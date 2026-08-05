@@ -1,0 +1,33 @@
+[package]
+name = "kchat-generation"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[features]
+default = []
+llamacpp = ["dep:llama-cpp-2"]
+mlx = []
+litert = []
+
+[dependencies]
+kchat-core = { path = "../kchat-core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+tokio = { workspace = true }
+parking_lot = { workspace = true }
+once_cell = { workspace = true }
+bytes = { workspace = true }
+uuid = { workspace = true }
+hex = "0.4"
+regex = "1"
+
+# Optional llama.cpp backend
+llama-cpp-2 = { version = "0.1", default-features = false, optional = true }
+
+[dev-dependencies]
+tempfile = "3"

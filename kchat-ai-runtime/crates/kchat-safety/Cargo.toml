@@ -1,0 +1,42 @@
+[package]
+name = "kchat-safety"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[features]
+default = ["text-pipeline"]
+text-pipeline = []
+encoder = []
+onnx-runtime = ["encoder", "dep:ort", "dep:tokenizers", "dep:ndarray"]
+skill-pack = ["dep:zip", "dep:serde_yaml"]
+
+[dependencies]
+kchat-core = { path = "../kchat-core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+ed25519-dalek = { workspace = true }
+sha2 = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+parking_lot = { workspace = true }
+once_cell = { workspace = true }
+regex = "1.10"
+unicode-normalization = "0.1"
+caseless = "0.2"
+hex = "0.4"
+subtle = "2.5"
+
+# Optional encoder deps
+ort = { version = "=2.0.0-rc.10", default-features = false, features = ["load-dynamic", "ndarray"], optional = true }
+tokenizers = { version = "0.21", default-features = false, features = ["fancy-regex"], optional = true }
+ndarray = { version = "0.16", optional = true }
+
+# Optional skill-pack deps
+zip = { version = "2", default-features = false, features = ["deflate"], optional = true }
+serde_yaml = { version = "0.9", optional = true }
+
+[dev-dependencies]
+tempfile = "3"
+rand = "0.8"

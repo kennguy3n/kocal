@@ -1,0 +1,23 @@
+[package]
+name = "kchat-action"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+kchat-core = { path = "../kchat-core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+parking_lot = { workspace = true }
+hex = "0.4"
+subtle = "2.5"
+hmac = "0.12"
+
+[dev-dependencies]
+tempfile = "3"

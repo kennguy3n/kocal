@@ -1,0 +1,21 @@
+[package]
+name = "kchat-generative-sidecar"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+kchat-core = { path = "../../crates/kchat-core" }
+kchat-generation = { path = "../../crates/kchat-generation", features = ["llamacpp"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+tokio = { workspace = true }
+parking_lot = { workspace = true }
+
+[[bin]]
+name = "kchat-generative-sidecar"
+path = "src/main.rs"

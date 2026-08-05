@@ -1,0 +1,68 @@
+# Rust build artifacts
+/target/
+**/target/
+
+# Cargo lock — keep for binary crates, ignore for libraries
+# This workspace has binaries (sidecar, eval harness), so we keep Cargo.lock
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Backup / temp files
+*.bak
+*.tmp
+*.backup
+
+# SQLCipher test databases
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+
+# Model packs / downloaded artifacts
+manifest/packs/*.gguf
+manifest/packs/*.bin
+manifest/packs/*.onnx
+manifest/packs/*.pt
+manifest/packs/*.safetensors
+
+# Logs
+*.log
+logs/
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# UniFFI generated bindings
+*.swift
+!crates/kchat-bindings/**/*.swift
+*.kt
+!crates/kchat-bindings/**/*.kt
+
+# N-API generated
+*.node
+
+# Coverage
+tarpaulin-report.html
+cobertura.xml
+coverage/

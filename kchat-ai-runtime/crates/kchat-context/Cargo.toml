@@ -1,0 +1,56 @@
+[package]
+name = "kchat-context"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[features]
+default = ["lexical"]
+lexical = []
+embeddings = ["dep:ort", "dep:tokenizers", "dep:ndarray"]
+connectors = ["dep:reqwest", "dep:async-trait"]
+reranker = ["embeddings"]
+
+[dependencies]
+kchat-core = { path = "../kchat-core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+hkdf = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tokio = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+parking_lot = { workspace = true }
+bytes = { workspace = true }
+
+# SQLCipher storage
+rusqlite = { version = "0.36", features = ["bundled-sqlcipher-vendored-openssl", "blob"] }
+
+# Encryption
+chacha20poly1305 = "0.10"
+zeroize = { version = "1", features = ["derive"] }
+blake3 = "1"
+
+# Cross-platform CSPRNG (Windows target only)
+[target.'cfg(target_os = "windows")'.dependencies]
+getrandom = "0.2"
+
+# Language detection
+whatlang = "0.18"
+unicode-normalization = "0.1"
+
+# Optional embedding deps
+ort = { version = "=2.0.0-rc.10", default-features = false, features = ["load-dynamic", "ndarray"], optional = true }
+tokenizers = { version = "0.21", default-features = false, features = ["fancy-regex"], optional = true }
+ndarray = { version = "0.16", optional = true }
+
+# Optional connector deps
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"], optional = true }
+async-trait = { version = "0.1", optional = true }
+
+[dev-dependencies]
+tempfile = "3"

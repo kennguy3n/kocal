@@ -1,0 +1,32 @@
+[package]
+name = "kchat-task-suite"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+kchat-core = { path = "../../crates/kchat-core" }
+kchat-safety = { path = "../../crates/kchat-safety" }
+kchat-context = { path = "../../crates/kchat-context" }
+kchat-generation = { path = "../../crates/kchat-generation" }
+kchat-action = { path = "../../crates/kchat-action" }
+kchat-bindings = { path = "../../crates/kchat-bindings" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+tokio = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+hex = "0.4"
+ed25519-dalek = { workspace = true }
+rand = "0.8"
+blake3 = "1"
+rusqlite = { version = "0.36", features = ["bundled-sqlcipher-vendored-openssl"] }
+
+[[bin]]
+name = "kchat-task-suite"
+path = "src/main.rs"

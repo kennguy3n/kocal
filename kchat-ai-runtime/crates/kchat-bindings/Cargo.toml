@@ -1,0 +1,36 @@
+[package]
+name = "kchat-bindings"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[features]
+default = []
+mobile = ["dep:uniffi"]
+mobile-full = ["mobile", "kchat-safety/onnx-runtime", "kchat-context/embeddings"]
+desktop = ["dep:napi", "dep:napi-derive"]
+
+[dependencies]
+kchat-core = { path = "../kchat-core" }
+kchat-safety = { path = "../kchat-safety" }
+kchat-context = { path = "../kchat-context" }
+kchat-generation = { path = "../kchat-generation" }
+kchat-action = { path = "../kchat-action" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+parking_lot = { workspace = true }
+tokio = { workspace = true }
+
+# UniFFI for mobile
+uniffi = { version = "0.28", default-features = false, optional = true }
+
+# N-API for desktop
+napi = { version = "2", default-features = false, features = ["napi6", "serde-json"], optional = true }
+napi-derive = { version = "2", optional = true }
+
+[build-dependencies]
+uniffi_build = { version = "0.28", features = ["builtin-bindgen"], optional = true }
+napi-build = { version = "2", optional = true }
