@@ -1,0 +1,189 @@
+{
+  "name": "kchat-context-v1",
+  "version": "1.0.0",
+  "description": "Real-world context retrieval dataset with multi-scope evidence, multilingual queries, ACL tests, and citation accuracy",
+  "documents": [
+    {
+      "id": "doc_001",
+      "scope": "workspace_engineering",
+      "content": "The authentication system uses OAuth 2.0 with PKCE flow. All tokens expire after 3600 seconds. Refresh tokens are stored in the iOS Keychain or Android Keystore. The token endpoint is at /api/v2/oauth/token.",
+      "language": "en",
+      "tags": ["auth", "oauth", "security"]
+    },
+    {
+      "id": "doc_002",
+      "scope": "workspace_engineering",
+      "content": "The database schema for the messaging system includes tables: conversations, messages, participants, and attachments. Messages use a CRDT for offline sync. The primary key for messages is a UUID v7 for time-ordering.",
+      "language": "en",
+      "tags": ["database", "messaging", "schema"]
+    },
+    {
+      "id": "doc_003",
+      "scope": "workspace_engineering",
+      "content": "Deployment uses Kubernetes with Helm charts. The CI/CD pipeline runs on GitHub Actions with parallel test, lint, and build jobs. Production deploys require approval from two team leads.",
+      "language": "en",
+      "tags": ["devops", "kubernetes", "ci-cd"]
+    },
+    {
+      "id": "doc_004",
+      "scope": "workspace_marketing",
+      "content": "Q3 2026 marketing campaign targets Southeast Asian markets with focus on Vietnam, Thailand, and Indonesia. Budget allocation: 40% digital ads, 30% influencer partnerships, 20% content marketing, 10% events.",
+      "language": "en",
+      "tags": ["marketing", "campaign", "budget"]
+    },
+    {
+      "id": "doc_005",
+      "scope": "workspace_marketing",
+      "content": "Brand guidelines specify primary color #1A56DB, secondary #16A34A, and accent #F59E0B. Typography uses Inter for body text and Space Grotesk for headings. Logo minimum size is 24px for digital.",
+      "language": "en",
+      "tags": ["brand", "design", "guidelines"]
+    },
+    {
+      "id": "doc_006",
+      "scope": "workspace_personal",
+      "content": "My passport number is P1234567B, issued in Singapore. My frequent flyer number is SQ*K789234. I prefer aisle seats and vegetarian meals on flights.",
+      "language": "en",
+      "tags": ["personal", "travel"]
+    },
+    {
+      "id": "doc_007",
+      "scope": "workspace_engineering",
+      "content": "Hệ thống mã hóa sử dụng AES-256-GCM cho dữ liệu tại nghỉ và TLS 1.3 cho dữ liệu truyền. Khóa được lưu trữ trong HSM. Quản lý khóa sử dụng rotation 90 ngày.",
+      "language": "vi",
+      "tags": ["security", "encryption", "infrastructure"]
+    },
+    {
+      "id": "doc_008",
+      "scope": "workspace_engineering",
+      "content": "API rate limiting: 1000 requests per minute for authenticated users, 100 for anonymous. Burst allowance is 10% above limit. Rate limit headers: X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset.",
+      "language": "en",
+      "tags": ["api", "rate-limiting"]
+    },
+    {
+      "id": "doc_009",
+      "scope": "workspace_legal",
+      "content": "Data Processing Agreement requires GDPR Article 28 compliance. Sub-processors must be approved by the data controller. Data subject requests must be fulfilled within 30 days. Breach notification within 72 hours.",
+      "language": "en",
+      "tags": ["legal", "gdpr", "compliance"]
+    },
+    {
+      "id": "doc_010",
+      "scope": "workspace_legal",
+      "content": "Employment contract template: Non-compete clause valid for 12 months post-employment within the same industry. Intellectual property assignment covers all work created during employment. Confidentiality obligations survive indefinitely.",
+      "language": "en",
+      "tags": ["legal", "employment", "contract"]
+    },
+    {
+      "id": "doc_011",
+      "scope": "workspace_engineering",
+      "content": "The on-device AI runtime uses a 4-plane architecture: safety (deterministic rules + ONNX encoder), context (SQLCipher + FTS5), generation (llama.cpp with grammar constraints), and action (artifact AST + RBAC). Tier selection is runtime-decided based on memory, thermal, and battery.",
+      "language": "en",
+      "tags": ["architecture", "ai", "runtime"]
+    },
+    {
+      "id": "doc_012",
+      "scope": "workspace_engineering",
+      "content": "モバイルアプリのパフォーマンス目標: コールドスタート2秒以内、フレームレート60fps維持、メモリ使用量512MB以下。バックグラウンド同期は15分間隔。バッテリー消費は1時間あたり5%以下。",
+      "language": "ja",
+      "tags": ["performance", "mobile", "targets"]
+    }
+  ],
+  "queries": [
+    {
+      "id": "q_001",
+      "query": "authentication token expiry",
+      "expected_doc_ids": ["doc_001"],
+      "allowed_scopes": ["workspace_engineering"],
+      "denied_scopes": [],
+      "description": "Simple keyword search in engineering scope"
+    },
+    {
+      "id": "q_002",
+      "query": "database schema messaging",
+      "expected_doc_ids": ["doc_002"],
+      "allowed_scopes": ["workspace_engineering"],
+      "denied_scopes": [],
+      "description": "Schema-related query"
+    },
+    {
+      "id": "q_003",
+      "query": "marketing budget Southeast Asia",
+      "expected_doc_ids": ["doc_004"],
+      "allowed_scopes": ["workspace_marketing", "workspace_engineering"],
+      "denied_scopes": [],
+      "description": "Cross-scope search, result in marketing"
+    },
+    {
+      "id": "q_004",
+      "query": "passport number travel preferences",
+      "expected_doc_ids": ["doc_006"],
+      "allowed_scopes": ["workspace_personal"],
+      "denied_scopes": [],
+      "description": "Personal scope with PII"
+    },
+    {
+      "id": "q_005",
+      "query": "encryption AES TLS",
+      "expected_doc_ids": ["doc_007"],
+      "allowed_scopes": ["workspace_engineering"],
+      "denied_scopes": [],
+      "description": "Vietnamese document, English query"
+    },
+    {
+      "id": "q_006",
+      "query": "rate limiting API",
+      "expected_doc_ids": ["doc_008"],
+      "allowed_scopes": ["workspace_engineering", "workspace_marketing"],
+      "denied_scopes": [],
+      "description": "Multi-scope allowed, result in engineering"
+    },
+    {
+      "id": "q_007",
+      "query": "GDPR compliance data processing",
+      "expected_doc_ids": ["doc_009"],
+      "allowed_scopes": ["workspace_legal"],
+      "denied_scopes": [],
+      "description": "Legal scope search"
+    },
+    {
+      "id": "q_008",
+      "query": "authentication security",
+      "expected_doc_ids": [],
+      "allowed_scopes": ["workspace_marketing"],
+      "denied_scopes": ["workspace_engineering"],
+      "description": "ACL test: engineering scope denied, should return empty"
+    },
+    {
+      "id": "q_009",
+      "query": "AI runtime architecture on-device",
+      "expected_doc_ids": ["doc_011"],
+      "allowed_scopes": ["workspace_engineering"],
+      "denied_scopes": [],
+      "description": "Architecture query"
+    },
+    {
+      "id": "q_010",
+      "query": "パフォーマンス モバイル 目標",
+      "expected_doc_ids": ["doc_012"],
+      "allowed_scopes": ["workspace_engineering"],
+      "denied_scopes": [],
+      "description": "Japanese query, Japanese document"
+    },
+    {
+      "id": "q_011",
+      "query": "non-compete confidentiality employment",
+      "expected_doc_ids": ["doc_010"],
+      "allowed_scopes": ["workspace_legal", "workspace_engineering"],
+      "denied_scopes": [],
+      "description": "Legal query with multiple scopes allowed"
+    },
+    {
+      "id": "q_012",
+      "query": "brand color typography guidelines",
+      "expected_doc_ids": ["doc_005"],
+      "allowed_scopes": ["workspace_marketing", "workspace_engineering", "workspace_legal"],
+      "denied_scopes": [],
+      "description": "Brand guidelines search"
+    }
+  ]
+}

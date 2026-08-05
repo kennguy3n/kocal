@@ -26,6 +26,8 @@ ed25519-dalek = { workspace = true }
 rand = "0.8"
 blake3 = "1"
 rusqlite = { version = "0.36", features = ["bundled-sqlcipher-vendored-openssl"] }
+which = "7"
+num_cpus = "1"
 
 [[bin]]
 name = "kchat-task-suite"

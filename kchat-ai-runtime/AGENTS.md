@@ -12,8 +12,12 @@ cargo build --workspace
 # Run all unit tests
 cargo test --workspace
 
-# Run the eval harness
+# Run the standard eval harness (synthetic unit-level evals)
 cargo run -p kchat-task-suite
+
+# Run the real-world eval harness (comprehensive datasets + real model inference)
+# Requires llama-server running with a GGUF model, or it will auto-start one
+cargo run -p kchat-task-suite -- --realworld
 
 # Build with mobile bindings (UniFFI)
 cargo build -p kchat-bindings --features mobile
@@ -21,6 +25,23 @@ cargo build -p kchat-bindings --features mobile
 # Build with desktop bindings (N-API)
 cargo build -p kchat-bindings --features desktop
 ```
+
+### Real-World Eval Setup
+
+The `--realworld` mode loads JSON datasets from `eval/kchat-task-suite/datasets/`
+and runs comprehensive tests with real model inference:
+
+- **Safety**: 50 cases (benign, PII, harmful, scam, URL risk, obfuscation, injection, multilingual)
+  with per-class precision/recall/F1 and latency P50/P95/P99
+- **Context**: 12 documents, 12 queries (multilingual, ACL tests) with recall@10 and MRR
+- **Generation**: 10 prompts with real Qwen3.5-0.8B inference via llama-server,
+  measuring TTFT, decode rate (tok/s), and JSON schema compliance
+- **Action**: 16 cases (tool plans, artifact ops, commit tokens, formula injection)
+
+To run generation tests, either:
+1. Start llama-server manually: `llama-server -m manifest/packs/Qwen3.5-0.8B-Q4_K_M.gguf --port 18888 -ngl 99`
+2. Or let the harness auto-start it (requires llama-server on PATH and model in manifest/packs/)
+3. Or set `LLAMA_SERVER_URL` to point to an existing server
 
 ## Architecture
 
@@ -62,5 +83,9 @@ The workspace is organized into 7 crates following the 4-plane architecture:
 - kchat-context: 19 tests
 - kchat-generation: 29 tests
 - kchat-bindings: 4 tests
-- kchat-task-suite: 43 eval cases
-- **Total: 179 tests, all passing**
+- kchat-task-suite: 43 standard eval cases
+- **Unit total: 136 tests, all passing**
+- **Standard eval: 43 cases, all passing**
+- **Real-world eval: 50 safety + 12 context + 10 generation + 16 action = 88 cases**
+  - Safety: 47/50 (94%), Context: 13/13 (100%), Generation: 9/11 (82%), Action: 17/17 (100%)
+  - Real model: Qwen3.5-0.8B Q4_K_M via llama-server (Metal), ~130 tok/s, 30ms TTFT

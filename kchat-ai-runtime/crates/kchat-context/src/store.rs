@@ -429,11 +429,23 @@ impl ContextStore {
 /// Wraps the query in double quotes (phrase query) and escapes internal
 /// double quotes to prevent FTS5 syntax injection.
 fn sanitize_fts_query(query: &str) -> String {
-    // Escape internal double quotes by doubling them (FTS5 escaping)
-    let escaped = query.replace('"', "\"\"");
-    // Wrap in double quotes to make it a phrase query,
-    // preventing interpretation of FTS5 operators like AND, OR, NOT, *, etc.
-    format!("\"{}\"", escaped)
+    // Split the query into individual terms and sanitize each one.
+    // This allows FTS5 to match documents containing any of the terms
+    // (using OR) rather than requiring an exact phrase match.
+    let terms: Vec<&str> = query.split_whitespace().filter(|t| !t.is_empty()).collect();
+    if terms.is_empty() {
+        return "\"\"".to_string();
+    }
+    // Quote each term individually and join with OR for broader recall
+    let quoted: Vec<String> = terms
+        .iter()
+        .map(|t| {
+            // Escape internal double quotes by doubling them (FTS5 escaping)
+            let escaped = t.replace('"', "\"\"");
+            format!("\"{}\"", escaped)
+        })
+        .collect();
+    quoted.join(" OR ")
 }
 
 /// FTS search result.

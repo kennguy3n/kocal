@@ -29,12 +29,30 @@ impl EvalResult {
         }
     }
 
+    pub fn pass_with_meta(name: impl Into<String>, duration_ms: u64, meta: HashMap<String, String>) -> Self {
+        Self {
+            name: name.into(),
+            status: EvalStatus::Pass,
+            duration_ms,
+            metadata: meta,
+        }
+    }
+
     pub fn fail(name: impl Into<String>, reason: impl Into<String>) -> Self {
         Self {
             name: name.into(),
             status: EvalStatus::Fail(reason.into()),
             duration_ms: 0,
             metadata: HashMap::new(),
+        }
+    }
+
+    pub fn fail_with_meta(name: impl Into<String>, reason: impl Into<String>, duration_ms: u64, meta: HashMap<String, String>) -> Self {
+        Self {
+            name: name.into(),
+            status: EvalStatus::Fail(reason.into()),
+            duration_ms,
+            metadata: meta,
         }
     }
 
@@ -130,9 +148,30 @@ impl EvalReport {
 
             for result in &suite.results {
                 let icon = match &result.status {
-                    EvalStatus::Pass => "✓",
+                    EvalStatus::Pass => {
+                        let meta_str = if result.metadata.is_empty() {
+                            String::new()
+                        } else {
+                            let items: Vec<String> = result.metadata.iter()
+                                .map(|(k, v)| format!("{}={}", k, v))
+                                .collect();
+                            format!(" [{}]", items.join(", "))
+                        };
+                        let dur_str = if result.duration_ms > 0 {
+                            format!(" ({}ms)", result.duration_ms)
+                        } else {
+                            String::new()
+                        };
+                        println!("    ✓ {}{}{}", result.name, dur_str, meta_str);
+                        continue;
+                    }
                     EvalStatus::Fail(reason) => {
-                        println!("    ✗ {} — {}", result.name, reason);
+                        let dur_str = if result.duration_ms > 0 {
+                            format!(" ({}ms)", result.duration_ms)
+                        } else {
+                            String::new()
+                        };
+                        println!("    ✗ {} — {}{}", result.name, reason, dur_str);
                         continue;
                     }
                     EvalStatus::Skip(reason) => {
@@ -140,7 +179,6 @@ impl EvalReport {
                         continue;
                     }
                 };
-                println!("    {} {}", icon, result.name);
             }
             println!();
         }

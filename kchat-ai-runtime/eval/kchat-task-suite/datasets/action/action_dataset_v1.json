@@ -1,0 +1,359 @@
+{
+  "name": "kchat-action-v1",
+  "version": "1.0.0",
+  "description": "Real-world action validation tests — complex tool plans, artifact operations, commit tokens, and RBAC enforcement",
+  "tool_manifests": [
+    {
+      "publisher_id": "kchat-official",
+      "version": "1.0.0",
+      "tools": [
+        {
+          "tool_id": "search_records",
+          "name": "Search Records",
+          "description": "Search for records in the workspace",
+          "arguments_schema": {
+            "type": "object",
+            "required": ["query"],
+            "properties": {
+              "query": { "type": "string" },
+              "limit": { "type": "number" },
+              "filters": {
+                "type": "object",
+                "properties": {
+                  "date_from": { "type": "string" },
+                  "date_to": { "type": "string" }
+                }
+              }
+            }
+          },
+          "side_effects": [],
+          "confirmation_class": "read_only",
+          "data_scopes": ["workspace_1", "workspace_2"]
+        },
+        {
+          "tool_id": "send_message",
+          "name": "Send Message",
+          "description": "Send a message to a contact",
+          "arguments_schema": {
+            "type": "object",
+            "required": ["recipient", "body"],
+            "properties": {
+              "recipient": { "type": "string" },
+              "body": { "type": "string" },
+              "attachments": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          },
+          "side_effects": ["sends_message"],
+          "confirmation_class": "local_mutation",
+          "data_scopes": ["workspace_1"]
+        },
+        {
+          "tool_id": "delete_record",
+          "name": "Delete Record",
+          "description": "Permanently delete a record",
+          "arguments_schema": {
+            "type": "object",
+            "required": ["record_id"],
+            "properties": {
+              "record_id": { "type": "string" },
+              "confirm": { "type": "boolean" }
+            }
+          },
+          "side_effects": ["deletes_data"],
+          "confirmation_class": "sensitive_action",
+          "data_scopes": ["workspace_1"]
+        },
+        {
+          "tool_id": "create_slide",
+          "name": "Create Slide",
+          "description": "Create a new slide in a presentation",
+          "arguments_schema": {
+            "type": "object",
+            "required": ["title"],
+            "properties": {
+              "title": { "type": "string" },
+              "content": { "type": "string" },
+              "after_slide_id": { "type": "string" }
+            }
+          },
+          "side_effects": ["modifies_artifact"],
+          "confirmation_class": "local_mutation",
+          "data_scopes": ["workspace_1"]
+        },
+        {
+          "tool_id": "execute_formula",
+          "name": "Execute Formula",
+          "description": "Execute a spreadsheet formula",
+          "arguments_schema": {
+            "type": "object",
+            "required": ["formula"],
+            "properties": {
+              "formula": { "type": "string" },
+              "cell_range": { "type": "string" }
+            }
+          },
+          "side_effects": ["modifies_artifact"],
+          "confirmation_class": "read_only",
+          "data_scopes": ["workspace_1"]
+        }
+      ]
+    }
+  ],
+  "test_cases": [
+    {
+      "id": "action_001",
+      "description": "Valid simple tool plan",
+      "plan": {
+        "steps": [
+          {
+            "tool_id": "search_records",
+            "action": "search",
+            "arguments": { "query": "quarterly report", "limit": 10 },
+            "data_scope": "workspace_1"
+          }
+        ]
+      },
+      "expected": "valid"
+    },
+    {
+      "id": "action_002",
+      "description": "Multi-step plan with read and mutation",
+      "plan": {
+        "steps": [
+          {
+            "tool_id": "search_records",
+            "action": "search",
+            "arguments": { "query": "contacts" },
+            "data_scope": "workspace_1"
+          },
+          {
+            "tool_id": "send_message",
+            "action": "send",
+            "arguments": { "recipient": "john@example.com", "body": "Hello" },
+            "data_scope": "workspace_1"
+          }
+        ]
+      },
+      "expected": "valid"
+    },
+    {
+      "id": "action_003",
+      "description": "Invalid: undeclared scope",
+      "plan": {
+        "steps": [
+          {
+            "tool_id": "search_records",
+            "action": "search",
+            "arguments": { "query": "test" },
+            "data_scope": "workspace_999"
+          }
+        ]
+      },
+      "expected": "error",
+      "expected_error": "UndeclaredScope"
+    },
+    {
+      "id": "action_004",
+      "description": "Invalid: missing required field",
+      "plan": {
+        "steps": [
+          {
+            "tool_id": "search_records",
+            "action": "search",
+            "arguments": { "limit": 10 },
+            "data_scope": "workspace_1"
+          }
+        ]
+      },
+      "expected": "error",
+      "expected_error": "MissingRequiredField"
+    },
+    {
+      "id": "action_005",
+      "description": "Invalid: type mismatch (string instead of number for limit)",
+      "plan": {
+        "steps": [
+          {
+            "tool_id": "search_records",
+            "action": "search",
+            "arguments": { "query": "test", "limit": "ten" },
+            "data_scope": "workspace_1"
+          }
+        ]
+      },
+      "expected": "error",
+      "expected_error": "TypeMismatch"
+    },
+    {
+      "id": "action_006",
+      "description": "Sensitive action requires step-up auth",
+      "plan": {
+        "steps": [
+          {
+            "tool_id": "delete_record",
+            "action": "delete",
+            "arguments": { "record_id": "rec_123", "confirm": true },
+            "data_scope": "workspace_1"
+          }
+        ]
+      },
+      "expected": "requires_step_up_auth"
+    },
+    {
+      "id": "action_007",
+      "description": "Mutation requires dry-run before commit",
+      "plan": {
+        "steps": [
+          {
+            "tool_id": "send_message",
+            "action": "send",
+            "arguments": { "recipient": "jane@example.com", "body": "Test" },
+            "data_scope": "workspace_1"
+          }
+        ]
+      },
+      "expected": "requires_dry_run"
+    },
+    {
+      "id": "action_008",
+      "description": "Formula with macro injection attempt",
+      "plan": {
+        "steps": [
+          {
+            "tool_id": "execute_formula",
+            "action": "execute",
+            "arguments": { "formula": "=MACRO(bad_code)", "cell_range": "A1:A10" },
+            "data_scope": "workspace_1"
+          }
+        ]
+      },
+      "expected": "artifact_error",
+      "expected_error": "InvalidFormula"
+    },
+    {
+      "id": "action_009",
+      "description": "Formula with case-variant macro injection",
+      "plan": {
+        "steps": [
+          {
+            "tool_id": "execute_formula",
+            "action": "execute",
+            "arguments": { "formula": "=Macro(inject)", "cell_range": "B1:B5" },
+            "data_scope": "workspace_1"
+          }
+        ]
+      },
+      "expected": "artifact_error",
+      "expected_error": "InvalidFormula"
+    },
+    {
+      "id": "action_010",
+      "description": "Valid formula (SUM)",
+      "plan": {
+        "steps": [
+          {
+            "tool_id": "execute_formula",
+            "action": "execute",
+            "arguments": { "formula": "=SUM(A1:A10)", "cell_range": "A1:A10" },
+            "data_scope": "workspace_1"
+          }
+        ]
+      },
+      "expected": "valid"
+    },
+    {
+      "id": "action_011",
+      "description": "InsertSlide with valid after_node",
+      "artifact_op": {
+        "type": "InsertSlide",
+        "after_node": "existing_node_1",
+        "title": "Quarterly Results"
+      },
+      "artifact_setup": {
+        "nodes": [
+          { "id": "existing_node_1", "type": "slide", "content": "Intro", "children": [], "version": 1 }
+        ],
+        "root_nodes": ["existing_node_1"]
+      },
+      "expected": "valid"
+    },
+    {
+      "id": "action_012",
+      "description": "InsertSlide with non-existent after_node",
+      "artifact_op": {
+        "type": "InsertSlide",
+        "after_node": "nonexistent_node",
+        "title": "Orphan Slide"
+      },
+      "artifact_setup": {
+        "nodes": [
+          { "id": "node_1", "type": "slide", "content": "Slide 1", "children": [], "version": 1 }
+        ],
+        "root_nodes": ["node_1"]
+      },
+      "expected": "artifact_error",
+      "expected_error": "NodeNotFound"
+    },
+    {
+      "id": "action_013",
+      "description": "Stale version rejection on UpdateRecord",
+      "artifact_op": {
+        "type": "UpdateRecord",
+        "node_id": "record_1",
+        "expected_version": 5,
+        "fields": { "status": "completed" }
+      },
+      "artifact_setup": {
+        "nodes": [
+          { "id": "record_1", "type": "record", "content": "", "children": [], "version": 3 }
+        ],
+        "root_nodes": ["record_1"]
+      },
+      "expected": "artifact_error",
+      "expected_error": "StaleVersion"
+    },
+    {
+      "id": "action_014",
+      "description": "Commit token with zero key should be rejected",
+      "commit_token_test": {
+        "use_zero_key": true,
+        "actor": "user_1",
+        "tool_id": "send_message",
+        "arguments": { "recipient": "test@example.com", "body": "Hello" },
+        "expiry_unix": 9999999999,
+        "artifact_version": 1
+      },
+      "expected": "error",
+      "expected_error": "ZeroKeySecret"
+    },
+    {
+      "id": "action_015",
+      "description": "Commit token roundtrip with proper secret",
+      "commit_token_test": {
+        "use_zero_key": false,
+        "actor": "user_1",
+        "tool_id": "send_message",
+        "arguments": { "recipient": "test@example.com", "body": "Hello" },
+        "expiry_unix": 9999999999,
+        "artifact_version": 1
+      },
+      "expected": "valid_token_roundtrip"
+    },
+    {
+      "id": "action_016",
+      "description": "Expired commit token should be rejected",
+      "commit_token_test": {
+        "use_zero_key": false,
+        "actor": "user_1",
+        "tool_id": "send_message",
+        "arguments": { "recipient": "test@example.com", "body": "Hello" },
+        "expiry_unix": 1,
+        "artifact_version": 1
+      },
+      "expected": "expired_rejected"
+    }
+  ]
+}

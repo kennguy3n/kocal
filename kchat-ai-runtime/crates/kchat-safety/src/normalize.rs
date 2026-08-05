@@ -14,6 +14,7 @@ use unicode_normalization::UnicodeNormalization;
 /// 3. Case fold for caseless matching
 /// 4. Normalize common leetspeak substitutions
 /// 5. Collapse repeated whitespace
+/// 6. De-space single-character obfuscation (e.g. "H O W T O" → "howto")
 pub fn normalize(text: &str) -> String {
     // 1. NFKC normalization
     let nfkc: String = text.nfkc().collect();
@@ -31,7 +32,12 @@ pub fn normalize(text: &str) -> String {
     let deleeted = normalize_leetspeak(&folded);
 
     // 5. Collapse whitespace
-    collapse_whitespace(&deleeted)
+    let collapsed = collapse_whitespace(&deleeted);
+
+    // 6. De-space single-character obfuscation
+    // e.g. "h o w t o m a k e a b o m b" → "howtomakeabomb"
+    // This catches spaced-out attempts to bypass lexicon matching
+    despace_obfuscation(&collapsed)
 }
 
 /// Light normalization for pattern-based detectors (PII, URL).
@@ -100,6 +106,52 @@ fn collapse_whitespace(text: &str) -> String {
         }
     }
     result.trim().to_string()
+}
+
+/// Remove spaces between single-letter sequences (obfuscation defense).
+///
+/// Detects patterns like "h o w t o m a k e a b o m b" where individual
+/// letters are separated by spaces to bypass keyword matching. Joins
+/// sequences of 3+ single-character tokens into continuous strings.
+fn despace_obfuscation(text: &str) -> String {
+    let tokens: Vec<&str> = text.split(' ').collect();
+    if tokens.len() < 3 {
+        return text.to_string();
+    }
+
+    let mut result = String::with_capacity(text.len());
+    let mut i = 0;
+
+    while i < tokens.len() {
+        // Check if this token and the next few are all single characters
+        let mut run_start = i;
+        let mut run_len = 1usize;
+
+        while i + run_len < tokens.len()
+            && tokens[i + run_len].chars().count() == 1
+            && tokens[i + run_len - 0].chars().count() == 1
+        {
+            run_len += 1;
+        }
+
+        // Adjust: we need at least 3 consecutive single-char tokens to de-space
+        if run_len >= 3 {
+            // Join the run without spaces
+            for j in 0..run_len {
+                result.push_str(tokens[run_start + j]);
+            }
+            i = run_start + run_len;
+        } else {
+            // Not a de-space candidate — output as-is with space
+            result.push_str(tokens[i]);
+            if i + 1 < tokens.len() {
+                result.push(' ');
+            }
+            i += 1;
+        }
+    }
+
+    result
 }
 
 #[cfg(test)]

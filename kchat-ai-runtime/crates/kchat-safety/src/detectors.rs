@@ -245,8 +245,14 @@ impl UrlDetector {
             let url = m.as_str().to_lowercase();
             let mut risk_score = 0u32;
 
-            // Suspicious TLDs
-            if url.ends_with(".tk") || url.ends_with(".ml") || url.ends_with(".ga") || url.ends_with(".cf") {
+            // Suspicious TLDs — check the domain part (after :// and before first / or end)
+            let domain = url.strip_prefix("http://")
+                .or_else(|| url.strip_prefix("https://"))
+                .unwrap_or(&url);
+            let domain = domain.split('/').next().unwrap_or(domain);
+            // Remove port if present
+            let domain = domain.split(':').next().unwrap_or(domain);
+            if domain.ends_with(".tk") || domain.ends_with(".ml") || domain.ends_with(".ga") || domain.ends_with(".cf") {
                 risk_score += 2;
             }
 
