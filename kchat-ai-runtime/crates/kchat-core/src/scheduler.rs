@@ -98,8 +98,15 @@ impl Scheduler {
         let tier = TierSelection::re_evaluate(state.current_tier, caps)?;
         state.current_tier = tier;
 
-        // Check thermal state
-        if requires_generative && matches!(caps.thermal_state, ThermalState::Serious | ThermalState::Critical) {
+        // Thermal state checks:
+        // - Critical: blocks ALL jobs (device is overheating, preserve core functions)
+        // - Serious: blocks generative jobs (heavy CPU/GPU load would worsen thermal state)
+        // - Fair: allowed for all jobs (device is warm but within safe operating range)
+        // - Nominal: allowed for all jobs (normal thermal state)
+        if matches!(caps.thermal_state, ThermalState::Critical) {
+            return Err(CoreError::ThermalCritical);
+        }
+        if requires_generative && matches!(caps.thermal_state, ThermalState::Serious) {
             return Err(CoreError::ThermalCritical);
         }
 
@@ -187,16 +194,30 @@ impl Scheduler {
     }
 
     /// Update the tier based on current device capabilities.
+    /// On error, downgrades to Low tier (fail-safe) to prevent running
+    /// heavy workloads on a device whose capabilities are uncertain.
     pub fn update_tier(&self, caps: &DeviceCapabilities) {
         let mut state = self.state.lock();
-        let new_tier = TierSelection::re_evaluate(state.current_tier, caps).unwrap_or(DeviceTier::Low);
-        if new_tier != state.current_tier {
-            tracing::info!(
-                "Tier changed: {:?} → {:?}",
-                state.current_tier,
-                new_tier
-            );
-            state.current_tier = new_tier;
+        match TierSelection::re_evaluate(state.current_tier, caps) {
+            Ok(new_tier) => {
+                if new_tier != state.current_tier {
+                    tracing::info!(
+                        "Tier changed: {:?} → {:?}",
+                        state.current_tier,
+                        new_tier
+                    );
+                    state.current_tier = new_tier;
+                }
+            }
+            Err(e) => {
+                // Fail-safe: downgrade to Low to avoid heavy workloads
+                // on a device with uncertain capabilities
+                tracing::warn!(
+                    "Tier re-evaluation failed, downgrading to Low: {}",
+                    e
+                );
+                state.current_tier = DeviceTier::Low;
+            }
         }
     }
 }

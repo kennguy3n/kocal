@@ -73,16 +73,6 @@ pub fn verify_signature_hex(
     pk.verify(message, &sig)
 }
 
-/// Compute SHA-256 content digest over a set of files (sorted by name).
-pub fn compute_content_digest(files: &std::collections::BTreeMap<String, Vec<u8>>) -> String {
-    let mut hasher = Sha256::new();
-    for (name, content) in files {
-        hasher.update(name.as_bytes());
-        hasher.update(content);
-    }
-    hex::encode(hasher.finalize())
-}
-
 /// Canonical signing preimage for policy packs.
 pub fn signing_preimage(content_sha256: &str, pack_id: &str, version: &str) -> Vec<u8> {
     format!("{content_sha256}|{pack_id}|{version}").into_bytes()

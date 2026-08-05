@@ -24,6 +24,9 @@ pub enum CoreError {
     #[error("pack not found: {0}")]
     PackNotFound(String),
 
+    #[error("invalid pack id: {0}")]
+    InvalidPackId(String),
+
     #[error("tier downgrade required: {reason}")]
     TierDowngradeRequired { reason: String },
 

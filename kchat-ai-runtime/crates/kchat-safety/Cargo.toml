@@ -23,10 +23,11 @@ tracing = { workspace = true }
 parking_lot = { workspace = true }
 once_cell = { workspace = true }
 regex = "1.10"
+fancy-regex = "0.13"
 unicode-normalization = "0.1"
 caseless = "0.2"
+lru = "0.16"
 hex = "0.4"
-subtle = "2.5"
 
 # Optional encoder deps
 ort = { version = "=2.0.0-rc.10", default-features = false, features = ["load-dynamic", "ndarray"], optional = true }

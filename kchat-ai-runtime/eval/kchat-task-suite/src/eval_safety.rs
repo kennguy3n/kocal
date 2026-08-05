@@ -121,6 +121,8 @@ fn test_group_escalation() -> EvalResult {
         relationship: None,
         encoder_available: true,
         slm_available: true,
+        quoted_from_user: false,
+        community_overlay_id: None,
     };
     let _result = classifier.classify(&req);
 
@@ -137,6 +139,8 @@ fn test_minor_escalation() -> EvalResult {
         relationship: None,
         encoder_available: true,
         slm_available: true,
+        quoted_from_user: false,
+        community_overlay_id: None,
     };
     let _result = classifier.classify(&req);
 

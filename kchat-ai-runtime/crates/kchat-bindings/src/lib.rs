@@ -147,17 +147,48 @@ pub struct KChatAiRuntime {
     safety: kchat_safety::classify::SafetyClassifier,
     tier: kchat_core::tier::DeviceTier,
     platform: String,
+    /// Cached device capabilities from the last probe
+    caps: Option<kchat_core::capability::DeviceCapabilities>,
 }
 
 impl KChatAiRuntime {
     /// Create a new runtime instance for the given platform.
+    ///
+    /// In production, this probes device capabilities and selects a tier.
+    /// If the probe fails, defaults to Low tier for safety (avoid overloading
+    /// an unknown device).
     pub fn new(platform: &str) -> Self {
-        // In production, this would probe device capabilities
-        let tier = kchat_core::tier::DeviceTier::Medium; // default
+        // Probe real device capabilities
+        match kchat_core::capability::CapabilityProbe::probe() {
+            Ok(caps) => {
+                let tier = select_tier(&caps);
+                Self {
+                    safety: kchat_safety::classify::SafetyClassifier::new(),
+                    tier,
+                    platform: platform.to_string(),
+                    caps: Some(caps),
+                }
+            }
+            Err(e) => {
+                // Fail-safe: default to Low tier when hardware detection fails
+                tracing::warn!("Capability probe failed, defaulting to Low tier: {}", e);
+                Self {
+                    safety: kchat_safety::classify::SafetyClassifier::new(),
+                    tier: kchat_core::tier::DeviceTier::Low,
+                    platform: platform.to_string(),
+                    caps: None,
+                }
+            }
+        }
+    }
+
+    /// Create a runtime with an explicit tier (for testing).
+    pub fn with_tier(platform: &str, tier: kchat_core::tier::DeviceTier) -> Self {
         Self {
             safety: kchat_safety::classify::SafetyClassifier::new(),
             tier,
             platform: platform.to_string(),
+            caps: None,
         }
     }
 
@@ -170,6 +201,8 @@ impl KChatAiRuntime {
             relationship: None,
             encoder_available: self.tier != kchat_core::tier::DeviceTier::Low,
             slm_available: self.tier != kchat_core::tier::DeviceTier::Low,
+            quoted_from_user: false,
+            community_overlay_id: None,
         };
         self.safety.classify(&request).into()
     }
@@ -187,6 +220,139 @@ impl KChatAiRuntime {
     /// Check if generative AI is available on this device.
     pub fn can_generate(&self) -> bool {
         self.tier != kchat_core::tier::DeviceTier::Low
+    }
+
+    /// Probe device capabilities (real OS API calls).
+    /// Re-evaluates dynamic state (thermal, battery, app state) on each call
+    /// to avoid returning stale data on long-lived runtime instances.
+    pub fn probe_capabilities(&self) -> FfiDeviceCapabilities {
+        if let Some(caps) = &self.caps {
+            // Clone and re-evaluate dynamic state (thermal, battery, app state)
+            let mut refreshed = caps.clone();
+            kchat_core::capability::CapabilityProbe::re_evaluate(&mut refreshed);
+            (&refreshed).into()
+        } else {
+            kchat_core::capability::CapabilityProbe::probe()
+                .map(|c| (&c).into())
+                .unwrap_or_default()
+        }
+    }
+
+    /// Get the safe AI memory budget in bytes.
+    pub fn safe_ai_budget(&self) -> u64 {
+        self.caps.as_ref().map(|c| c.safe_ai_budget()).unwrap_or(0)
+    }
+
+    /// Check if the device allows generative inference (thermal + app state).
+    pub fn allows_generative(&self) -> bool {
+        self.caps.as_ref().map(|c| c.allows_generative()).unwrap_or(false)
+    }
+}
+
+/// Select device tier based on capabilities.
+/// Thermal state is checked at every level to prevent overheating.
+fn select_tier(caps: &kchat_core::capability::DeviceCapabilities) -> kchat_core::tier::DeviceTier {
+    use kchat_core::capability::ThermalState;
+    use kchat_core::tier::DeviceTier;
+
+    // Critical thermal → always Low
+    if matches!(caps.thermal_state, ThermalState::Critical) {
+        return DeviceTier::Low;
+    }
+
+    // Memory-based selection, with thermal downgrade at each tier
+    let budget = caps.safe_ai_budget();
+    let high_allowed = caps.thermal_state == ThermalState::Nominal;
+    // Serious/Fair thermal → cap at Medium
+    let medium_allowed = matches!(
+        caps.thermal_state,
+        ThermalState::Nominal | ThermalState::Fair | ThermalState::Serious
+    );
+
+    match caps.platform.as_str() {
+        "ios" | "android" => {
+            if high_allowed && budget >= 4 * 1024 * 1024 * 1024 {
+                DeviceTier::High
+            } else if medium_allowed && budget >= 2 * 1024 * 1024 * 1024 {
+                DeviceTier::Medium
+            } else {
+                DeviceTier::Low
+            }
+        }
+        "macos" | "windows" | "linux" => {
+            if high_allowed && budget >= 8 * 1024 * 1024 * 1024 {
+                DeviceTier::High
+            } else if medium_allowed && budget >= 4 * 1024 * 1024 * 1024 {
+                DeviceTier::Medium
+            } else {
+                DeviceTier::Low
+            }
+        }
+        _ => DeviceTier::Low,
+    }
+}
+
+/// FFI-friendly device capabilities.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FfiDeviceCapabilities {
+    pub platform: String,
+    pub physical_memory: u64,
+    pub safe_allocatable_memory: u64,
+    pub cpu_arch: String,
+    pub cpu_cores: u32,
+    pub performance_cores: Option<u32>,
+    pub isa_features: Vec<String>,
+    pub gpu_backend: String,
+    pub npu_provider: String,
+    pub free_storage: u64,
+    pub battery_level: Option<u8>,
+    pub on_charger: bool,
+    pub thermal_state: String,
+    pub app_state: String,
+    pub unmetered_network: bool,
+}
+
+impl From<&kchat_core::capability::DeviceCapabilities> for FfiDeviceCapabilities {
+    fn from(c: &kchat_core::capability::DeviceCapabilities) -> Self {
+        Self {
+            platform: c.platform.clone(),
+            physical_memory: c.physical_memory,
+            safe_allocatable_memory: c.safe_allocatable_memory,
+            cpu_arch: c.cpu_arch.clone(),
+            cpu_cores: c.cpu_cores,
+            performance_cores: c.performance_cores,
+            isa_features: c.isa_features.clone(),
+            gpu_backend: format!("{:?}", c.gpu_backend).to_lowercase(),
+            npu_provider: format!("{:?}", c.npu_provider).to_lowercase(),
+            free_storage: c.free_storage,
+            battery_level: c.battery_level,
+            on_charger: c.on_charger,
+            thermal_state: format!("{:?}", c.thermal_state).to_lowercase(),
+            app_state: format!("{:?}", c.app_state).to_lowercase(),
+            unmetered_network: c.unmetered_network,
+        }
+    }
+}
+
+impl Default for FfiDeviceCapabilities {
+    fn default() -> Self {
+        Self {
+            platform: "unknown".into(),
+            physical_memory: 0,
+            safe_allocatable_memory: 0,
+            cpu_arch: "unknown".into(),
+            cpu_cores: 1,
+            performance_cores: None,
+            isa_features: vec![],
+            gpu_backend: "none".into(),
+            npu_provider: "none".into(),
+            free_storage: 0,
+            battery_level: None,
+            on_charger: true,
+            thermal_state: "nominal".into(),
+            app_state: "foreground".into(),
+            unmetered_network: false,
+        }
     }
 }
 
@@ -299,7 +465,13 @@ mod tests {
     fn test_runtime_creation() {
         let runtime = KChatAiRuntime::new("ios");
         assert_eq!(runtime.platform(), "ios");
-        assert!(runtime.can_generate()); // default medium tier
+    }
+
+    #[test]
+    fn test_runtime_with_explicit_tier() {
+        let runtime = KChatAiRuntime::with_tier("ios", kchat_core::tier::DeviceTier::Low);
+        assert_eq!(runtime.device_tier(), FfiDeviceTier::Low);
+        assert!(!runtime.can_generate());
     }
 
     #[test]
@@ -321,5 +493,120 @@ mod tests {
         let tier = kchat_core::tier::DeviceTier::High;
         let ffi_tier: FfiDeviceTier = tier.into();
         assert_eq!(ffi_tier, FfiDeviceTier::High);
+    }
+
+    #[test]
+    fn test_probe_capabilities() {
+        let runtime = KChatAiRuntime::new("macos");
+        let caps = runtime.probe_capabilities();
+        // On a real device, platform should be detected
+        assert!(!caps.platform.is_empty());
+        assert!(caps.physical_memory > 0);
+        assert!(caps.cpu_cores > 0);
+    }
+
+    #[test]
+    fn test_probe_capabilities_on_macos() {
+        let runtime = KChatAiRuntime::new("macos");
+        let caps = runtime.probe_capabilities();
+        // macOS should detect Metal GPU
+        assert_eq!(caps.gpu_backend, "metal");
+        // And Apple NE
+        assert_eq!(caps.npu_provider, "applene");
+    }
+
+    #[test]
+    fn test_safe_ai_budget() {
+        let runtime = KChatAiRuntime::new("macos");
+        let budget = runtime.safe_ai_budget();
+        // On a real device, budget should be > 0
+        if runtime.caps.is_some() {
+            assert!(budget > 0);
+        }
+    }
+
+    #[test]
+    fn test_allows_generative() {
+        let runtime = KChatAiRuntime::new("macos");
+        // On a nominal-thermal device in foreground, should allow
+        if let Some(caps) = &runtime.caps {
+            if caps.thermal_state == kchat_core::capability::ThermalState::Nominal {
+                assert!(runtime.allows_generative());
+            }
+        }
+    }
+
+    #[test]
+    fn test_select_tier_high() {
+        let caps = kchat_core::capability::DeviceCapabilities {
+            platform: "macos".into(),
+            physical_memory: 32 * 1024 * 1024 * 1024,
+            safe_allocatable_memory: 20 * 1024 * 1024 * 1024,
+            cpu_arch: "aarch64".into(),
+            cpu_cores: 10,
+            performance_cores: Some(8),
+            isa_features: vec![],
+            gpu_backend: kchat_core::capability::GpuBackend::Metal,
+            npu_provider: kchat_core::capability::NpuProvider::AppleNe,
+            free_storage: 0,
+            battery_level: None,
+            on_charger: true,
+            thermal_state: kchat_core::capability::ThermalState::Nominal,
+            app_state: kchat_core::capability::AppState::Foreground,
+            unmetered_network: true,
+        };
+        let tier = select_tier(&caps);
+        assert_eq!(tier, kchat_core::tier::DeviceTier::High);
+    }
+
+    #[test]
+    fn test_select_tier_thermal_critical_forces_low() {
+        let caps = kchat_core::capability::DeviceCapabilities {
+            platform: "macos".into(),
+            physical_memory: 32 * 1024 * 1024 * 1024,
+            safe_allocatable_memory: 20 * 1024 * 1024 * 1024,
+            cpu_arch: "aarch64".into(),
+            cpu_cores: 10,
+            performance_cores: Some(8),
+            isa_features: vec![],
+            gpu_backend: kchat_core::capability::GpuBackend::Metal,
+            npu_provider: kchat_core::capability::NpuProvider::AppleNe,
+            free_storage: 0,
+            battery_level: None,
+            on_charger: true,
+            thermal_state: kchat_core::capability::ThermalState::Critical,
+            app_state: kchat_core::capability::AppState::Foreground,
+            unmetered_network: true,
+        };
+        let tier = select_tier(&caps);
+        assert_eq!(tier, kchat_core::tier::DeviceTier::Low);
+    }
+
+    #[test]
+    fn test_ffi_device_capabilities_conversion() {
+        let caps = kchat_core::capability::DeviceCapabilities {
+            platform: "ios".into(),
+            physical_memory: 8 * 1024 * 1024 * 1024,
+            safe_allocatable_memory: 3 * 1024 * 1024 * 1024,
+            cpu_arch: "aarch64".into(),
+            cpu_cores: 6,
+            performance_cores: Some(4),
+            isa_features: vec!["neon".into()],
+            gpu_backend: kchat_core::capability::GpuBackend::Metal,
+            npu_provider: kchat_core::capability::NpuProvider::AppleNe,
+            free_storage: 64 * 1024 * 1024 * 1024,
+            battery_level: Some(85),
+            on_charger: false,
+            thermal_state: kchat_core::capability::ThermalState::Nominal,
+            app_state: kchat_core::capability::AppState::Foreground,
+            unmetered_network: true,
+        };
+        let ffi: FfiDeviceCapabilities = (&caps).into();
+        assert_eq!(ffi.platform, "ios");
+        assert_eq!(ffi.physical_memory, 8 * 1024 * 1024 * 1024);
+        assert_eq!(ffi.cpu_cores, 6);
+        assert_eq!(ffi.gpu_backend, "metal");
+        assert_eq!(ffi.thermal_state, "nominal");
+        assert_eq!(ffi.battery_level, Some(85));
     }
 }

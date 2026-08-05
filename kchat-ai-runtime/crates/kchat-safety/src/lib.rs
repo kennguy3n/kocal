@@ -17,11 +17,15 @@
 pub mod classify;
 pub mod crypto;
 pub mod detectors;
+pub mod encoder;
 pub mod normalize;
 pub mod policy;
 pub mod verdict;
 
 pub use classify::{ClassifyRequest, ClassifyResult, SafetyClassifier};
+pub use encoder::{MockEncoder, MockSlmAdjudicator, SlmDecision};
+#[cfg(feature = "onnx-runtime")]
+pub use encoder::OnnxEncoder;
 pub use policy::{PolicyPack, PolicyPackManifest, PolicyRule, RiskCategory};
 pub use verdict::{Action, Verdict, VerdictBuilder};
 

@@ -1,0 +1,7 @@
+# WASM build configuration — limits memory and stack to prevent
+# memory exhaustion attacks in the browser runtime.
+[target.wasm32-unknown-unknown]
+rustflags = [
+    "-C", "link-arg=-zstack-size=1048576",       # 1MB stack
+    "-C", "link-arg=--max-memory=134217728",      # 128MB max memory
+]

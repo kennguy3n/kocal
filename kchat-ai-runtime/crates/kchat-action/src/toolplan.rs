@@ -500,4 +500,64 @@ mod tests {
         let result = validator.generate_commit_token("user1", "search_tool", &args, 9999999999, 1);
         assert!(matches!(result, Err(ToolPlanError::ZeroKeySecret)));
     }
+
+    #[test]
+    fn test_commit_token_wrong_tool_rejected() {
+        let validator = make_validator_with_secret();
+        let args = json!({"query": "test"});
+        let token = validator.generate_commit_token("user1", "search_tool", &args, 9999999999, 1).unwrap();
+        // Same actor, different tool_id → should fail
+        assert!(!validator.verify_commit_token(&token, "user1", "delete_tool", &args, 9999999999, 1));
+    }
+
+    #[test]
+    fn test_commit_token_wrong_arguments_rejected() {
+        let validator = make_validator_with_secret();
+        let args = json!({"query": "test"});
+        let token = validator.generate_commit_token("user1", "search_tool", &args, 9999999999, 1).unwrap();
+        // Different arguments → should fail (prevents argument swapping attacks)
+        let wrong_args = json!({"query": "different"});
+        assert!(!validator.verify_commit_token(&token, "user1", "search_tool", &wrong_args, 9999999999, 1));
+    }
+
+    #[test]
+    fn test_commit_token_wrong_version_rejected() {
+        let validator = make_validator_with_secret();
+        let args = json!({"query": "test"});
+        let token = validator.generate_commit_token("user1", "search_tool", &args, 9999999999, 1).unwrap();
+        // Different artifact version → should fail (prevents replay on updated artifacts)
+        assert!(!validator.verify_commit_token(&token, "user1", "search_tool", &args, 9999999999, 2));
+    }
+
+    #[test]
+    fn test_commit_token_wrong_expiry_rejected() {
+        let validator = make_validator_with_secret();
+        let args = json!({"query": "test"});
+        let token = validator.generate_commit_token("user1", "search_tool", &args, 9999999999, 1).unwrap();
+        // Different expiry → should fail (prevents expiry extension attacks)
+        assert!(!validator.verify_commit_token(&token, "user1", "search_tool", &args, 8888888888, 1));
+    }
+
+    #[test]
+    fn test_commit_token_empty_token_rejected() {
+        let validator = make_validator_with_secret();
+        let args = json!({"query": "test"});
+        assert!(!validator.verify_commit_token("", "user1", "search_tool", &args, 9999999999, 1));
+    }
+
+    #[test]
+    fn test_commit_token_replay_after_expiry() {
+        let validator = make_validator_with_secret();
+        let args = json!({"query": "test"});
+        // Generate token with very near expiry
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        let token = validator.generate_commit_token("user1", "search_tool", &args, now + 10, 1).unwrap();
+        // Valid now
+        assert!(validator.verify_commit_token(&token, "user1", "search_tool", &args, now + 10, 1));
+        // But not with a past expiry
+        assert!(!validator.verify_commit_token(&token, "user1", "search_tool", &args, now - 10, 1));
+    }
 }

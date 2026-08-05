@@ -18,6 +18,31 @@ use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
+/// Recursively sort all object keys in a JSON value lexicographically.
+/// This implements RFC 8785 JSON Canonicalization Scheme (JCS) key sorting
+/// to ensure deterministic signature preimages.
+fn canonicalize_json(value: &mut serde_json::Value) {
+    match value {
+        serde_json::Value::Object(map) => {
+            // Sort entries by key
+            let mut entries: Vec<(String, serde_json::Value)> =
+                map.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
+            entries.sort_by(|a, b| a.0.cmp(&b.0));
+            map.clear();
+            for (k, mut v) in entries {
+                canonicalize_json(&mut v);
+                map.insert(k, v);
+            }
+        }
+        serde_json::Value::Array(arr) => {
+            for v in arr {
+                canonicalize_json(v);
+            }
+        }
+        _ => {}
+    }
+}
+
 /// Type of pack described by a manifest.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -172,17 +197,21 @@ pub struct SignedManifest {
 
 impl SignedManifest {
     /// Canonical message bytes for signature verification.
-    /// This is the JSON serialization of the manifest without the signature field.
+    /// This is the JSON serialization of the manifest without the signature field,
+    /// with all object keys sorted lexicographically (RFC 8785 JCS).
     pub fn canonical_message(&self) -> Result<Vec<u8>> {
         // Serialize everything except the signature
         let mut value = serde_json::to_value(self)?;
         if let serde_json::Value::Object(ref mut map) = value {
             map.remove("signature");
         }
+        // Recursively sort all object keys for canonical form
+        canonicalize_json(&mut value);
         Ok(serde_json::to_vec(&value)?)
     }
 
     /// Verify the Ed25519 signature of this manifest against a pinned public key.
+    /// Also validates pack ID uniqueness and manifest expiry.
     pub fn verify(&self, pinned_public_key_hex: &str) -> Result<()> {
         // 1. Validate hex length BEFORE comparison to avoid timing leaks
         if self.signature.public_key.len() != 64 {
@@ -240,6 +269,31 @@ impl SignedManifest {
         // 6. Verify all pack digests are non-null
         for pack in &self.packs {
             pack.verify_digests_non_null()?;
+        }
+
+        // 7. Verify pack IDs are unique (prevent shadowing attacks)
+        let mut seen_ids = std::collections::HashSet::new();
+        for pack in &self.packs {
+            if !seen_ids.insert(&pack.pack_id) {
+                return Err(CoreError::ManifestVerificationFailed(
+                    format!("duplicate pack_id: {}", pack.pack_id),
+                ));
+            }
+        }
+
+        // 8. Verify packs have not expired (fail-closed on malformed timestamps)
+        for pack in &self.packs {
+            if !pack.expires_at.is_empty() {
+                let expires = chrono::DateTime::parse_from_rfc3339(&pack.expires_at)
+                    .map_err(|e| CoreError::ManifestVerificationFailed(
+                        format!("pack {} has malformed expires_at '{}': {}", pack.pack_id, pack.expires_at, e),
+                    ))?;
+                if expires.with_timezone(&chrono::Utc) < chrono::Utc::now() {
+                    return Err(CoreError::ManifestVerificationFailed(
+                        format!("pack {} expired at {}", pack.pack_id, pack.expires_at),
+                    ));
+                }
+            }
         }
 
         Ok(())

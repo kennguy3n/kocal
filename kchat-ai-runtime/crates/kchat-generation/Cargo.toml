@@ -8,6 +8,9 @@ authors.workspace = true
 [features]
 default = []
 llamacpp = ["dep:llama-cpp-2"]
+llamacpp-metal = ["llamacpp", "llama-cpp-2/metal", "llama-cpp-2/common"]
+llamacpp-vulkan = ["llamacpp", "llama-cpp-2/vulkan", "llama-cpp-2/common"]
+llamacpp-cuda = ["llamacpp", "llama-cpp-2/cuda", "llama-cpp-2/common"]
 mlx = []
 litert = []
 
@@ -26,7 +29,9 @@ uuid = { workspace = true }
 hex = "0.4"
 regex = "1"
 
-# Optional llama.cpp backend
+# Optional llama.cpp backend — feature flags select the GPU backend
+# (metal on macOS/iOS, vulkan on Android/Windows, cuda on Linux, or plain CPU)
+# The `common` feature enables grammar-constrained sampling (GBNF).
 llama-cpp-2 = { version = "0.1", default-features = false, optional = true }
 
 [dev-dependencies]

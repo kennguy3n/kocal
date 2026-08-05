@@ -1,0 +1,98 @@
+namespace kchat {
+  // Factory function to create the runtime
+  KChatAiRuntime create_runtime(string platform);
+};
+
+enum FfiDeviceTier {
+  "low",
+  "medium",
+  "high"
+};
+
+enum FfiSafetyAction {
+  "allow",
+  "warn",
+  "block",
+  "redact",
+  "require_consent"
+};
+
+dictionary FfiSafetyResult {
+  FfiSafetyAction action;
+  u8 severity;
+  u32 category;
+  f64 confidence;
+  sequence<string> reason_codes;
+  boolean used_encoder;
+  boolean used_slm;
+  u64 duration_us;
+};
+
+dictionary FfiRetrievalResult {
+  string evidence_id;
+  f64 score;
+  f64 fts_score;
+  f64 recency_score;
+};
+
+dictionary FfiGenerationResult {
+  string text;
+  u32 prompt_tokens;
+  u32 completion_tokens;
+  u64 ttft_ms;
+  u64 total_ms;
+  f64 tokens_per_second;
+  boolean grammar_valid;
+};
+
+dictionary FfiValidationResult {
+  boolean valid;
+  u64 step_count;
+  string? error;
+};
+
+dictionary FfiDeviceCapabilities {
+  string platform;
+  u64 physical_memory;
+  u64 safe_allocatable_memory;
+  string cpu_arch;
+  u32 cpu_cores;
+  u32? performance_cores;
+  sequence<string> isa_features;
+  string gpu_backend;
+  string npu_provider;
+  u64 free_storage;
+  u8? battery_level;
+  boolean on_charger;
+  string thermal_state;
+  string app_state;
+  boolean unmetered_network;
+};
+
+interface KChatAiRuntime {
+  constructor(string platform);
+
+  // Safety
+  FfiSafetyResult classify_safety(string text, boolean is_group);
+
+  // Device
+  FfiDeviceTier device_tier();
+  string platform();
+  boolean can_generate();
+  FfiDeviceCapabilities probe_capabilities();
+};
+
+// Callback interface for platform-specific probing
+callback interface DeviceCapabilityProbe {
+  string get_platform();
+  u64 get_physical_memory();
+  u64 get_safe_allocatable_memory();
+  string get_cpu_arch();
+  u32 get_cpu_cores();
+  string get_gpu_backend();
+  string get_npu_provider();
+  u8 get_thermal_state();
+  u8? get_battery_level();
+  boolean is_on_charger();
+  u8 get_app_state();
+};

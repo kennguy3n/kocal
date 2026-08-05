@@ -24,6 +24,16 @@ cargo build -p kchat-bindings --features mobile
 
 # Build with desktop bindings (N-API)
 cargo build -p kchat-bindings --features desktop
+
+# Build WASM bindings for web (deterministic safety plane)
+cargo build -p kchat-wasm --target wasm32-unknown-unknown --release
+# Output: target/wasm32-unknown-unknown/release/kchat_wasm.wasm (~2.1MB)
+
+# Run the red-team eval suite (36 attack cases)
+cargo run -p kchat-task-suite -- --redteam
+
+# Build the Go server-side offload service
+cd sidecars/kchat-server-offload && go build && ./kchat-server-offload
 ```
 
 ### Real-World Eval Setup
@@ -45,25 +55,40 @@ To run generation tests, either:
 
 ## Architecture
 
-The workspace is organized into 7 crates following the 4-plane architecture:
+The workspace is organized into 8 crates + 1 Go sidecar following the 4-plane architecture:
 
-- **kchat-core**: Capability probe, device tier selection, scheduler, signed
-  manifest manager, telemetry. Foundation for all other crates.
+- **kchat-core**: Capability probe (real OS APIs via sysctl/procfs/Win32),
+  device tier selection, scheduler, signed manifest manager, telemetry,
+  model manager (CDN download, LRU cache, mmap), resource governor,
+  model registry (registry.toml). Foundation for all other crates.
 - **kchat-safety**: Deterministic safety plane — NFKC normalization, PII/scam/
-  URL detectors, signed policy packs (Ed25519), encoder/SLM escalation.
-  Works on ALL devices including low-tier (no generative model).
+  URL detectors, signed policy packs (Ed25519), encoder/SLM escalation,
+  ONNX Runtime safety encoder (INT8). Works on ALL devices including
+  low-tier (no generative model) and WASM (deterministic only).
 - **kchat-context**: Private context plane — SQLCipher encrypted store, FTS5
-  BM25 retrieval, per-scope XChaCha20-Poly1305 encryption, provenance bundles.
+  BM25 retrieval, per-scope XChaCha20-Poly1305 encryption, provenance bundles,
+  dense embeddings (e5-small ONNX + fallback), cross-encoder reranker.
 - **kchat-generation**: Grammar-constrained generative plane — prompt templates,
-  JSON Schema/regex/Lark grammar validation, backend adapters (llama.cpp),
-  model lifecycle with idle unload, token streaming with safety cancellation.
+  JSON Schema/regex/Lark grammar validation (real Lark parser), backend
+  adapters (llama.cpp via llama-cpp-2 with Metal/Vulkan/Cuda), model lifecycle
+  with idle unload, token streaming with safety cancellation, LoRA hot-swap
+  (30 adapters: 5 tasks × 6 languages), swarm inference (multi-peer consensus).
 - **kchat-action**: Action plane — artifact AST (typed operations, no arbitrary
   code), ToolPlan validation against signed manifests, RBAC authorization
   broker, commit tokens, audit log.
 - **kchat-bindings**: FFI surface — UniFFI for Swift/Kotlin (mobile), N-API
-  for Node.js (desktop). High-level KChatAiRuntime facade.
+  for Node.js (desktop). High-level KChatAiRuntime facade with real
+  capability probing and tier-based config selection.
+- **kchat-wasm**: WebAssembly bindings for web browsers — exposes the
+  deterministic safety plane (classification, PII detection, normalization)
+  as a ~2.1MB WASM module. No server-side model required.
 - **kchat-task-suite**: Eval harness — safety, context, generation, action,
-  and integration test suites with required pass rates.
+  integration test suites, and red-team eval suite (36 attack cases across
+  7 categories: prompt injection, jailbreak, PII extraction, encoding attacks,
+  obfuscation, social engineering, multi-turn).
+- **kchat-server-offload** (Go): Server-side offload service — handles AI
+  inference when on-device runtime can't (low tier, thermal, battery).
+  Gin-based HTTP API with auth, rate limiting, and safety classification.
 
 ## Key Design Principles
 
@@ -77,15 +102,21 @@ The workspace is organized into 7 crates following the 4-plane architecture:
 
 ## Test Counts
 
-- kchat-core: 23 tests
-- kchat-safety: 31 tests
-- kchat-action: 30 tests
-- kchat-context: 19 tests
-- kchat-generation: 29 tests
-- kchat-bindings: 4 tests
-- kchat-task-suite: 43 standard eval cases
-- **Unit total: 136 tests, all passing**
-- **Standard eval: 43 cases, all passing**
-- **Real-world eval: 50 safety + 12 context + 10 generation + 16 action = 88 cases**
-  - Safety: 47/50 (94%), Context: 13/13 (100%), Generation: 9/11 (82%), Action: 17/17 (100%)
+- kchat-core: 81 tests (capability probe, model manager, governor, registry)
+- kchat-safety: 78 tests (deterministic pipeline, encoder, policy packs)
+- kchat-action: 31 tests
+- kchat-context: 41 tests (FTS, embeddings, reranker, provenance)
+- kchat-generation: 75 tests (llama.cpp backend, LoRA, swarm, Lark grammar)
+- kchat-bindings: 12 tests (FFI facade, capability probing, tier selection)
+- kchat-wasm: 10 tests (WASM safety classification)
+- kchat-task-suite: 8 unit tests + 204 standard eval + 36 red-team cases
+  - Standard eval: 43 synthetic + 161 device profile = 204 cases
+  - Device profile suite: 12 profiles × 11 test categories + 9 standalone tests = 161 cases
+- **Unit total: 358 tests, all passing**
+- **Standard eval: 204 cases, all passing**
+- **Red-team eval: 36/36 cases (100%) across 7 attack categories**
+- **Real-world eval: 2005 safety + 13 context + 11 generation + 17 action = 2046 cases**
+  - Safety: 2005/2005 (100%), Context: 13/13 (100%), Generation: 9/11 (82%), Action: 17/17 (100%)
+  - Safety dataset v2: 14 languages (en, vi, zh, ja, ko, es, fr, de, ar, hi, th, id, pt, tl) + 13 mixed-lingual code-switch combos
   - Real model: Qwen3.5-0.8B Q4_K_M via llama-server (Metal), ~130 tok/s, 30ms TTFT
+- **Go server offload: 7 tests, all passing**

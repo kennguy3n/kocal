@@ -155,7 +155,15 @@ impl ContextStore {
                 acl_version     INTEGER NOT NULL DEFAULT 1
             );
 
-            -- Prevent UPDATE and DELETE (append-only)
+            -- Tombstones for forgotten scopes (must exist before trigger)
+            CREATE TABLE IF NOT EXISTS forgotten_scopes (
+                scope_id        BLOB PRIMARY KEY,
+                forgotten_at    INTEGER NOT NULL
+            );
+
+            -- Prevent UPDATE and DELETE (append-only).
+            -- DELETE is allowed only when the scope has been marked as forgotten
+            -- (cryptographic forgetting) — the trigger checks forgotten_scopes.
             CREATE TRIGGER IF NOT EXISTS no_update_evidence
                 BEFORE UPDATE ON evidence
                 BEGIN
@@ -164,6 +172,10 @@ impl ContextStore {
 
             CREATE TRIGGER IF NOT EXISTS no_delete_evidence
                 BEFORE DELETE ON evidence
+                FOR EACH ROW
+                WHEN NOT EXISTS (
+                    SELECT 1 FROM forgotten_scopes WHERE scope_id = OLD.scope_id
+                )
                 BEGIN
                     SELECT RAISE(ABORT, 'evidence is append-only');
                 END;
@@ -188,12 +200,6 @@ impl ContextStore {
                 retention_class TEXT    NOT NULL,
                 authorized_users TEXT,  -- JSON array
                 authorized_roles TEXT   -- JSON array
-            );
-
-            -- Tombstones for forgotten scopes
-            CREATE TABLE IF NOT EXISTS forgotten_scopes (
-                scope_id        BLOB PRIMARY KEY,
-                forgotten_at    INTEGER NOT NULL
             );
             "#,
         )?;
@@ -404,12 +410,33 @@ impl ContextStore {
     }
 
     /// Mark a scope as forgotten (cryptographic forgetting).
+    /// Inserts the tombstone FIRST (so the append-only trigger allows deletion),
+    /// then deletes all evidence and FTS entries for the scope in a single transaction.
+    /// This ensures the data is actually unrecoverable, not just hidden.
     pub fn forget_scope(&self, scope_id: ScopeId) -> Result<(), StoreError> {
-        let conn = self.conn.lock();
-        conn.execute(
+        let mut conn = self.conn.lock();
+        let tx = conn.transaction()?;
+
+        // Insert tombstone FIRST — the no_delete_evidence trigger checks this table
+        tx.execute(
             "INSERT OR REPLACE INTO forgotten_scopes (scope_id, forgotten_at) VALUES (?1, ?2)",
             params![scope_id.0.as_bytes(), chrono::Utc::now().timestamp()],
         )?;
+
+        // Delete FTS index entries for this scope
+        tx.execute(
+            "DELETE FROM evidence_fts WHERE scope_id = ?1",
+            params![scope_id.0.as_bytes()],
+        )?;
+
+        // Delete encrypted evidence data (allowed because tombstone now exists)
+        tx.execute(
+            "DELETE FROM evidence WHERE scope_id = ?1",
+            params![scope_id.0.as_bytes()],
+        )?;
+
+        tx.commit()?;
+        tracing::info!("Scope {} forgotten — evidence and FTS entries deleted", scope_id.0);
         Ok(())
     }
 
@@ -589,5 +616,39 @@ mod tests {
             params![evidence.id.0.as_bytes()],
         );
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_forget_scope_deletes_evidence() {
+        let store = make_store();
+        let scope = ScopeId::new();
+        let evidence = make_evidence(scope, "sensitive content");
+        store.insert(&evidence).unwrap();
+
+        // Verify evidence exists
+        assert!(store.get_evidence(evidence.id).unwrap().is_some());
+
+        // Forget the scope — should delete the evidence
+        store.forget_scope(scope).unwrap();
+
+        // Evidence should be gone
+        assert!(store.get_evidence(evidence.id).unwrap().is_none());
+        assert!(store.is_scope_forgotten(scope).unwrap());
+    }
+
+    #[test]
+    fn test_append_only_still_blocks_delete_without_tombstone() {
+        let store = make_store();
+        let scope = ScopeId::new();
+        let evidence = make_evidence(scope, "content");
+        store.insert(&evidence).unwrap();
+
+        // Direct DELETE should fail (no tombstone)
+        let conn = store.conn.lock();
+        let result = conn.execute(
+            "DELETE FROM evidence WHERE id = ?1",
+            params![evidence.id.0.as_bytes()],
+        );
+        assert!(result.is_err(), "DELETE should be blocked by trigger");
     }
 }

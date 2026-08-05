@@ -26,11 +26,16 @@ pub enum ModelState {
     Failed,
 }
 
+/// Internal lifecycle state protected by a single mutex.
+struct LifecycleInner {
+    state: ModelState,
+    last_used: Option<Instant>,
+    config: Option<BackendConfig>,
+}
+
 /// Model lifecycle manager — coordinates load/unload with the scheduler.
 pub struct ModelLifecycle {
-    state: Mutex<ModelState>,
-    last_used: Mutex<Option<Instant>>,
-    config: Mutex<Option<BackendConfig>>,
+    inner: Mutex<LifecycleInner>,
     idle_timeout: Duration,
     tier: DeviceTier,
     platform: String,
@@ -45,9 +50,11 @@ impl ModelLifecycle {
         };
 
         Self {
-            state: Mutex::new(ModelState::Unloaded),
-            last_used: Mutex::new(None),
-            config: Mutex::new(None),
+            inner: Mutex::new(LifecycleInner {
+                state: ModelState::Unloaded,
+                last_used: None,
+                config: None,
+            }),
             idle_timeout,
             tier,
             platform: platform_str,
@@ -55,29 +62,37 @@ impl ModelLifecycle {
     }
 
     /// Load the model with the given backend.
+    /// Uses atomic state transition to prevent concurrent double-load.
     pub fn load(
         &self,
         backend: &dyn BackendAdapter,
         config: BackendConfig,
     ) -> Result<(), BackendError> {
         {
-            let mut state = self.state.lock();
-            if *state == ModelState::Ready {
-                return Ok(()); // Already loaded
+            let mut inner = self.inner.lock();
+            match inner.state {
+                ModelState::Ready => return Ok(()), // Already loaded
+                ModelState::Loading => {
+                    return Err(BackendError::LoadFailed(
+                        "model load already in progress".into(),
+                    ));
+                }
+                _ => inner.state = ModelState::Loading,
             }
-            *state = ModelState::Loading;
         }
 
         match backend.load(&config) {
             Ok(()) => {
-                *self.state.lock() = ModelState::Ready;
-                *self.config.lock() = Some(config);
-                *self.last_used.lock() = Some(Instant::now());
+                let mut inner = self.inner.lock();
+                inner.state = ModelState::Ready;
+                inner.config = Some(config);
+                inner.last_used = Some(Instant::now());
                 tracing::info!("Model loaded successfully");
                 Ok(())
             }
             Err(e) => {
-                *self.state.lock() = ModelState::Failed;
+                let mut inner = self.inner.lock();
+                inner.state = ModelState::Failed;
                 tracing::error!("Model load failed: {}", e);
                 Err(e)
             }
@@ -87,23 +102,25 @@ impl ModelLifecycle {
     /// Unload the model.
     pub fn unload(&self, backend: &dyn BackendAdapter) -> Result<(), BackendError> {
         {
-            let mut state = self.state.lock();
-            if *state == ModelState::Unloaded {
+            let mut inner = self.inner.lock();
+            if inner.state == ModelState::Unloaded {
                 return Ok(());
             }
-            *state = ModelState::Unloading;
+            inner.state = ModelState::Unloading;
         }
 
         match backend.unload() {
             Ok(()) => {
-                *self.state.lock() = ModelState::Unloaded;
-                *self.config.lock() = None;
-                *self.last_used.lock() = None;
+                let mut inner = self.inner.lock();
+                inner.state = ModelState::Unloaded;
+                inner.config = None;
+                inner.last_used = None;
                 tracing::info!("Model unloaded");
                 Ok(())
             }
             Err(e) => {
-                *self.state.lock() = ModelState::Failed;
+                let mut inner = self.inner.lock();
+                inner.state = ModelState::Failed;
                 Err(e)
             }
         }
@@ -111,27 +128,31 @@ impl ModelLifecycle {
 
     /// Mark the model as used (resets idle timer).
     pub fn touch(&self) {
-        *self.last_used.lock() = Some(Instant::now());
+        let mut inner = self.inner.lock();
+        inner.last_used = Some(Instant::now());
     }
 
     /// Check if the model should be unloaded due to idle.
     pub fn should_unload(&self) -> bool {
-        let state = self.state.lock();
-        if *state != ModelState::Ready {
+        let inner = self.inner.lock();
+        if inner.state != ModelState::Ready {
             return false;
         }
-
-        let last_used = self.last_used.lock();
-        if let Some(last) = *last_used {
+        if let Some(last) = inner.last_used {
             return last.elapsed() >= self.idle_timeout;
         }
-
         false
     }
 
     /// Get the current model state.
     pub fn state(&self) -> ModelState {
-        *self.state.lock()
+        self.inner.lock().state
+    }
+
+    /// Set the last-used time (for testing idle timeout behavior).
+    #[cfg(test)]
+    pub(crate) fn set_last_used_for_test(&self, instant: Instant) {
+        self.inner.lock().last_used = Some(instant);
     }
 
     /// Get the idle timeout duration.
@@ -204,6 +225,26 @@ mod tests {
             })
         }
 
+        fn generate_stream(
+            &self,
+            _prompt: &str,
+            _config: &GenerationConfig,
+            stream: &crate::stream::StreamHandle,
+        ) -> Result<GenerationResult, BackendError> {
+            stream.push_token("mock");
+            stream.complete(5, 100);
+            Ok(GenerationResult {
+                text: "mock output".into(),
+                prompt_tokens: 10,
+                completion_tokens: 5,
+                ttft_ms: 50,
+                total_ms: 100,
+                tokens_per_second: 50.0,
+                backend: "mock".into(),
+                grammar_valid: true,
+            })
+        }
+
         fn backend_type(&self) -> BackendType {
             BackendType::LlamaCppMetal
         }
@@ -258,7 +299,7 @@ mod tests {
         assert!(!lifecycle.should_unload());
 
         // Simulate idle by setting last_used to the past
-        *lifecycle.last_used.lock() = Some(Instant::now() - Duration::from_secs(60));
+        lifecycle.set_last_used_for_test(Instant::now() - Duration::from_secs(60));
         assert!(lifecycle.should_unload());
     }
 
@@ -275,7 +316,7 @@ mod tests {
         );
 
         lifecycle.load(&backend, config).unwrap();
-        *lifecycle.last_used.lock() = Some(Instant::now() - Duration::from_secs(60));
+        lifecycle.set_last_used_for_test(Instant::now() - Duration::from_secs(60));
         assert!(lifecycle.should_unload());
 
         lifecycle.touch();

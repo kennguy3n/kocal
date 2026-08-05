@@ -8,6 +8,7 @@
 //! Backend selection is based on device capabilities and tier.
 
 use crate::grammar::Grammar;
+use crate::stream::StreamHandle;
 use kchat_core::tier::DeviceTier;
 use serde::{Deserialize, Serialize};
 
@@ -199,6 +200,17 @@ pub trait BackendAdapter: Send + Sync {
         &self,
         prompt: &str,
         config: &GenerationConfig,
+    ) -> Result<GenerationResult, BackendError>;
+
+    /// Generate text from a prompt, streaming tokens to the provided handle.
+    ///
+    /// The stream allows the caller to receive tokens as they are generated
+    /// and to cancel generation mid-stream (e.g. on safety violation).
+    fn generate_stream(
+        &self,
+        prompt: &str,
+        config: &GenerationConfig,
+        stream: &StreamHandle,
     ) -> Result<GenerationResult, BackendError>;
 
     /// Get the backend type.

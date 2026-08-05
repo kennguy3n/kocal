@@ -82,10 +82,14 @@ impl PromptTemplate {
             }
         }
 
-        // Replace {{slot}} placeholders
+        // Replace {{slot}} placeholders.
+        // Slot values are sanitized to prevent template injection: any `{{` or `}}`
+        // in values is escaped so they cannot be interpreted as template variables.
         for (key, value) in slots {
             let placeholder = format!("{{{{{}}}}}", key);
-            result = result.replace(&placeholder, value);
+            // Escape template syntax in slot values to prevent injection
+            let sanitized = value.replace("{{", "<<").replace("}}", ">>");
+            result = result.replace(&placeholder, &sanitized);
         }
 
         Ok(result)

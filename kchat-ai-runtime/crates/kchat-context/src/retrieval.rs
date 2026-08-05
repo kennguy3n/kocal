@@ -9,6 +9,7 @@
 //! and citation location. Remote documents and chat messages are untrusted
 //! content.
 
+use crate::embeddings::{cosine_similarity, EmbeddingManager};
 use crate::scope::ScopeFilter;
 use crate::store::{ContextStore, EvidenceId};
 use serde::{Deserialize, Serialize};
@@ -59,6 +60,8 @@ pub struct Retriever<'a> {
     weights: HybridWeights,
     recency_half_life_secs: f64,
     tier: RetrievalTier,
+    /// Optional embedding manager for Medium/High tier vector search
+    embeddings: Option<&'a EmbeddingManager>,
 }
 
 impl<'a> Retriever<'a> {
@@ -68,16 +71,31 @@ impl<'a> Retriever<'a> {
             weights: HybridWeights::default(),
             recency_half_life_secs: 30.0 * 24.0 * 60.0 * 60.0, // 30 days
             tier,
+            embeddings: None,
         }
     }
 
     pub fn with_weights(mut self, weights: HybridWeights) -> Self {
-        self.weights = weights;
+        // Validate weights are non-negative and normalize to sum=1.0
+        let total = weights.fts + weights.recency + weights.vector;
+        if total > 0.0 && weights.fts >= 0.0 && weights.recency >= 0.0 && weights.vector >= 0.0 {
+            self.weights = HybridWeights {
+                fts: weights.fts / total,
+                recency: weights.recency / total,
+                vector: weights.vector / total,
+            };
+        }
         self
     }
 
     pub fn with_recency_half_life(mut self, half_life_secs: f64) -> Self {
         self.recency_half_life_secs = half_life_secs;
+        self
+    }
+
+    /// Attach an embedding manager for Medium/High tier vector search.
+    pub fn with_embeddings(mut self, embeddings: &'a EmbeddingManager) -> Self {
+        self.embeddings = Some(embeddings);
         self
     }
 
@@ -96,7 +114,17 @@ impl<'a> Retriever<'a> {
         // Step 1: FTS search (always available)
         let fts_results = self.store.search_fts(query, filter, limit * 2)?;
 
-        // Step 2: Fuse scores
+        // Step 2: Compute query embedding for Medium/High tier
+        let query_embedding = match (self.tier, &self.embeddings) {
+            (RetrievalTier::Medium | RetrievalTier::High, Some(embs))
+                if embs.is_available() =>
+            {
+                embs.embed_query(query).ok()
+            }
+            _ => None,
+        };
+
+        // Step 3: Fuse scores
         let now = chrono::Utc::now().timestamp() as f64;
         let mut results = Vec::with_capacity(fts_results.len());
 
@@ -113,14 +141,21 @@ impl<'a> Retriever<'a> {
             let age_secs = (now - fts.created_at as f64).max(0.0);
             let recency_score = (-age_secs * (2.0_f64.ln()) / self.recency_half_life_secs).exp();
 
-            // Vector score: 0.0 on low tier (no embeddings)
-            let vector_score = match self.tier {
-                RetrievalTier::Low => 0.0,
-                RetrievalTier::Medium | RetrievalTier::High => {
-                    // In production: compute query embedding and cosine similarity
-                    // For now, 0.0 (embeddings not yet integrated)
-                    0.0
+            // Vector score: cosine similarity between query and document embeddings
+            let vector_score: f64 = match (&query_embedding, &self.embeddings) {
+                (Some(qe), Some(embs)) if embs.is_available() => {
+                    // Fetch the evidence content to embed it
+                    match self.store.get_evidence(fts.evidence_id) {
+                        Ok(Some(evidence)) => {
+                            match embs.embed_passage(&evidence.fts_content) {
+                                Ok(doc_emb) => cosine_similarity(qe, &doc_emb) as f64,
+                                Err(_) => 0.0,
+                            }
+                        }
+                        _ => 0.0,
+                    }
                 }
+                _ => 0.0,
             };
 
             // Weighted fusion

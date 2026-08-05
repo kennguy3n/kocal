@@ -16,6 +16,7 @@ use crate::normalize;
 use crate::policy::{PolicyPack, PolicyThresholds};
 use crate::verdict::{Action, Severity, Verdict, VerdictBuilder, VerdictSource};
 use parking_lot::RwLock;
+use unicode_normalization::UnicodeNormalization;
 use std::sync::Arc;
 use std::time::Instant;
 
@@ -34,6 +35,12 @@ pub struct ClassifyRequest {
     pub encoder_available: bool,
     /// Whether the SLM is available (medium+ tier)
     pub slm_available: bool,
+    /// Whether the user explicitly quoted another message (protected-speech
+    /// context). Set by the chat client, not user content — spoof-resistant.
+    pub quoted_from_user: bool,
+    /// Community overlay id, if any. Used to derive NEWS/EDUCATION/
+    /// COUNTERSPEECH context hints via substring match.
+    pub community_overlay_id: Option<String>,
 }
 
 impl ClassifyRequest {
@@ -46,6 +53,8 @@ impl ClassifyRequest {
             relationship: None,
             encoder_available: false,
             slm_available: false,
+            quoted_from_user: false,
+            community_overlay_id: None,
         }
     }
 
@@ -55,6 +64,106 @@ impl ClassifyRequest {
         self.slm_available = true;
         self
     }
+
+    /// Mark this message as quoting another user (protected-speech context).
+    pub fn with_quoted(mut self) -> Self {
+        self.quoted_from_user = true;
+        self
+    }
+
+    /// Set the community overlay id for context-hint derivation.
+    pub fn with_overlay(mut self, overlay: impl Into<String>) -> Self {
+        self.community_overlay_id = Some(overlay.into());
+        self
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Protected-speech context hints. Ported from slm-guardrail's
+// `pipeline/context.rs` — 4 hint types with per-hint confidence.
+// ---------------------------------------------------------------------------
+
+/// Minimum context confidence required to fully demote a non-SAFE,
+/// non-CHILD_SAFETY verdict to Allow.
+pub const CONTEXT_DEMOTION_CONFIDENCE_THRESHOLD: f64 = 0.5;
+
+/// A protected-speech context hint with confidence.
+#[derive(Debug, Clone)]
+pub struct ContextHint {
+    pub reason_code: String,
+    pub context_confidence: f64,
+}
+
+/// Overlay-id substring tokens that imply a news-coverage context.
+const NEWS_CONTEXT_OVERLAY_TOKENS: &[&str] = &["journalism", "news"];
+
+/// Overlay-id substring tokens that imply an educational context.
+const EDUCATION_CONTEXT_OVERLAY_TOKENS: &[&str] = &[
+    "education_higher", "education", "school", "research", "science",
+];
+
+/// Overlay-id substring tokens that imply a counterspeech / civic-rights
+/// context. NOTE: bare "tolerance" is intentionally excluded — would
+/// false-fire on "zero_tolerance" overlays (the opposite of counterspeech).
+const COUNTERSPEECH_CONTEXT_OVERLAY_TOKENS: &[&str] = &[
+    "lgbtq_support", "minority_support", "civic", "humanrights",
+    "human_rights", "counterspeech", "counter_speech", "anti_racism",
+    "antiracism", "anti_hate", "antihate", "anti_bullying", "antibullying",
+];
+
+/// Derive protected-speech context hints from request fields.
+///
+/// Returns one hint per matching signal, each with its default confidence:
+/// - `QUOTED_SPEECH_CONTEXT` (0.7) — from `quoted_from_user` structural flag
+/// - `NEWS_CONTEXT` (0.5) — from overlay-id substring match
+/// - `EDUCATION_CONTEXT` (0.5) — from overlay-id substring match
+/// - `COUNTERSPEECH_CONTEXT` (0.5) — from overlay-id substring match
+pub fn derive_context_hints(
+    quoted_from_user: bool,
+    community_overlay_id: Option<&str>,
+) -> Vec<ContextHint> {
+    let mut hints = Vec::new();
+    if quoted_from_user {
+        hints.push(ContextHint {
+            reason_code: "QUOTED_SPEECH_CONTEXT".into(),
+            context_confidence: 0.7,
+        });
+    }
+    if let Some(overlay) = community_overlay_id {
+        let lower = overlay.to_ascii_lowercase();
+        if NEWS_CONTEXT_OVERLAY_TOKENS.iter().any(|t| lower.contains(t)) {
+            hints.push(ContextHint {
+                reason_code: "NEWS_CONTEXT".into(),
+                context_confidence: 0.5,
+            });
+        }
+        if EDUCATION_CONTEXT_OVERLAY_TOKENS.iter().any(|t| lower.contains(t)) {
+            hints.push(ContextHint {
+                reason_code: "EDUCATION_CONTEXT".into(),
+                context_confidence: 0.5,
+            });
+        }
+        if COUNTERSPEECH_CONTEXT_OVERLAY_TOKENS.iter().any(|t| lower.contains(t)) {
+            hints.push(ContextHint {
+                reason_code: "COUNTERSPEECH_CONTEXT".into(),
+                context_confidence: 0.5,
+            });
+        }
+    }
+    hints
+}
+
+/// Check if a verdict should be demoted to Allow under protected-speech
+/// context hints. CHILD_SAFETY (category 1) is never demoted.
+fn should_demote_for_protected_speech(
+    category: u32,
+    hints: &[ContextHint],
+) -> Option<&ContextHint> {
+    // CHILD_SAFETY is never demoted — defense in depth.
+    if category == detectors::categories::CHILD_SAFETY {
+        return None;
+    }
+    hints.iter().find(|h| h.context_confidence >= CONTEXT_DEMOTION_CONFIDENCE_THRESHOLD)
 }
 
 /// Result of safety classification.
@@ -161,16 +270,47 @@ impl SafetyClassifier {
     pub fn classify(&self, request: &ClassifyRequest) -> ClassifyResult {
         let start = Instant::now();
 
-        // Step 1: Normalize — two levels for different detector types
+        // Step 1: Normalize — multiple views for different detector types
         let pattern_text = normalize::normalize_for_patterns(&request.text);
-        let lexicon_text = normalize::normalize(&request.text);
+        let lexicon_base = normalize::normalize_for_lexicon(&request.text);
 
-        // Step 2: Run deterministic detectors
+        // Build search views: the non-leetspeak base + defanged variants.
+        // Scam patterns use `!` and `.` which leetspeak corrupts, so the
+        // non-leetspeak base is always included. Defang variants add
+        // leetspeak readings (digit `1` → `l` or `i`) for lexicon matching.
+        let defang_variants = normalize::defang_variants_for_matching(&lexicon_base);
+        let mut lexicon_views: Vec<String> = Vec::with_capacity(defang_variants.len() + 1);
+        lexicon_views.push(lexicon_base.clone());
+        for v in &defang_variants {
+            if !lexicon_views.contains(v) {
+                lexicon_views.push(v.clone());
+            }
+        }
+
+        // Step 2: Run deterministic detectors across all views
         let lexicon = self.build_lexicon();
-        let signals = detectors::run_all_detectors(&pattern_text, &lexicon_text, &lexicon);
+        let signals = detectors::run_all_detectors(&pattern_text, &lexicon_views, &lexicon);
+
+        // Derive protected-speech context hints from request fields.
+        let context_hints = derive_context_hints(
+            request.quoted_from_user,
+            request.community_overlay_id.as_deref(),
+        );
 
         // Resolve deterministic verdict
         let verdict = if let Some(signal) = detectors::resolve_priority_chain(&signals) {
+            // Check protected-speech demotion BEFORE building the verdict.
+            // CHILD_SAFETY is never demoted — defense in depth.
+            if let Some(hint) = should_demote_for_protected_speech(signal.category, &context_hints) {
+                VerdictBuilder::default()
+                    .action(Action::Allow)
+                    .severity(Severity::SAFE)
+                    .category(detectors::categories::SAFE)
+                    .confidence(0.90)
+                    .reason_code(&format!("protected_speech_{}", hint.reason_code.to_lowercase()))
+                    .source(VerdictSource::Deterministic)
+                    .build()
+            } else {
             // Deterministic match found
             let mut builder = VerdictBuilder::default()
                 .action(signal.action)
@@ -224,6 +364,7 @@ impl SafetyClassifier {
             }
 
             builder.build()
+            }
         } else {
             // No deterministic match — check if we need encoder for safety
             let mut degraded = false;
@@ -233,7 +374,7 @@ impl SafetyClassifier {
             let needs_encoder = request.encoder_available
                 && (request.is_group
                     || request.age_mode.as_deref() == Some("minor")
-                    || self.has_high_risk_indicators(&lexicon_text));
+                    || self.has_high_risk_indicators(&lexicon_views[0]));
 
             if needs_encoder {
                 if let Some(encoder) = self.encoder.read().as_ref() {
@@ -306,10 +447,13 @@ impl SafetyClassifier {
                 let cat = rule.category.as_u32();
                 let sev = crate::policy::severity_from_u8(rule.severity);
                 for term in &rule.lexicon {
-                    // Normalize to lowercase for consistent matching
-                    let lower_term = term.to_lowercase();
-                    if seen.insert(lower_term.clone()) {
-                        lexicon.push((lower_term, cat, sev));
+                    // Normalize: NFKC + casefold to match normalize_for_lexicon output.
+                    // This is critical for scripts like Thai where NFKC decomposes
+                    // composed characters (e.g. SARA AM U+0E33 → NIKHAHIT + SARA AA).
+                    let nfkc: String = term.nfkc().collect();
+                    let folded = caseless::default_case_fold_str(&nfkc);
+                    if seen.insert(folded.clone()) {
+                        lexicon.push((folded, cat, sev));
                     }
                 }
             }
@@ -427,6 +571,8 @@ mod tests {
             relationship: None,
             encoder_available: true,
             slm_available: false,
+            quoted_from_user: false,
+            community_overlay_id: None,
         };
 
         let result = classifier.classify(&req);
@@ -449,6 +595,8 @@ mod tests {
             relationship: None,
             encoder_available: true,
             slm_available: false,
+            quoted_from_user: false,
+            community_overlay_id: None,
         };
 
         let result = classifier.classify(&req);
@@ -480,5 +628,189 @@ mod tests {
             "deterministic path took {}us, expected <50000us",
             result.duration_us
         );
+    }
+
+    #[test]
+    fn test_quoted_speech_demotes_scam() {
+        let classifier = SafetyClassifier::new();
+        // Scam detector fires on "Congratulations! You've won" — with
+        // quoted_from_user=true, it should be demoted to Allow
+        let req = ClassifyRequest::from_text("Congratulations! You've won $1,000,000")
+            .with_quoted();
+        let result = classifier.classify(&req);
+        assert_eq!(result.verdict.action, Action::Allow);
+        assert!(result.verdict.reason_codes.iter().any(|r| r.contains("protected_speech")));
+    }
+
+    #[test]
+    fn test_news_context_demotes_scam() {
+        let classifier = SafetyClassifier::new();
+        let req = ClassifyRequest::from_text("Congratulations! You've won $1,000,000")
+            .with_overlay("kchat.community.news.guardrail.v1");
+        let result = classifier.classify(&req);
+        assert_eq!(result.verdict.action, Action::Allow);
+        assert!(result.verdict.reason_codes.iter().any(|r| r.contains("protected_speech")));
+    }
+
+    #[test]
+    fn test_education_context_demotes() {
+        let classifier = SafetyClassifier::new();
+        let req = ClassifyRequest::from_text("Send the wire transfer fee to release the funds")
+            .with_overlay("kchat.community.education.guardrail.v1");
+        let result = classifier.classify(&req);
+        assert_eq!(result.verdict.action, Action::Allow);
+    }
+
+    #[test]
+    fn test_counterspeech_context_demotes() {
+        let classifier = SafetyClassifier::new();
+        let req = ClassifyRequest::from_text("Congratulations! You've won a prize")
+            .with_overlay("kchat.community.counterspeech.guardrail.v1");
+        let result = classifier.classify(&req);
+        assert_eq!(result.verdict.action, Action::Allow);
+    }
+
+    #[test]
+    fn test_no_context_no_demotion() {
+        let classifier = SafetyClassifier::new();
+        // Same scam text but without any context hints → should NOT be demoted
+        let req = ClassifyRequest::from_text("Congratulations! You've won $1,000,000");
+        let result = classifier.classify(&req);
+        assert_ne!(result.verdict.action, Action::Allow);
+    }
+
+    #[test]
+    fn test_child_safety_never_demoted() {
+        // Unit test: verify should_demote_for_protected_speech returns None
+        // for CHILD_SAFETY category even with high-confidence hints.
+        let hints = vec![ContextHint {
+            reason_code: "QUOTED_SPEECH_CONTEXT".into(),
+            context_confidence: 0.9,
+        }];
+        assert!(should_demote_for_protected_speech(
+            detectors::categories::CHILD_SAFETY,
+            &hints,
+        ).is_none());
+    }
+
+    #[test]
+    fn test_derive_context_hints_quoted() {
+        let hints = derive_context_hints(true, None);
+        assert_eq!(hints.len(), 1);
+        assert_eq!(hints[0].reason_code, "QUOTED_SPEECH_CONTEXT");
+        assert_eq!(hints[0].context_confidence, 0.7);
+    }
+
+    #[test]
+    fn test_derive_context_hints_news_overlay() {
+        let hints = derive_context_hints(false, Some("kchat.community.news.v1"));
+        assert_eq!(hints.len(), 1);
+        assert_eq!(hints[0].reason_code, "NEWS_CONTEXT");
+    }
+
+    #[test]
+    fn test_derive_context_hints_education_overlay() {
+        let hints = derive_context_hints(false, Some("kchat.community.education.v1"));
+        assert_eq!(hints.len(), 1);
+        assert_eq!(hints[0].reason_code, "EDUCATION_CONTEXT");
+    }
+
+    #[test]
+    fn test_derive_context_hints_counterspeech_overlay() {
+        let hints = derive_context_hints(false, Some("kchat.community.counterspeech.v1"));
+        assert_eq!(hints.len(), 1);
+        assert_eq!(hints[0].reason_code, "COUNTERSPEECH_CONTEXT");
+    }
+
+    #[test]
+    fn test_derive_context_hints_multiple() {
+        // Quoted + news overlay → 2 hints
+        let hints = derive_context_hints(true, Some("kchat.community.news.v1"));
+        assert_eq!(hints.len(), 2);
+    }
+
+    #[test]
+    fn test_derive_context_hints_none() {
+        let hints = derive_context_hints(false, None);
+        assert!(hints.is_empty());
+    }
+
+    #[test]
+    fn test_derive_context_hints_zero_tolerance_not_counterspeech() {
+        // "zero_tolerance" should NOT match counterspeech (bare "tolerance" excluded)
+        let hints = derive_context_hints(false, Some("kchat.community.zero_tolerance.v1"));
+        assert!(hints.is_empty());
+    }
+
+    #[test]
+    fn test_empty_text_is_allowed() {
+        let classifier = SafetyClassifier::new();
+        let req = ClassifyRequest::from_text("");
+        let result = classifier.classify(&req);
+        assert_eq!(result.verdict.action, Action::Allow);
+    }
+
+    #[test]
+    fn test_whitespace_only_text_is_allowed() {
+        let classifier = SafetyClassifier::new();
+        let req = ClassifyRequest::from_text("   \n\t  ");
+        let result = classifier.classify(&req);
+        assert_eq!(result.verdict.action, Action::Allow);
+    }
+
+    #[test]
+    fn test_very_long_safe_text_is_allowed() {
+        let classifier = SafetyClassifier::new();
+        let long_text = "Hello world. ".repeat(1000);
+        let req = ClassifyRequest::from_text(&long_text);
+        let result = classifier.classify(&req);
+        assert_eq!(result.verdict.action, Action::Allow);
+    }
+
+    #[test]
+    fn test_pii_in_long_text_is_detected() {
+        let classifier = SafetyClassifier::new();
+        let mut text = "Hello world. ".repeat(500);
+        text.push_str(" my card is 4111 1111 1111 1111 ");
+        let req = ClassifyRequest::from_text(&text);
+        let result = classifier.classify(&req);
+        assert_eq!(result.verdict.action, Action::Redact);
+    }
+
+    #[test]
+    fn test_unicode_text_is_handled() {
+        let classifier = SafetyClassifier::new();
+        let req = ClassifyRequest::from_text("こんにちは、元気ですか？");
+        let result = classifier.classify(&req);
+        assert_eq!(result.verdict.action, Action::Allow);
+    }
+
+    #[test]
+    fn test_encoder_failure_falls_back_to_deterministic() {
+        struct FailingEncoder;
+        impl EncoderAdapter for FailingEncoder {
+            fn classify(&self, _text: &str) -> Result<EncoderVerdict, EncoderError> {
+                Err(EncoderError::InferenceFailed("mock failure".into()))
+            }
+        }
+
+        let classifier = SafetyClassifier::new();
+        classifier.attach_encoder(Box::new(FailingEncoder));
+
+        let req = ClassifyRequest {
+            text: "Hello everyone in this group".into(),
+            is_group: true,
+            age_mode: None,
+            relationship: None,
+            encoder_available: true,
+            slm_available: false,
+            quoted_from_user: false,
+            community_overlay_id: None,
+        };
+
+        let result = classifier.classify(&req);
+        // Should fall back gracefully (Degraded source), not crash
+        assert_eq!(result.verdict.source, VerdictSource::Degraded);
+        assert!(!result.verdict.used_encoder);
     }
 }
