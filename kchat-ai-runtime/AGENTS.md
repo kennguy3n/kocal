@@ -102,21 +102,52 @@ The workspace is organized into 8 crates + 1 Go sidecar following the 4-plane ar
 
 ## Test Counts
 
-- kchat-core: 81 tests (capability probe, model manager, governor, registry)
+- kchat-core: 90 tests (capability probe, model manager, governor, registry)
 - kchat-safety: 78 tests (deterministic pipeline, encoder, policy packs)
 - kchat-action: 31 tests
 - kchat-context: 41 tests (FTS, embeddings, reranker, provenance)
-- kchat-generation: 75 tests (llama.cpp backend, LoRA, swarm, Lark grammar)
+- kchat-generation: 80 tests (llama.cpp backend, LoRA, swarm, Lark grammar, MLX)
 - kchat-bindings: 12 tests (FFI facade, capability probing, tier selection)
 - kchat-wasm: 10 tests (WASM safety classification)
-- kchat-task-suite: 8 unit tests + 204 standard eval + 36 red-team cases
-  - Standard eval: 43 synthetic + 161 device profile = 204 cases
+- kchat-task-suite: 8 unit tests + 205 standard eval + 36 red-team cases
+  - Standard eval: 44 synthetic + 161 device profile = 205 cases
   - Device profile suite: 12 profiles × 11 test categories + 9 standalone tests = 161 cases
-- **Unit total: 358 tests, all passing**
-- **Standard eval: 204 cases, all passing**
+  - Device simulator: `--simulate` flag runs 12 profiles × full decision tree (138 checks)
+- **Unit total: 367 tests, all passing**
+- **Standard eval: 205 cases, all passing**
 - **Red-team eval: 36/36 cases (100%) across 7 attack categories**
 - **Real-world eval: 2005 safety + 13 context + 11 generation + 17 action = 2046 cases**
   - Safety: 2005/2005 (100%), Context: 13/13 (100%), Generation: 9/11 (82%), Action: 17/17 (100%)
   - Safety dataset v2: 14 languages (en, vi, zh, ja, ko, es, fr, de, ar, hi, th, id, pt, tl) + 13 mixed-lingual code-switch combos
   - Real model: Qwen3.5-0.8B Q4_K_M via llama-server (Metal), ~130 tok/s, 30ms TTFT
 - **Go server offload: 7 tests, all passing**
+
+## Model Registry (10 packs)
+
+| Pack ID | Type | Min Tier | Size | Quant | Backend | Platform |
+|---------|------|----------|------|-------|---------|----------|
+| ternary-bonsai-1.7b-mlx-2bit | generative | Low | 472 MB | 2bit-MLX | MLX | ios/macos |
+| ternary-bonsai-1.7b-q2_0 | generative | Low | 442 MB | Q2_0 | llama.cpp Vulkan | android/windows |
+| qwen3.5-0.8b-q4 | generative | Medium | 500 MB | Q4_K_M | llama.cpp | all |
+| ternary-bonsai-4b-q2_0 | generative | High | 1.0 GB | Q2_0 | llama.cpp Vulkan | android |
+| macaw-4bit-mlx | generative | High | 1.5 GB | 4bit-MLX | MLX | ios/macos |
+| ternary-bonsai-8b-q2_0 | generative | High | 2.1 GB | Q2_0 | llama.cpp Vulkan | windows |
+| qwen3.5-0.8b-q8 | generative | High | 850 MB | Q8_0 | llama.cpp | fallback |
+| multilingual-e5-small-int8 | embedding | Medium | 45 MB | INT8 | ONNX | all |
+| safety-classifier-int8 | safety | Medium | 25 MB | INT8 | ONNX | all |
+| cross-encoder-miniLM-int8 | reranker | High | 25 MB | INT8 | ONNX | all |
+
+### Model selection by tier and platform
+
+- **Low tier**:
+  - iOS/macOS: `ternary-bonsai-1.7b-mlx-2bit` via **MLX** (Qwen3-1.7B, 1.58-bit, 472MB)
+  - Android/Windows: `ternary-bonsai-1.7b-q2_0` via **llama.cpp Vulkan** (Qwen3-1.7B, Q2_0, 442MB)
+- **Medium tier** (all platforms): `qwen3.5-0.8b-q4` via **llama.cpp** (Qwen3.5 0.8B, Q4_K_M, 500MB)
+- **High tier**:
+  - iOS/macOS: `macaw-4bit-mlx` via **MLX** (LFM2.5-2.6B, 4-bit MLX, 1.5GB, 128K context)
+  - Android: `ternary-bonsai-4b-q2_0` via **llama.cpp Vulkan** (Qwen3-4B, Q2_0, 1.0GB, 32K context)
+  - Windows: `ternary-bonsai-8b-q2_0` via **llama.cpp Vulkan** (Qwen3-8B, Q2_0, 2.1GB, 65K context)
+  - Other: `qwen3.5-0.8b-q8` via **llama.cpp CPU** (fallback, 850MB)
+
+All models support `tool_use`. The "deterministic-first" principle is preserved —
+safety works on ALL devices without a generative model.

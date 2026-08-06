@@ -7,7 +7,7 @@
 //!
 //! Usage: cargo run -p kchat-task-suite -- --simulate
 
-use crate::eval_device_profile::{all_profiles, select_model_for_tier, DeviceProfile};
+use crate::eval_device_profile::{all_profiles, select_model_for_tier_platform, DeviceProfile};
 use kchat_core::capability::{AppState, DeviceCapabilities, ThermalState};
 use kchat_core::registry::{MinTier, ModelRegistry};
 use kchat_core::scheduler::{Scheduler, SchedulerConfig};
@@ -163,7 +163,7 @@ fn simulate_profile(
     // --- Model Selection ---
     println!("├──────────────────────────────────────────────────────────────────────────────┤");
     println!("│  MODEL SELECTION                                                             │");
-    let model = select_model_for_tier(tier);
+    let model = select_model_for_tier_platform(tier, profile.platform);
     let model_ok = model == profile.expected_model_pack;
     checks += 1;
     if model_ok { pass += 1; }
@@ -329,9 +329,17 @@ fn simulate_profile(
         reset
     );
 
-    // Model fit check
+    // Model fit check — use tier-appropriate and platform-appropriate model size
     if model.is_some() {
-        let model_size = 500 * 1024 * 1024; // Q4 model ~500MB
+        let model_size = match (tier, profile.platform) {
+            (DeviceTier::Low, "ios" | "macos") => 472_000_000,              // Bonsai 1.7B MLX ~472MB
+            (DeviceTier::Low, _) => 463_290_464,                            // Bonsai 1.7B Q2_0 GGUF ~442MB
+            (DeviceTier::Medium, _) => 500 * 1024 * 1024,                   // 0.8B Q4 ~500MB
+            (DeviceTier::High, "ios" | "macos") => 1_500 * 1024 * 1024,     // Macaw MLX ~1.5GB
+            (DeviceTier::High, "android") => 1_074_969_344,                 // Bonsai 4B Q2_0 ~1.0GB
+            (DeviceTier::High, "windows") => 2_182_184_672,                 // Bonsai 8B Q2_0 ~2.1GB
+            (DeviceTier::High, _) => 850 * 1024 * 1024,                     // 0.8B Q8 fallback ~850MB
+        };
         let fits = model_size <= peak;
         checks += 1;
         if fits { pass += 1; }
@@ -487,7 +495,7 @@ fn print_summary_table(profiles: &[DeviceProfile]) {
         let backend = BackendType::select(&caps.platform, tier)
             .map(|b| b.as_str().to_string())
             .unwrap_or("none".into());
-        let model = select_model_for_tier(tier).unwrap_or("—");
+        let model = select_model_for_tier_platform(tier, &caps.platform).unwrap_or("—");
         let budget = TierBudget::for_tier(tier, p.platform);
 
         let tier_str = format!("{:?}", tier);

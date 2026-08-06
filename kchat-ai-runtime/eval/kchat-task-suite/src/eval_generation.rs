@@ -24,8 +24,9 @@ pub fn run() -> SuiteReport {
     suite.add(test_prompt_template_hash());
     suite.add(test_backend_selection_low_tier());
     suite.add(test_backend_selection_medium_tier());
+    suite.add(test_backend_selection_high_tier_mlx());
     suite.add(test_model_lifecycle_idle_timeout());
-    suite.add(test_low_tier_no_generation());
+    suite.add(test_low_tier_can_generate());
 
     suite
 }
@@ -130,20 +131,32 @@ fn test_prompt_template_hash() -> EvalResult {
 }
 
 fn test_backend_selection_low_tier() -> EvalResult {
+    // Low tier on Apple: MLX (for Bonsai-1.7B-MLX)
     let backend = BackendType::select("ios", DeviceTier::Low);
-    if backend.is_none() {
+    if backend == Some(BackendType::Mlx) {
         EvalResult::pass("backend_selection_low_tier")
     } else {
-        EvalResult::fail("backend_selection_low_tier", "low tier should not select a backend")
+        EvalResult::fail("backend_selection_low_tier", format!("expected Mlx, got {:?}", backend))
     }
 }
 
 fn test_backend_selection_medium_tier() -> EvalResult {
+    // Medium tier on Apple: llama.cpp Metal (for Qwen 0.8B Q4 GGUF)
     let backend = BackendType::select("ios", DeviceTier::Medium);
     if backend == Some(BackendType::LlamaCppMetal) {
         EvalResult::pass("backend_selection_medium_tier")
     } else {
         EvalResult::fail("backend_selection_medium_tier", format!("expected LlamaCppMetal, got {:?}", backend))
+    }
+}
+
+fn test_backend_selection_high_tier_mlx() -> EvalResult {
+    // High tier on Apple platforms should use MLX for Macaw-4bit-MLX
+    let backend = BackendType::select("ios", DeviceTier::High);
+    if backend == Some(BackendType::Mlx) {
+        EvalResult::pass("backend_selection_high_tier_mlx")
+    } else {
+        EvalResult::fail("backend_selection_high_tier_mlx", format!("expected Mlx, got {:?}", backend))
     }
 }
 
@@ -158,11 +171,12 @@ fn test_model_lifecycle_idle_timeout() -> EvalResult {
     }
 }
 
-fn test_low_tier_no_generation() -> EvalResult {
+fn test_low_tier_can_generate() -> EvalResult {
+    // Low tier now has a tier-appropriate generative model (0.3B Q4, ~200MB)
     let lifecycle = ModelLifecycle::new(DeviceTier::Low, "ios");
-    if !lifecycle.can_generate() {
-        EvalResult::pass("low_tier_no_generation")
+    if lifecycle.can_generate() {
+        EvalResult::pass("low_tier_can_generate")
     } else {
-        EvalResult::fail("low_tier_no_generation", "low tier should not allow generation")
+        EvalResult::fail("low_tier_can_generate", "low tier should allow generation with 0.3B model")
     }
 }

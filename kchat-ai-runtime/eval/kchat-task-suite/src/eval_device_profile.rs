@@ -112,8 +112,8 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             app_state: AppState::Foreground,
             unmetered_network: true,
             expected_tier: DeviceTier::High,
-            expected_model_pack: Some("qwen3.5-0.8b-q4"),
-            expected_backend: Some("llama.cpp_metal"),
+            expected_model_pack: Some("macaw-4bit-mlx"),
+            expected_backend: Some("mlx"),
         },
         DeviceProfile {
             name: "iPhone 14 (6GB, A15)",
@@ -133,7 +133,7 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             app_state: AppState::Foreground,
             unmetered_network: true,
             expected_tier: DeviceTier::Medium,
-            expected_model_pack: None, // qwen3.5-0.8b-q4 requires High tier
+            expected_model_pack: Some("qwen3.5-0.8b-q4"),
             expected_backend: Some("llama.cpp_metal"),
         },
         DeviceProfile {
@@ -154,8 +154,8 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             app_state: AppState::Foreground,
             unmetered_network: true,
             expected_tier: DeviceTier::Low,
-            expected_model_pack: None,
-            expected_backend: None,
+            expected_model_pack: Some("ternary-bonsai-1.7b-mlx-2bit"),
+            expected_backend: Some("mlx"),
         },
         // === Mobile: Android ===
         DeviceProfile {
@@ -176,7 +176,7 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             app_state: AppState::Foreground,
             unmetered_network: true,
             expected_tier: DeviceTier::High,
-            expected_model_pack: Some("qwen3.5-0.8b-q4"),
+            expected_model_pack: Some("ternary-bonsai-4b-q2_0"),
             expected_backend: Some("llama.cpp_vulkan"),
         },
         DeviceProfile {
@@ -197,7 +197,7 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             app_state: AppState::Foreground,
             unmetered_network: true,
             expected_tier: DeviceTier::Medium,
-            expected_model_pack: None, // qwen3.5-0.8b-q4 requires High tier
+            expected_model_pack: Some("qwen3.5-0.8b-q4"),
             expected_backend: Some("llama.cpp_vulkan"),
         },
         DeviceProfile {
@@ -218,8 +218,8 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             app_state: AppState::Foreground,
             unmetered_network: false,
             expected_tier: DeviceTier::Low,
-            expected_model_pack: None,
-            expected_backend: None,
+            expected_model_pack: Some("ternary-bonsai-1.7b-q2_0"),
+            expected_backend: Some("llama.cpp_vulkan"),
         },
         // === Desktop: macOS ===
         DeviceProfile {
@@ -240,8 +240,8 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             app_state: AppState::Foreground,
             unmetered_network: true,
             expected_tier: DeviceTier::High,
-            expected_model_pack: Some("qwen3.5-0.8b-q4"),
-            expected_backend: Some("llama.cpp_metal"),
+            expected_model_pack: Some("macaw-4bit-mlx"),
+            expected_backend: Some("mlx"),
         },
         DeviceProfile {
             name: "MacBook Air M2 (8GB)",
@@ -261,8 +261,8 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             app_state: AppState::Foreground,
             unmetered_network: true,
             expected_tier: DeviceTier::Low,
-            expected_model_pack: None,
-            expected_backend: None,
+            expected_model_pack: Some("ternary-bonsai-1.7b-mlx-2bit"),
+            expected_backend: Some("mlx"),
         },
         DeviceProfile {
             name: "Intel NUC (8GB, i3)",
@@ -282,8 +282,8 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             app_state: AppState::Foreground,
             unmetered_network: true,
             expected_tier: DeviceTier::Low,
-            expected_model_pack: None,
-            expected_backend: None,
+            expected_model_pack: Some("ternary-bonsai-1.7b-mlx-2bit"),
+            expected_backend: Some("mlx"),
         },
         // === Desktop: Windows ===
         DeviceProfile {
@@ -304,7 +304,7 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             app_state: AppState::Foreground,
             unmetered_network: true,
             expected_tier: DeviceTier::High,
-            expected_model_pack: Some("qwen3.5-0.8b-q4"),
+            expected_model_pack: Some("ternary-bonsai-8b-q2_0"),
             expected_backend: Some("llama.cpp_vulkan"),
         },
         DeviceProfile {
@@ -325,8 +325,8 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             app_state: AppState::Foreground,
             unmetered_network: true,
             expected_tier: DeviceTier::Low,
-            expected_model_pack: None,
-            expected_backend: None,
+            expected_model_pack: Some("ternary-bonsai-1.7b-q2_0"),
+            expected_backend: Some("llama.cpp_vulkan"),
         },
         DeviceProfile {
             name: "Windows Legacy (8GB, i5)",
@@ -346,8 +346,8 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             app_state: AppState::Foreground,
             unmetered_network: true,
             expected_tier: DeviceTier::Low,
-            expected_model_pack: None,
-            expected_backend: None,
+            expected_model_pack: Some("ternary-bonsai-1.7b-q2_0"),
+            expected_backend: Some("llama.cpp_vulkan"),
         },
     ]
 }
@@ -356,10 +356,33 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
 // Helper: select model pack for a tier from the registry
 // ---------------------------------------------------------------------------
 
+/// Select the appropriate generative model for a tier and platform.
+///
+/// - High tier on Apple (iOS/macOS): Macaw-4bit-MLX (MLX format, 1.5GB)
+/// - High tier on other platforms: qwen3.5-0.8b-q4 (GGUF, 500MB)
+/// - Medium tier: qwen3.5-0.8b-q4 (GGUF, 350MB)
+/// - Low tier: Bonsai-1.7B MLX (Apple, ~472MB) or GGUF (Android/Windows, ~442MB)
 pub fn select_model_for_tier(tier: DeviceTier) -> Option<&'static str> {
+    select_model_for_tier_platform(tier, "")
+}
+/// Platform-aware model selection.
+pub fn select_model_for_tier_platform(tier: DeviceTier, platform: &str) -> Option<&'static str> {
     match tier {
-        DeviceTier::Low | DeviceTier::Medium => None, // No generative model with min_tier <= Medium
-        DeviceTier::High => Some("qwen3.5-0.8b-q4"),
+        DeviceTier::Low => {
+            match platform {
+                "ios" | "macos" => Some("ternary-bonsai-1.7b-mlx-2bit"),  // Bonsai 1.7B MLX 2-bit, ~472MB
+                _ => Some("ternary-bonsai-1.7b-q2_0"),                     // Bonsai 1.7B Q2_0 GGUF, ~442MB
+            }
+        }
+        DeviceTier::Medium => Some("qwen3.5-0.8b-q4"),  // 0.8B Q4, ~500MB
+        DeviceTier::High => {
+            match platform {
+                "ios" | "macos" => Some("macaw-4bit-mlx"),          // Macaw 4-bit MLX, 1.5GB
+                "android" => Some("ternary-bonsai-4b-q2_0"),         // Ternary Bonsai 4B Q2_0, ~1.0GB
+                "windows" => Some("ternary-bonsai-8b-q2_0"),         // Ternary Bonsai 8B Q2_0, ~2.1GB
+                _ => Some("qwen3.5-0.8b-q8"),                        // Qwen 0.8B Q8 fallback, 850MB
+            }
+        }
     }
 }
 
@@ -507,7 +530,7 @@ fn test_tier_selection(p: &DeviceProfile) -> EvalResult {
 fn test_model_selection(p: &DeviceProfile, registry: &ModelRegistry) -> EvalResult {
     let caps = p.to_caps();
     let tier = TierSelection::select(&caps).unwrap_or(DeviceTier::Low);
-    let selected = select_model_for_tier(tier);
+    let selected = select_model_for_tier_platform(tier, &caps.platform);
 
     if selected == p.expected_model_pack {
         // Verify the model exists in the registry and is compatible with the tier
@@ -709,17 +732,22 @@ fn test_memory_budget(p: &DeviceProfile) -> EvalResult {
         ));
     }
 
-    // Check that a model pack size fits within the budget for non-low tiers
-    if tier != DeviceTier::Low {
-        // Q4 model is ~500MB
-        let model_size = 500 * 1024 * 1024;
-        if model_size > peak_budget {
-            errors.push(format!(
-                "model_size {}MB > peak_budget {}MB",
-                model_size / (1024 * 1024),
-                peak_budget / (1024 * 1024)
-            ));
-        }
+    // Check that the tier-appropriate model pack fits within the budget
+    let model_size = match (tier, p.platform) {
+        (DeviceTier::Low, "ios" | "macos") => 472_000_000,              // Bonsai 1.7B MLX ~472MB
+        (DeviceTier::Low, _) => 463_290_464,                            // Bonsai 1.7B Q2_0 GGUF ~442MB
+        (DeviceTier::Medium, _) => 500 * 1024 * 1024,                   // 0.8B Q4 ~500MB
+        (DeviceTier::High, "ios" | "macos") => 1_500 * 1024 * 1024,     // Macaw MLX ~1.5GB
+        (DeviceTier::High, "android") => 1_074_969_344,                 // Bonsai 4B Q2_0 ~1.0GB
+        (DeviceTier::High, "windows") => 2_182_184_672,                 // Bonsai 8B Q2_0 ~2.1GB
+        (DeviceTier::High, _) => 850 * 1024 * 1024,                     // 0.8B Q8 fallback ~850MB
+    };
+    if model_size > peak_budget {
+        errors.push(format!(
+            "model_size {}MB > peak_budget {}MB",
+            model_size / (1024 * 1024),
+            peak_budget / (1024 * 1024)
+        ));
     }
 
     // Verify check_memory_budget passes for the tier's peak budget
@@ -886,7 +914,8 @@ fn test_scheduler_admission(p: &DeviceProfile) -> EvalResult {
     let tier = TierSelection::select(&caps).unwrap_or(DeviceTier::Low);
     let scheduler = Scheduler::new(SchedulerConfig::default(), tier);
 
-    let requires_generative = tier != DeviceTier::Low;
+    // All tiers can now run generative jobs with tier-appropriate models
+    let requires_generative = true;
     let peak_bytes = tier.peak_memory_budget(p.platform);
 
     let result = scheduler.request_job(&caps, requires_generative, peak_bytes);
@@ -903,13 +932,7 @@ fn test_scheduler_admission(p: &DeviceProfile) -> EvalResult {
             }
         }
         Err(e) => {
-            // Low tier devices should still be able to run non-generative jobs
-            if !requires_generative {
-                errors.push(format!(
-                    "non-generative job rejected on low tier: {}",
-                    e
-                ));
-            }
+            errors.push(format!("job rejected on {:?} tier: {}", tier, e));
         }
     }
 
@@ -1188,25 +1211,51 @@ fn test_registry_finds_model_for_high_tier(registry: &ModelRegistry) -> EvalResu
         let mut meta = HashMap::new();
         meta.insert("count".into(), format!("{}", results.len()));
         meta.insert("first".into(), results[0].pack_id.clone());
-        EvalResult::pass_with_meta("registry_high_tier_model", 0, meta)
+        // High tier should find all 7 generative models
+        // (Bonsai-1.7B-MLX, Bonsai-1.7B-GGUF, 0.8B-Q4, Bonsai-4B, Macaw, Bonsai-8B, Q8)
+        if results.len() != 7 {
+            EvalResult::fail(
+                "registry_high_tier_model",
+                format!("expected 7 generative models for High tier, got {}", results.len()),
+            )
+        } else {
+            EvalResult::pass_with_meta("registry_high_tier_model", 0, meta)
+        }
     }
 }
 
 fn test_registry_finds_no_model_for_low_tier(registry: &ModelRegistry) -> EvalResult {
-    // Low tier should not find generative models (all have min_tier >= Medium)
-    let results = registry.find_for_task("summarize", MinTier::Low);
-    // Actually, MinTier::Low satisfies all min_tiers since Low <= Medium <= High
-    // So this should find models. The real check is that BackendType::select
-    // returns None for Low tier, preventing generative use.
-    // Let's verify the registry logic is correct instead:
+    // Low tier should find 2 Bonsai-1.7B generative models (MLX + GGUF)
+    let low_results = registry.find_for_task("summarize", MinTier::Low);
+    let mut errors = Vec::new();
+    if low_results.is_empty() {
+        errors.push("no generative models found for Low tier (expected 2 Bonsai-1.7B)".into());
+    } else {
+        // Verify all Low tier models fit in 750MB mobile budget
+        for m in &low_results {
+            if m.size_bytes > 750 * 1024 * 1024 {
+                errors.push(format!(
+                    "Low tier model {} too large: {}MB > 750MB",
+                    m.pack_id,
+                    m.size_bytes / (1024 * 1024)
+                ));
+            }
+        }
+        // Should find exactly 2 models
+        if low_results.len() != 2 {
+            errors.push(format!(
+                "expected 2 Low tier generative models, got {}",
+                low_results.len()
+            ));
+        }
+    }
+
+    // Reranker still requires High tier
     let high_only = registry.find_for_task("rerank", MinTier::High);
     let medium_only = registry.find_for_task("rerank", MinTier::Medium);
-
-    let mut errors = Vec::new();
     if high_only.is_empty() {
         errors.push("no rerank models for High tier".into());
     }
-    // Reranker has min_tier=High, so Medium should NOT find it
     if !medium_only.is_empty() {
         errors.push(format!(
             "rerank model found for Medium tier (should require High): {}",

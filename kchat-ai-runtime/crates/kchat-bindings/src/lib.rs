@@ -218,8 +218,13 @@ impl KChatAiRuntime {
     }
 
     /// Check if generative AI is available on this device.
+    ///
+    /// All tiers now have tier-appropriate generative models:
+    /// - Low: 0.3B Q4 (~200MB)
+    /// - Medium: 0.5B Q4 (~350MB)
+    /// - High: 0.8B Q4/Q8 (~500-850MB)
     pub fn can_generate(&self) -> bool {
-        self.tier != kchat_core::tier::DeviceTier::Low
+        true
     }
 
     /// Probe device capabilities (real OS API calls).
@@ -471,7 +476,8 @@ mod tests {
     fn test_runtime_with_explicit_tier() {
         let runtime = KChatAiRuntime::with_tier("ios", kchat_core::tier::DeviceTier::Low);
         assert_eq!(runtime.device_tier(), FfiDeviceTier::Low);
-        assert!(!runtime.can_generate());
+        // Low tier now has a generative model (0.3B Q4)
+        assert!(runtime.can_generate());
     }
 
     #[test]

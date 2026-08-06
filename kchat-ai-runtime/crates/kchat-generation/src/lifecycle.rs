@@ -171,8 +171,13 @@ impl ModelLifecycle {
     }
 
     /// Check if generation is allowed on this tier.
+    ///
+    /// All tiers now have tier-appropriate generative models:
+    /// - Low: 0.3B Q4 (~200MB)
+    /// - Medium: 0.5B Q4 (~350MB)
+    /// - High: 0.8B Q4/Q8 (~500-850MB)
     pub fn can_generate(&self) -> bool {
-        self.tier != DeviceTier::Low
+        true
     }
 }
 
@@ -324,9 +329,9 @@ mod tests {
     }
 
     #[test]
-    fn test_low_tier_cannot_generate() {
+    fn test_low_tier_can_generate() {
         let lifecycle = ModelLifecycle::new(DeviceTier::Low, "ios");
-        assert!(!lifecycle.can_generate());
+        assert!(lifecycle.can_generate());
     }
 
     #[test]
