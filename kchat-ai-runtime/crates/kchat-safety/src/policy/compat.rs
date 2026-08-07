@@ -31,16 +31,17 @@ pub enum RiskCategory {
 }
 
 impl RiskCategory {
+    /// Map to taxonomy category ID per kchat.guardrail.taxonomy.v1.
     pub fn as_u32(self) -> u32 {
         match self {
-            RiskCategory::ChildSafety => 1,
-            RiskCategory::PrivateData => 2,
-            RiskCategory::ScamFraud => 3,
-            RiskCategory::HateSpeech => 4,
-            RiskCategory::Violence => 5,
-            RiskCategory::Nsfw => 6,
-            RiskCategory::SelfHarm => 7,
-            RiskCategory::Spam => 8,
+            RiskCategory::ChildSafety => 1,    // CHILD_SAFETY
+            RiskCategory::SelfHarm => 2,       // SELF_HARM
+            RiskCategory::Violence => 3,       // VIOLENCE_THREAT
+            RiskCategory::HateSpeech => 6,     // HATE
+            RiskCategory::ScamFraud => 7,      // SCAM_FRAUD
+            RiskCategory::PrivateData => 9,    // PRIVATE_DATA
+            RiskCategory::Nsfw => 10,          // SEXUAL_ADULT
+            RiskCategory::Spam => 7,           // Map to SCAM_FRAUD (closest taxonomy match)
             RiskCategory::Custom(id) => id,
         }
     }

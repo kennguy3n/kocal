@@ -19,22 +19,34 @@ use std::sync::{Arc, OnceLock};
 use parking_lot::Mutex;
 use lru::LruCache;
 
-/// Risk category IDs from the KChat taxonomy.
+/// Risk category IDs from the KChat taxonomy (kchat.guardrail.taxonomy.v1).
+/// 17 categories (0-16) — overlays can narrow but not invent new categories.
 pub mod categories {
     pub const SAFE: u32 = 0;
     pub const CHILD_SAFETY: u32 = 1;
-    pub const PRIVATE_DATA: u32 = 2;
-    pub const SCAM_FRAUD: u32 = 3;
-    pub const HATE_SPEECH: u32 = 4;
-    pub const VIOLENCE: u32 = 5;
-    pub const NSFW: u32 = 6;
-    pub const SELF_HARM: u32 = 7;
-    pub const SPAM: u32 = 8;
-    pub const EXTREMISM: u32 = 9;
-    pub const HARASSMENT: u32 = 10;
+    pub const SELF_HARM: u32 = 2;
+    pub const VIOLENCE_THREAT: u32 = 3;
+    pub const EXTREMISM: u32 = 4;
+    pub const HARASSMENT: u32 = 5;
+    pub const HATE: u32 = 6;
+    pub const SCAM_FRAUD: u32 = 7;
+    pub const MALWARE_LINK: u32 = 8;
+    pub const PRIVATE_DATA: u32 = 9;
+    pub const SEXUAL_ADULT: u32 = 10;
     pub const DRUGS_WEAPONS: u32 = 11;
-    pub const DEEPFAKE: u32 = 12;
-    pub const MALWARE: u32 = 13;
+    pub const ILLEGAL_GOODS: u32 = 12;
+    pub const MISINFORMATION_HEALTH: u32 = 13;
+    pub const MISINFORMATION_CIVIC: u32 = 14;
+    pub const COMMUNITY_RULE: u32 = 15;
+    pub const DEEPFAKE_SYNTHETIC: u32 = 16;
+
+    // Backward-compatible aliases for code that hasn't been migrated yet.
+    pub const VIOLENCE: u32 = VIOLENCE_THREAT;
+    pub const HATE_SPEECH: u32 = HATE;
+    pub const NSFW: u32 = SEXUAL_ADULT;
+    pub const SPAM: u32 = SCAM_FRAUD;
+    pub const DEEPFAKE: u32 = DEEPFAKE_SYNTHETIC;
+    pub const MALWARE: u32 = MALWARE_LINK;
 }
 
 // ---------------------------------------------------------------------------
@@ -690,8 +702,8 @@ pub fn resolve_priority_chain(signals: &LocalSignals) -> Option<DetectorSignal> 
     if signals.signals.is_empty() { return None; }
     let priority = [
         categories::CHILD_SAFETY, categories::SELF_HARM, categories::PRIVATE_DATA,
-        categories::SCAM_FRAUD, categories::HATE_SPEECH, categories::VIOLENCE,
-        categories::NSFW, categories::SPAM,
+        categories::SCAM_FRAUD, categories::HATE, categories::VIOLENCE_THREAT,
+        categories::SEXUAL_ADULT, categories::MALWARE_LINK,
     ];
     for &cat in &priority {
         if let Some(best) = signals.signals.iter()

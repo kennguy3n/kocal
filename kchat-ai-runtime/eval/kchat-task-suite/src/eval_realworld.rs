@@ -7,6 +7,7 @@
 //! - Action validation with complex tool plans and artifact operations
 
 use crate::report::{EvalResult, SuiteReport};
+use kchat_safety::policy::PolicyPack;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::path::Path;
@@ -62,126 +63,12 @@ fn legacy_category_to_taxonomy_id(category: &str) -> u32 {
     }
 }
 
-#[derive(Debug, Deserialize)]
-struct ContextDataset {
-    documents: Vec<ContextDocument>,
-    queries: Vec<ContextQuery>,
-}
-
-#[derive(Debug, Deserialize)]
-struct ContextDocument {
-    id: String,
-    scope: String,
-    content: String,
-    #[serde(default)]
-    language: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct ContextQuery {
-    id: String,
-    query: String,
-    expected_doc_ids: Vec<String>,
-    allowed_scopes: Vec<String>,
-    #[serde(default)]
-    denied_scopes: Vec<String>,
-    description: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct GenerationDataset {
-    prompts: Vec<GenerationPrompt>,
-}
-
-#[derive(Debug, Deserialize)]
-struct GenerationPrompt {
-    id: String,
-    prompt: String,
-    max_tokens: u32,
-    #[serde(default)]
-    grammar: Option<GrammarSpec>,
-    expected_min_tokens: u32,
-    description: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct GrammarSpec {
-    #[serde(rename = "type")]
-    grammar_type: String,
-    #[serde(default)]
-    schema: serde_json::Value,
-}
-
-#[derive(Debug, Deserialize)]
-struct ActionDataset {
-    test_cases: Vec<ActionTestCase>,
-}
-
-#[derive(Debug, Deserialize)]
-struct ActionTestCase {
-    id: String,
-    description: String,
-    #[serde(default)]
-    expected: String,
-    #[serde(default)]
-    expected_error: Option<String>,
-}
-
-// ─── Helpers ───
-
-fn load_dataset<T: for<'de> Deserialize<'de>>(path: &str) -> Result<T, String> {
-    let full_path = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("datasets")
-        .join(path);
-    let content = std::fs::read_to_string(&full_path)
-        .map_err(|e| format!("failed to read {}: {}", full_path.display(), e))?;
-    serde_json::from_str(&content)
-        .map_err(|e| format!("failed to parse {}: {}", full_path.display(), e))
-}
-
-fn model_path() -> Option<String> {
-    // Check for model in manifest/packs/
-    let pack_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../manifest/packs");
-    if let Ok(entries) = std::fs::read_dir(&pack_dir) {
-        for entry in entries.flatten() {
-            let name = entry.file_name().to_string_lossy().to_string();
-            if name.ends_with(".gguf") {
-                return Some(entry.path().to_string_lossy().to_string());
-            }
-        }
-    }
-    // Check env var
-    if let Ok(path) = std::env::var("KCHAT_MODEL_PATH") {
-        if Path::new(&path).exists() {
-            return Some(path);
-        }
-    }
-    None
-}
-
-// ─── Safety eval ───
-
-pub fn run_safety_realworld() -> SuiteReport {
-    let mut suite = SuiteReport::new("Real-World Safety Eval", 0.90);
-
-    let dataset: SafetyDataset = match load_dataset("safety/safety_dataset_v1.json") {
-        Ok(d) => d,
-        Err(e) => {
-            suite.add(EvalResult::fail("dataset_load", e));
-            return suite;
-        }
-    };
-
-    use kchat_safety::classify::{SafetyClassifier, ClassifyRequest};
+/// Build the shared eval policy pack with multilingual lexicon rules.
+/// Used by both the JSON dataset eval and the guardrail YAML eval.
+fn build_eval_policy_pack() -> PolicyPack {
     use kchat_safety::policy::{PolicyPack, PolicyPackManifest, PolicyRule, PolicyThresholds, RiskCategory};
-    use std::sync::Arc;
 
-    let classifier = SafetyClassifier::new();
-
-    // Load a comprehensive policy pack with harmful content lexicon terms
-    // In production, this would be Ed25519-signed and verified on-device
-    let policy_pack = PolicyPack {
+    PolicyPack {
         manifest: PolicyPackManifest {
             pack_id: "kchat-safety-v1".into(),
             version: "1.0.0".into(),
@@ -334,7 +221,7 @@ pub fn run_safety_realworld() -> SuiteReport {
             },
             PolicyRule {
                 rule_id: "cybersecurity_harmful".into(),
-                category: RiskCategory::Custom(10),
+                category: RiskCategory::Custom(8), // MALWARE_LINK
                 severity: 4,
                 lexicon: vec![
                     "phishing email".into(), "write a phishing".into(), "ransomware".into(),
@@ -439,7 +326,7 @@ pub fn run_safety_realworld() -> SuiteReport {
             },
             PolicyRule {
                 rule_id: "prompt_injection".into(),
-                category: RiskCategory::Custom(11),
+                category: RiskCategory::Custom(15), // COMMUNITY_RULE
                 severity: 4,
                 lexicon: vec![
                     "ignore all previous instructions".into(),
@@ -479,9 +366,125 @@ pub fn run_safety_realworld() -> SuiteReport {
         ],
         thresholds: PolicyThresholds::default(),
         slm_prompt: "Classify the following text for safety risks.".into(),
+    }
+}
+
+#[derive(Debug, Deserialize)]
+struct ContextDataset {
+    documents: Vec<ContextDocument>,
+    queries: Vec<ContextQuery>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ContextDocument {
+    id: String,
+    scope: String,
+    content: String,
+    #[serde(default)]
+    language: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct ContextQuery {
+    id: String,
+    query: String,
+    expected_doc_ids: Vec<String>,
+    allowed_scopes: Vec<String>,
+    #[serde(default)]
+    denied_scopes: Vec<String>,
+    description: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct GenerationDataset {
+    prompts: Vec<GenerationPrompt>,
+}
+
+#[derive(Debug, Deserialize)]
+struct GenerationPrompt {
+    id: String,
+    prompt: String,
+    max_tokens: u32,
+    #[serde(default)]
+    grammar: Option<GrammarSpec>,
+    expected_min_tokens: u32,
+    description: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct GrammarSpec {
+    #[serde(rename = "type")]
+    grammar_type: String,
+    #[serde(default)]
+    schema: serde_json::Value,
+}
+
+#[derive(Debug, Deserialize)]
+struct ActionDataset {
+    test_cases: Vec<ActionTestCase>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ActionTestCase {
+    id: String,
+    description: String,
+    #[serde(default)]
+    expected: String,
+    #[serde(default)]
+    expected_error: Option<String>,
+}
+
+// ─── Helpers ───
+
+fn load_dataset<T: for<'de> Deserialize<'de>>(path: &str) -> Result<T, String> {
+    let full_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("datasets")
+        .join(path);
+    let content = std::fs::read_to_string(&full_path)
+        .map_err(|e| format!("failed to read {}: {}", full_path.display(), e))?;
+    serde_json::from_str(&content)
+        .map_err(|e| format!("failed to parse {}: {}", full_path.display(), e))
+}
+
+fn model_path() -> Option<String> {
+    // Check for model in manifest/packs/
+    let pack_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../manifest/packs");
+    if let Ok(entries) = std::fs::read_dir(&pack_dir) {
+        for entry in entries.flatten() {
+            let name = entry.file_name().to_string_lossy().to_string();
+            if name.ends_with(".gguf") {
+                return Some(entry.path().to_string_lossy().to_string());
+            }
+        }
+    }
+    // Check env var
+    if let Ok(path) = std::env::var("KCHAT_MODEL_PATH") {
+        if Path::new(&path).exists() {
+            return Some(path);
+        }
+    }
+    None
+}
+
+// ─── Safety eval ───
+
+pub fn run_safety_realworld() -> SuiteReport {
+    let mut suite = SuiteReport::new("Real-World Safety Eval", 0.90);
+
+    let dataset: SafetyDataset = match load_dataset("safety/safety_dataset_v1.json") {
+        Ok(d) => d,
+        Err(e) => {
+            suite.add(EvalResult::fail("dataset_load", e));
+            return suite;
+        }
     };
 
-    classifier.load_policy_pack(Arc::new(policy_pack));
+    use kchat_safety::classify::{SafetyClassifier, ClassifyRequest};
+    use std::sync::Arc;
+
+    let classifier = SafetyClassifier::new();
+    classifier.load_policy_pack(Arc::new(build_eval_policy_pack()));
 
     let mut correct = 0u32;
     let mut total = 0u32;
@@ -502,13 +505,13 @@ pub fn run_safety_realworld() -> SuiteReport {
 
         let predicted = format!("{:?}", result.verdict.action);
         let expected = case.expected_action.clone();
-        let is_correct = predicted == expected;
+        let action_match = predicted == expected;
 
         // When expected_category is present, also check taxonomy alignment.
         let taxonomy_match = case.expected_category.map_or(true, |exp_cat| {
             result.verdict.category == exp_cat
         });
-        let is_correct = is_correct && taxonomy_match;
+        let is_correct = action_match && taxonomy_match;
 
         total += 1;
         if is_correct {
@@ -638,10 +641,12 @@ struct GuardrailMessage {
     #[serde(default)]
     has_attachment: bool,
     #[serde(default)]
+    #[allow(dead_code)]
     attachment_kinds: Vec<String>,
     #[serde(default)]
     quoted_from_user: bool,
     #[serde(default)]
+    #[allow(dead_code)]
     is_outbound: bool,
     #[serde(default)]
     media_descriptors: Vec<GuardrailMediaDescriptor>,
@@ -665,8 +670,10 @@ struct GuardrailContext {
     #[serde(default)]
     group_age_mode: String,
     #[serde(default)]
+    #[allow(dead_code)]
     user_role: String,
     #[serde(default)]
+    #[allow(dead_code)]
     relationship_known: bool,
     #[serde(default)]
     locale: Option<String>,
@@ -675,6 +682,7 @@ struct GuardrailContext {
     #[serde(default)]
     community_overlay_id: Option<String>,
     #[serde(default)]
+    #[allow(dead_code)]
     is_offline: bool,
 }
 
@@ -721,25 +729,11 @@ fn run_guardrail_sample_messages() -> SuiteReport {
     };
 
     use kchat_safety::classify::{SafetyClassifier, ClassifyRequest};
-    use kchat_safety::policy::{PolicyPack, PolicyPackManifest, PolicyThresholds};
+    use kchat_safety::media::MediaDescriptor;
     use std::sync::Arc;
 
     let classifier = SafetyClassifier::new();
-
-    // Load the same policy pack as the JSON eval for consistency.
-    let policy_pack = PolicyPack {
-        manifest: PolicyPackManifest {
-            pack_id: "kchat-safety-v1".into(),
-            version: "1.0.0".into(),
-            content_sha256: "a".repeat(64),
-            public_key: "b".repeat(64),
-            signature: "c".repeat(128),
-        },
-        rules: vec![],
-        thresholds: PolicyThresholds::default(),
-        slm_prompt: "Classify the following text for safety risks.".into(),
-    };
-    classifier.load_policy_pack(Arc::new(policy_pack));
+    classifier.load_policy_pack(Arc::new(build_eval_policy_pack()));
 
     let mut correct = 0u32;
     let mut total = 0u32;
@@ -758,7 +752,34 @@ fn run_guardrail_sample_messages() -> SuiteReport {
                 req.jurisdiction = Some(parts[2].to_string());
             }
         }
-        req.locale = case.context.locale.clone();
+        // Use locale from context, or derive from lang_hint as fallback.
+        req.locale = case.context.locale.clone().or_else(|| {
+            if !case.message.lang_hint.is_empty() {
+                Some(case.message.lang_hint.clone())
+            } else {
+                None
+            }
+        });
+
+        // Wire media descriptors from YAML into the classifier request.
+        if !case.message.media_descriptors.is_empty() {
+            req.media_descriptors = case.message.media_descriptors.iter().map(|md| {
+                MediaDescriptor {
+                    kind: md.kind.clone(),
+                    nsfw_score: Some(md.nsfw_score),
+                    violence_score: Some(md.violence_score),
+                    self_harm_score: None,
+                    hate_score: None,
+                    harassment_score: None,
+                    drugs_weapons_score: None,
+                    extremism_score: None,
+                    child_safety_score: None,
+                    deepfake_score: None,
+                    malware_score: None,
+                    face_count: if md.face_count > 0 { Some(md.face_count) } else { None },
+                }
+            }).collect();
+        }
 
         // Derive is_group from group_kind.
         req.is_group = match case.context.group_kind.as_str() {
