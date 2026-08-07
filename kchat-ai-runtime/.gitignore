@@ -43,6 +43,7 @@ manifest/packs/*.bin
 manifest/packs/*.onnx
 manifest/packs/*.pt
 manifest/packs/*.safetensors
+manifest/packs/**/*
 
 # Logs
 *.log
@@ -56,8 +57,14 @@ Desktop.ini
 # UniFFI generated bindings
 *.swift
 !crates/kchat-bindings/**/*.swift
+!swift/kchat-mlx-server/**/*.swift
 *.kt
 !crates/kchat-bindings/**/*.kt
+
+# Swift build artifacts
+swift/**/.build/
+swift/**/.build-release/
+swift/**/Package.resolved
 
 # N-API generated
 *.node

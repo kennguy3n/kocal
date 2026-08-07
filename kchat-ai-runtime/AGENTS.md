@@ -32,6 +32,11 @@ cargo build -p kchat-wasm --target wasm32-unknown-unknown --release
 # Run the red-team eval suite (36 attack cases)
 cargo run -p kchat-task-suite -- --redteam
 
+# Run the per-device real-world eval (12 profiles × 150 tasks × real model inference)
+# Tests each device profile's assigned model with 150 tasks across 15 categories
+# GGUF models use llama-server; MLX models use kchat-mlx-server (Swift or Python fallback)
+cargo run -p kchat-task-suite -- --perdevice
+
 # Build the Go server-side offload service
 cd sidecars/kchat-server-offload && go build && ./kchat-server-offload
 ```
@@ -52,6 +57,38 @@ To run generation tests, either:
 1. Start llama-server manually: `llama-server -m manifest/packs/Qwen3.5-0.8B-Q4_K_M.gguf --port 18888 -ngl 99`
 2. Or let the harness auto-start it (requires llama-server on PATH and model in manifest/packs/)
 3. Or set `LLAMA_SERVER_URL` to point to an existing server
+
+### Per-Device Eval Setup
+
+The `--perdevice` mode tests each of the 12 device profiles against its assigned
+real model (4 unique models), running 150 tasks across 15 categories:
+
+- **15 task categories**: summarization, translation, structured output, tool use,
+  multi-turn conversation, code generation, reasoning, instruction following,
+  safety, context retrieval, action, core, generation, WASM, bindings
+- **4 unique models**: ternary-bonsai-1.7b-mlx-2bit, ternary-bonsai-1.7b-q2_0,
+  ternary-bonsai-4b-q2_0, ternary-bonsai-8b-q2_0
+- **Multilingual coverage**: English, Vietnamese, Japanese, Korean, Chinese, Spanish,
+  Arabic, Hindi, Thai + mixed-language code-switching scenarios
+- **Judgment criteria**: task success rate (50%), quality (35% blended: 15% pass rate + 20% avg quality score),
+  TTFT P95 vs tier target (10%), decode P50 vs tier target (5%)
+- **Quality scoring**: Each task's quality check returns a 0.0-1.0 score (not just pass/fail).
+  Quality pass threshold is ≥0.7. Composite checks use `multi_check` to average sub-checks.
+  Check types: min_length, max_length, contains_keyword, contains_all, not_contains,
+  exact_match, json_schema_valid, regex_match, coherent, sentence_count, language_script,
+  min_words, multi_check
+- **Judgment**: Pass (≥75%), Marginal (50-74%), Fail (<50%)
+
+GGUF models run via `llama-server` subprocess. MLX models run via `kchat-mlx-server`
+(Swift binary preferred, Python `mlx-lm` fallback if Swift not built).
+
+To build the Swift MLX server:
+```bash
+cd swift/kchat-mlx-server && swift build -c release
+```
+
+If the Swift binary is not available, the harness automatically falls back to
+`swift/kchat-mlx-server/kchat_mlx_server.py` (requires `pip install mlx-lm`).
 
 ## Architecture
 
@@ -121,6 +158,13 @@ The workspace is organized into 8 crates + 1 Go sidecar following the 4-plane ar
   - Safety dataset v2: 14 languages (en, vi, zh, ja, ko, es, fr, de, ar, hi, th, id, pt, tl) + 13 mixed-lingual code-switch combos
   - Real model: Qwen3.5-0.8B Q4_K_M via llama-server (Metal), ~130 tok/s, 30ms TTFT
 - **Go server offload: 7 tests, all passing**
+- **Per-device eval: 12 profiles × 150 tasks = 1800 task runs (4 unique models)**
+  - 15 task categories: summarization, translation, structured output, tool use,
+    multi-turn, code generation, reasoning, instruction following, safety,
+    context retrieval, action, core, generation, WASM, bindings
+  - Multilingual: EN, VI, JA, KO, ZH, ES, AR, HI, TH + mixed-language
+  - Judgment: Pass (≥75%), Marginal (50-74%), Fail (<50%)
+  - GGUF via llama-server, MLX via kchat-mlx-server (Swift or Python fallback)
 
 ## Model Registry (10 packs)
 
@@ -142,12 +186,10 @@ The workspace is organized into 8 crates + 1 Go sidecar following the 4-plane ar
 - **Low tier**:
   - iOS/macOS: `ternary-bonsai-1.7b-mlx-2bit` via **MLX** (Qwen3-1.7B, 1.58-bit, 472MB)
   - Android/Windows: `ternary-bonsai-1.7b-q2_0` via **llama.cpp Vulkan** (Qwen3-1.7B, Q2_0, 442MB)
-- **Medium tier** (all platforms): `qwen3.5-0.8b-q4` via **llama.cpp** (Qwen3.5 0.8B, Q4_K_M, 500MB)
+- **Medium tier** (all platforms): `ternary-bonsai-4b-q2_0` via **llama.cpp** (Qwen3-4B, Q2_0, 1.0GB, 32K context)
 - **High tier**:
-  - iOS/macOS: `macaw-4bit-mlx` via **MLX** (LFM2.5-2.6B, 4-bit MLX, 1.5GB, 128K context)
-  - Android: `ternary-bonsai-4b-q2_0` via **llama.cpp Vulkan** (Qwen3-4B, Q2_0, 1.0GB, 32K context)
-  - Windows: `ternary-bonsai-8b-q2_0` via **llama.cpp Vulkan** (Qwen3-8B, Q2_0, 2.1GB, 65K context)
-  - Other: `qwen3.5-0.8b-q8` via **llama.cpp CPU** (fallback, 850MB)
+  - All platforms: `ternary-bonsai-8b-q2_0` via **llama.cpp** (Qwen3-8B, Q2_0, 2.1GB, 65K context)
+  - Fallback: `qwen3.5-0.8b-q8` via **llama.cpp CPU** (850MB)
 
 All models support `tool_use`. The "deterministic-first" principle is preserved —
 safety works on ALL devices without a generative model.

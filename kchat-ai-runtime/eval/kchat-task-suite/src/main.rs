@@ -21,6 +21,7 @@ mod eval_action;
 mod eval_integration;
 mod eval_realworld;
 mod eval_device_profile;
+mod eval_perdevice;
 mod device_simulator;
 mod redteam;
 mod report;
@@ -32,9 +33,12 @@ fn main() {
     let realworld_mode = args.iter().any(|a| a == "--realworld" || a == "--real");
     let redteam_mode = args.iter().any(|a| a == "--redteam" || a == "--red");
     let simulate_mode = args.iter().any(|a| a == "--simulate" || a == "--sim");
+    let perdevice_mode = args.iter().any(|a| a == "--perdevice" || a == "--perdev");
 
     println!("kchat-task-suite: Evaluation harness for kchat-ai-runtime");
-    if realworld_mode {
+    if perdevice_mode {
+        println!("Mode: PER-DEVICE (real model inference per device profile)");
+    } else if realworld_mode {
         println!("Mode: REAL-WORLD (comprehensive datasets + model inference)");
     } else if redteam_mode {
         println!("Mode: RED-TEAM (adversarial attack suite)");
@@ -44,6 +48,11 @@ fn main() {
         println!("Mode: STANDARD (synthetic unit-level evals)");
     }
     println!("=========================================================\n");
+
+    if perdevice_mode {
+        eval_perdevice::run();
+        return;
+    }
 
     if simulate_mode {
         device_simulator::run();

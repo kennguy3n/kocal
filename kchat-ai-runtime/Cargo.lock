@@ -1570,6 +1570,7 @@ dependencies = [
  "kchat-safety",
  "num_cpus",
  "rand 0.8.7",
+ "regex",
  "rusqlite",
  "serde",
  "serde_json",

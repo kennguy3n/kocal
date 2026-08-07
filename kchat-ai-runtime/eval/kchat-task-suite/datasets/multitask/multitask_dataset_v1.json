@@ -1,0 +1,651 @@
+{
+  "name": "kchat-multitask-v1",
+  "version": "1.0.0",
+  "description": "Comprehensive multi-task dataset for per-device real-world eval. 40 tasks across 8 categories.",
+  "tasks": [
+    {
+      "id": "summarize_001",
+      "category": "summarization",
+      "prompt": "Summarize the following news article in 2-3 sentences:\n\nApple announced today that its new M4 chip will feature a dedicated Neural Engine capable of 38 trillion operations per second, a significant leap from the M3's 18 TOPS. The chip will debut in the new iPad Pro lineup and later in MacBook Air models. Apple emphasized that the increased NPU performance enables on-device AI inference without compromising battery life, a key differentiator from competitors that rely on cloud-based AI.\n\nSummary:",
+      "max_tokens": 128,
+      "expected_min_tokens": 15,
+      "grammar": null,
+      "quality_check": {
+        "type": "min_length",
+        "min_chars": 50
+      },
+      "description": "News article summary (tech)"
+    },
+    {
+      "id": "summarize_002",
+      "category": "summarization",
+      "prompt": "Summarize this meeting transcript in 3-4 sentences:\n\nJohn: Let's discuss the Q3 roadmap. We have three major features to ship.\nSarah: The authentication refactor is the biggest one. It'll take 4 weeks.\nMike: I think we can parallelize the API migration with the UI updates.\nJohn: Good idea. Sarah, you take auth. Mike, handle the API. I'll do UI.\nSarah: What about testing? We need at least 2 weeks for QA.\nJohn: Let's allocate the last two weeks of Q3 for integration testing.\n\nSummary:",
+      "max_tokens": 128,
+      "expected_min_tokens": 15,
+      "grammar": null,
+      "quality_check": {
+        "type": "min_length",
+        "min_chars": 60
+      },
+      "description": "Meeting transcript summary"
+    },
+    {
+      "id": "summarize_003",
+      "category": "summarization",
+      "prompt": "Summarize this product review in one sentence:\n\nI've been using these wireless earbuds for about three months now. The sound quality is impressive for the price point, with clear highs and decent bass. Battery life is around 6 hours on a single charge, which is adequate but not outstanding. The fit is comfortable for extended use, though they can feel a bit loose during vigorous exercise. The noise cancellation works well in office environments but struggles with loud traffic. Overall, a solid mid-range option.\n\nSummary:",
+      "max_tokens": 64,
+      "expected_min_tokens": 10,
+      "grammar": null,
+      "quality_check": {
+        "type": "min_length",
+        "min_chars": 30
+      },
+      "description": "Product review summary"
+    },
+    {
+      "id": "summarize_004",
+      "category": "summarization",
+      "prompt": "Summarize this technical documentation in 2-3 sentences:\n\nThe authentication system uses OAuth 2.0 with PKCE (Proof Key for Code Exchange) for all client applications. Access tokens have a 15-minute lifetime and are automatically refreshed using the refresh token, which expires after 30 days. Token revocation is handled through a Redis-backed blacklist that is checked on every request. Rate limiting is applied at 100 requests per minute per user, with burst capacity of 150 requests.\n\nSummary:",
+      "max_tokens": 96,
+      "expected_min_tokens": 15,
+      "grammar": null,
+      "quality_check": {
+        "type": "min_length",
+        "min_chars": 50
+      },
+      "description": "Technical doc summary"
+    },
+    {
+      "id": "summarize_005",
+      "category": "summarization",
+      "prompt": "Summarize this email in 2 sentences:\n\nDear Team,\n\nI hope this message finds you well. I wanted to provide an update on the server migration project. We have successfully completed the first phase, which involved moving all static assets to the new CDN. The second phase, database migration, is scheduled for this weekend starting Saturday at 2 AM UTC. During this time, there will be a planned downtime of approximately 4 hours. Please ensure all critical jobs are paused before the maintenance window. If you have any concerns, please reach out to the infrastructure team before Friday EOD.\n\nBest regards,\nAlex\n\nSummary:",
+      "max_tokens": 96,
+      "expected_min_tokens": 15,
+      "grammar": null,
+      "quality_check": {
+        "type": "min_length",
+        "min_chars": 50
+      },
+      "description": "Email summary"
+    },
+
+    {
+      "id": "translate_001",
+      "category": "translation",
+      "prompt": "Translate the following English text to Vietnamese:\n\nHello, how are you today? I hope you are doing well. Can we schedule a meeting for tomorrow afternoon?\n\nVietnamese:",
+      "max_tokens": 64,
+      "expected_min_tokens": 10,
+      "grammar": null,
+      "quality_check": {
+        "type": "min_length",
+        "min_chars": 30
+      },
+      "description": "EN→VI common phrases"
+    },
+    {
+      "id": "translate_002",
+      "category": "translation",
+      "prompt": "Translate the following English text to Chinese:\n\nDear Mr. Chen, I am writing to confirm our appointment for next Tuesday at 10 AM. Please let me know if you need to reschedule.\n\nChinese:",
+      "max_tokens": 64,
+      "expected_min_tokens": 10,
+      "grammar": null,
+      "quality_check": {
+        "type": "min_length",
+        "min_chars": 20
+      },
+      "description": "EN→ZH business email"
+    },
+    {
+      "id": "translate_003",
+      "category": "translation",
+      "prompt": "Translate the following English text to Japanese:\n\nHello, my name is Alex. I am a software engineer from California. Nice to meet you!\n\nJapanese:",
+      "max_tokens": 64,
+      "expected_min_tokens": 10,
+      "grammar": null,
+      "quality_check": {
+        "type": "min_length",
+        "min_chars": 20
+      },
+      "description": "EN→JA greeting"
+    },
+    {
+      "id": "translate_004",
+      "category": "translation",
+      "prompt": "Translate the following English text to Korean:\n\nWhat time is our team meeting tomorrow? I need to prepare the presentation slides beforehand.\n\nKorean:",
+      "max_tokens": 64,
+      "expected_min_tokens": 10,
+      "grammar": null,
+      "quality_check": {
+        "type": "min_length",
+        "min_chars": 20
+      },
+      "description": "EN→KO schedule question"
+    },
+    {
+      "id": "translate_005",
+      "category": "translation",
+      "prompt": "Translate the following Vietnamese text to English:\n\nChào bạn, hôm nay bạn có rảnh không? Mình muốn mời bạn đi uống cà phê chiều nay.\n\nEnglish:",
+      "max_tokens": 64,
+      "expected_min_tokens": 10,
+      "grammar": null,
+      "quality_check": {
+        "type": "min_length",
+        "min_chars": 30
+      },
+      "description": "VI→EN casual message"
+    },
+
+    {
+      "id": "json_001",
+      "category": "structured_output",
+      "prompt": "Generate a JSON object representing a user profile with the following fields: name (string), age (number), email (string), active (boolean). Use example values.\n\nJSON:",
+      "max_tokens": 128,
+      "expected_min_tokens": 20,
+      "grammar": {
+        "type": "json_schema",
+        "schema": {
+          "type": "object",
+          "required": ["name", "age", "email", "active"],
+          "properties": {
+            "name": { "type": "string" },
+            "age": { "type": "number" },
+            "email": { "type": "string" },
+            "active": { "type": "boolean" }
+          }
+        }
+      },
+      "quality_check": {
+        "type": "json_schema_valid",
+        "schema": {
+          "type": "object",
+          "required": ["name", "age", "email", "active"],
+          "properties": {
+            "name": { "type": "string" },
+            "age": { "type": "number" },
+            "email": { "type": "string" },
+            "active": { "type": "boolean" }
+          }
+        }
+      },
+      "description": "User profile JSON"
+    },
+    {
+      "id": "json_002",
+      "category": "structured_output",
+      "prompt": "Generate a JSON object representing a calendar event with fields: title (string), date (string in YYYY-MM-DD format), time (string in HH:MM format), attendees (array of strings).\n\nJSON:",
+      "max_tokens": 128,
+      "expected_min_tokens": 20,
+      "grammar": {
+        "type": "json_schema",
+        "schema": {
+          "type": "object",
+          "required": ["title", "date", "time", "attendees"],
+          "properties": {
+            "title": { "type": "string" },
+            "date": { "type": "string" },
+            "time": { "type": "string" },
+            "attendees": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      },
+      "quality_check": {
+        "type": "json_schema_valid",
+        "schema": {
+          "type": "object",
+          "required": ["title", "date", "time", "attendees"],
+          "properties": {
+            "title": { "type": "string" },
+            "date": { "type": "string" },
+            "time": { "type": "string" },
+            "attendees": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      },
+      "description": "Calendar event JSON"
+    },
+    {
+      "id": "json_003",
+      "category": "structured_output",
+      "prompt": "Generate a JSON object representing a search query with fields: query (string), filters (object with optional category and date_range fields), limit (number).\n\nJSON:",
+      "max_tokens": 128,
+      "expected_min_tokens": 20,
+      "grammar": {
+        "type": "json_schema",
+        "schema": {
+          "type": "object",
+          "required": ["query", "filters", "limit"],
+          "properties": {
+            "query": { "type": "string" },
+            "filters": {
+              "type": "object",
+              "properties": {
+                "category": { "type": "string" },
+                "date_range": { "type": "string" }
+              }
+            },
+            "limit": { "type": "number" }
+          }
+        }
+      },
+      "quality_check": {
+        "type": "json_schema_valid",
+        "schema": {
+          "type": "object",
+          "required": ["query", "filters", "limit"],
+          "properties": {
+            "query": { "type": "string" },
+            "filters": { "type": "object" },
+            "limit": { "type": "number" }
+          }
+        }
+      },
+      "description": "Search query JSON"
+    },
+    {
+      "id": "json_004",
+      "category": "structured_output",
+      "prompt": "Generate a JSON object representing a tool call with fields: tool_name (string), arguments (object with any string key-value pairs).\n\nJSON:",
+      "max_tokens": 96,
+      "expected_min_tokens": 15,
+      "grammar": {
+        "type": "json_schema",
+        "schema": {
+          "type": "object",
+          "required": ["tool_name", "arguments"],
+          "properties": {
+            "tool_name": { "type": "string" },
+            "arguments": { "type": "object" }
+          }
+        }
+      },
+      "quality_check": {
+        "type": "json_schema_valid",
+        "schema": {
+          "type": "object",
+          "required": ["tool_name", "arguments"],
+          "properties": {
+            "tool_name": { "type": "string" },
+            "arguments": { "type": "object" }
+          }
+        }
+      },
+      "description": "Tool call JSON"
+    },
+    {
+      "id": "json_005",
+      "category": "structured_output",
+      "prompt": "Generate a JSON object representing a server config with fields: host (string), port (number), database (object with name and pool_size fields), features (array of strings).\n\nJSON:",
+      "max_tokens": 128,
+      "expected_min_tokens": 20,
+      "grammar": {
+        "type": "json_schema",
+        "schema": {
+          "type": "object",
+          "required": ["host", "port", "database", "features"],
+          "properties": {
+            "host": { "type": "string" },
+            "port": { "type": "number" },
+            "database": {
+              "type": "object",
+              "required": ["name", "pool_size"],
+              "properties": {
+                "name": { "type": "string" },
+                "pool_size": { "type": "number" }
+              }
+            },
+            "features": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      },
+      "quality_check": {
+        "type": "json_schema_valid",
+        "schema": {
+          "type": "object",
+          "required": ["host", "port", "database", "features"],
+          "properties": {
+            "host": { "type": "string" },
+            "port": { "type": "number" },
+            "database": { "type": "object" },
+            "features": { "type": "array" }
+          }
+        }
+      },
+      "description": "Config JSON with nested objects"
+    },
+
+    {
+      "id": "tool_001",
+      "category": "tool_use",
+      "prompt": "You have access to these tools: weather(location), send_message(recipient, body), search(query), create_reminder(time, text), battery_status().\n\nUser says: \"What's the weather like in Tokyo?\"\n\nWhich tool should be called and with what arguments? Respond with a JSON tool call.",
+      "max_tokens": 64,
+      "expected_min_tokens": 5,
+      "grammar": null,
+      "quality_check": {
+        "type": "contains_keyword",
+        "keywords": ["weather"]
+      },
+      "description": "Weather tool call"
+    },
+    {
+      "id": "tool_002",
+      "category": "tool_use",
+      "prompt": "You have access to these tools: weather(location), send_message(recipient, body), search(query), create_reminder(time, text), battery_status().\n\nUser says: \"Send a message to Ada saying I'll be late for the meeting.\"\n\nWhich tool should be called and with what arguments? Respond with a JSON tool call.",
+      "max_tokens": 64,
+      "expected_min_tokens": 5,
+      "grammar": null,
+      "quality_check": {
+        "type": "contains_keyword",
+        "keywords": ["send_message"]
+      },
+      "description": "Send message tool call"
+    },
+    {
+      "id": "tool_003",
+      "category": "tool_use",
+      "prompt": "You have access to these tools: weather(location), send_message(recipient, body), search(query), create_reminder(time, text), battery_status().\n\nUser says: \"Search for Q3 financial reports.\"\n\nWhich tool should be called and with what arguments? Respond with a JSON tool call.",
+      "max_tokens": 64,
+      "expected_min_tokens": 5,
+      "grammar": null,
+      "quality_check": {
+        "type": "contains_keyword",
+        "keywords": ["search"]
+      },
+      "description": "Search tool call"
+    },
+    {
+      "id": "tool_004",
+      "category": "tool_use",
+      "prompt": "You have access to these tools: weather(location), send_message(recipient, body), search(query), create_reminder(time, text), battery_status().\n\nUser says: \"Remind me at 3pm to call the dentist.\"\n\nWhich tool should be called and with what arguments? Respond with a JSON tool call.",
+      "max_tokens": 64,
+      "expected_min_tokens": 5,
+      "grammar": null,
+      "quality_check": {
+        "type": "contains_keyword",
+        "keywords": ["create_reminder", "reminder"]
+      },
+      "description": "Create reminder tool call"
+    },
+    {
+      "id": "tool_005",
+      "category": "tool_use",
+      "prompt": "You have access to these tools: weather(location), send_message(recipient, body), search(query), create_reminder(time, text), battery_status().\n\nUser says: \"How much battery do I have left?\"\n\nWhich tool should be called and with what arguments? Respond with a JSON tool call.",
+      "max_tokens": 64,
+      "expected_min_tokens": 5,
+      "grammar": null,
+      "quality_check": {
+        "type": "contains_keyword",
+        "keywords": ["battery"]
+      },
+      "description": "Battery status tool call"
+    },
+
+    {
+      "id": "multiturn_001",
+      "category": "multi_turn",
+      "prompt": "This is a 3-turn conversation. Respond to the final message.\n\nTurn 1 - User: Hi! What can you help me with?\nTurn 1 - Assistant: Hello! I can help you with summarization, translation, scheduling, and answering questions.\nTurn 2 - User: Can you summarize a document for me?\nTurn 2 - Assistant: Of course! Please share the document you'd like me to summarize.\nTurn 3 - User: What format should I send it in?\n\nAssistant:",
+      "max_tokens": 96,
+      "expected_min_tokens": 10,
+      "grammar": null,
+      "quality_check": {
+        "type": "min_length",
+        "min_chars": 30
+      },
+      "description": "3-turn greeting conversation"
+    },
+    {
+      "id": "multiturn_002",
+      "category": "multi_turn",
+      "prompt": "This is a 4-turn conversation. Respond to the final message.\n\nTurn 1 - User: I need to assign a task to someone on the team.\nTurn 1 - Assistant: Sure, I can help. What task needs to be assigned?\nTurn 2 - User: The API documentation needs to be updated.\nTurn 2 - Assistant: Got it. Who would you like to assign this to?\nTurn 3 - User: I think Sarah would be best since she wrote the original docs.\nTurn 3 - Assistant: Good choice. Should I set a deadline?\nTurn 4 - User: Yes, let's say end of next week.\n\nAssistant:",
+      "max_tokens": 96,
+      "expected_min_tokens": 10,
+      "grammar": null,
+      "quality_check": {
+        "type": "min_length",
+        "min_chars": 30
+      },
+      "description": "4-turn task assignment"
+    },
+    {
+      "id": "multiturn_003",
+      "category": "multi_turn",
+      "prompt": "This is a 3-turn conversation. Respond to the final message.\n\nTurn 1 - User: My app keeps crashing when I try to upload a file.\nTurn 1 - Assistant: I'm sorry to hear that. What file type are you trying to upload?\nTurn 2 - User: It's a PDF file, about 5MB in size.\nTurn 2 - Assistant: Thanks. Does the crash happen immediately or after some time?\nTurn 3 - User: It happens right after I select the file.\n\nAssistant:",
+      "max_tokens": 128,
+      "expected_min_tokens": 10,
+      "grammar": null,
+      "quality_check": {
+        "type": "min_length",
+        "min_chars": 40
+      },
+      "description": "3-turn error diagnosis"
+    },
+    {
+      "id": "multiturn_004",
+      "category": "multi_turn",
+      "prompt": "This is a 5-turn conversation. Respond to the final message.\n\nTurn 1 - User: Let's plan the product launch for next month.\nTurn 1 - Assistant: Great! Let's start with the timeline. What's the target date?\nTurn 2 - User: We're aiming for March 15th.\nTurn 2 - Assistant: Perfect. What are the key milestones we need to hit before then?\nTurn 3 - User: We need to finish beta testing, prepare marketing materials, and train the support team.\nTurn 3 - Assistant: Understood. How long do you estimate each milestone will take?\nTurn 4 - User: Beta testing needs 2 weeks, marketing 1 week, and training 3 days.\nTurn 4 - Assistant: That's a tight timeline. Should we prioritize any of these?\nTurn 5 - User: Beta testing is the most critical. If it runs long, we should delay the launch.\n\nAssistant:",
+      "max_tokens": 128,
+      "expected_min_tokens": 10,
+      "grammar": null,
+      "quality_check": {
+        "type": "min_length",
+        "min_chars": 40
+      },
+      "description": "5-turn planning discussion"
+    },
+    {
+      "id": "multiturn_005",
+      "category": "multi_turn",
+      "prompt": "This is a 3-turn conversation. Respond to the final message.\n\nTurn 1 - User: Can you review this function? It calculates the total price.\nTurn 1 - Assistant: Sure, please share the function code.\nTurn 2 - User: function getTotal(items) { let total = 0; for (let i of items) { total += i.price; } return total; }\nTurn 2 - Assistant: The function looks correct for basic use. However, it doesn't handle edge cases like empty arrays or items without a price property.\nTurn 3 - User: Good point. How should I handle those cases?\n\nAssistant:",
+      "max_tokens": 128,
+      "expected_min_tokens": 10,
+      "grammar": null,
+      "quality_check": {
+        "type": "min_length",
+        "min_chars": 40
+      },
+      "description": "3-turn code review"
+    },
+
+    {
+      "id": "code_001",
+      "category": "code_generation",
+      "prompt": "Write a Python function that adds two numbers and returns the result. Include a docstring.\n\n```python\n",
+      "max_tokens": 96,
+      "expected_min_tokens": 10,
+      "grammar": null,
+      "quality_check": {
+        "type": "contains_keyword",
+        "keywords": ["def", "return"]
+      },
+      "description": "Simple add function"
+    },
+    {
+      "id": "code_002",
+      "category": "code_generation",
+      "prompt": "Write a Python function that implements FizzBuzz from 1 to n. For multiples of 3 print 'Fizz', for multiples of 5 print 'Buzz', for multiples of both print 'FizzBuzz'.\n\n```python\n",
+      "max_tokens": 128,
+      "expected_min_tokens": 15,
+      "grammar": null,
+      "quality_check": {
+        "type": "contains_keyword",
+        "keywords": ["Fizz", "Buzz"]
+      },
+      "description": "FizzBuzz implementation"
+    },
+    {
+      "id": "code_003",
+      "category": "code_generation",
+      "prompt": "Write a JavaScript function that parses a JSON string safely, returning null if the string is invalid.\n\n```javascript\n",
+      "max_tokens": 96,
+      "expected_min_tokens": 10,
+      "grammar": null,
+      "quality_check": {
+        "type": "contains_keyword",
+        "keywords": ["JSON", "parse"]
+      },
+      "description": "JSON parser helper"
+    },
+    {
+      "id": "code_004",
+      "category": "code_generation",
+      "prompt": "Write a SQL query that selects all users who registered in the last 30 days, ordered by registration date descending.\n\n```sql\n",
+      "max_tokens": 96,
+      "expected_min_tokens": 10,
+      "grammar": null,
+      "quality_check": {
+        "type": "contains_keyword",
+        "keywords": ["SELECT", "FROM"]
+      },
+      "description": "SQL query builder"
+    },
+    {
+      "id": "code_005",
+      "category": "code_generation",
+      "prompt": "Write a simple React component that displays a greeting message with a prop called 'name'.\n\n```jsx\n",
+      "max_tokens": 128,
+      "expected_min_tokens": 15,
+      "grammar": null,
+      "quality_check": {
+        "type": "contains_keyword",
+        "keywords": ["function", "return"]
+      },
+      "description": "React component skeleton"
+    },
+
+    {
+      "id": "reason_001",
+      "category": "reasoning",
+      "prompt": "Solve this math problem step by step: A store sells apples at $2 each and oranges at $3 each. If a customer buys 5 apples and 3 oranges, how much do they spend in total?\n\nAnswer:",
+      "max_tokens": 128,
+      "expected_min_tokens": 10,
+      "grammar": null,
+      "quality_check": {
+        "type": "contains_keyword",
+        "keywords": ["19"]
+      },
+      "description": "Math word problem"
+    },
+    {
+      "id": "reason_002",
+      "category": "reasoning",
+      "prompt": "Use logical deduction: If all cats are mammals, and all mammals are animals, then are all cats animals? Explain your reasoning.\n\nAnswer:",
+      "max_tokens": 96,
+      "expected_min_tokens": 10,
+      "grammar": null,
+      "quality_check": {
+        "type": "contains_keyword",
+        "keywords": ["yes"]
+      },
+      "description": "Logical deduction"
+    },
+    {
+      "id": "reason_003",
+      "category": "reasoning",
+      "prompt": "Explain the cause and effect: What happens to ice when the temperature rises above 0 degrees Celsius, and why?\n\nAnswer:",
+      "max_tokens": 128,
+      "expected_min_tokens": 10,
+      "grammar": null,
+      "quality_check": {
+        "type": "contains_keyword",
+        "keywords": ["melt", "water"]
+      },
+      "description": "Cause and effect"
+    },
+    {
+      "id": "reason_004",
+      "category": "reasoning",
+      "prompt": "Compare these two options and recommend one:\nOption A: A phone with 12-hour battery life and a basic camera.\nOption B: A phone with 8-hour battery life and an excellent camera.\nWhich would you recommend for a travel blogger and why?\n\nRecommendation:",
+      "max_tokens": 128,
+      "expected_min_tokens": 15,
+      "grammar": null,
+      "quality_check": {
+        "type": "min_length",
+        "min_chars": 50
+      },
+      "description": "Comparison and recommendation"
+    },
+    {
+      "id": "reason_005",
+      "category": "reasoning",
+      "prompt": "A user reports their phone won't charge. List 3 possible causes and a troubleshooting step for each.\n\nAnswer:",
+      "max_tokens": 192,
+      "expected_min_tokens": 20,
+      "grammar": null,
+      "quality_check": {
+        "type": "min_length",
+        "min_chars": 80
+      },
+      "description": "Troubleshooting steps"
+    },
+
+    {
+      "id": "instruct_001",
+      "category": "instruction_following",
+      "prompt": "Write exactly 3 sentences about the importance of sleep for health. Do not write more or fewer than 3 sentences.",
+      "max_tokens": 128,
+      "expected_min_tokens": 15,
+      "grammar": null,
+      "quality_check": {
+        "type": "min_length",
+        "min_chars": 60
+      },
+      "description": "Exactly 3 sentences"
+    },
+    {
+      "id": "instruct_002",
+      "category": "instruction_following",
+      "prompt": "List 5 benefits of regular exercise. Number them 1 through 5. Do not include any other text.",
+      "max_tokens": 128,
+      "expected_min_tokens": 15,
+      "grammar": null,
+      "quality_check": {
+        "type": "contains_keyword",
+        "keywords": ["1.", "2.", "3."]
+      },
+      "description": "Numbered list of 5"
+    },
+    {
+      "id": "instruct_003",
+      "category": "instruction_following",
+      "prompt": "Is the following statement true or false: 'The Earth orbits the Sun.' Respond with only 'YES' or 'NO'.",
+      "max_tokens": 8,
+      "expected_min_tokens": 1,
+      "grammar": null,
+      "quality_check": {
+        "type": "contains_keyword",
+        "keywords": ["YES"]
+      },
+      "description": "Yes/No response only"
+    },
+    {
+      "id": "instruct_004",
+      "category": "instruction_following",
+      "prompt": "Create a simple table with 3 columns (Name, Age, City) and 2 rows of sample data. Use markdown table format.",
+      "max_tokens": 96,
+      "expected_min_tokens": 15,
+      "grammar": null,
+      "quality_check": {
+        "type": "contains_keyword",
+        "keywords": ["|"]
+      },
+      "description": "Markdown table format"
+    },
+    {
+      "id": "instruct_005",
+      "category": "instruction_following",
+      "prompt": "Write a haiku about autumn. A haiku has 3 lines with 5-7-5 syllable pattern. Include only the haiku.",
+      "max_tokens": 48,
+      "expected_min_tokens": 5,
+      "grammar": null,
+      "quality_check": {
+        "type": "min_length",
+        "min_chars": 15
+      },
+      "description": "Haiku about autumn"
+    }
+  ],
+  "performance_targets": {
+    "low_tier":    { "ttft_p95_ms": 2500, "decode_p50_tps": 8,  "max_memory_gb": 0.75 },
+    "medium_tier": { "ttft_p95_ms": 1500, "decode_p50_tps": 15, "max_memory_gb": 1.5  },
+    "high_tier":   { "ttft_p95_ms": 1000, "decode_p50_tps": 25, "max_memory_gb": 3.0  }
+  }
+}
