@@ -1,0 +1,25 @@
+# Chinese-language lexicon bundle for the kchat.jurisdiction.sg.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: sg_zh_lexicon_v1
+language: zh
+locale: zh-SG
+provenance: kchat_trust_and_safety_sg_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+  - 7   # SCAM_FRAUD
+terms:
+  - term_id: sg_zh_term_cypa_child_zh_v1
+    categories: [1]
+    notes: Children and Young Persons Act indicators (Chinese).
+  - term_id: sg_zh_term_isa_zh_v1
+    categories: [4]
+    notes: Internal Security Act indicators (Chinese).
+  - term_id: sg_zh_term_ocha_consumer_fraud_v1
+    categories: [7]
+    notes: Online Criminal Harms Act consumer-fraud indicators (Chinese).

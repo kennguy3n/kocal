@@ -1,0 +1,21 @@
+# Italian-language lexicon bundle for the kchat.jurisdiction.ch.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: ch_it_lexicon_v1
+language: it
+locale: it-CH
+provenance: kchat_trust_and_safety_ch_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 6   # HATE
+terms:
+  - term_id: ch_it_term_cp_197_minori_ch_v1
+    categories: [1]
+    notes: Codice penale Art. 197 indicators (Swiss-Italian).
+  - term_id: ch_it_term_cp_261bis_it_ch_v1
+    categories: [6]
+    notes: Codice penale Art. 261bis anti-racism indicators.

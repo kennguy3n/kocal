@@ -1,0 +1,21 @@
+# Galician-language lexicon bundle for the kchat.jurisdiction.es.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: es_gl_lexicon_v1
+language: gl
+locale: gl-ES
+provenance: kchat_trust_and_safety_es_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+terms:
+  - term_id: es_gl_term_lopjm_menor_gl_v1
+    categories: [1]
+    notes: LOPJM protección do menor (Galician catalogue).
+  - term_id: es_gl_term_cp_terrorismo_gl_v1
+    categories: [4]
+    notes: Código penal — terrorismo (Galician catalogue).

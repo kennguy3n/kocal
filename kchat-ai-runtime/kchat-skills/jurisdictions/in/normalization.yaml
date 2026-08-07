@@ -1,0 +1,13 @@
+# Normalization rules for the India jurisdiction overlay.
+#
+# Devanagari transliteration ref is added on top of the core
+# transliteration ref so Hindi text in Devanagari script is
+# romanised before lexicon matching.
+
+schema_version: 1
+nfkc: true
+case_fold: true
+homoglyph_map_id: homoglyph_core_v1
+transliteration_refs:
+  - translit_core_v1
+  - translit_devanagari_v1

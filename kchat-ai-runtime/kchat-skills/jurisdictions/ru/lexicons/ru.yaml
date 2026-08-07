@@ -1,0 +1,21 @@
+# RU (Russia) lexicon bundle for the kchat.jurisdiction.ru.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: ru_ru_lexicon_v1
+language: ru
+locale: ru-RU
+provenance: kchat_trust_and_safety_ru_v1
+categories:
+  - 1
+  - 4
+terms:
+  - term_id: ru_ru_term_child_protection_v1
+    categories: [1]
+    notes: Federal Law 124-FZ child-protection indicators (catalogue-only).
+  - term_id: ru_ru_term_extremism_114fz_v1
+    categories: [4]
+    notes: Federal Law 114-FZ extremist-org indicators (catalogue-only).

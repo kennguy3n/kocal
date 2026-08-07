@@ -1,0 +1,116 @@
+# Global Risk Taxonomy — kchat.global.guardrail.baseline
+#
+# The 17-category global risk taxonomy. Every guardrail skill — including
+# jurisdiction and community overlays — must classify content into exactly
+# one of these IDs. Overlays may *narrow* a category or raise its severity,
+# but they may NOT invent new categories, remove categories, rename them,
+# or change their numeric IDs.
+#
+# Source of truth: ARCHITECTURE.md "Global Risk Taxonomy" table.
+schema_version: 1
+taxonomy_id: kchat.guardrail.taxonomy.v1
+
+categories:
+  - id: 0
+    name: SAFE
+    description: No detected risk.
+    typical_local_action: None.
+
+  - id: 1
+    name: CHILD_SAFETY
+    description: >-
+      Content sexualising or endangering minors; grooming patterns;
+      CSAM indicators.
+    typical_local_action: Block preview, hard warn, surface report flow.
+
+  - id: 2
+    name: SELF_HARM
+    description: >-
+      Suicide ideation, self-injury planning, pro-ana / pro-mia content.
+    typical_local_action: Soft warn, surface local crisis resources.
+
+  - id: 3
+    name: VIOLENCE_THREAT
+    description: >-
+      Credible threats of physical violence against an identifiable target.
+    typical_local_action: Strong warn, surface report and block flows.
+
+  - id: 4
+    name: EXTREMISM
+    description: >-
+      Recruitment / glorification of violent extremist orgs
+      (jurisdiction-listed).
+    typical_local_action: Strong warn; jurisdictional override possible.
+
+  - id: 5
+    name: HARASSMENT
+    description: >-
+      Targeted insults, doxxing, sustained pile-on, sexual harassment.
+    typical_local_action: Warn, suggest mute / report.
+
+  - id: 6
+    name: HATE
+    description: Dehumanising speech against a protected class.
+    typical_local_action: Warn; protected-speech context check.
+
+  - id: 7
+    name: SCAM_FRAUD
+    description: >-
+      Phishing, advance-fee fraud, fake giveaways, impersonation.
+    typical_local_action: Warn, mark links, surface report.
+
+  - id: 8
+    name: MALWARE_LINK
+    description: >-
+      Links / attachments matching malware or credential-stealing patterns.
+    typical_local_action: Block link preview, hard warn.
+
+  - id: 9
+    name: PRIVATE_DATA
+    description: >-
+      PII / financial / credentials / location of self or others.
+    typical_local_action: >-
+      Warn before send / before display, suggest redaction.
+
+  - id: 10
+    name: SEXUAL_ADULT
+    description: Adult sexual content between consenting adults.
+    typical_local_action: Label; gated by group age mode + jurisdiction.
+
+  - id: 11
+    name: DRUGS_WEAPONS
+    description: >-
+      Sale or facilitation of drugs / firearms / regulated goods.
+    typical_local_action: Warn; jurisdictional override common.
+
+  - id: 12
+    name: ILLEGAL_GOODS
+    description: >-
+      Stolen goods, counterfeit currency, trafficked items.
+    typical_local_action: Warn; surface report flow.
+
+  - id: 13
+    name: MISINFORMATION_HEALTH
+    description: >-
+      Health claims contradicting public-health consensus in a high-harm
+      context.
+    typical_local_action: Label, link to authoritative source.
+
+  - id: 14
+    name: MISINFORMATION_CIVIC
+    description: >-
+      Election / civic misinformation in a jurisdiction-flagged window.
+    typical_local_action: Label, link to electoral authority.
+
+  - id: 15
+    name: COMMUNITY_RULE
+    description: >-
+      Content violating an explicit community-overlay rule.
+    typical_local_action: Label per community overlay action.
+
+  - id: 16
+    name: DEEPFAKE_SYNTHETIC
+    description: >-
+      Deepfake face-swap, synthetic voice-to-video, AI-generated
+      impersonation, or doctored/spliced media designed to deceive.
+    typical_local_action: Warn; in election windows escalate to critical.

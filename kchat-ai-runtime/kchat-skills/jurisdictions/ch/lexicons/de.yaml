@@ -1,0 +1,21 @@
+# German-language lexicon bundle for the kchat.jurisdiction.ch.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: ch_de_lexicon_v1
+language: de
+locale: de-CH
+provenance: kchat_trust_and_safety_ch_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 6   # HATE
+terms:
+  - term_id: ch_de_term_stgb_197_kinder_ch_v1
+    categories: [1]
+    notes: StGB Art. 197 indicators (Swiss-German catalogue).
+  - term_id: ch_de_term_stgb_261bis_ch_v1
+    categories: [6]
+    notes: StGB Art. 261bis anti-racism indicators.

@@ -1,0 +1,142 @@
+# NCII / non-consensual intimate imagery dataset sourcing manifest
+# (kchat.guardrail.dataset_sourcing.v1)
+#
+# SCAFFOLD ONLY — this manifest documents the external benchmarks that a
+# future, credentialed bake/evaluation host would pull to harden the
+# SEXUAL_ADULT (taxonomy id 10) NCII detection capability. It deliberately
+# ships NO downloaded media, NO live download URLs, and NO credentials:
+# every entry below is trust-and-safety-gated or law-enforcement-gated
+# behind a signed access agreement that the operator must complete
+# out-of-band. The on-device SDK never ships these datasets; they are used
+# only off-device to (a) calibrate the MobileCLIP-S2 vision prototype bank
+# and (b) measure recall / precision for the held-out vision corpus.
+#
+# Privacy & licence posture
+# -------------------------
+# * Non-consensual intimate imagery (NCII) is among the most
+#   privacy-harmful content categories. Sourcing is restricted to
+#   credentialed T&S organisations and law-enforcement-adjacent research
+#   programmes with strict chain-of-custody, data-minimisation, and
+#   victim-protection mandates.
+# * The scope of this scaffold is NCII / image-based sexual abuse (IBSA)
+#   governance — not consensual adult content. The SEXUAL_ADULT category
+#   covers both, but NCII-specific evaluation requires dedicated,
+#   non-consensual-origin corpora that must be handled under the highest
+#   privacy safeguards.
+# * Each benchmark is redistribution-restricted. We record only the
+#   provider, the access process, and the licence class — never a mirror.
+# * Negative (consensual, disclosed adult content) sources are included so
+#   the precision gate (no false positives on legitimate adult expression)
+#   can be measured, not just recall.
+# * `status: scaffold` means "documented access path, not yet ingested".
+#   An operator with credentials flips this to `ingested` in their private
+#   overlay; this checked-in file stays `scaffold`.
+#
+# This file is intentionally inert: nothing in the build imports media
+# from here. `tools/build_vision_category_prototypes.py` bakes prototypes
+# from text prompts (`vision_prototypes_source.yaml`); these corpora are
+# the *evaluation* and future *image-centroid* sourcing path.
+
+schema_id: kchat.guardrail.dataset_sourcing.v1
+schema_version: 1
+category_id: 10
+category_name: SEXUAL_ADULT
+status: scaffold
+
+# --------------------------------------------------------------------------
+# Positive benchmarks — NCII / image-based sexual abuse imagery
+# (SEXUAL_ADULT / NCII POSITIVES).
+# --------------------------------------------------------------------------
+positive_benchmarks:
+  - id: ts_ncii_hashset
+    name: NCII hash-match and perceptual-hash reference corpus
+    role: positive
+    modality: image
+    purpose: >-
+      Perceptual hashes (PhotoDNA-class, PDQ, or equivalent) of confirmed
+      NCII material, supplied by a recognised T&S intermediary. Used to
+      calibrate hash-match recall against the SEXUAL_ADULT category
+      without storing or transmitting the underlying imagery. Primary
+      recall reference for NCII visual signals.
+    licence_class: ts_restricted
+    redistribution: prohibited
+    credentials_required: true
+    access_process: >-
+      Apply to a recognised NCII T&S intermediary (e.g. StopNCII.org
+      hash-sharing programme, or a platform-consortium hash-exchange
+      operating under a multi-party data-sharing agreement). Access is
+      granted only to vetted organisations with a documented T&S mandate
+      and strict data-handling, retention, and destruction policies.
+      No raw media is transferred — only perceptual-hash sets. No public
+      mirror; do not commit hash lists or media.
+    provenance_note: >-
+      Cite the T&S intermediary programme and the data-sharing agreement
+      reference. Hash sets are non-reversible and do not constitute
+      imagery, but must still be handled under the strictest
+      data-minimisation and access-control requirements.
+  - id: ts_ibsa_research
+    name: Image-based sexual abuse research corpus
+    role: positive
+    modality: image
+    purpose: >-
+      Curated reference imagery from law-enforcement-adjacent or
+      victim-advocacy research programmes studying image-based sexual
+      abuse patterns. Harder positives that stress the boundary between
+      consensual adult content and non-consensual distribution.
+    licence_class: ts_restricted
+    redistribution: prohibited
+    credentials_required: true
+    access_process: >-
+      Access through a law-enforcement-adjacent research programme or
+      victim-advocacy organisation operating under strict ethical
+      oversight (e.g. university study with law-enforcement data-sharing
+      MOU, or a T&S consortium IBSA research track). Provider grants
+      access only under a signed agreement with chain-of-custody,
+      data-minimisation, and victim-notification requirements. No public
+      mirror; no redistribution permitted. All access requires
+      documented ethical approval and victim-protection safeguards.
+    provenance_note: >-
+      Data must originate from a programme with documented ethical
+      oversight and victim-protection mandates. Cite the originating
+      programme and ethical-approval reference when reporting results.
+
+# --------------------------------------------------------------------------
+# Negative sources — consensual, disclosed adult content that MUST NOT be
+# flagged as NCII. These calibrate the precision gate
+# (benign_false_positive cases in held_out_vision.yaml).
+# --------------------------------------------------------------------------
+negative_sources:
+  - id: consensual_adult_disclosed
+    name: Consensual, disclosed adult content (age-verified, licence-clean)
+    role: negative
+    modality: image
+    purpose: >-
+      Legitimate, consensual adult content from age-verified platforms
+      that is NOT non-consensual — the canonical false-positive guard
+      for the NCII detection capability within SEXUAL_ADULT.
+    licence_class: commercial_or_platform_tos
+    redistribution: per_source_licence
+    credentials_required: false
+    access_process: >-
+      Curate from age-verified, consent-documented adult content
+      platforms operating under platform terms of service. Exclude any
+      image where consent status is ambiguous, disputed, or unknown.
+      All negatives must carry documented creator consent and
+      age-verification provenance.
+    provenance_note: >-
+      Negatives must have documented, verifiable consent and
+      age-verification; pair each with the platform-consent metadata
+      used in the held-out negatives.
+
+# Operator hook: a credentialed evaluation host overrides this file in a
+# private overlay, sets per-entry `local_path` + `status: ingested`, and
+# runs tools/eval_vision_metrics.py over the encoder-required vision cases.
+# The checked-in copy remains a credential-free scaffold.
+ingestion_hook:
+  consumes: kchat-skills/eval/held_out_vision.yaml
+  partition_tag: encoder_required
+  evaluator: tools/eval_vision_metrics.py
+  note: >-
+    No automated download runs from this repo. Ingestion is an explicit,
+    out-of-band operator step gated by the signed agreements, ethical
+    approvals, and victim-protection mandates above.

@@ -30,7 +30,31 @@ pub mod categories {
     pub const NSFW: u32 = 6;
     pub const SELF_HARM: u32 = 7;
     pub const SPAM: u32 = 8;
+    pub const EXTREMISM: u32 = 9;
+    pub const HARASSMENT: u32 = 10;
+    pub const DRUGS_WEAPONS: u32 = 11;
+    pub const DEEPFAKE: u32 = 12;
+    pub const MALWARE: u32 = 13;
 }
+
+// ---------------------------------------------------------------------------
+// Media safety score thresholds (ported from slm-guardrail priority_chain).
+// ---------------------------------------------------------------------------
+
+/// Media safety score above which a media branch fires (strict `>`).
+const MEDIA_TRIGGER_THRESHOLD: f64 = 0.7;
+
+/// Media safety score at or above which a branch escalates to severity-4.
+const MEDIA_HIGH_BAND: f64 = 0.9;
+
+/// Confidence floor for child-safety media branch.
+const CHILD_SAFETY_CONFIDENCE_FLOOR: f64 = 0.45;
+
+/// Confidence ceiling for child-safety media branch.
+const CHILD_SAFETY_CONFIDENCE_CEIL: f64 = 0.99;
+
+/// Confidence ceiling for non-child-safety media branches.
+const DETERMINISTIC_CONFIDENCE_CEIL: f64 = 0.95;
 
 /// A signal from a deterministic detector.
 #[derive(Debug, Clone)]
@@ -46,11 +70,17 @@ pub struct DetectorSignal {
 #[derive(Debug, Default)]
 pub struct LocalSignals {
     pub signals: Vec<DetectorSignal>,
+    /// Media descriptors from on-device vision models (image/video safety scores).
+    pub media_descriptors: Vec<crate::media::MediaDescriptor>,
 }
 
 impl LocalSignals {
-    pub fn is_empty(&self) -> bool { self.signals.is_empty() }
+    pub fn is_empty(&self) -> bool { self.signals.is_empty() && self.media_descriptors.is_empty() }
     pub fn add(&mut self, signal: DetectorSignal) { self.signals.push(signal); }
+    pub fn with_media(mut self, media: Vec<crate::media::MediaDescriptor>) -> Self {
+        self.media_descriptors = media;
+        self
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -633,10 +663,31 @@ pub fn run_all_detectors(
     signals
 }
 
-/// Resolve deterministic signals into a verdict using the priority chain:
+/// Resolve deterministic signals into a verdict using the priority chain.
+///
+/// Media branches are checked first (highest priority) since they represent
+/// on-device vision model verdicts with direct safety implications:
+///   CHILD_SAFETY_media > SELF_HARM_media > EXTREMISM_media > HATE_media >
+///   HARASSMENT_media > DRUGS_WEAPONS_media > NSFW_media > VIOLENCE_media >
+///   DEEPFAKE_media > MALWARE_media
+///
+/// Then text-based signals in priority order:
 ///   CHILD_SAFETY > SELF_HARM > PRIVATE_DATA > SCAM_FRAUD > HATE_SPEECH > VIOLENCE > NSFW > SPAM
 pub fn resolve_priority_chain(signals: &LocalSignals) -> Option<DetectorSignal> {
-    if signals.is_empty() { return None; }
+    // --- Media branches (highest priority) ---
+    if let Some(s) = child_safety_media_branch(signals) { return Some(s); }
+    if let Some(s) = self_harm_media_branch(signals) { return Some(s); }
+    if let Some(s) = extremism_media_branch(signals) { return Some(s); }
+    if let Some(s) = hate_media_branch(signals) { return Some(s); }
+    if let Some(s) = harassment_media_branch(signals) { return Some(s); }
+    if let Some(s) = drugs_weapons_media_branch(signals) { return Some(s); }
+    if let Some(s) = nsfw_media_branch(signals) { return Some(s); }
+    if let Some(s) = violence_media_branch(signals) { return Some(s); }
+    if let Some(s) = deepfake_media_branch(signals) { return Some(s); }
+    if let Some(s) = malware_media_branch(signals) { return Some(s); }
+
+    // --- Text-based signals ---
+    if signals.signals.is_empty() { return None; }
     let priority = [
         categories::CHILD_SAFETY, categories::SELF_HARM, categories::PRIVATE_DATA,
         categories::SCAM_FRAUD, categories::HATE_SPEECH, categories::VIOLENCE,
@@ -651,6 +702,176 @@ pub fn resolve_priority_chain(signals: &LocalSignals) -> Option<DetectorSignal> 
         }
     }
     signals.signals.first().cloned()
+}
+
+// ---------------------------------------------------------------------------
+// Media branch detectors — image/video safety scores from on-device vision
+// models. Ported from slm-guardrail's priority_chain.rs media branches.
+// Each branch iterates media_descriptors and fires on the first score above
+// MEDIA_TRIGGER_THRESHOLD (> 0.7). Severity escalates at MEDIA_HIGH_BAND (>= 0.9).
+// ---------------------------------------------------------------------------
+
+/// Helper: clamp a value into `[lo, hi]`, collapsing NaN to `lo`.
+fn clamp_finite(value: f64, lo: f64, hi: f64) -> f64 {
+    if value.is_nan() { return lo; }
+    if value < lo { return lo; }
+    if value > hi { return hi; }
+    value
+}
+
+/// Helper: build a media branch DetectorSignal for the standard
+/// warn/strong_warn pattern (all branches except child_safety and malware).
+fn media_signal_standard(
+    score: f64,
+    category: u32,
+    reason_code: &str,
+) -> DetectorSignal {
+    let (severity, action) = if score >= MEDIA_HIGH_BAND {
+        (Severity::SEVERE, Action::Block)
+    } else {
+        (Severity::BORDERLINE, Action::Warn)
+    };
+    DetectorSignal {
+        category,
+        severity,
+        confidence: score.min(DETERMINISTIC_CONFIDENCE_CEIL),
+        reason_code: reason_code.into(),
+        action,
+    }
+}
+
+/// CHILD_SAFETY media — fires on `child_safety_score > 0.7`.
+/// Severity-5 critical, always Block. Highest-priority media branch.
+fn child_safety_media_branch(signals: &LocalSignals) -> Option<DetectorSignal> {
+    for m in &signals.media_descriptors {
+        if let Some(score) = m.child_safety_score {
+            if score > MEDIA_TRIGGER_THRESHOLD {
+                return Some(DetectorSignal {
+                    category: categories::CHILD_SAFETY,
+                    severity: Severity::CRITICAL,
+                    confidence: clamp_finite(score, CHILD_SAFETY_CONFIDENCE_FLOOR, CHILD_SAFETY_CONFIDENCE_CEIL),
+                    reason_code: "CHILD_SAFETY_MEDIA".into(),
+                    action: Action::Block,
+                });
+            }
+        }
+    }
+    None
+}
+
+/// SELF_HARM media — fires on `self_harm_score > 0.7`.
+fn self_harm_media_branch(signals: &LocalSignals) -> Option<DetectorSignal> {
+    for m in &signals.media_descriptors {
+        if let Some(score) = m.self_harm_score {
+            if score > MEDIA_TRIGGER_THRESHOLD {
+                return Some(media_signal_standard(score, categories::SELF_HARM, "SELF_HARM_MEDIA"));
+            }
+        }
+    }
+    None
+}
+
+/// EXTREMISM media — fires on `extremism_score > 0.7`.
+fn extremism_media_branch(signals: &LocalSignals) -> Option<DetectorSignal> {
+    for m in &signals.media_descriptors {
+        if let Some(score) = m.extremism_score {
+            if score > MEDIA_TRIGGER_THRESHOLD {
+                return Some(media_signal_standard(score, categories::EXTREMISM, "EXTREMISM_MEDIA"));
+            }
+        }
+    }
+    None
+}
+
+/// HATE media — fires on `hate_score > 0.7`.
+fn hate_media_branch(signals: &LocalSignals) -> Option<DetectorSignal> {
+    for m in &signals.media_descriptors {
+        if let Some(score) = m.hate_score {
+            if score > MEDIA_TRIGGER_THRESHOLD {
+                return Some(media_signal_standard(score, categories::HATE_SPEECH, "HATE_MEDIA"));
+            }
+        }
+    }
+    None
+}
+
+/// HARASSMENT media — fires on `harassment_score > 0.7`.
+fn harassment_media_branch(signals: &LocalSignals) -> Option<DetectorSignal> {
+    for m in &signals.media_descriptors {
+        if let Some(score) = m.harassment_score {
+            if score > MEDIA_TRIGGER_THRESHOLD {
+                return Some(media_signal_standard(score, categories::HARASSMENT, "HARASSMENT_MEDIA"));
+            }
+        }
+    }
+    None
+}
+
+/// DRUGS_WEAPONS media — fires on `drugs_weapons_score > 0.7`.
+fn drugs_weapons_media_branch(signals: &LocalSignals) -> Option<DetectorSignal> {
+    for m in &signals.media_descriptors {
+        if let Some(score) = m.drugs_weapons_score {
+            if score > MEDIA_TRIGGER_THRESHOLD {
+                return Some(media_signal_standard(score, categories::DRUGS_WEAPONS, "DRUGS_WEAPONS_MEDIA"));
+            }
+        }
+    }
+    None
+}
+
+/// NSFW media — fires on `nsfw_score > 0.7`.
+fn nsfw_media_branch(signals: &LocalSignals) -> Option<DetectorSignal> {
+    for m in &signals.media_descriptors {
+        if let Some(score) = m.nsfw_score {
+            if score > MEDIA_TRIGGER_THRESHOLD {
+                return Some(media_signal_standard(score, categories::NSFW, "NSFW_MEDIA"));
+            }
+        }
+    }
+    None
+}
+
+/// VIOLENCE media — fires on `violence_score > 0.7`.
+fn violence_media_branch(signals: &LocalSignals) -> Option<DetectorSignal> {
+    for m in &signals.media_descriptors {
+        if let Some(score) = m.violence_score {
+            if score > MEDIA_TRIGGER_THRESHOLD {
+                return Some(media_signal_standard(score, categories::VIOLENCE, "VIOLENCE_MEDIA"));
+            }
+        }
+    }
+    None
+}
+
+/// DEEPFAKE media — fires on `deepfake_score > 0.7`.
+fn deepfake_media_branch(signals: &LocalSignals) -> Option<DetectorSignal> {
+    for m in &signals.media_descriptors {
+        if let Some(score) = m.deepfake_score {
+            if score > MEDIA_TRIGGER_THRESHOLD {
+                return Some(media_signal_standard(score, categories::DEEPFAKE, "DEEPFAKE_MEDIA"));
+            }
+        }
+    }
+    None
+}
+
+/// MALWARE media — fires on `malware_score > 0.7`.
+/// Always severity-3 Warn (no high-band escalation).
+fn malware_media_branch(signals: &LocalSignals) -> Option<DetectorSignal> {
+    for m in &signals.media_descriptors {
+        if let Some(score) = m.malware_score {
+            if score > MEDIA_TRIGGER_THRESHOLD {
+                return Some(DetectorSignal {
+                    category: categories::MALWARE,
+                    severity: Severity::BORDERLINE,
+                    confidence: score.min(DETERMINISTIC_CONFIDENCE_CEIL),
+                    reason_code: "MALWARE_MEDIA".into(),
+                    action: Action::Warn,
+                });
+            }
+        }
+    }
+    None
 }
 
 #[cfg(test)]
@@ -821,5 +1042,176 @@ mod tests {
         let lex = vec![("كيف أصنع سلاحا".into(), categories::VIOLENCE, Severity::SEVERE)];
         let sigs = LexiconDetector::detect(&normalized, &lex);
         assert!(!sigs.is_empty(), "Arabic lexicon should match normalized text: normalized='{}', sigs={:?}", normalized, sigs);
+    }
+
+    // --- Media branch tests ---
+
+    fn media_desc(score_field: &str, score: f64) -> crate::media::MediaDescriptor {
+        let mut d = crate::media::MediaDescriptor {
+            kind: "image".into(),
+            nsfw_score: None,
+            violence_score: None,
+            self_harm_score: None,
+            hate_score: None,
+            harassment_score: None,
+            drugs_weapons_score: None,
+            extremism_score: None,
+            child_safety_score: None,
+            deepfake_score: None,
+            malware_score: None,
+            face_count: None,
+        };
+        match score_field {
+            "nsfw" => d.nsfw_score = Some(score),
+            "violence" => d.violence_score = Some(score),
+            "self_harm" => d.self_harm_score = Some(score),
+            "hate" => d.hate_score = Some(score),
+            "harassment" => d.harassment_score = Some(score),
+            "drugs_weapons" => d.drugs_weapons_score = Some(score),
+            "extremism" => d.extremism_score = Some(score),
+            "child_safety" => d.child_safety_score = Some(score),
+            "deepfake" => d.deepfake_score = Some(score),
+            "malware" => d.malware_score = Some(score),
+            _ => {}
+        }
+        d
+    }
+
+    fn signals_with_media(media: Vec<crate::media::MediaDescriptor>) -> LocalSignals {
+        LocalSignals::default().with_media(media)
+    }
+
+    #[test]
+    fn test_child_safety_media_fires() {
+        let sig = signals_with_media(vec![media_desc("child_safety", 0.85)]);
+        let result = resolve_priority_chain(&sig);
+        assert!(result.is_some());
+        let s = result.unwrap();
+        assert_eq!(s.category, categories::CHILD_SAFETY);
+        assert_eq!(s.severity, Severity::CRITICAL);
+        assert_eq!(s.action, Action::Block);
+        assert_eq!(s.reason_code, "CHILD_SAFETY_MEDIA");
+    }
+
+    #[test]
+    fn test_child_safety_media_below_threshold() {
+        let sig = signals_with_media(vec![media_desc("child_safety", 0.5)]);
+        assert!(resolve_priority_chain(&sig).is_none());
+    }
+
+    #[test]
+    fn test_self_harm_media_fires() {
+        let sig = signals_with_media(vec![media_desc("self_harm", 0.75)]);
+        let result = resolve_priority_chain(&sig).unwrap();
+        assert_eq!(result.category, categories::SELF_HARM);
+        assert_eq!(result.severity, Severity::BORDERLINE);
+        assert_eq!(result.action, Action::Warn);
+    }
+
+    #[test]
+    fn test_self_harm_media_high_band() {
+        let sig = signals_with_media(vec![media_desc("self_harm", 0.92)]);
+        let result = resolve_priority_chain(&sig).unwrap();
+        assert_eq!(result.category, categories::SELF_HARM);
+        assert_eq!(result.severity, Severity::SEVERE);
+        assert_eq!(result.action, Action::Block);
+    }
+
+    #[test]
+    fn test_nsfw_media_fires() {
+        let sig = signals_with_media(vec![media_desc("nsfw", 0.8)]);
+        let result = resolve_priority_chain(&sig).unwrap();
+        assert_eq!(result.category, categories::NSFW);
+        assert_eq!(result.reason_code, "NSFW_MEDIA");
+    }
+
+    #[test]
+    fn test_violence_media_fires() {
+        let sig = signals_with_media(vec![media_desc("violence", 0.88)]);
+        let result = resolve_priority_chain(&sig).unwrap();
+        assert_eq!(result.category, categories::VIOLENCE);
+        assert_eq!(result.reason_code, "VIOLENCE_MEDIA");
+    }
+
+    #[test]
+    fn test_extremism_media_fires() {
+        let sig = signals_with_media(vec![media_desc("extremism", 0.75)]);
+        let result = resolve_priority_chain(&sig).unwrap();
+        assert_eq!(result.category, categories::EXTREMISM);
+    }
+
+    #[test]
+    fn test_hate_media_fires() {
+        let sig = signals_with_media(vec![media_desc("hate", 0.75)]);
+        let result = resolve_priority_chain(&sig).unwrap();
+        assert_eq!(result.category, categories::HATE_SPEECH);
+        assert_eq!(result.reason_code, "HATE_MEDIA");
+    }
+
+    #[test]
+    fn test_harassment_media_fires() {
+        let sig = signals_with_media(vec![media_desc("harassment", 0.75)]);
+        let result = resolve_priority_chain(&sig).unwrap();
+        assert_eq!(result.category, categories::HARASSMENT);
+    }
+
+    #[test]
+    fn test_drugs_weapons_media_fires() {
+        let sig = signals_with_media(vec![media_desc("drugs_weapons", 0.75)]);
+        let result = resolve_priority_chain(&sig).unwrap();
+        assert_eq!(result.category, categories::DRUGS_WEAPONS);
+    }
+
+    #[test]
+    fn test_deepfake_media_fires() {
+        let sig = signals_with_media(vec![media_desc("deepfake", 0.75)]);
+        let result = resolve_priority_chain(&sig).unwrap();
+        assert_eq!(result.category, categories::DEEPFAKE);
+    }
+
+    #[test]
+    fn test_malware_media_fires() {
+        let sig = signals_with_media(vec![media_desc("malware", 0.75)]);
+        let result = resolve_priority_chain(&sig).unwrap();
+        assert_eq!(result.category, categories::MALWARE);
+        assert_eq!(result.severity, Severity::BORDERLINE);
+        assert_eq!(result.action, Action::Warn);
+    }
+
+    #[test]
+    fn test_malware_media_no_high_band_escalation() {
+        let sig = signals_with_media(vec![media_desc("malware", 0.95)]);
+        let result = resolve_priority_chain(&sig).unwrap();
+        assert_eq!(result.severity, Severity::BORDERLINE);
+        assert_eq!(result.action, Action::Warn);
+    }
+
+    #[test]
+    fn test_child_safety_media_priority_over_text() {
+        let mut sig = signals_with_media(vec![media_desc("child_safety", 0.85)]);
+        sig.add(DetectorSignal {
+            category: categories::SCAM_FRAUD,
+            severity: Severity::SEVERE,
+            confidence: 0.99,
+            reason_code: "scam_test".into(),
+            action: Action::Block,
+        });
+        let result = resolve_priority_chain(&sig).unwrap();
+        assert_eq!(result.category, categories::CHILD_SAFETY);
+        assert_eq!(result.reason_code, "CHILD_SAFETY_MEDIA");
+    }
+
+    #[test]
+    fn test_media_below_threshold_falls_through_to_text() {
+        let mut sig = signals_with_media(vec![media_desc("nsfw", 0.3)]);
+        sig.add(DetectorSignal {
+            category: categories::SCAM_FRAUD,
+            severity: Severity::BORDERLINE,
+            confidence: 0.8,
+            reason_code: "scam_test".into(),
+            action: Action::Warn,
+        });
+        let result = resolve_priority_chain(&sig).unwrap();
+        assert_eq!(result.category, categories::SCAM_FRAUD);
     }
 }

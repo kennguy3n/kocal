@@ -1,0 +1,159 @@
+# Training corpus subset — category 5 (harassment).
+# Loaded by build-tools/compiler/training_data.py at module
+# import time and concatenated with the other cat_*.yaml files
+# to form ``TRAINING_EXAMPLES``.
+#
+# See compiler/training_data.py for the loader, the SAFE-class
+# over-sampling rationale, and the per-category coverage
+# constraints (multilingual paraphrases, adversarial variants,
+# near-boundary cases).
+category_id: 5
+category_name: harassment
+examples:
+- you're worthless and nobody likes you, just disappear
+- repeated insults and stalking messages aimed at one person
+- 'doxxing threat: i''ll post your home address online'
+- you're so ugly nobody will ever want you, give up
+- i'll make sure everyone at your job knows what you did
+- targeted bullying campaign against a single user
+- stalking and unwanted contact after being told to stop
+- personal attack repeated dozens of times to harass the recipient
+- i'm going to ruin your reputation in this group
+- i'll keep messaging you on every account until you respond
+- threat to leak embarrassing photos unless the target apologises
+- revealing a co-worker's salary and home address out of spite
+- creating a dozen fake accounts just to keep messaging her
+- tagging the target in every post with a humiliating nickname
+- encouraging others in the group to pile on a specific user
+- repeatedly mocking someone's medical condition in the team channel
+- body-shaming directed at one named member after they posted a photo
+- posting a target's family members' phone numbers to embarrass them
+- relentless dm campaign after the target asked them to stop
+- sustained gendered abuse aimed at a single colleague
+- eres un fracasado, deja de existir
+- 私は彼女を毎日嫌がらせのメッセージで攻撃する
+- ich werde ihre nummer im internet veröffentlichen, wenn sie sich nicht entschuldigt
+- سأنشر معلوماتها الشخصية في كل مكان
+- আমি তোমাকে প্রতিদিন বার্তা পাঠাব যতক্ষণ না তুমি জবাব দাও
+- tôi sẽ làm cậu xấu hổ trước tất cả mọi người
+- मैं तुम्हें हर अकाउंट से परेशान करता रहूँगा
+- vou denunciar tudo o que você disse no trabalho
+- seguiré escribiéndote en todas tus cuentas hasta que respondas
+- nobody's going to forget what you did, i'll make sure of it
+- we both know your secret, want me to remind the group again
+- i screenshotted everything, see how your boss reacts on monday
+- you keep blocking me, i keep making new accounts, your call
+- i'll be at your gym tomorrow, see if you can avoid me there too
+- public callout that crosses into doxxing of a private citizen
+- 'conditional doxx: ''apologise or your address goes up'''
+- sustained mockery of one user after they shared a personal story
+- 'borderline harassment: snide mentions in every reply chain'
+- a sustained pile-on against one user across multiple group threads
+- an ex-partner harassing the target across multiple new accounts
+- revenge-porn threat aimed at one specific person
+- relentless mocking of a coworker's accent in every team meeting
+- dm campaign threatening to call cps on a single mother
+- posting a target's home address to a hostile group chat
+- sustained slurs and personal attacks aimed at a named user
+- sending the target's pet pictures back to them captioned with threats
+- repeatedly tagging the target in unrelated threads to mock them
+- threatening to publish a target's medical records out of revenge
+- organising a brigade to spam-report a single user's account
+- personal attacks designed to make a target unsafe at work
+- vou estragar a sua vida e a sua reputação no trabalho
+- ti rovino la reputazione in azienda, non smetto finché non ti licenzi
+- я не остановлюсь, пока тебя не уволят
+- 我一定要毁掉你的名声,你别想清静
+- je vais te poursuivre dans tous les groupes jusqu'à ce que tu partes
+- '''just one more thing i should mention to your boss'' as a recurring threat'
+- '''reminding everyone'' of a private medical incident the target shared'
+- '''public service announcement'' that is actually a sustained attack on one user'
+- compiling a public dossier on a private citizen to encourage piling on
+- 'borderline harassment: replying to every single post by one user with criticism'
+# --- WS1a expansion: focus-region multilingual + adversarial paraphrases. ---
+- coordinated group targeting a single user with sustained insults across channels
+- repeated unsolicited abusive dms after the recipient blocked the sender
+- creating multiple alt accounts to continue harassing someone who blocked you
+- doxing threat aimed at intimidating someone into leaving an online community
+- targeted campaign of personal attacks intended to silence a speaker
+- sustained mockery of a person's disability in a group chat
+- revenge sharing of private screenshots to humiliate a former friend
+- tagging a user in degrading posts every day after being asked to stop
+- flooding someone's mentions with insults and threats to drive them offline
+- impersonating a user to post embarrassing content in their name
+- người dùng liên tục gửi tin nhắn xúc phạm dù đã bị chặn
+- acoso coordinado contra una persona en múltiples plataformas
+- campaña de insultos dirigidos contra un usuario por su apariencia
+- koordinierte belästigungskampagne gegen einen einzelnen nutzer über mehrere kanäle
+- wiederholte beleidigungen und erniedrigungen einer person in einer gruppenunterhaltung
+- المستخدم يقوم بمضايقة شخص بشكل منهجي عبر حسابات متعددة
+- حملة تنمر جماعية ضد شخص واحد في مجموعة دردشة
+- 複数のアカウントを使って特定のユーザーを組織的に嫌がらせする
+- グループチャットで一人を集中的に侮辱し続ける
+- ব্যবহারকারী একাধিক অ্যাকাউন্ট তৈরি করে কাউকে ক্রমাগত হয়রানি করছে
+- গ্রুপ চ্যাটে একজনকে লক্ষ্য করে বারবার অপমান করা
+- एक व्यक्ति को अनेक प्लेटफॉर्म पर संगठित रूप से परेशान करना
+- समूह चैट में किसी व्यक्ति को बार-बार अपमानित करना
+- 用户创建多个假账户持续骚扰某人
+- 在群聊中有组织地对一个人进行侮辱
+- pengguna mencipta akaun palsu untuk terus mengganggu seseorang
+- kempen buli yang disasarkan terhadap seorang pengguna dalam kumpulan
+- பயனர் தொடர்ந்து பல கணக்குகளை உருவாக்கி ஒருவரை தொந்தரவு செய்கிறார்
+- குழு அரட்டையில் ஒரு நபரை இலக்காகக் கொண்டு தொடர்ச்சியான அவமானம்
+- l'utilisateur crée plusieurs comptes pour harceler quelqu'un en continu
+- campagne de cyberharcèlement coordonnée contre une personne
+- l'utente sta creando più account per molestare qualcuno continuamente
+- campagna di cyberbullismo coordinata contro un singolo utente
+- in utilisader creescha plirs contos per molestar ina persuna permanentamain
+- campanha de assédio coordenado contra uma pessoa em várias plataformas
+- c00rdinated h4rassm3nt campaign across mult1ple acc0unts to s1lence someone
+- d0xing thr3at aimed at 1ntimidating a us3r into leaving th3 platform
+- 'near-violence boundary: harassment escalating into explicit threats of physical harm'
+- 'near-hate boundary: targeted harassment driven by hatred of a protected group'
+- 'near-child-safety boundary: coordinated bullying campaign targeting a minor online'
+- 'borderline: aggressive but non-threatening messages left under every post of a user'
+- 'borderline: persistent negative comments that border on free speech but create a hostile environment'
+- impersonation account posting fabricated embarrassing stories about a real person
+- revenge account that publishes private conversations to embarrass a former partner
+- spam-tagging a user in unrelated posts solely to humiliate and annoy them
+- mass-reporting a user's legitimate posts to get their account suspended
+- creating a parody account that closely mimics a real user to spread lies about them
+- posting edited photos of someone to ridicule them in a public group
+- targeted leaking of someone's workplace information to get them fired
+- sending repeated graphic insults to a user across email, sms, and social media
+- using a bot to flood a user's notifications with abusive messages every minute
+- coordinated pile-on by a community against a whistleblower to discredit them
+- threatening to release private medical info unless a user leaves a forum
+- sustained campaign of misgendering and deadnaming a trans person in every interaction
+- following someone across platforms to post degrading comments on everything they share
+- persistent mockery of someone's accent in voice channels despite requests to stop
+- creating a 'hate account' dedicated solely to posting insults about one specific user
+- posting someone's real phone number in a chat and encouraging others to call and harass them
+- repeatedly photoshopping a user's face onto degrading images and sharing them
+- using a group poll to collectively vote on insulting nicknames for a specific person
+- coordinated effort to get someone banned by filing false reports
+- 'imminent: a group is planning a mass harassment attack against a user at a specific time'
+- "report: several accounts are coordinating to flood one member with insults for hours"
+- "relato: vários usuários estão coordenando ataques e xingamentos contra um único membro"
+# --- Stream-B expansion: direct, message-style targeted personal abuse
+# (non-identity) across languages (distinct from held_out_multilingual.yaml).
+- "you're a pathetic loser and everyone in this group laughs at you behind your back"
+- "shut up already, nobody wants to hear your stupid worthless opinions"
+- "we're all going to keep spamming your dms until you finally delete your account"
+- "keep crying, we love watching you embarrass yourself here every single day"
+- "aww look who showed up, the group chat clown that nobody actually respects"
+- "cállate de una vez, eres patético y todos se burlan de ti aquí"
+- "vamos a seguir molestándote hasta que borres tu cuenta, fracasado"
+- "halt endlich die klappe, du bist erbärmlich und alle lachen über dich"
+- "ferme-la, t'es minable et tout le monde se moque de toi ici"
+- "stai zitto, sei patetico e tutti ti deridono alle spalle"
+- "cala a boca, você é patético e todo mundo ri de você pelas costas"
+- "اخرس، أنت مثير للشفقة والجميع يسخر منك من خلفك"
+- "سنستمر في مضايقتك حتى تحذف حسابك أيها الفاشل"
+- "입 좀 닥쳐, 넌 한심하고 다들 뒤에서 너 비웃고 있어"
+- "계정 지울 때까지 계속 괴롭혀 줄게, 이 한심한 놈아"
+- "चुप हो जा, तू दयनीय है और सब तेरे पीछे तेरा मज़ाक उड़ाते हैं"
+- "जब तक तू अकाउंट डिलीट नहीं करता हम तुझे परेशान करते रहेंगे, नाकाम इंसान"
+- "黙れよ、お前は哀れだし、みんな陰でお前を笑ってるんだ"
+- "闭嘴吧，你这个废物，大家背后都在嘲笑你"
+- "заткнись уже, ты жалок, и все за спиной над тобой смеются"

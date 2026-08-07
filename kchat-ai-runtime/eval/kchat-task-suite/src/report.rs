@@ -109,6 +109,11 @@ impl SuiteReport {
     pub fn passed(&self) -> bool {
         self.pass_rate() >= self.required_pass_rate
     }
+
+    /// Append all results from another suite into this one.
+    pub fn merge(&mut self, other: &SuiteReport) {
+        self.results.extend(other.results.iter().cloned());
+    }
 }
 
 /// Overall evaluation report.

@@ -1,0 +1,151 @@
+# Training corpus subset — category 3 (violence_threat).
+# Loaded by build-tools/compiler/training_data.py at module
+# import time and concatenated with the other cat_*.yaml files
+# to form ``TRAINING_EXAMPLES``.
+#
+# See compiler/training_data.py for the loader, the SAFE-class
+# over-sampling rationale, and the per-category coverage
+# constraints (multilingual paraphrases, adversarial variants,
+# near-boundary cases).
+category_id: 3
+category_name: violence_threat
+examples:
+- i'm going to hurt them when i see them tomorrow
+- planning to attack the person who wronged me
+- i'll make them pay, they won't see it coming
+- i know where they live and i'm going there tonight
+- threat to harm a specific co-worker over a dispute
+- i'm going to find them and beat them up
+- violent intent to assault a named person tomorrow
+- i'll bring a weapon and finish this once and for all
+- i'll be waiting outside her office with a baseball bat
+- i'm going to break his nose the moment he walks in
+- once the kids are at school, i'm coming for him
+- planning to ambush him at the parking garage tonight
+- if i see her again i swear i'll choke her
+- told my brother to bring the crowbar, this ends today
+- i'll put him in the hospital before the week ends
+- we're going to corner him after the shift change
+- i'm going to slash his tires and worse if he comes back
+- threat to physically harm a teacher after a grade dispute
+- i will smash his car window and pull him out by the neck
+- i know his bus route, he won't get home tonight without trouble
+- voy a hacerles daño cuando los vea
+- 私は彼を殴るつもりだ、明日学校で
+- ich werde ihn schlagen wenn ich ihn sehe
+- سأقوم بضربه عندما أراه غدًا
+- আমি তাকে কাল মেরে ফেলব
+- tôi sẽ đánh nó khi gặp lại
+- मैं उसे कल चोट पहुंचाऊंगा जब वो दिखेगा
+- vou bater nele quando o encontrar amanhã
+- 私は彼女を待ち伏せして殴る
+- he's gonna get jumped, he doesn't even know it yet
+- his face is going to look real different after tomorrow
+- might pay him a visit at home if he doesn't pay up
+- he won't be walking out of that bar in one piece
+- i'll be the last person he ever messes with
+- if he keeps it up i don't know what i'll do to him
+- 'threatening text: ''watch your back when you leave the office'''
+- 'conditional threat: ''if she says one more word i''ll deck her'''
+- direct threat to a named ex-partner over a custody dispute
+- i'll be at his house with a knife at midnight
+- 'threatening text to a coworker: ''i''ll break your jaw monday'''
+- plan to ambush a specific delivery driver after his last stop
+- threat to set fire to a neighbour's car overnight
+- specific threat to assault a referee after a youth match
+- i'm going to put a brick through his window and worse
+- threat to stab a roommate if they don't move out by friday
+- planning to corner a coach in the parking lot after practice
+- threat to attack a specific bus driver after a fare dispute
+- i'll knock his teeth in if i see him at the bar again
+- threat to set up a 'welcome' for his car when he gets home
+- explicit threat to physically harm a teacher tomorrow
+- eu vou bater nele assim que sair do trabalho hoje
+- voglio ammazzarlo, lo aspetto fuori da casa stasera
+- я приду к нему и сломаю ему руку
+- 我今晚就去揍他,他逃不掉的
+- je vais le frapper dès que je le vois demain
+- '''he''s getting a tune-up'' tonight, see if he learns'
+- '''someone''s about to catch hands'' at the meet-up later'
+- '''gonna leave him with a souvenir'' from tonight, he''ll remember'
+- 'conditional threat: ''one more word and i''ll knock him out cold'''
+- '''i can''t promise i won''t hurt him if he keeps mocking my kid'''
+# --- WS1a expansion: focus-region multilingual + adversarial paraphrases. ---
+- explicit threat to assault someone with a weapon at a named location
+- planning an ambush on a specific person coming home from work
+- 'message: i am going to bring a knife to school tomorrow and use it'
+- threat to run someone over with a car after a dispute
+- user describing how they will kidnap and injure a specific individual
+- planning a violent confrontation at a workplace with named co-workers
+- explicit threat to strangle someone at their home address
+- 'i will shoot them at the event, i have already bought the ammunition'
+- planning to firebomb a rival's property this weekend
+- detailed plot to attack a public figure at a scheduled appearance
+- người dùng đe dọa sẽ mang dao đến trường và tấn công bạn học
+- alguien amenaza con disparar a otra persona en su lugar de trabajo
+- persona que planea un ataque con arma blanca en un evento público
+- ein nutzer droht, eine person mit einer waffe bei einem treffen anzugreifen
+- jemand plant einen gewaltangriff auf eine bestimmte person in ihrem haus
+- المستخدم يهدد بمهاجمة شخص بسلاح في موقع محدد
+- شخص يخطط لاعتداء عنيف على جار بسلاح أبيض
+- ユーザーが特定の人物を武器で襲撃する計画を記述している
+- 特定の場所で銃撃を行うと脅迫するメッセージ
+- ব্যবহারকারী একটি নির্দিষ্ট ব্যক্তিকে ছুরি দিয়ে আক্রমণ করার পরিকল্পনা বর্ণনা করছে
+- কেউ একটি নির্দিষ্ট স্থানে বোমা রাখার হুমকি দিচ্ছে
+- उपयोगकर्ता एक व्यक्ति को चाकू से हमला करने की योजना बना रहा है
+- किसी विशिष्ट स्थान पर बम विस्फोट की धमकी
+- 用户威胁要在特定地点用刀攻击某人
+- 某人正在详细策划一起公开场合的袭击
+- pengguna mengancam untuk menyerang seseorang dengan senjata di lokasi yang dinyatakan
+- seseorang merancang serangan ganas terhadap jiran
+- பயனர் ஒரு குறிப்பிட்ட நபரை கத்தியால் தாக்கத் திட்டமிடுகிறார்
+- ஒரு குறிப்பிட்ட இடத்தில் குண்டு வைக்க மிரட்டுகிறார்
+- l'utilisateur menace de poignarder quelqu'un sur un lieu nommé
+- une personne planifie une agression armée dans un lieu public
+- l'utente minaccia di accoltellare qualcuno in un luogo specifico
+- qualcuno pianifica un'aggressione armata a un evento
+- in utilisader smanatsha d'attaccar ina persuna cun in'arma
+- um usuário ameaça esfaquear alguém em um local público
+- menace de v10lence 4rmée contre une personne dans un espace publ1c
+- thr3at to sh00t someone at th3ir home t0night with a r1fle
+- planning an a55ault at a pub1ic ev3nt with a w3apon
+- 'near-extremism boundary: threat to bomb a government building as an act of political protest'
+- 'near-harassment boundary: repeated graphic threats in dms aimed at intimidating a specific person'
+- 'borderline: user says i will make them regret it when i see them tomorrow'
+- 'borderline: vague threat to hurt someone badly without specifying when or how'
+- explicit threat to throw acid on a former partner
+- plan to attack a specific house with petrol and a lighter
+- user listing names and addresses of people they intend to beat up
+- threat to commit a drive-by shooting in a named neighbourhood
+- detailed plan to assault staff at a hospital after a dispute
+- plotting to stab someone at a specific train station at rush hour
+- someone says they have made a pipe bomb and plan to use it at a school
+- threat to carjack and assault an ex-partner at a named intersection
+- plan to poison food intended for a specific co-worker at the office
+- describing a plan to carry out a mass stabbing at a crowded festival
+- i am going to put a bullet through his head when he walks in
+- wait until dark and then attack the building with improvised weapons
+- planning to ram a vehicle into a crowd at the weekend market
+- explicit threat to kidnap a child from a school playground
+- direct message threatening to burn down someone's house while they sleep
+- 'imminent: the attacker says they are on their way right now with the weapon'
+- threat to derail a train by placing objects on the tracks
+- user describes sharpening a blade and rehearsing an attack plan
+- plotting to use a drone to drop an incendiary device on a property
+- "report: a member repeatedly tells another user he will beat him up after work"
+- "observed: someone keeps posting that he will wait outside a coworker's home and hurt them"
+- "informe: un miembro amenaza con golpear a otro usuario en cuanto lo vea mañana"
+# --- Stream-B expansion: direct, message-style threats of violence across
+# languages (distinct from kchat-skills/eval/held_out_multilingual.yaml).
+- "watch your back, the next time i see you i'm putting you in the hospital"
+- "you and i both know what happens if you show up here again, don't test me"
+- "cuídate, la próxima vez que te vea te voy a mandar al hospital"
+- "pass auf dich auf, wenn ich dich sehe, lande ich dich im krankenhaus"
+- "fais gaffe à toi, la prochaine fois je t'envoie à l'hôpital"
+- "se cuida, da próxima vez que te ver vou te mandar pro hospital"
+- "انتبه لنفسك، في المرة القادمة سأرسلك إلى المستشفى"
+- "조심해, 다음에 보면 너 진짜 병원에 보내 버릴 거야"
+- "संभल कर रहना, अगली बार मिला तो तुझे अस्पताल पहुँचा दूंगा"
+- "気をつけろ、次に会ったら病院送りにしてやるからな"
+- "你给我小心点，下次见到你我就送你进医院"
+- "берегись, в следующий раз я отправлю тебя в больницу"

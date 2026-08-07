@@ -1,0 +1,162 @@
+# Training corpus subset — category 4 (extremism).
+# Loaded by build-tools/compiler/training_data.py at module
+# import time and concatenated with the other cat_*.yaml files
+# to form ``TRAINING_EXAMPLES``.
+#
+# See compiler/training_data.py for the loader, the SAFE-class
+# over-sampling rationale, and the per-category coverage
+# constraints (multilingual paraphrases, adversarial variants,
+# near-boundary cases).
+category_id: 4
+category_name: extremism
+examples:
+- recruiting for a violent extremist organisation, looking for new members
+- glorifying a terrorist attack and praising the perpetrators
+- calling for armed insurrection against the government
+- ideology promoting violent action against an ethnic group
+- extremist propaganda celebrating mass casualty attacks
+- violent jihad recruitment and glorification of attacks
+- white nationalist propaganda calling for race war
+- praising a banned militant group and inciting attacks on civilians
+- incitement to violent uprising and armed revolution
+- celebrating a bombing that killed civilians as 'just revenge'
+- recruitment funnel for a foreign-designated terrorist organisation
+- praising a designated militant leader and his attacks on civilians
+- encouraging supporters to carry out lone-wolf attacks
+- framing a recent attack as 'inspiration for the next generation'
+- propaganda video glorifying suicide bombings
+- calling for the overthrow of the government by armed force
+- celebrating the murder of police officers as a political statement
+- recruitment for a militia preparing for a civil war
+- praising a manifesto that calls for mass violence against minorities
+- calls for ethnic cleansing of a specified neighbourhood
+- apoyando un grupo terrorista y reclutando miembros
+- ich rufe zu bewaffnetem widerstand gegen die regierung auf
+- الإشادة بهجوم إرهابي والدعوة لمزيد من العنف
+- 私はテロ攻撃を称賛し、新しいメンバーを募集している
+- একটি নিষিদ্ধ চরমপন্থী দলের জন্য সদস্য সংগ্রহ
+- kêu gọi tấn công vũ trang nhằm vào dân thường
+- एक प्रतिबंधित आतंकवादी संगठन के लिए भर्ती कर रहा हूँ
+- propaganda elogiando ataques terroristas contra civiles
+- ich glorifiziere den jüngsten anschlag und werbe nachwuchs
+- looking for like-minded comrades to take action against the regime
+- the only language they understand is force, time to organise
+- the brothers in [redacted city] are ready, who else is in
+- celebrating an attack with veiled language ('they got what they deserved')
+- 'recruitment dm: ''we have plans, we need disciplined men'''
+- calling for civil disobedience that crosses into incitement of violence
+- borderline militia chatter that praises previous attacks
+- recruitment language disguised as 'community defence'
+- praising a designated terror leader while denying any intent to act
+- calling for armed defence of a named neighbourhood against 'outsiders'
+- recruitment for a paramilitary cell preparing for 'the day x'
+- explicit glorification of a recent ethnically motivated mass shooting
+- posting a 'kill list' targeting public officials by name
+- propaganda framing political opponents as legitimate targets for violence
+- explicit incitement to attack a named place of worship
+- celebrating a sectarian attack and calling for retaliation
+- organising an ambush against a rival political rally
+- incitement to attack journalists covering a protest
+- recruitment of teenagers into a violent extremist online cell
+- praise for a designated foreign terrorist organisation's recent operation
+- explicit endorsement of ethnic cleansing in a specific region
+- estamos planeando una acción armada contra el gobierno
+- inneggiamo al recente attentato e cerchiamo nuovi combattenti
+- призываем к вооружённому восстанию против режима
+- 我们号召武装起义反对政府
+- nous glorifions l'attaque récente et appelons à de nouvelles actions
+- '''gentlemen of [code]'' time to take the action we''ve trained for'
+- '''the great reset'' framing used to recruit for armed action'
+- '''remember the 14'' recruitment slogan tied to a hate manifesto'
+- '''day of the rope'' posting praising a fictional purge'
+- '''community self-defence training'' that crosses into paramilitary planning'
+# --- WS1a expansion: focus-region multilingual + adversarial paraphrases. ---
+- recruitment message for a designated terrorist organisation promising glory
+- propaganda video glorifying a mass-casualty attack for political ends
+- 'user sharing a manifesto justifying violence against civilians in the name of ideology'
+- instruction manual for lone-wolf attacks disguised as religious duty
+- fundraising appeal for a banned militant organisation
+- glorification of a specific historical terrorist attack as a heroic act
+- instructions on how to build and use an improvised explosive for political violence
+- message pledging allegiance to a terrorist group and urging others to join
+- guide to radicalising vulnerable youth into an extremist movement
+- recruitment pitch exploiting poverty to drive enlistment in a paramilitary group
+- bài đăng tuyển quân cho một tổ chức khủng bố được liệt kê
+- mensaje de reclutamiento para una organización terrorista designada
+- propaganda que glorifica ataques terroristas masivos por motivos ideológicos
+- rekrutierungsnachricht für eine verbotene extremistische organisation
+- aufruf zur gewalt im namen einer politischen ideologie
+- رسالة تجنيد لمنظمة إرهابية مصنفة
+- دعاية تمجد هجومًا إرهابيًا وتحث على تكراره
+- テロ組織への参加を促す勧誘メッセージ
+- 過激思想に基づく暴力行為を美化するプロパガンダ
+- একটি নিষিদ্ধ জঙ্গি সংগঠনে যোগদানের জন্য নিয়োগ বার্তা
+- আত্মঘাতী হামলাকে বীরত্ব হিসেবে মহিমান্বিত করা
+- एक प्रतिबंधित आतंकवादी समूह में भर्ती का संदेश
+- आत्मघाती हमले को वीरतापूर्ण कार्य के रूप में महिमामंडित करना
+- 招募消息为一个被列为恐怖组织的团体征兵
+- 宣传视频美化大规模恐怖袭击以达到政治目的
+- mesej merekrut untuk organisasi pengganas yang ditetapkan
+- propaganda memuja serangan pengganas besar-besaran
+- தடைசெய்யப்பட்ட தீவிரவாத அமைப்பிற்கு ஆள்சேர்க்கும் செய்தி
+- தற்கொலை தாக்குதலை வீரதீரச் செயலாக புகழும் பிரச்சாரம்
+- message de recrutement pour une organisation terroriste désignée
+- propagande glorifiant un attentat terroriste de masse à des fins politiques
+- messaggio di reclutamento per un'organizzazione terroristica designata
+- propaganda che glorifica un attentato terroristico di massa
+- recrutament per ina organisaziun extremista cun agid digital
+- mensagem de recrutamento para um grupo terrorista proibido
+- r3cruitm3nt for a t3rror1st org promising p4radise for m4rtyrs
+- pr0paganda gl0rifying mass-c4sualty att4ck for p0litical ends
+- 'near-violence boundary: manifesto that explicitly calls for armed attacks on named targets'
+- 'near-misinformation-civic boundary: extremist propaganda framed as patriotic civic education'
+- 'near-hate boundary: white-supremacist recruitment disguised as cultural preservation'
+- 'borderline: political speech that edges into encouraging armed uprising'
+- 'borderline: fundraising for a sanctioned militia framed as charitable aid'
+- guide explaining how to smuggle weapons across a border for a militant cause
+- radicalisation pipeline grooming a teen through gaming communities
+- instructions on constructing an IED hidden inside common household items
+- message urging followers to carry out knife attacks in public transport hubs
+- propaganda targeting diaspora communities for foreign fighter recruitment
+- encrypted channels organising weapons procurement for an outlawed militia
+- glorification of a school shooter as a martyr for a cause
+- audio message from a leader of a banned group calling for global jihad
+- manifesto calling for ethnic cleansing as a political solution
+- document outlining strategies for infiltrating law enforcement for a separatist movement
+- sharing bomb-making tutorials under the guise of chemistry education
+- message celebrating the anniversary of a deadly terror attack as a holiday
+- recruitment drive targeting alienated veterans for a domestic extremist cell
+- call for violent revolution with specific operational timelines
+- 'near-scam boundary: fake charity front channelling funds to a militant organisation'
+- instructional pamphlet on evading surveillance while planning a violent action
+- sharing logistics for coordinated attacks on infrastructure for political disruption
+- video series grooming viewers toward acceptance of politically-motivated mass violence
+- online radicalisation chat encouraging users to carry out vehicle-ramming attacks
+- pledging allegiance to a banned separatist movement and calling for armed action
+- 'borderline: conspiracy theory that merges into incitement of violence against a government'
+- "report: an account is pushing a banned militant group's manifesto and inviting members to training"
+- "observed: a user keeps sharing extremist propaganda videos and asking who wants to enlist"
+# --- Stream-B expansion: direct, message-style recruitment / glorification
+# across languages (distinct from kchat-skills/eval/held_out_multilingual.yaml).
+- "stop waiting around, grab a rifle and join the cell, we strike the capital next week"
+- "our people will only survive if we wipe them out, are you ready to fight"
+- "the bombing was beautiful, may a thousand more follow, who is with me"
+- "we need disciplined soldiers for the holy war, message me to enlist today"
+- "time to stop talking and start the cleansing, who actually has the courage"
+- "we honour the shooter as a saint of the new order and we will follow his path"
+- "the brothers are ready for the big day, dm me if you want to be a soldier"
+- "toma las armas y únete a nosotros, solo con sangre liberaremos la patria"
+- "deja de esperar, la única salida es la lucha armada, alístate ya"
+- "greift zu den waffen, brüder, nur durch den heiligen krieg retten wir unser volk"
+- "rejoins la cellule, prends les armes, nous frapperons l'état très bientôt"
+- "prendi le armi e unisciti alla cellula, colpiremo presto senza pietà"
+- "pega em armas e junta-te a nós, só com a luta armada venceremos"
+- "احمل سلاحك وانضم إلينا، لن ننتصر إلا بالجهاد ضد أعدائنا"
+- "العملية الأخيرة كانت مجيدة، وندعو لمزيد منها ضد الكفار قريبًا"
+- "총을 들고 우리 조직에 합류해라, 이제 적들을 쓸어버릴 때가 왔다"
+- "마지막 공격은 위대했어, 우리도 곧 그 뒤를 따라 그들을 쳐야 해"
+- "बंदूक उठाओ और हमारे साथ आ जाओ, खून बहाकर ही हम जीतेंगे"
+- "हथियार उठाने का समय आ गया है, जो हिम्मत रखता है वही हमारे साथ आए"
+- "銃を取って組織に加われ、来週首都を攻撃する準備はできている"
+- "拿起武器加入我们，只有圣战才能拯救我们的民族"
+- "бери оружие и вступай в ячейку, скоро мы нанесём удар по врагам"

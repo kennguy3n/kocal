@@ -1,0 +1,36 @@
+# Community Overlay — kchat.community.open_source.guardrail.v1
+#
+# Open-source / developer-community overlay (adult-only). Tightens
+# malware-link and scam handling against package / supply-chain
+# attacks.
+
+skill_id: kchat.community.open_source.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: open_source
+  age_mode: adult_only
+  visibility: members_only_summary
+  set_by: group_admin
+
+rules:
+  - category: 8   # MALWARE_LINK
+    action: strong_warn
+    note: >-
+      Malicious-link / package-takeover patterns tightened to a hard
+      modal warning.
+  - category: 7   # SCAM_FRAUD
+    action: warn
+    note: >-
+      Maintainer-impersonation / sponsor scams warn before display.
+
+group_risk_counters:
+  - counter_id: group_scam_links_24h
+    method: device_local_expiring_counter
+    window: 24h
+    thresholds:
+      label_at: 3
+      strong_label_at: 6
+      escalate_at: 10

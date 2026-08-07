@@ -1,0 +1,26 @@
+# Community Overlay — kchat.community.parenting.guardrail.v1
+#
+# Parenting / new-parent overlay. Tightens adult content and softly
+# surfaces health-misinformation guards on parenting myths.
+
+skill_id: kchat.community.parenting.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: parenting
+  age_mode: mixed_age
+  visibility: public_summary
+  set_by: group_admin
+
+rules:
+  - category: 10  # SEXUAL_ADULT
+    action: strong_warn
+    note: >-
+      Adult sexual content in a parenting channel surfaces a hard
+      modal warning.
+  - category: 13  # MISINFORMATION_HEALTH
+    action: warn
+    note: >-
+      Parenting / paediatric health misinformation tightened to warn.

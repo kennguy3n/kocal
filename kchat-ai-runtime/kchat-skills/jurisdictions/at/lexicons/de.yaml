@@ -1,0 +1,21 @@
+# German-language lexicon bundle for the kchat.jurisdiction.at.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: at_de_lexicon_v1
+language: de
+locale: de-AT
+provenance: kchat_trust_and_safety_at_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+terms:
+  - term_id: at_de_term_stgb_207a_kinder_at_v1
+    categories: [1]
+    notes: StGB §207a indicators (Austrian catalogue).
+  - term_id: at_de_term_verbotsgesetz_1945_v1
+    categories: [4]
+    notes: Verbotsgesetz 1945 indicator phrases.

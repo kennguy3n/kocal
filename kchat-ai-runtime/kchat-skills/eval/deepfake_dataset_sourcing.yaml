@@ -1,0 +1,143 @@
+# Deepfake / synthetic-media dataset sourcing manifest
+# (kchat.guardrail.dataset_sourcing.v1)
+#
+# SCAFFOLD ONLY — this manifest documents the external benchmarks that a
+# future, credentialed bake/evaluation host would pull to harden the
+# DEEPFAKE_SYNTHETIC (taxonomy id 16) capability. It deliberately ships NO
+# downloaded media, NO live download URLs, and NO credentials: every entry
+# below is research-licensed and gated behind a signed access agreement
+# that the operator must complete out-of-band. The on-device SDK never
+# ships these datasets; they are used only off-device to (a) calibrate the
+# MobileCLIP-S2 vision prototype bank and (b) measure recall / precision
+# for the held-out vision corpus.
+#
+# Privacy & licence posture
+# -------------------------
+# * Each benchmark is redistribution-restricted. We record only the
+#   provider, the access process, and the licence class — never a mirror.
+# * Negative (legitimate-AI-art) sources are included so the precision
+#   gate (no false positives on disclosed creative-arts AI) can be
+#   measured, not just recall.
+# * `status: scaffold` means "documented access path, not yet ingested".
+#   An operator with credentials flips this to `ingested` in their private
+#   overlay; this checked-in file stays `scaffold`.
+#
+# This file is intentionally inert: nothing in the build imports media
+# from here. `tools/build_vision_category_prototypes.py` bakes prototypes
+# from text prompts (`vision_prototypes_source.yaml`); these corpora are
+# the *evaluation* and future *image-centroid* sourcing path.
+
+schema_id: kchat.guardrail.dataset_sourcing.v1
+schema_version: 1
+category_id: 16
+category_name: DEEPFAKE_SYNTHETIC
+status: scaffold
+
+# --------------------------------------------------------------------------
+# Positive benchmarks — manipulated / synthetic media (deepfake POSITIVES).
+# --------------------------------------------------------------------------
+positive_benchmarks:
+  - id: faceforensics_pp
+    name: FaceForensics++
+    role: positive
+    modality: video
+    purpose: >-
+      Face-swap / face-reenactment manipulation detection (Deepfakes,
+      Face2Face, FaceSwap, NeuralTextures subsets). Primary recall corpus
+      for DEEPFAKE_SYNTHETIC face-swap signals.
+    licence_class: research_only
+    redistribution: prohibited
+    credentials_required: true
+    access_process: >-
+      Submit the signed FaceForensics++ Terms of Use / EULA to the
+      maintainers (TU Munich) to receive a time-limited download script.
+      No public mirror; do not commit the media.
+    provenance_note: >-
+      Cite Roessler et al., "FaceForensics++: Learning to Detect
+      Manipulated Facial Images" (ICCV 2019).
+  - id: celeb_df_v2
+    name: Celeb-DF (v2)
+    role: positive
+    modality: video
+    purpose: >-
+      High-visual-quality celebrity deepfakes; harder positives that
+      stress the strong-warn (>= 0.70) band of the confidence ladder.
+    licence_class: research_only
+    redistribution: prohibited
+    credentials_required: true
+    access_process: >-
+      Email the authors (request form) agreeing to the research-only
+      licence; they return a private download link. No mirror.
+    provenance_note: >-
+      Cite Li et al., "Celeb-DF: A Large-scale Challenging Dataset for
+      DeepFake Forensics" (CVPR 2020).
+  - id: dfdc
+    name: Deepfake Detection Challenge (DFDC) dataset
+    role: positive
+    modality: video
+    purpose: >-
+      Large-scale, demographically diverse deepfakes for robustness /
+      bias-audit coverage across jurisdictions.
+    licence_class: research_only
+    redistribution: prohibited
+    credentials_required: true
+    access_process: >-
+      Accept the DFDC dataset licence on the hosting platform
+      (Meta / Kaggle distribution) to obtain access. No mirror.
+    provenance_note: >-
+      Cite Dolhansky et al., "The DeepFake Detection Challenge (DFDC)
+      Dataset" (2020).
+
+# --------------------------------------------------------------------------
+# Negative sources — legitimate, DISCLOSED AI-generated art that MUST NOT
+# be flagged as deceptive deepfakes. These calibrate the precision gate
+# (benign_false_positive cases in held_out_vision.yaml).
+# --------------------------------------------------------------------------
+negative_sources:
+  - id: public_ai_art_disclosed
+    name: Disclosed AI-generated artwork (public, licence-clean)
+    role: negative
+    modality: image
+    purpose: >-
+      Creative-arts AI images that are openly labelled as synthetic and
+      are NOT impersonations of real people — the canonical false-positive
+      guard for DEEPFAKE_SYNTHETIC.
+    licence_class: public_or_cc
+    redistribution: per_source_licence
+    credentials_required: false
+    access_process: >-
+      Curate from licence-clean public collections (e.g. CC-licensed
+      generative-art galleries). Exclude any image depicting an
+      identifiable real person to avoid mislabelling the negative set.
+    provenance_note: >-
+      Negatives must be disclosed-synthetic and non-deceptive; pair each
+      with the creative_arts / photography / music community overlay used
+      in the held-out negatives.
+  - id: real_unmanipulated_faces
+    name: Real, unmanipulated face imagery (pristine control)
+    role: negative
+    modality: video
+    purpose: >-
+      The pristine ("real") splits bundled with the positive benchmarks
+      above act as the in-distribution negative control for face imagery.
+    licence_class: research_only
+    redistribution: prohibited
+    credentials_required: true
+    access_process: >-
+      Use the untouched / original split shipped inside FaceForensics++ /
+      Celeb-DF / DFDC under the same signed agreement; no separate fetch.
+    provenance_note: >-
+      Keeps the negative control in the same visual domain as positives so
+      precision is measured fairly.
+
+# Operator hook: a credentialed evaluation host overrides this file in a
+# private overlay, sets per-entry `local_path` + `status: ingested`, and
+# runs tools/eval_vision_metrics.py over the encoder-required vision cases.
+# The checked-in copy remains a credential-free scaffold.
+ingestion_hook:
+  consumes: kchat-skills/eval/held_out_vision.yaml
+  partition_tag: encoder_required
+  evaluator: tools/eval_vision_metrics.py
+  note: >-
+    No automated download runs from this repo. Ingestion is an explicit,
+    out-of-band operator step gated by the signed licences above.

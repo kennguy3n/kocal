@@ -1,0 +1,25 @@
+# Indonesian-language lexicon bundle for the kchat.jurisdiction.id.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: id_id_lexicon_v1
+language: id
+locale: id-ID
+provenance: kchat_trust_and_safety_id_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+  - 10   # SEXUAL_ADULT
+terms:
+  - term_id: id_id_term_uu_35_2014_anak_v1
+    categories: [1]
+    notes: UU 35/2014 perlindungan anak indicators.
+  - term_id: id_id_term_uu_5_2018_terorisme_v1
+    categories: [4]
+    notes: UU 5/2018 terrorism indicators.
+  - term_id: id_id_term_uu_44_2008_pornografi_v1
+    categories: [10]
+    notes: UU 44/2008 pornography indicators.

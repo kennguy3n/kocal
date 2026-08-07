@@ -1,0 +1,160 @@
+# Training corpus subset — category 14 (misinformation_civic).
+# Loaded by build-tools/compiler/training_data.py at module
+# import time and concatenated with the other cat_*.yaml files
+# to form ``TRAINING_EXAMPLES``.
+#
+# See compiler/training_data.py for the loader, the SAFE-class
+# over-sampling rationale, and the per-category coverage
+# constraints (multilingual paraphrases, adversarial variants,
+# near-boundary cases).
+category_id: 14
+category_name: misinformation_civic
+examples:
+- the election was stolen by widespread voter fraud, false claim
+- false story claiming voting machines flipped millions of votes
+- deceptive political content fabricating a candidate's quote
+- manipulated video used to spread civic disinformation
+- false claim that mail-in ballots are systematically fraudulent
+- fabricated news story about a politician committing a crime
+- conspiracy theory accusing a head of state of being an impostor
+- false story about a foreign country invading the homeland
+- manipulated polling data presented as a real survey
+- false claim that the census is being used to deport voters
+- doctored audio clip of a candidate that has been debunked
+- false story that polling places will be closed without notice
+- fabricated screenshot of an electoral commission 'announcement'
+- false claim that ballots were dumped in a river after the count
+- conspiracy theory tying election software to a foreign government
+- false claim that a public-health agency has been 'abolished overnight'
+- manipulated chart of crime statistics shared as a political attack
+- fabricated 'leaked' memo from a campaign that never existed
+- false claim that voters of a certain district will be turned away
+- ai-generated photo of a politician at a protest they never attended
+- desinformación electoral sobre el fraude en las elecciones
+- falsche politische behauptung über wahlbetrug bei der briefwahl
+- معلومات مضللة عن تزوير الانتخابات
+- 選挙不正に関する偽の主張
+- নির্বাচনে কারচুপির সম্পর্কে মিথ্যা তথ্য
+- thông tin sai lệch về gian lận bầu cử
+- चुनाव में धोखाधड़ी के बारे में झूठी जानकारी
+- desinformação eleitoral alegando fraude generalizada
+- 選挙日変更という偽の主張
+- '''just-asking-questions'' post that repeats long-debunked civic conspiracies'
+- '''sources say'' rumour about a senator that has been formally retracted'
+- ai-generated 'press release' designed to look official
+- recycled 2020-era fraud claim re-skinned for a current election
+- '''breaking'' alert about polling places being moved without notice'
+- partisan analysis that ignores the most reliable available counts
+- speculative 'what if' that slides into asserting a fabricated event
+- misrepresented exit-poll number reposted without context
+- post falsely framing a normal procedural delay as 'evidence of fraud'
+- false 'election day moved' rumour aimed at suppressing turnout
+- manufactured screenshot of a campaign 'leak' that never happened
+- '''i.d. checks are required to vote in your district'' - false suppression rumour'
+- ai-generated 'leaked video' of a politician confessing to a crime
+- false claim that a public-health agency was 'secretly disbanded'
+- fabricated 'official statement' from a non-existent government department
+- doctored map of polling places used to redirect voters to the wrong site
+- false rumour that a foreign country has taken control of the postal service
+- conspiracy that ballots from a specific district were 'shredded overnight'
+- manipulated 'screenshot' of an electoral commission email
+- '''caravan of fake voters arriving from the next state'' - debunked rumour'
+- false claim that 'every vote for X is automatically discarded'
+- '''as eleições foram fraudadas em massa'' rumor falso já desmentido'
+- '''le elezioni sono state truccate'' affermazione falsa già smentita'
+- '''выборы массово сфальсифицированы'' опровергнутый ложный слух'
+- '''选举大面积造假'' 早已被多次证伪的虚假说法'
+- '''les élections ont été massivement truquées'' rumeur fausse déjà démentie'
+- '''sources are saying'' rumour that recycles a long-debunked civic conspiracy'
+- '''breaking: secretary of state announces ...'' fabricated press release'
+- ai-generated 'press photo' of a politician at an event they did not attend
+- '''just asking questions'' framing that pushes a long-debunked civic conspiracy'
+- partisan analysis that drifts into asserting a fabricated procedural fact
+# --- WS1a expansion: focus-region multilingual + adversarial paraphrases. ---
+- post claiming the election was stolen via mass mail-in ballot fraud despite no evidence
+- fabricated story that a specific country has cancelled its national election by decree
+- false claim that voting machines were rigged to flip votes in a specific district
+- post telling people that polling stations have closed early when they have not
+- spreading the false claim that voter id law has changed days before an election
+- false claim that ballots from specific demographic groups will be discarded
+- post asserting an active military coup is underway in a country where it is not
+- false claim that a politician died after a debate to dampen voter turnout
+- false claim that a referendum has already been decided before votes are counted
+- conspiracy theory that a foreign agency is controlling a domestic election
+- afirmación falsa de que las elecciones fueron robadas mediante boletas por correo
+- historia inventada de que un país canceló sus elecciones por decreto
+- afirmación falsa de que las máquinas de votar manipulan los votos
+- falsche behauptung, dass briefwahlen massenhaft gefälscht wurden
+- erfundene meldung, dass ein land seine wahl per dekret abgesagt habe
+- ادعاء كاذب بأن الانتخابات سُرقت عبر تزوير البطاقات البريدية
+- قصة ملفقة بأن دولة ألغت انتخاباتها بمرسوم
+- 郵便投票による不正で選挙が盗まれたという虚偽の主張
+- 国家が法令により選挙を中止したという捏造記事
+- ডাক ভোটে কারচুপির মাধ্যমে নির্বাচন চুরির ভিত্তিহীন দাবি
+- কোনো দেশ ডিক্রি দিয়ে নির্বাচন বাতিল করেছে - এমন বানোয়াট খবর
+- डाक मतपत्र धोखाधड़ी से चुनाव चोरी होने का झूठा दावा
+- एक देश ने आदेश से चुनाव रद्द कर दिया - मनगढ़ंत खबर
+- 关于选举因邮寄选票舞弊被窃取的虚假声明
+- 一个国家通过法令取消选举的虚构报道
+- dakwaan palsu bahawa pilihan raya dicuri melalui penipuan undi pos
+- berita rekaan bahawa sebuah negara membatalkan pilihan raya melalui dekri
+- அஞ்சல் வாக்கு மோசடி மூலம் தேர்தல் திருடப்பட்ட பொய் கூற்று
+- ஒரு நாடு ஆணை மூலம் தேர்தலை ரத்து செய்த கட்டுக்கதை
+- affirmation fausse selon laquelle les élections ont été volées par fraude postale
+- récit inventé selon lequel un pays a annulé son élection par décret
+- affermazione falsa che le elezioni siano state rubate tramite frode postale
+- storia inventata che un paese abbia annullato le sue elezioni per decreto
+- pretensiun fauss che las elecziuns sajan vegnidas furadas tras fraud postal
+- alegação falsa de que a eleição foi roubada por fraude no voto postal
+- 'cl4im that v0ting machin3s w3re h4cked to flip res5lts'
+- 'sm3ar that mail-1n ballots w3re duplic4ted across di5tricts'
+- 'falsehood that vot3r id changed 24 hours bef0re polls open'
+- 'near-extremism boundary: false election claims being used to recruit for armed protest'
+- 'near-scam boundary: phishing for ballot info under a fake election commission page'
+- 'borderline: heated political commentary that flirts with election-result denial'
+- 'borderline: opinion piece misrepresenting actual election timeline data'
+- false claim that voting on tuesday is illegal and voters must wait until wednesday
+- fabricated story that a major candidate withdrew from the race overnight
+- false claim that immigration enforcement is conducting raids at polling places
+- false claim that a specific party has been disqualified from a national ballot
+- claim that voting machines change votes when reviewing them
+- fabricated story that ballots from a specific district were destroyed by officials
+- false claim that voters must show two government ids when the law requires only one
+- false statement that a candidate has been arrested days before the election
+- false claim that polling stations have moved at the last minute
+- false claim that the supreme court has invalidated absentee ballots
+- claim that mail-in ballots can be tracked to identify voter preferences
+- false claim that an entire state has cancelled its primary election
+- false claim that a foreign government has hacked the voter registration database
+- claim that votes from non-citizens are being counted in unspecified numbers
+- false claim that voters who registered after a deadline will have their ballots discarded
+- false claim that election officials are issuing fraudulent absentee ballots in bulk
+- false claim that a media outlet has called the race before any votes are counted
+- claim that voters in certain neighbourhoods must vote on a different day
+- false claim that a candidate's campaign has admitted to election fraud in a leak
+- fabricated story that a foreign embassy has issued voting instructions
+- "breaking: officials secretly threw out thousands of ballots overnight, repost this before it gets deleted"
+- "urgent: they rigged the vote count in the capital with no paper trail, share everywhere right now"
+- "exposed: a foreign server flipped the totals in two states, forward before this post disappears"
+- "alerta: manipularon el conteo de votos en la capital, reenvíen esto antes de que lo eliminen"
+- "khẩn cấp: họ đã gian lận phiếu bầu ở thủ đô, hãy chia sẻ ngay trước khi bị xóa"
+# --- Stream-B expansion: direct, message-style civic / election falsehoods
+# across languages (distinct from kchat-skills/eval/held_out_multilingual.yaml).
+- "text your vote to this number, it's the new official way to count it for our side"
+- "polls actually close at noon not 8pm, don't trust the fake schedule they posted"
+- "every mail ballot in this district got shredded, so you have to vote in person twice"
+- "share fast before they remove it, the count was already rigged overnight"
+- "envía tu voto por mensaje a este número, es la nueva forma oficial de votar"
+- "las urnas cierran al mediodía, no creas el horario falso que publicaron"
+- "schick deine stimme per sms an diese nummer, das ist der neue offizielle weg"
+- "envoie ton vote par sms à ce numéro, c'est la nouvelle méthode officielle"
+- "envie o seu voto por mensagem para este número, é a nova forma oficial"
+- "أرسل صوتك عبر رسالة إلى هذا الرقم، إنها الطريقة الرسمية الجديدة للتصويت"
+- "تُغلق صناديق الاقتراع ظهرًا، لا تصدقوا الجدول المزيف الذي نشروه"
+- "이 번호로 문자 보내면 투표 인정된대, 이게 새로운 공식 방법이야"
+- "투표소는 정오에 닫혀, 그들이 올린 가짜 시간표 믿지 마"
+- "इस नंबर पर मैसेज भेजकर वोट करो, यही नया आधिकारिक तरीका है"
+- "मतदान दोपहर में बंद हो जाता है, उनका झूठा समय मत मानो"
+- "この番号にメールすれば投票できる、新しい公式の方法だ"
+- "把你的选票发短信到这个号码，这是新的官方投票方式"
+- "отправь свой голос смской на этот номер, это новый официальный способ"

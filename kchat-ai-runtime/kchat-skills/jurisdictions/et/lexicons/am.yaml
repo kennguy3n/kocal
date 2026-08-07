@@ -1,0 +1,21 @@
+# AM (Ethiopia) lexicon bundle for the kchat.jurisdiction.et.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: et_am_lexicon_v1
+language: am
+locale: am-ET
+provenance: kchat_trust_and_safety_et_v1
+categories:
+  - 1
+  - 4
+terms:
+  - term_id: et_am_term_child_protection_v1
+    categories: [1]
+    notes: Criminal Code Art. 644 (child sexual abuse) indicators (catalogue-only).
+  - term_id: et_am_term_anti_terror_proc_v1
+    categories: [4]
+    notes: Anti-Terrorism Proclamation 1176/2020 indicators (catalogue-only).

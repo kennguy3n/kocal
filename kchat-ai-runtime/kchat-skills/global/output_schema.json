@@ -1,0 +1,116 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "kchat.guardrail.output.v1",
+  "title": "KChat Guardrail Encoder Classifier Output",
+  "description": "Constrained JSON output schema emitted by the on-device encoder classifier. The runtime rejects any output that does not validate against this schema. See ARCHITECTURE.md 'Output Schema'.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "severity",
+    "category",
+    "confidence",
+    "actions",
+    "reason_codes",
+    "rationale_id"
+  ],
+  "properties": {
+    "severity": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 5,
+      "description": "Severity level per the 0-5 severity rubric."
+    },
+    "category": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 16,
+      "description": "Taxonomy category id (see taxonomy.yaml)."
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "description": "Model confidence in [0.0, 1.0]."
+    },
+    "actions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "label_only",
+        "warn",
+        "strong_warn",
+        "critical_intervention",
+        "suggest_redact",
+        "surface_resources"
+      ],
+      "properties": {
+        "label_only": { "type": "boolean" },
+        "warn": { "type": "boolean" },
+        "strong_warn": { "type": "boolean" },
+        "critical_intervention": { "type": "boolean" },
+        "suggest_redact": { "type": "boolean" },
+        "surface_resources": { "type": "boolean", "description": "When true, the UI should surface crisis resources (e.g. self-harm hotlines) alongside the verdict." }
+      }
+    },
+    "reason_codes": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "LEXICON_HIT",
+          "SCAM_PATTERN",
+          "PRIVATE_DATA_PATTERN",
+          "URL_RISK",
+          "QUOTED_SPEECH_CONTEXT",
+          "NEWS_CONTEXT",
+          "EDUCATION_CONTEXT",
+          "COUNTERSPEECH_CONTEXT",
+          "GROUP_AGE_MODE",
+          "JURISDICTION_OVERRIDE",
+          "COMMUNITY_RULE",
+          "CHILD_SAFETY_FLOOR",
+          "WARN_WITH_CONTEXT",
+          "CHILD_SAFETY_MEDIA",
+          "SELF_HARM_MEDIA",
+          "EXTREMISM_MEDIA",
+          "HATE_MEDIA",
+          "HARASSMENT_MEDIA",
+          "DRUGS_WEAPONS_MEDIA",
+          "DEEPFAKE_MEDIA",
+          "MALWARE_MEDIA"
+        ]
+      }
+    },
+    "rationale_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Closed-phrasebook id mapping to a public rationale phrase. No free text."
+    },
+    "resource_link_id": {
+      "type": ["string", "null"],
+      "description": "Localized resource link id (e.g. crisis hotline, electoral authority). The runtime resolves the URL locally; the classifier never emits a resolved URL."
+    },
+    "counter_updates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["counter_id", "delta"],
+        "properties": {
+          "counter_id": { "type": "string", "minLength": 1 },
+          "delta": { "type": "integer" }
+        }
+      }
+    },
+    "model_health": {
+      "type": "string",
+      "enum": [
+        "healthy",
+        "model_unavailable",
+        "inference_error"
+      ],
+      "description": "Safety-relevant status signal describing whether the encoder model produced this verdict (``healthy``) or whether the pipeline fell back to a degraded mode in which only the deterministic detectors fired (``model_unavailable`` when the encoder could not run; ``inference_error`` when it ran but emitted output that did not validate against this schema). Absence of the field is equivalent to ``healthy``. This is not message content or an embedding — it is a coarse health signal so the UI can distinguish 'safe message' from 'model couldn't run'. **Consumers MUST inspect this field**: when the value is anything other than ``healthy``, the deterministic detectors are the only signal that ran, so reason codes such as ``PRIVATE_DATA_PATTERN`` / ``SCAM_PATTERN`` / ``URL_RISK`` / ``LEXICON_HIT`` may be present on a ``category=0`` (SAFE) verdict and should be surfaced to the end user. A UI that only inspects ``severity`` / ``actions`` will silently miss harm signals in degraded mode."
+    }
+  }
+}

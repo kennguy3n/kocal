@@ -1,0 +1,67 @@
+{
+  "generated_utc": "2026-06-10T23:21:12+00:00",
+  "runs": [
+    {
+      "apply_clip_norm": true,
+      "center_prototypes": false,
+      "summary": {
+        "accuracy": 0.25,
+        "clips_evaluated": 8,
+        "harmful_catch_rate": 1.0,
+        "harmful_caught_count": 3,
+        "harmful_clip_count": 3,
+        "safe_clip_count": 5,
+        "safe_overflag_count": 5,
+        "safe_overflag_rate": 1.0
+      }
+    },
+    {
+      "apply_clip_norm": true,
+      "center_prototypes": true,
+      "summary": {
+        "accuracy": 0.25,
+        "clips_evaluated": 8,
+        "harmful_catch_rate": 1.0,
+        "harmful_caught_count": 3,
+        "harmful_clip_count": 3,
+        "safe_clip_count": 5,
+        "safe_overflag_count": 5,
+        "safe_overflag_rate": 1.0
+      }
+    },
+    {
+      "apply_clip_norm": false,
+      "center_prototypes": false,
+      "summary": {
+        "accuracy": 1.0,
+        "clips_evaluated": 8,
+        "harmful_catch_rate": 1.0,
+        "harmful_caught_count": 3,
+        "harmful_clip_count": 3,
+        "safe_clip_count": 5,
+        "safe_overflag_count": 0,
+        "safe_overflag_rate": 0.0
+      }
+    },
+    {
+      "apply_clip_norm": false,
+      "center_prototypes": true,
+      "summary": {
+        "accuracy": 1.0,
+        "clips_evaluated": 8,
+        "harmful_catch_rate": 1.0,
+        "harmful_caught_count": 3,
+        "harmful_clip_count": 3,
+        "safe_clip_count": 5,
+        "safe_overflag_count": 0,
+        "safe_overflag_rate": 0.0
+      }
+    }
+  ],
+  "sampling": {
+    "fps": 1.0,
+    "max_frames": 30,
+    "strategy": "uniform"
+  },
+  "schema": "kchat.guardrail.video_benchmark_ablation.v1"
+}

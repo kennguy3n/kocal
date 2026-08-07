@@ -1,0 +1,72 @@
+# Community Overlay — kchat.community.marketplace.guardrail.v1
+#
+# Buy / sell / trade overlay. Tightens scam, illegal-goods, and
+# drugs/weapons handling, and tracks scam-link bursts via a local
+# expiring counter.
+
+skill_id: kchat.community.marketplace.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: marketplace
+  age_mode: mixed_age
+  visibility: public_summary
+  set_by: group_admin
+
+rules:
+  - category: 7    # SCAM_FRAUD
+    action: strong_warn
+    note: >-
+      Phishing, advance-fee fraud, fake giveaways, and impersonation
+      surface a hard modal warning in marketplace channels.
+  - category: 11   # DRUGS_WEAPONS
+    action: strong_warn
+    note: >-
+      Sale or facilitation of drugs / firearms / regulated goods is
+      tightened in marketplace contexts.
+  - category: 12   # ILLEGAL_GOODS
+    action: strong_warn
+    note: >-
+      Stolen goods, counterfeit currency, and trafficked items surface
+      a hard modal warning.
+
+slm_prompt_suffix: >-
+  Marketplace community: apply extra scrutiny to buy/sell/trade
+  interactions. Watch for advance-fee demands (pay deposit before
+  viewing), counterfeit goods, fake escrow services, overpayment
+  refund scams, and non-delivery after payment. Treat external
+  payment links and requests for wire transfer or gift cards as
+  elevated scam risk. Flag accounts selling new items at implausibly
+  low prices.
+
+scam_phrase_additions:
+  - key: en_marketplace_scam
+    language: en
+    entries:
+      - phrase: pay deposit before viewing
+        weight: 0.85
+      - phrase: escrow service fee
+        weight: 0.85
+      - phrase: overpayment refund
+        weight: 0.9
+      - phrase: wire transfer only
+        weight: 0.8
+      - phrase: gift card payment
+        weight: 0.85
+      - phrase: shipping fee upfront
+        weight: 0.8
+      - phrase: non-delivery claim
+        weight: 0.75
+      - phrase: counterfeit goods listing
+        weight: 0.7
+
+group_risk_counters:
+  - counter_id: group_scam_links_24h
+    method: device_local_expiring_counter
+    window: 24h
+    thresholds:
+      label_at:        3
+      strong_label_at: 6
+      escalate_at:     10

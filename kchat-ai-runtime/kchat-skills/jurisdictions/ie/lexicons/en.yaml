@@ -1,0 +1,21 @@
+# EN (Ireland) lexicon bundle for the kchat.jurisdiction.ie.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: ie_en_lexicon_v1
+language: en
+locale: en-IE
+provenance: kchat_trust_and_safety_ie_v1
+categories:
+  - 1
+  - 4
+terms:
+  - term_id: ie_en_term_child_trafficking_pornography_v1
+    categories: [1]
+    notes: Child Trafficking and Pornography Act 1998 indicators (catalogue-only).
+  - term_id: ie_en_term_offences_against_state_v1
+    categories: [4]
+    notes: Offences against the State Act 1939 indicators (catalogue-only).

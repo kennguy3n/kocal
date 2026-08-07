@@ -1,0 +1,21 @@
+# French-language lexicon bundle for the kchat.jurisdiction.ch.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: ch_fr_lexicon_v1
+language: fr
+locale: fr-CH
+provenance: kchat_trust_and_safety_ch_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 6   # HATE
+terms:
+  - term_id: ch_fr_term_cp_197_enfants_ch_v1
+    categories: [1]
+    notes: Code pénal Art. 197 indicators (Swiss-French).
+  - term_id: ch_fr_term_cp_261bis_ch_v1
+    categories: [6]
+    notes: Code pénal Art. 261bis anti-racism indicators.

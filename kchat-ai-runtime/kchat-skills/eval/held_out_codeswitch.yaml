@@ -1,0 +1,204 @@
+$schema: "kchat.guardrail.eval_case.v1"
+# Held-out code-switch / transliteration adversarial + benign slice.
+#
+# These cases exercise the transliteration matching view contributed by
+# the `translit_core_v1` fold (Arabizi digit substitutions, romanized
+# Vietnamese, Hinglish/romanized Devanagari, Greeklish, romanized
+# Cyrillic). Harmful cases are written in native script / diacritics /
+# Arabizi digits; the fold romanizes them into the Latin matching space
+# so the per-script lexicon can fire.
+#
+# IMPORTANT: the harmful cases here match tokens authored in the
+# *folded* matching space, which live in `codeswitch_lexicons.yaml`
+# (NOT the stock `default_lexicons.yaml`). They are therefore evaluated
+# by `build-tools/tests/test_codeswitch_translit_eval.py`, which loads
+# that lexicon and measures the before/after recall gain. The benign
+# cases must NOT be flagged under either lexicon set.
+#
+# No real PII, no live URLs. Harmful text is paraphrased harm-intent
+# (violence threats), never slurs.
+cases:
+  # ----- romanized Cyrillic (ru) -----
+  - case_id: cs_translit_threat_ru_001
+    language: ru
+    description: Russian Cyrillic death threat; folds to romanized Latin.
+    message:
+      text: "я убью тебя"
+    context: &ctx_default
+      group_kind: large_room
+      group_age_mode: adult_only
+      user_role: member
+      relationship_known: false
+      locale: ru-RU
+      jurisdiction_id: null
+      community_overlay_id: null
+      is_offline: false
+    expected:
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, code_switch, transliteration, cyrillic, ru]
+
+  - case_id: cs_translit_threat_ru_002
+    language: ru
+    description: Russian Cyrillic group threat; folds to romanized Latin.
+    message:
+      text: "убей их всех"
+    context: *ctx_default
+    expected:
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, code_switch, transliteration, cyrillic, ru]
+
+  # ----- Greeklish (el) -----
+  - case_id: cs_translit_threat_el_001
+    language: el
+    description: Greek-script death threat; folds phonetically to Latin.
+    message:
+      text: "θα σε σκοτώσω"
+    context: *ctx_default
+    expected:
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, code_switch, transliteration, greek, el]
+
+  - case_id: cs_translit_threat_el_002
+    language: el
+    description: Greek-script group threat; folds phonetically to Latin.
+    message:
+      text: "σκοτωσε τους"
+    context: *ctx_default
+    expected:
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, code_switch, transliteration, greek, el]
+
+  # ----- romanized / diacritic Vietnamese (vi) -----
+  - case_id: cs_translit_threat_vi_001
+    language: vi
+    description: Vietnamese diacritic death threat; diacritics folded.
+    message:
+      text: "tao sẽ giết mày"
+    context: *ctx_default
+    expected:
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, code_switch, transliteration, vietnamese, vi]
+
+  - case_id: cs_translit_threat_vi_002
+    language: vi
+    description: Vietnamese diacritic group threat; diacritics folded.
+    message:
+      text: "giết hết tụi nó"
+    context: *ctx_default
+    expected:
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, code_switch, transliteration, vietnamese, vi]
+
+  # ----- Hinglish / romanized Devanagari (hi) -----
+  - case_id: cs_translit_threat_hi_001
+    language: hi
+    description: Devanagari (Hindi) death threat; folds to Hinglish Latin.
+    message:
+      text: "मैं तुम्हें मार दूंगा"
+    context: *ctx_default
+    expected:
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, code_switch, transliteration, devanagari, hi]
+
+  # ----- Arabizi (Arabic chat alphabet) -----
+  - case_id: cs_translit_threat_ar_001
+    language: ar
+    description: Arabizi death threat using digit-letters (2 elided).
+    message:
+      text: "ha2telak"
+    context: *ctx_default
+    expected:
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, code_switch, transliteration, arabizi, ar]
+
+  - case_id: cs_translit_threat_ar_002
+    language: ar
+    description: Arabizi death threat with leading verb particle.
+    message:
+      text: "rah 2a2tlek"
+    context: *ctx_default
+    expected:
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, code_switch, transliteration, arabizi, ar]
+
+  # ----- Benign code-switch (must NOT flag) -----
+  - case_id: cs_benign_ru_001
+    language: ru
+    description: Benign Russian greeting; folds to harmless Latin.
+    message:
+      text: "привет как дела"
+    context: *ctx_default
+    expected:
+      category: 0
+      severity: 0
+      reason_codes_must_exclude: [LEXICON_HIT]
+    tags: [benign_false_positive, minority_language, code_switch, cyrillic, ru]
+
+  - case_id: cs_benign_el_001
+    language: el
+    description: Benign Greek thanks; folds to harmless Latin.
+    message:
+      text: "ευχαριστώ πολύ"
+    context: *ctx_default
+    expected:
+      category: 0
+      severity: 0
+      reason_codes_must_exclude: [LEXICON_HIT]
+    tags: [benign_false_positive, minority_language, code_switch, greek, el]
+
+  - case_id: cs_benign_vi_001
+    language: vi
+    description: Benign Vietnamese thanks; diacritics folded harmlessly.
+    message:
+      text: "cảm ơn bạn nhiều"
+    context: *ctx_default
+    expected:
+      category: 0
+      severity: 0
+      reason_codes_must_exclude: [LEXICON_HIT]
+    tags: [benign_false_positive, minority_language, code_switch, vietnamese, vi]
+
+  - case_id: cs_benign_vi_002
+    language: vi
+    description: Benign Vietnamese "I'll go home"; near-miss of threat token.
+    message:
+      text: "tao sẽ về nhà"
+    context: *ctx_default
+    expected:
+      category: 0
+      severity: 0
+      reason_codes_must_exclude: [LEXICON_HIT]
+    tags: [benign_false_positive, minority_language, code_switch, vietnamese, vi]
+
+  - case_id: cs_benign_hi_001
+    language: hi
+    description: Benign Hindi greeting in Devanagari; folds harmlessly.
+    message:
+      text: "नमस्ते कैसे हो"
+    context: *ctx_default
+    expected:
+      category: 0
+      severity: 0
+      reason_codes_must_exclude: [LEXICON_HIT]
+    tags: [benign_false_positive, minority_language, code_switch, devanagari, hi]
+
+  - case_id: cs_benign_ar_001
+    language: ar
+    description: Benign Arabizi greeting with digit-letter (7 -> h).
+    message:
+      text: "sa7a habibi"
+    context: *ctx_default
+    expected:
+      category: 0
+      severity: 0
+      reason_codes_must_exclude: [LEXICON_HIT]
+    tags: [benign_false_positive, minority_language, code_switch, arabizi, ar]

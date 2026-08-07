@@ -1,0 +1,437 @@
+# Training corpus subset — category 0 (safe).
+# Loaded by build-tools/compiler/training_data.py at module
+# import time and concatenated with the other cat_*.yaml files
+# to form ``TRAINING_EXAMPLES``.
+#
+# See compiler/training_data.py for the loader, the SAFE-class
+# over-sampling rationale, and the per-category coverage
+# constraints (multilingual paraphrases, adversarial variants,
+# near-boundary cases).
+category_id: 0
+category_name: safe
+examples:
+- hey, what time is dinner tonight?
+- see you at the meeting tomorrow morning
+- does anyone know a good vegetarian recipe?
+- i'll be five minutes late, traffic is bad
+- happy birthday! hope you have a great day
+- the weather is nice today, going for a walk
+- can you send me the meeting notes when you get a chance?
+- just finished the project, thanks everyone for the help
+- bonjour tout le monde, comment allez-vous
+- こんにちは、今日はいい天気ですね
+- xin chào mọi người, hôm nay khỏe không
+- hola, ¿cómo estás? ¿qué tal el día?
+- guten morgen, hat jemand gut geschlafen
+- আমি আজ বিকেলে আসব
+- yes thanks, that works for me
+- can we move the call to friday at three pm?
+- looking forward to the conference next week
+- the cake was delicious, thank you for bringing it
+- i finished the report and emailed it to the team
+- does the library have a copy of that book?
+- we should go hiking this weekend if the weather holds
+- the bus is running late again
+- I'll pick up groceries on the way home
+- congrats on the new job, that's great news
+- hope your trip went well
+- the laundry takes forever to dry in winter
+- can someone recommend a plumber in this neighbourhood?
+- i tried that new ramen place, the broth was great
+- did you watch the match last night, what a finish
+- running a five-k this weekend, wish me luck
+- the bakery on the corner reopened with new owners
+- just got back from the dentist, all clear
+- our dog learned a new trick today, so proud
+- the new season of that cooking show is finally up
+- anyone want to split a taxi to the venue?
+- i finally finished that puzzle, took me three weeks
+- the kids loved the trip to the aquarium
+- did you plant tomatoes this year, mine are huge
+- the rain finally stopped, the garden looks happy
+- rearranged the living room, feels much bigger now
+- the swap meet is back this saturday in the park
+- i started learning piano again after years off
+- we drove up the coast and stopped at three lighthouses
+- the bookstore is having a buy-two-get-one sale
+- first day of class went smoothly, the kids were excited
+- standup is starting in two minutes, who has updates
+- the design review went well, only minor revisions
+- I'll share the slide deck after I clean up the appendix
+- the office coffee machine is finally working again
+- anyone covering the friday demo, I'm out that day
+- the new intern is settling in nicely
+- revising the chapter on supply chains, it needs a rewrite
+- we wrapped the sprint with one ticket still open
+- the deadline moved back a week, that helps
+- the lab equipment finally arrived, we can start tuesday
+- can someone proofread the abstract before i submit it
+- got accepted to the workshop, see you in june
+- the dataset cleaned up well, much fewer outliers now
+- my advisor signed off on the proposal
+- the office is closed monday, holiday weekend
+- hôm nay tôi đi mua sắm với gia đình
+- buenas noches, descansa bien
+- صباح الخير، كيف حالك اليوم
+- おはようございます、よろしくお願いします
+- আজকের আবহাওয়া খুব সুন্দর
+- ich gehe heute abend ins kino mit freunden
+- नमस्ते, आज का दिन कैसा रहा
+- vamos a cenar a las ocho en casa de mi madre
+- mai mette il pranzo nel forno per favore
+- rất vui được gặp lại bạn cuối tuần
+- 私たちは公園で散歩をします
+- ich freue mich auf das wochenende
+- আমি কাল বাজার যাব
+- hoy hace mucho calor, voy a la playa
+- الطعام كان لذيذًا، شكرًا لك
+- क्या आप मुझे रेसिपी भेज सकते हैं
+- hôm qua tôi xem một bộ phim hay lắm
+- はい、それで大丈夫です
+- guten appetit, das essen sieht super aus
+- আপনারা সবাই ভাল আছেন তো
+- the train was packed but i got a seat in the end
+- topped up my transit card on the way to the station
+- rent went up again, looking for a roommate
+- split the dinner bill with the group, easy enough
+- the recipe calls for star anise, anyone got some?
+- kicked the soccer ball over the fence, again
+- the public pool reopens next month after the renovation
+- borrowed three books from the library, two are great
+- the painting class meets every other thursday
+- our cat brought us a leaf as a present this morning
+- re-strung my guitar, sounds way better now
+- trying to learn to bake sourdough, the starter is grumpy
+- anyone going to the farmers market tomorrow morning?
+- the local park has a new walking trail along the river
+- the museum exhibit on rare books was worth the trip
+- the kettle is on, want a cup?
+- renewed my passport at the post office, took twenty minutes
+- the basketball team won their first match of the season
+- we set up the new bookshelf in the hallway last night
+- the park ranger gave a great talk about local birds
+- the pottery class made bowls from scratch yesterday
+- borrowed a stand mixer from a neighbour for the bake-off
+- the kids tied their own laces today, first time both feet
+- the city library extended its weekend hours
+- our community garden harvested the first batch of peppers
+- the new museum wing opened with a free family weekend
+- decided to walk the long way home to enjoy the sunshine
+- anyone got tips for keeping basil alive through winter?
+- the chess club moved to wednesday evenings starting next week
+- baked some cookies for the office, hope people like raisins
+- the puppy class graduation is on saturday, we're so excited
+- our team retro went really well, we picked up some good fixes
+- ordered new running shoes, they finally arrived today
+- planning a small barbecue for sunday, drop by if you can
+- the new highway off-ramp shaved ten minutes off my commute
+- watching the river otters at the wildlife centre, so cute
+- my niece's school play was adorable, she nailed her line
+- the office moved the printer to the second floor finally
+- found a great second-hand bookshop near the train station
+- trying out a new bread recipe with rye flour this weekend
+- the choir is rehearsing for the spring concert, sounds great
+- our cycling group rode forty kilometres on saturday, slow but steady
+- the cat finally jumped onto my lap voluntarily today
+- painted the bedroom a soft green, it really brightens the room
+- the airport shuttle was on time for the first time this month
+- planning a road trip up the coast next month with friends
+- the local cinema is showing classic films every wednesday
+- just finished a really good crime novel, can recommend
+- the fall colours along the canal are gorgeous this year
+- running a small workshop on knitting basics at the cafe
+- the marathon route goes right past our house this year
+- vou ao mercado, alguém precisa de algo?
+- ciao a tutti, come state oggi
+- привет, как у вас дела сегодня
+- 早上好,今天天气怎么样
+- salut tout le monde, ça va bien
+- cảm ơn rất nhiều, hẹn gặp lại tuần sau
+- muchas gracias por la receta, salió deliciosa
+- ありがとう、また連絡します
+- আজ আমাদের পরিবার একসাথে রাতের খাবার খাব
+- der zug hatte etwas verspätung, aber alles gut
+- शुक्रिया, मुझे यह बहुत पसंद आया
+- estoy aprendiendo a tocar la guitarra, es divertido
+- شكراً جزيلاً، أراك في الاجتماع
+- 家族で公園にピクニックに行きました
+- আমরা সাপ্তাহিক ছুটিতে পাহাড়ে যাব
+- vamos a celebrar el cumpleaños de mi abuela el sábado
+- the bakery had fresh croissants this morning, perfect
+- traffic was light this morning, made it to work early
+- the new sushi place is opening down the block next month
+- anyone watching the documentary series about ancient rome?
+# Near-boundary benign examples — protected-speech-adjacent
+# content the encoder has historically false-fired on. Each row is a
+# benign discussion that uses harm-adjacent vocabulary (mental
+# health recovery, identity disclosure, reclaimed slurs as community
+# practice, lottery/draw numbers, ordinary multilingual chat) but
+# whose intent is clearly SAFE. Without these examples the encoder
+# treats "panic attacks getting less frequent" as a self-harm
+# signal because the only training mention of "panic attacks" lives
+# under self-harm. See calibration notes in docs/RUNNING_XLMR.md.
+# Mental-health recovery / therapy progress (no first-person ideation).
+- after a year of therapy, my anxiety attacks have calmed down a lot
+- my counsellor says i am making real progress this month
+- six months of cbt and the daytime worry spirals are mostly gone
+- meds got adjusted last week and the side effects are easing up
+- group therapy has been surprisingly helpful, i look forward to it now
+- después de seis meses de terapia, los ataques de pánico son menos frecuentes
+- ich gehe seit einem jahr zur therapie und es geht mir deutlich besser
+- 薬を変えてから体調がよくなってきました、副作用も落ち着いてきた
+- নিয়মিত থেরাপির ফলে আমি অনেক ভালো বোধ করছি এখন
+- gặp bác sĩ tâm lý đều đặn giúp tôi cảm thấy ổn định hơn nhiều
+- شكراً للعلاج النفسي، حالتي تحسنت كثيراً في الأشهر الماضية
+# Identity / coming-out / family acceptance (benign disclosure).
+- coming out to my family went better than i feared honestly
+- told my parents about my partner this weekend, they were lovely
+- my sibling came out to me last week and i am so proud of them
+- मैंने अपने परिवार को अपनी पहचान बताई, उन्होंने मुझे स्वीकार किया
+- salir del armario con mi familia fue duro al principio pero ahora me apoyan
+- 家族にカミングアウトしたら、思っていたより受け入れてくれました
+- মা-বাবাকে আমার সঙ্গী সম্পর্কে বলেছি, তারা মেনে নিয়েছেন
+# Reclaimed-language meta-discussion (community practice, not slur use).
+- within our community we sometimes use that word among ourselves to take its sting away
+- reclaiming language is a coping practice many minority communities have written about
+- the panel discussed how reclaimed slurs function inside affinity groups
+# Lottery / draw / raffle / sports-score numeric sequences (multi-digit groups).
+- last night winning lottery numbers were 5 11 19 22 30 42 no jackpot winners again
+- the powerball draw came in 7 14 21 28 35 49 with bonus ball 12
+- the school raffle prize numbers are 03 11 27 44, check your tickets
+- 今夜の宝くじの当選番号は 3 9 15 22 28 41 でした
+- die lottozahlen vom samstag sind 6 11 19 25 33 47 und superzahl 4
+- final score of last night football match was 27 24 21 17 in the first three quarters
+# German benign chat (coverage gap surfaced by held-out eval).
+- können wir uns morgen um sieben treffen, oder passt es dir nicht
+- sag mir bescheid wenn sich etwas an deinem plan ändert
+- komm doch am wochenende vorbei, wenn du zeit hast
+# --- WS1a expansion: focus-region multilingual + adversarial paraphrases. ---
+- can someone help me find a good dentist near downtown
+- the bus schedule changed again this week, anyone got an update
+- what's the best podcast about local history you've listened to lately
+- thinking of taking up gardening this spring, any beginner tips
+- the rain finally stopped so I got out for my morning run
+- the new bakery on oak street has incredible sourdough
+- anybody else watching the documentary that everyone is talking about
+- I bought tickets to the concert in May, who else is going
+- the kids enjoyed the school play, especially the singing parts
+- ordering takeout tonight, can't decide between thai or japanese
+- bonjour, comment se sont passées vos vacances en montagne
+- merci beaucoup pour le café de ce matin, c'était délicieux
+- ¿alguien sabe dónde encontrar buen pan integral por aquí
+- gracias por venir al cumpleaños, fue genial verlos a todos
+- guten morgen, hat jemand einen tipp für ein gutes café in der nähe
+- danke für die einladung gestern, es hat sehr viel spaß gemacht
+- صباح الخير، هل لدى أحدكم خبر عن الاجتماع غداً
+- شكرًا جزيلًا على المساعدة في إعداد الحفل أمس
+- おはようございます、今朝のミーティングは何時からでしたか
+- 昨日の食事会、楽しかったですね。また計画しましょう
+- শুভ সকাল, আজকের সভাটি কখন শুরু হবে
+- কাল রাতের রান্না সত্যিই দারুণ ছিল, ধন্যবাদ
+- नमस्ते, क्या किसी को आज की बैठक का समय पता है
+- कल की पार्टी बहुत अच्छी रही, सब आए धन्यवाद
+- 大家好，今天的会议改到几点了
+- 谢谢昨晚的晚餐，菜真的非常好吃
+- selamat pagi, ada sesiapa tahu tarikh hari raya tahun ini
+- terima kasih sebab tolong saya tempah meja semalam
+- காலை வணக்கம், இன்றைய கூட்டம் எத்தனை மணிக்கு
+- நேற்று இரவு உணவு மிகவும் சுவையாக இருந்தது, நன்றி
+- ciao a tutti, come è andata la riunione di questa mattina
+- grazie per la cena di ieri sera, è stata davvero bella
+- bun di a tuts, sco vai cun ils preparatorius per la festa
+- bun saira, in grond engraziament per la chasa, era ina sera fitg bella
+- olá pessoal, alguém viu o jogo ontem à noite
+- obrigada pela ajuda com a mudança, foi ótimo
+- could you forward the slides from yesterday's lunch-and-learn please
+- my daughter just got her driving licence, very proud
+- the conference badges arrived, let me know if anyone needs theirs printed differently
+- looking for a window cleaner who serves the east side
+- finally got around to organising the garage, found my old guitar
+- the spring market opens this weekend at the riverside park
+- has anyone tried the new ramen place near the train station
+- our cat finally let the vet examine her teeth without fuss
+- bought a bike for commuting, anyone got tips on lock recommendations
+- the museum has a new exhibit on local glassmakers, worth a visit
+- thinking about switching to a standing desk, has it helped your back
+- the library now offers a 3d printer on tuesdays, neat addition
+- our youngest just learned to ride a bike, took only one afternoon
+- swapped the lights for warmer bulbs, makes the living room cosier
+- the city hall is hosting a sustainability fair next saturday
+- can someone recommend a good electrician for renovations
+- the pumpkin patch this year had the biggest gourds I've seen
+- our gardening club is doing a seed swap next week, all welcome
+- the choir concert raised money for the children's hospital, lovely event
+- new yoga class on wednesday evenings if anyone's interested
+- weekend hike was beautiful, the leaves are starting to turn
+- a friend recommended a great book club, anyone want to join
+- the recipe came out perfectly, thanks for sharing it last week
+- looking for someone who can fix a leaky kitchen faucet
+- have you tried the new vegetarian restaurant near the cinema
+- the kids are doing a science fair project on solar panels
+- our team finally won a match this season, big celebration
+- 'enjoying the long weekend, hope everyone got a good rest'
+- great photos from the trip, the sunset shots are stunning
+- my mum sent over homemade biscuits, anyone want to come for tea
+- the running club meets at the park on saturdays at seven am
+- the new café has the best matcha latte in town
+- watched a great movie last night, would totally recommend it
+- the new playground equipment was just installed at the community park
+- our dog learned how to fetch the newspaper, very pleased with him
+- the school bake sale raised more than expected for the new library
+- looking for a good cleaning service that's pet-friendly
+- buenas tardes, ¿alguien sabe a qué hora abre la biblioteca el sábado
+- merci pour l'aide hier soir, je vous dois un café
+- guten abend allerseits, kann mir jemand eine gute werkstatt empfehlen
+- صباح الخير، هل تعرفون مطعمًا جيدًا للأطعمة النباتية في المنطقة
+- 今夜の食事会、楽しみにしています
+- आज रात के खाने के लिए सब तैयार हैं
+- 大家有什么周末计划吗，我们想去附近徒步
+- selamat tengah hari, ada cadangan tempat makan tengah hari yang sedap
+- மதிய வணக்கம், சாலையில் போக்குவரத்து எப்படி உள்ளது
+- buongiorno, sapete a che ora apre il negozio domani
+- bun di, esa enzatgi che sa, nua che ins po crumpar ina buna chasa da te qua
+- olá, alguém aqui sabe um bom mecânico
+- the trees in our street are blooming early this year
+- our running group raised over five thousand euros for charity
+- found a good locksmith who comes on weekends
+- the new community pool opens next month, can't wait
+- did anyone catch the live stream of the awards last night
+- the pet adoption event is happening at the park this saturday
+- the new bike lane on main street is great for commuting
+- looking for a good piano teacher for my nine-year-old
+- the youth orchestra played beautifully at the recital
+- the spring fair will have artisan crafts and food trucks
+- thanks for organising the office potluck, the curry was a hit
+- the local theatre has a new production opening tomorrow night
+- our community garden is looking for volunteers this weekend
+- the rivers are high after the rain, anyone going kayaking
+- the farmers market starts again next saturday at the square
+- found a great mechanic who's honest about repairs
+- bought my first sewing machine, any beginner project ideas
+- the city is hosting free outdoor cinema nights all summer
+- bonjour, je cherche un bon coiffeur près du centre-ville
+- bonsoir, comment a été ta journée
+- merci pour le déjeuner d'hier, c'était une belle surprise
+- ¿qué tal el clima por allá esta semana
+- gracias por organizar la salida del fin de semana, fue maravillosa
+- alles gute zum geburtstag, geniess deinen tag
+- vielen dank für deine hilfe heute, du bist ein lebensretter
+- 이번 다가오는 일요일에 같이 갈래
+- 새로운 카페에 가봤어, 정말 좋았어
+- 朝のジョギング、最近欠かさずやってます
+- 来週の会議の議題ありがとうございます
+- 大家午餐时间什么时候有空一起聊聊
+- 这周末有没有人想一起去爬山
+- selamat pagi, ada cadangan tempat sarapan yang sedap
+- jumpa lagi minggu hadapan ya
+- நாளை மீட்டிங் என்ன நேரம் என்று தெரிய வேண்டும்
+- நன்றி, உங்கள் உதவி இல்லாமல் இது சாத்தியமில்லை
+- 'looking for someone to walk our dog while we''re on holiday next week'
+- the new co-working space opens monday, lovely natural light
+- our book club is reading the latest booker winner this month
+- the school play was hilarious, the kids did so well
+- found a great florist that delivers same day
+- the open-air swim club starts again on sunday, water still cold
+- has anyone got a tip for a reliable house painter
+- the rooftop cinema starts next friday with a classic comedy
+- looking for a babysitter for friday evening, any recommendations
+- our marathon training group meets sundays at six am
+- the bakery now has gluten-free options, very excited
+- the language exchange meetup on thursdays is great practice
+- bun saira, sco è ida la nair a la gronda festa
+- a curr meinis che jau veng cun a la cucinaduria
+- 'asking for restaurant recommendations for a date night'
+- 'requesting a recipe for the cake brought to the office potluck'
+- 'thanking the team for the surprise birthday lunch'
+- 'asking for tips on training for a 10k race'
+- 'sharing a sunset photo from the recent vacation'
+- 'asking about the schedule for the upcoming charity run'
+- 'discussing weekend gardening plans with neighbours'
+- 'announcing the arrival of a new puppy to the family'
+- 'asking for advice on a good travel insurance provider'
+- 'sharing a recipe for a vegetarian curry'
+- 'announcing the opening of a new local art gallery'
+- 'asking for recommendations for a weekend hike with kids'
+- 'thanking a neighbour for watering the plants while away'
+- 'asking the chat about the best way to fix a squeaky door'
+- 'announcing a community clean-up event at the local park'
+- 'asking for a recommendation for a reliable car mechanic'
+- 'sharing photos from a recent family reunion'
+- 'discussing the upcoming school events for next semester'
+- 'asking about local farmers markets opening hours'
+- 'announcing a new yoga studio opening in the neighbourhood'
+- 'asking for advice on a good slow cooker recipe'
+- 'sharing a podcast recommendation about local culture'
+- 'announcing volunteering opportunities at the local food bank'
+- 'asking about good language classes for adults'
+- 'announcing a new community garden plot opening up'
+- "moderator note: weapon and ammunition sales are not permitted anywhere in this server"
+- "as a reminder, our group rules forbid posting any drug-related sale offers"
+- "per the marketplace policy, listings for stolen or counterfeit goods are removed on sight"
+- "friendly reminder from the admins: phishing links and fake giveaway scams are not allowed here"
+- "community guideline: slurs or harassment targeting any protected group are strictly prohibited"
+- "house rules: threats of violence against other members lead to an immediate ban"
+- "reminder that sharing other people's home addresses or phone numbers is against our policy"
+- "note from the team: content that sexualises minors is illegal and banned, report it immediately"
+- "this channel does not allow recruitment for extremist or banned organisations of any kind"
+- "policy reminder: do not post malware, cracked software, or links to pirated downloads"
+- "heads up: any post offering counterfeit or smuggled goods will be deleted and the user warned"
+- "just a reminder that doxxing or leaking private data about members is forbidden here"
+- "our rules clearly prohibit selling prescription medication without a valid prescription"
+- "reminder for new members: hate speech and discriminatory jokes are not tolerated in this group"
+- "admin announcement: we have a zero-tolerance rule for scam investment schemes"
+- "please remember that posting someone else's nudes without consent is banned and reportable"
+- "the marketplace board forbids any firearm, ammunition, or weapon-conversion listings"
+- "reminder: encouraging or glorifying self-harm is against the rules; we share crisis resources instead"
+- "group policy: links to malware or credential-phishing pages are removed and reported"
+- "rappel : la vente d'armes à feu est interdite sur ce serveur"
+- "rappel : la publication de l'adresse ou du numéro d'une autre personne est interdite"
+- "hinweis der moderation: der verkauf von drogen ist in dieser gruppe verboten"
+- "hinweis: hetze und beleidigungen gegen geschützte gruppen sind hier nicht erlaubt"
+- "recordatorio: están prohibidos los anuncios de productos robados o falsificados"
+- "recordatorio: los esquemas de inversión fraudulentos no están permitidos aquí"
+- "promemoria: insulti e discriminazioni verso gruppi protetti non sono ammessi"
+- "lembrete: ameaças de violência contra outros membros resultam em banimento"
+- "nhắc nhở: nội dung lừa đảo và liên kết giả mạo không được phép trong nhóm này"
+- "nhắc nhở: rao bán vũ khí và chất cấm bị nghiêm cấm trong nhóm"
+# --- Stream-B expansion: multilingual benign "hard negatives" that mention
+# identity / health / politics / sadness / conflict words neutrally, plus
+# violent-sounding idioms — these MUST stay SAFE so benign FP stays at 0.
+# Distinct from kchat-skills/eval/held_out_multilingual.yaml.
+- "the new health clinic downtown has way shorter wait times now, finally"
+- "i'm really sad the season ended, that finale honestly wrecked me emotionally"
+- "we had a great and respectful debate in class today about immigration policy"
+- "my grandma takes five different pills a day, i help her sort them every morning"
+- "the election results come out tonight, i'm nervous but excited to watch them"
+- "i was so angry at the referee earlier but it's just a game, we'll get them next time"
+- "this puzzle game is killing me, i've been stuck on the same level for an hour"
+- "i could kill for a coffee right now, i barely slept at all last night"
+- "that plot twist was an absolute crime, i can't believe the writers did that"
+- "our trivia team absolutely destroyed the competition last night, what a win"
+- "la clínica nueva del centro atiende mucho más rápido ahora, qué alivio"
+- "hoy salen los resultados de las elecciones, estoy nervioso pero emocionado"
+- "tuvimos un debate muy respetuoso sobre inmigración en clase hoy"
+- "ese examen me mató, estudié toda la noche y aun así estuvo durísimo"
+- "die neue klinik in der stadt hat jetzt viel kürzere wartezeiten, endlich"
+- "heute abend kommen die wahlergebnisse, ich bin gespannt und ein bisschen nervös"
+- "diese hitze bringt mich um, ich brauche dringend etwas kaltes zu trinken"
+- "la nouvelle clinique en ville a des délais d'attente bien plus courts maintenant"
+- "on a eu un débat très respectueux sur l'immigration en cours aujourd'hui"
+- "a nova clínica do centro atende muito mais rápido agora, que alívio"
+- "la nuova clinica in città ha tempi di attesa molto più brevi adesso"
+- "phòng khám mới ở trung tâm giờ chờ nhanh hơn nhiều, cuối cùng cũng được"
+- "العيادة الجديدة في المدينة صارت أسرع بكثير الآن، الحمد لله"
+- "نتائج الانتخابات تظهر الليلة، أنا متوتر قليلاً لكنني متحمس لمتابعتها"
+- "جدتي تأخذ عدة أدوية يوميًا وأساعدها في ترتيبها كل صباح"
+- "시내에 새로 생긴 병원은 이제 대기 시간이 훨씬 짧아졌어, 다행이야"
+- "오늘 밤 선거 결과 나온대, 긴장되지만 그래도 기대돼"
+- "할머니가 매일 약을 여러 개 드셔서 아침마다 내가 정리해 드려"
+- "शहर के नए क्लिनिक में अब इंतज़ार बहुत कम होता है, आखिरकार"
+- "आज रात चुनाव के नतीजे आएंगे, थोड़ी घबराहट है पर उत्साह भी"
+- "दादी हर दिन कई दवाइयाँ लेती हैं, मैं हर सुबह उन्हें छाँटने में मदद करता हूँ"
+- "町に新しくできたクリニックは待ち時間がずっと短くなった、やっとだ"
+- "今夜は選挙の結果が出る、緊張するけどすごく楽しみだ"
+- "市中心新开的诊所现在等候时间短多了，终于啊"
+- "今晚出选举结果，有点紧张但很期待"
+- "в новой клинике в центре теперь очереди намного короче, наконец-то"
+- "сегодня вечером объявят результаты выборов, волнуюсь, но жду с нетерпением"

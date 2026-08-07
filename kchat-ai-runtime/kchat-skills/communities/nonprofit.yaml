@@ -1,0 +1,35 @@
+# Community Overlay — kchat.community.nonprofit.guardrail.v1
+#
+# Nonprofit / NGO overlay. Tightens scam (donation fraud) and
+# civic-misinformation handling.
+
+skill_id: kchat.community.nonprofit.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: nonprofit
+  age_mode: mixed_age
+  visibility: public_summary
+  set_by: group_admin
+
+rules:
+  - category: 7   # SCAM_FRAUD
+    action: strong_warn
+    note: >-
+      Donation / fake-charity scams tightened to a hard modal
+      warning.
+  - category: 14  # MISINFORMATION_CIVIC
+    action: warn
+    note: >-
+      Civic misinformation in advocacy channels warns before display.
+
+group_risk_counters:
+  - counter_id: group_scam_links_24h
+    method: device_local_expiring_counter
+    window: 24h
+    thresholds:
+      label_at: 3
+      strong_label_at: 6
+      escalate_at: 10

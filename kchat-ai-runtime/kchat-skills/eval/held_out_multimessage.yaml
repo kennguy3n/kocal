@@ -1,0 +1,202 @@
+$schema: "kchat.guardrail.multimessage_case.v1"
+# Held-out MULTI-MESSAGE (conversational window) slice — MULTILINGUAL,
+# native-script split-intent + benign multi-turn.
+#
+# Each case is a short THREAD (`messages:`, chronological oldest→newest;
+# the last message is the "current" message, the earlier ones are the
+# bounded prior window). Harmful cases split a multi-word violence
+# threat across consecutive messages so that:
+#   * the SINGLE-message baseline (classify the current message alone)
+#     MISSES it — `single_message_severity_at_most: 0`;
+#   * the WINDOWED path (`classify_with_history`) CATCHES it once the
+#     bounded window reassembles the phrase — `windowed_severity_at_least`
+#     with `reason_codes_must_include: [MULTI_MESSAGE_CONTEXT, ...]`.
+# Benign multi-turn threads must stay clean under BOTH paths
+# (`windowed_severity_at_most: 0`, no MULTI_MESSAGE_CONTEXT tag) — this
+# pins the "no new false positives on benign multi-turn" contract.
+#
+# Harmful tokens live in `multimessage_lexicons.yaml` (folded matching
+# space). Driven by `tools/demo_conversation_window.py`, which prints
+# the before→after table. Provenance: authored by hand for this stream;
+# paraphrased harm intent (violence threats), never slurs; no real PII.
+cases:
+  # ===================================================================
+  # Harmful — split-intent across consecutive messages, native scripts.
+  # ===================================================================
+  - case_id: mm_split_threat_es_001
+    language: es
+    description: >-
+      Spanish death threat "te voy a matar" split across two messages;
+      neither fragment trips a token alone.
+    messages:
+      - text: "oye, escúchame bien"
+      - text: "te voy a"
+      - text: "matar"
+    context: &ctx_default
+      group_kind: large_room
+      group_age_mode: adult_only
+      user_role: member
+      relationship_known: false
+      locale: und
+      jurisdiction_id: null
+      community_overlay_id: null
+      is_offline: false
+    expected:
+      single_message_severity_at_most: 0
+      windowed_severity_at_least: 3
+      reason_codes_must_include: [MULTI_MESSAGE_CONTEXT, LEXICON_HIT]
+    tags: [adversarial, multi_message, split_intent, es]
+
+  - case_id: mm_split_threat_en_001
+    language: en
+    description: English death threat split across the message boundary.
+    messages:
+      - text: "i will"
+      - text: "kill you"
+    context: *ctx_default
+    expected:
+      single_message_severity_at_most: 0
+      windowed_severity_at_least: 3
+      reason_codes_must_include: [MULTI_MESSAGE_CONTEXT, LEXICON_HIT]
+    tags: [adversarial, multi_message, split_intent, en]
+
+  - case_id: mm_split_threat_fr_001
+    language: fr
+    description: French death threat "je vais te tuer" split across turns.
+    messages:
+      - text: "je vais"
+      - text: "te tuer"
+    context: *ctx_default
+    expected:
+      single_message_severity_at_most: 0
+      windowed_severity_at_least: 3
+      reason_codes_must_include: [MULTI_MESSAGE_CONTEXT, LEXICON_HIT]
+    tags: [adversarial, multi_message, split_intent, fr]
+
+  - case_id: mm_split_threat_ru_cyrillic_001
+    language: ru
+    description: >-
+      Russian Cyrillic death threat "я убью тебя" split across two
+      messages; folds to the native-Cyrillic matching form.
+    messages:
+      - text: "я убью"
+      - text: "тебя"
+    context: *ctx_default
+    expected:
+      single_message_severity_at_most: 0
+      windowed_severity_at_least: 3
+      reason_codes_must_include: [MULTI_MESSAGE_CONTEXT, LEXICON_HIT]
+    tags: [adversarial, multi_message, split_intent, cyrillic, ru]
+
+  - case_id: mm_split_threat_hi_devanagari_001
+    language: hi
+    description: >-
+      Hindi Devanagari death threat "मैं तुम्हें मार दूँगा" split across
+      messages; folds to romanized Hindi.
+    messages:
+      - text: "मैं तुम्हें"
+      - text: "मार दूँगा"
+    context: *ctx_default
+    expected:
+      single_message_severity_at_most: 0
+      windowed_severity_at_least: 3
+      reason_codes_must_include: [MULTI_MESSAGE_CONTEXT, LEXICON_HIT]
+    tags: [adversarial, multi_message, split_intent, devanagari, hi]
+
+  - case_id: mm_split_threat_ar_native_001
+    language: ar
+    description: >-
+      Arabic death threat "سوف أقتلك" split across two messages
+      (matched in native script; Arabic is not transliterated).
+    messages:
+      - text: "سوف"
+      - text: "أقتلك"
+    context: *ctx_default
+    expected:
+      single_message_severity_at_most: 0
+      windowed_severity_at_least: 3
+      reason_codes_must_include: [MULTI_MESSAGE_CONTEXT, LEXICON_HIT]
+    tags: [adversarial, multi_message, split_intent, arabic, ar]
+
+  - case_id: mm_split_threat_es_three_msg_001
+    language: es
+    description: >-
+      Spanish threat fragmented across THREE messages, exercising a
+      deeper window (K=3).
+    messages:
+      - text: "te"
+      - text: "voy a"
+      - text: "matar"
+    context: *ctx_default
+    expected:
+      single_message_severity_at_most: 0
+      windowed_severity_at_least: 3
+      reason_codes_must_include: [MULTI_MESSAGE_CONTEXT, LEXICON_HIT]
+    tags: [adversarial, multi_message, split_intent, es]
+
+  # ===================================================================
+  # Benign multi-turn — must stay clean under BOTH paths.
+  # ===================================================================
+  - case_id: mm_benign_es_001
+    language: es
+    description: Benign Spanish dinner-plan chat.
+    messages:
+      - text: "buenos días"
+      - text: "cómo estás"
+      - text: "nos vemos a las siete"
+    context: *ctx_default
+    expected:
+      single_message_severity_at_most: 0
+      windowed_severity_at_most: 0
+    tags: [benign, multi_message, es]
+
+  - case_id: mm_benign_en_001
+    language: en
+    description: Benign English plan-making chat.
+    messages:
+      - text: "hey are you free later"
+      - text: "want to grab dinner"
+      - text: "sure see you at 7"
+    context: *ctx_default
+    expected:
+      single_message_severity_at_most: 0
+      windowed_severity_at_most: 0
+    tags: [benign, multi_message, en]
+
+  - case_id: mm_benign_ru_cyrillic_001
+    language: ru
+    description: Benign Russian Cyrillic greeting chat.
+    messages:
+      - text: "доброе утро"
+      - text: "как дела"
+      - text: "увидимся позже"
+    context: *ctx_default
+    expected:
+      single_message_severity_at_most: 0
+      windowed_severity_at_most: 0
+    tags: [benign, multi_message, cyrillic, ru]
+
+  - case_id: mm_benign_hi_devanagari_001
+    language: hi
+    description: Benign Hindi Devanagari greeting chat.
+    messages:
+      - text: "नमस्ते"
+      - text: "क्या हाल है"
+      - text: "मिलते हैं"
+    context: *ctx_default
+    expected:
+      single_message_severity_at_most: 0
+      windowed_severity_at_most: 0
+    tags: [benign, multi_message, devanagari, hi]
+
+  - case_id: mm_benign_ar_native_001
+    language: ar
+    description: Benign Arabic greeting chat.
+    messages:
+      - text: "صباح الخير"
+      - text: "كيف حالك"
+    context: *ctx_default
+    expected:
+      single_message_severity_at_most: 0
+      windowed_severity_at_most: 0
+    tags: [benign, multi_message, arabic, ar]

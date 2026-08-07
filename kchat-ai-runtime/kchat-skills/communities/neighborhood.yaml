@@ -1,0 +1,62 @@
+# Community Overlay — kchat.community.neighborhood.guardrail.v1
+#
+# Neighborhood / local-community overlay. Tightens private-data
+# (addresses, schedules) and watches for local-marketplace scams.
+
+skill_id: kchat.community.neighborhood.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: neighborhood
+  age_mode: mixed_age
+  visibility: public_summary
+  set_by: group_admin
+
+rules:
+  - category: 7   # SCAM_FRAUD
+    action: warn
+    note: >-
+      Local-marketplace scams (fake landlord, fake lost-pet) warn
+      before display.
+  - category: 9   # PRIVATE_DATA
+    action: strong_warn
+    suggest_redact: true
+    note: >-
+      Home addresses, school routes, and child schedules tightened to
+      a hard modal warning.
+
+slm_prompt_suffix: >-
+  Neighborhood community: apply extra scrutiny to local-marketplace
+  scams including fake landlord deposit requests, lost-pet reward
+  fee scams, contractor fraud demands, and fake neighborhood-watch
+  fundraising. Treat requests for upfront payments for services not
+  yet rendered as elevated scam risk. Watch for door-to-door
+  impersonation patterns adapted to chat.
+
+scam_phrase_additions:
+  - key: en_neighborhood_scam
+    language: en
+    entries:
+      - phrase: landlord deposit before viewing
+        weight: 0.9
+      - phrase: lost pet reward fee
+        weight: 0.85
+      - phrase: contractor upfront payment
+        weight: 0.8
+      - phrase: neighborhood watch donation
+        weight: 0.75
+      - phrase: utility inspection fee
+        weight: 0.8
+      - phrase: moving sale deposit
+        weight: 0.7
+
+group_risk_counters:
+  - counter_id: group_scam_links_24h
+    method: device_local_expiring_counter
+    window: 24h
+    thresholds:
+      label_at: 3
+      strong_label_at: 6
+      escalate_at: 10

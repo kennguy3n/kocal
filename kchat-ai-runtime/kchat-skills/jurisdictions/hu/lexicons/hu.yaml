@@ -1,0 +1,21 @@
+# HU (Hungary) lexicon bundle for the kchat.jurisdiction.hu.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: hu_hu_lexicon_v1
+language: hu
+locale: hu-HU
+provenance: kchat_trust_and_safety_hu_v1
+categories:
+  - 1
+  - 4
+terms:
+  - term_id: hu_hu_term_btk_204_v1
+    categories: [1]
+    notes: Btk. §204 child-protection indicators (catalogue-only).
+  - term_id: hu_hu_term_btk_315_v1
+    categories: [4]
+    notes: Btk. §314-§318 terrorism indicators (catalogue-only).

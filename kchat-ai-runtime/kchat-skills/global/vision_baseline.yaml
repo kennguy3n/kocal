@@ -1,0 +1,162 @@
+# kchat.global.guardrail.vision_baseline
+#
+# Vision-modality companion to `baseline.yaml`. Loaded by the
+# skill-pack compiler when the active deployment ships the
+# MobileCLIP-S2 image encoder.
+#
+# Architectural contract
+# ----------------------
+# - **Inherits unchanged**: taxonomy (17 categories, same IDs as
+#   text), severity rubric (the 0-5 ladder including the
+#   CHILD_SAFETY=5 floor), the decision-policy thresholds
+#   (`label_only=0.45 / warn=0.62 / strong_warn=0.78 /
+#   critical_intervention=0.85`), and the eight privacy rules. The
+#   canonical confidence thresholds are modality-agnostic
+#   confidence buckets — they describe how to interpret a
+#   `[0,1]` confidence value regardless of which encoder produced
+#   it. See `crates/kchat-safety-core/src/policy/threshold.rs`
+#   `from_thresholds` which rejects any non-canonical values for
+#   signed packs.
+# - **Extends with**: vision prototype-bank reference, prompt
+#   catalog reference, optional per-category severity floors that
+#   are specific to image classification (default empty),
+#   optional per-category action overrides for image verdicts
+#   (default empty).
+#
+# The text baseline (`baseline.yaml`) is the source of truth for
+# anything not explicitly extended here. The compiler reconciles
+# the two; a future jurisdictional vision overlay can extend this
+# pack the same way text overlays extend `baseline.yaml`.
+
+skill_id: kchat.global.guardrail.vision_baseline
+schema_version: 1
+phase: 1
+status: complete
+parent: kchat.global.guardrail.baseline
+signers: [trust_and_safety]
+
+# Structural references resolved at compile time. Paths relative
+# to this file's directory.
+references:
+  taxonomy:                ./taxonomy.yaml
+  severity:                ./severity.yaml
+  privacy_contract:        ./privacy_contract.yaml
+  text_baseline:           ./baseline.yaml
+  prompt_catalog:          ./vision_prototypes_source.yaml
+  prototypes:              ../../build-tools/compiler/data/vision_category_prototypes.npz
+  prototypes_sidecar:      ../../build-tools/compiler/data/vision_category_prototypes.json
+
+# Encoder pin — the runtime's MobileCLIP-S2 must match this
+# identity. `prototypes_sha256` is filled in by the compiler from
+# the NPZ artefact at sign time; an empty value here marks an
+# uncompiled (draft) pack.
+encoder:
+  model_id: apple/MobileCLIP-S2
+  embed_dim: 512
+  taxonomy_size: 17
+  # SHA-256 of the prototype NPZ raw bytes. Compiler cross-checks
+  # this against the on-disk artefact at sign time. Filled in here
+  # at bake time so the YAML is committable with the prototype
+  # artefact. When the prompt catalog reaches
+  # `status: production_approved` the bake regenerates and this
+  # SHA updates.
+  prototypes_sha256: "b59fb1d199c32dec6ac4ec702ee8e09b18e28753691cc0fb5aa4f796f6dd711e"
+  prototype_source: hybrid_image_text
+  # `placeholder: false` mirrors the manifest entry. Distinct from
+  # the artefact-bytes sha256 — this flag describes the bake mode,
+  # not the file integrity. Set to `false` when
+  # `vision_prototypes_source.yaml::status` reaches
+  # `production_approved` and `tools/build_vision_category_prototypes.py`
+  # has produced the on-disk NPZ (no longer the e_c orthogonal-basis
+  # placeholder).
+  placeholder: false
+  prototype_source_note: >-
+    Image-derived hybrid bake (mode `hybrid_image_text`), produced
+    by `tools/build_vision_category_prototypes.py --image-exemplars
+    --centroid trimmed_mean`. Eight rows (cats 0,3,5,7,8,11,13,14)
+    are trimmed-mean centroids of L2-normalised MobileCLIP-S2
+    IMAGE-tower embeddings — the SAME tower the runtime uses, so
+    scoring is image-to-image and the CLIP modality gap is closed
+    on the zero-shot cosine-vs-bank path. Their corpus is labelled
+    and permissively licensed: Open Images validation photos
+    (CC-BY-2.0; Safe + benign-child Boy/Girl hard negatives for
+    cat 0, weapons for cat 11), synthetic CC0 screenshots
+    (cats 5,7,8,13,14), and Wikimedia Commons clips (cats 0,3,11),
+    all embedded through the shared [0,1]-pixel preprocess and
+    pooled per category. The image-file corpus is held strictly
+    disjoint from the benchmark eval set. The remaining nine rows
+    (cats 1,2,4,6,9,10,12,15,16) have no permissively-licensed
+    image source and fall back to MobileCLIP-S2 TEXT-tower prompt
+    centroids from `vision_prototypes_source.yaml` (these rows
+    still carry the residual modality gap; sourcing licensed
+    images for them is future work). open_clip's MobileCLIP-S2
+    image tower is byte-equivalent to the exported ONNX image
+    tower (cosine 1.000000), so the bake lands in the exact
+    runtime/parity space. The bake is deterministic given the same
+    corpus + weights + seed.
+
+# Inherit text-baseline decision policy verbatim. Stated
+# explicitly to make the inheritance auditable at review time.
+decision_policy:
+  inherits_from: kchat.global.guardrail.baseline
+  thresholds:
+    label_only:            0.45
+    warn:                  0.62
+    strong_warn:           0.78
+    critical_intervention: 0.85
+  uncertainty_handling:
+    inherits_from: kchat.global.guardrail.baseline
+
+# Optional per-category severity floors specific to image
+# modality. Empty = inherit `severity.yaml` for every category
+# (the CHILD_SAFETY floor of 5 already applies via the global
+# rubric). The runtime takes max(global, overlay) per category.
+#
+# Example — uncomment to raise SEXUAL_ADULT floor for image
+# verdicts even when global severity would put it lower:
+#
+# vision_severity_floors:
+#   10: 2   # SEXUAL_ADULT minimum severity 2 in image overlays
+#
+vision_severity_floors: {}
+
+# Optional per-category action overrides for image verdicts.
+# Same shape as text action overrides — see baseline.yaml. Empty
+# = inherit canonical action ladder.
+#
+# Example:
+#
+# vision_action_overrides:
+#   10:
+#     warn: true        # SEXUAL_ADULT always carries 'warn' on image
+#     strong_warn: false
+#
+vision_action_overrides: {}
+
+# Vision-specific classifier calibration.
+# ---------------------------------------
+# These knobs govern the embedding -> verdict head for the IMAGE
+# modality only; the text path keeps the shared defaults. They are
+# documented here as the policy source of truth and enforced by the
+# Rust runtime via `ClassifierConfig::vision_default()`
+# (`crates/kchat-safety-core/src/encoder/adapter.rs`). The Python
+# real-image benchmark mirrors them in
+# `tools/benchmark_vision_real_images.py`. A drift-guard test
+# (`build-tools/tests/test_vision_baseline.py`) pins the floor here
+# to the Rust constant so the two cannot silently diverge.
+#
+# `child_safety_cosine_margin_floor`: a winning CHILD_SAFETY(1)
+# verdict is demoted to SAFE(0) unless its prototype **cosine
+# margin** — the CHILD_SAFETY cosine minus the best non-CHILD_SAFETY
+# cosine — is at least this value. Rationale: the image tower has no
+# sourceable CSAM, so the CHILD_SAFETY prototype row is frozen at a
+# centroid that clusters *benign* child imagery by construction, and
+# CHILD_SAFETY fires at severity-5 `critical_intervention` (the most
+# severe action). Without a margin floor every innocent family photo
+# that edges the frozen row by a sliver of cosine would trigger a
+# wrongful sev-5 escalation. The floor keeps escalation for a strong,
+# corroborated signal while refusing to act on a weak pixel-only
+# guess. Empirically the benign-child probe margins sit <= 0.03 while
+# the floor is 0.05. `0.0` disables the floor (the text default).
+vision_classifier_calibration:
+  child_safety_cosine_margin_floor: 0.05

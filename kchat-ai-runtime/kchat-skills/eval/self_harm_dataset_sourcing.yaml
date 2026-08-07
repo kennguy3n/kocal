@@ -1,0 +1,125 @@
+# Self-harm dataset sourcing manifest
+# (kchat.guardrail.dataset_sourcing.v1)
+#
+# SCAFFOLD ONLY — this manifest documents the external benchmarks that a
+# future, credentialed bake/evaluation host would pull to harden the
+# SELF_HARM (taxonomy id 2) capability. It deliberately ships NO
+# downloaded media, NO live download URLs, and NO credentials: every entry
+# below is research-licensed or trust-and-safety-gated behind a signed
+# access agreement that the operator must complete out-of-band. The
+# on-device SDK never ships these datasets; they are used only off-device
+# to (a) calibrate the MobileCLIP-S2 vision prototype bank and
+# (b) measure recall / precision for the held-out vision corpus.
+#
+# Privacy & licence posture
+# -------------------------
+# * Self-harm imagery is among the most psychologically harmful content
+#   categories. Sourcing is restricted to credentialed T&S / clinical
+#   research partnerships operating under institutional review (IRB/ethics
+#   committee) approval.
+# * Each benchmark is redistribution-restricted. We record only the
+#   provider, the access process, and the licence class — never a mirror.
+# * Negative (legitimate wellness / recovery) sources are included so the
+#   precision gate (no false positives on wellbeing content) can be
+#   measured, not just recall.
+# * `status: scaffold` means "documented access path, not yet ingested".
+#   An operator with credentials flips this to `ingested` in their private
+#   overlay; this checked-in file stays `scaffold`.
+#
+# This file is intentionally inert: nothing in the build imports media
+# from here. `tools/build_vision_category_prototypes.py` bakes prototypes
+# from text prompts (`vision_prototypes_source.yaml`); these corpora are
+# the *evaluation* and future *image-centroid* sourcing path.
+
+schema_id: kchat.guardrail.dataset_sourcing.v1
+schema_version: 1
+category_id: 2
+category_name: SELF_HARM
+status: scaffold
+
+# --------------------------------------------------------------------------
+# Positive benchmarks — self-harm imagery (SELF_HARM POSITIVES).
+# --------------------------------------------------------------------------
+positive_benchmarks:
+  - id: ts_clinical_selfharm
+    name: Trust-and-safety clinical self-harm corpus
+    role: positive
+    modality: image
+    purpose: >-
+      Curated images depicting self-injury, pro-self-harm visual messaging,
+      and suicide ideation imagery. Primary recall corpus for SELF_HARM
+      visual signals. Sourced from trust-and-safety research partnerships
+      operating under clinical or IRB oversight.
+    licence_class: research_ts_gated
+    redistribution: prohibited
+    credentials_required: true
+    access_process: >-
+      Establish a credentialed trust-and-safety or clinical research
+      partnership with a recognised provider (e.g. university IRB-approved
+      study, platform T&S research programme). The provider supplies
+      access under a signed data-sharing agreement with strict handling
+      requirements. No public mirror; do not commit the media. All access
+      requires ethics-committee or IRB approval documentation.
+    provenance_note: >-
+      Data must originate from an IRB-approved study or recognised T&S
+      research programme. Cite the originating study and ethics approval
+      reference when reporting evaluation results.
+  - id: ts_proana_promia
+    name: Pro-anorexia / pro-bulimia visual content corpus
+    role: positive
+    modality: image
+    purpose: >-
+      Imagery promoting dangerous eating disorders (pro-ana, pro-mia
+      visual tropes, "thinspiration"). Harder positives that stress the
+      boundary between health-advocacy and self-harm promotion.
+    licence_class: research_ts_gated
+    redistribution: prohibited
+    credentials_required: true
+    access_process: >-
+      Access through a trust-and-safety research partnership or
+      IRB-approved clinical study focused on eating-disorder online
+      content. Provider grants access under a signed data-sharing
+      agreement. No public mirror; no redistribution permitted.
+    provenance_note: >-
+      Data must be sourced under ethics-committee oversight. Cite the
+      originating programme and ethics approval when reporting results.
+
+# --------------------------------------------------------------------------
+# Negative sources — legitimate wellness, recovery, and mental-health
+# awareness content that MUST NOT be flagged as self-harm. These calibrate
+# the precision gate (benign_false_positive cases in held_out_vision.yaml).
+# --------------------------------------------------------------------------
+negative_sources:
+  - id: wellness_recovery_content
+    name: Mental-health awareness and recovery imagery (public, licence-clean)
+    role: negative
+    modality: image
+    purpose: >-
+      Legitimate mental-health awareness campaigns, recovery milestone
+      imagery, and clinical resource visuals that are NOT self-harm
+      content — the canonical false-positive guard for SELF_HARM.
+    licence_class: public_or_cc
+    redistribution: per_source_licence
+    credentials_required: false
+    access_process: >-
+      Curate from licence-clean public collections (e.g. CC-licensed
+      mental-health awareness galleries, public-health campaign
+      imagery). Exclude any image depicting actual self-injury or that
+      could be interpreted as promoting self-harm.
+    provenance_note: >-
+      Negatives must be clearly wellness- or recovery-oriented and
+      non-harmful; pair each with the health/wellbeing context used in
+      the held-out negatives.
+
+# Operator hook: a credentialed evaluation host overrides this file in a
+# private overlay, sets per-entry `local_path` + `status: ingested`, and
+# runs tools/eval_vision_metrics.py over the encoder-required vision cases.
+# The checked-in copy remains a credential-free scaffold.
+ingestion_hook:
+  consumes: kchat-skills/eval/held_out_vision.yaml
+  partition_tag: encoder_required
+  evaluator: tools/eval_vision_metrics.py
+  note: >-
+    No automated download runs from this repo. Ingestion is an explicit,
+    out-of-band operator step gated by the signed licences and ethics
+    approvals above.

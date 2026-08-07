@@ -1,0 +1,21 @@
+# AR (Iraq) lexicon bundle for the kchat.jurisdiction.iq.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: iq_ar_lexicon_v1
+language: ar
+locale: ar-IQ
+provenance: kchat_trust_and_safety_iq_v1
+categories:
+  - 1
+  - 4
+terms:
+  - term_id: iq_ar_term_child_protection_v1
+    categories: [1]
+    notes: Iraqi Juvenile Welfare Law No. 76/1983 indicators (catalogue-only).
+  - term_id: iq_ar_term_anti_terror_v1
+    categories: [4]
+    notes: Iraqi Anti-Terrorism Law No. 13/2005 indicators (catalogue-only).

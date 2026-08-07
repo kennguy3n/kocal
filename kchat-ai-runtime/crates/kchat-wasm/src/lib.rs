@@ -183,6 +183,9 @@ impl KChatWasm {
             slm_available: false,
             quoted_from_user: false,
             community_overlay_id: None,
+            jurisdiction: None,
+            locale: None,
+            media_descriptors: Vec::new(),
         };
         self.classifier.classify(&request).into()
     }

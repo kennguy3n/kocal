@@ -1,0 +1,43 @@
+# Code-switch / transliteration eval lexicon.
+#
+# These tokens exercise the transliteration matching view added by the
+# `translit_core_v1` fold. They are authored in the *folded Latin
+# matching space* that ``transliterate_for_matching`` produces — i.e.
+# the phonetic romanization of each script — NOT in native script.
+#
+# Why a separate file (not ``default_lexicons.yaml``):
+#   * ``default_lexicons.yaml`` is the culturally-neutral baseline that
+#     the stock ``eval_runner.py`` loads; its tokens deliberately live
+#     in their *native* script / diacritic form.
+#   * The transliteration view only gains recall for tokens authored in
+#     the *folded* space. To demonstrate that gain in isolation (with a
+#     clean before/after) we keep these folded-space tokens here and
+#     load them from the dedicated test
+#     ``build-tools/tests/test_codeswitch_translit_eval.py``.
+#
+# Token-matching contract is identical to ``default_lexicons.yaml``:
+# tokens are matched with ``\b<token>\b`` against each search view,
+# case-folded by the matcher. Tokens are harm-intent *descriptors*
+# (violence threats), never slurs.
+#
+# Category ids match ``compiler.training_data.CAT_*`` (3=VIOLENCE_THREAT).
+schema_version: 1
+default_lexicons:
+  - lexicon_id: codeswitch_violence_threat_v1
+    category: 3
+    weight: 0.9
+    tokens:
+      # romanized Cyrillic (ru) — folded by translit_core_v1
+      - "ya ubyu tebya"        # "я убью тебя"  (I will kill you)
+      - "ubei ikh vsekh"       # "убей их всех" (kill them all)
+      # Greeklish (el) — folded from Greek script
+      - "tha se skotoso"       # "θα σε σκοτώσω" (I will kill you)
+      - "skotose toys"         # "σκοτωσε τους"  (kill them)
+      # romanized Vietnamese — diacritics folded
+      - "tao se giet may"      # "tao sẽ giết mày" (I will kill you)
+      - "giet het tui no"      # "giết hết tụi nó" (kill them all)
+      # Hinglish / romanized Devanagari (hi)
+      - "main tumhen mar dunga"  # "मैं तुम्हें मार दूंगा" (I will kill you)
+      # Arabizi (Arabic chat alphabet) — digit→phoneme folds
+      - "hatelak"              # "ha2telak"   (I will kill you)
+      - "rah atlek"            # "rah 2a2tlek" (I will kill you)

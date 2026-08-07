@@ -1,0 +1,510 @@
+{
+  "n_cases": 71,
+  "n_passed": 63,
+  "n_failed": 8,
+  "per_language": {
+    "en": {
+      "n": 33,
+      "passed": 33,
+      "failed": 0
+    },
+    "es": {
+      "n": 11,
+      "passed": 11,
+      "failed": 0
+    },
+    "de": {
+      "n": 3,
+      "passed": 3,
+      "failed": 0
+    },
+    "ar": {
+      "n": 7,
+      "passed": 6,
+      "failed": 1
+    },
+    "ja": {
+      "n": 3,
+      "passed": 3,
+      "failed": 0
+    },
+    "zh": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "hi": {
+      "n": 3,
+      "passed": 1,
+      "failed": 2
+    },
+    "ru": {
+      "n": 2,
+      "passed": 0,
+      "failed": 2
+    },
+    "el": {
+      "n": 2,
+      "passed": 0,
+      "failed": 2
+    },
+    "vi": {
+      "n": 3,
+      "passed": 2,
+      "failed": 1
+    },
+    "fr": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "bn": {
+      "n": 2,
+      "passed": 2,
+      "failed": 0
+    }
+  },
+  "per_tag": {
+    "adversarial": {
+      "n": 57,
+      "passed": 49,
+      "failed": 8
+    },
+    "self_harm": {
+      "n": 22,
+      "passed": 17,
+      "failed": 5
+    },
+    "en": {
+      "n": 35,
+      "passed": 35,
+      "failed": 0
+    },
+    "es": {
+      "n": 11,
+      "passed": 11,
+      "failed": 0
+    },
+    "de": {
+      "n": 3,
+      "passed": 3,
+      "failed": 0
+    },
+    "ar": {
+      "n": 7,
+      "passed": 6,
+      "failed": 1
+    },
+    "ja": {
+      "n": 3,
+      "passed": 3,
+      "failed": 0
+    },
+    "zh": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "hi": {
+      "n": 3,
+      "passed": 1,
+      "failed": 2
+    },
+    "code_switch": {
+      "n": 10,
+      "passed": 2,
+      "failed": 8
+    },
+    "transliteration": {
+      "n": 6,
+      "passed": 0,
+      "failed": 6
+    },
+    "cyrillic": {
+      "n": 2,
+      "passed": 0,
+      "failed": 2
+    },
+    "ru": {
+      "n": 2,
+      "passed": 0,
+      "failed": 2
+    },
+    "greek": {
+      "n": 2,
+      "passed": 0,
+      "failed": 2
+    },
+    "el": {
+      "n": 2,
+      "passed": 0,
+      "failed": 2
+    },
+    "vi": {
+      "n": 3,
+      "passed": 2,
+      "failed": 1
+    },
+    "arabizi": {
+      "n": 1,
+      "passed": 0,
+      "failed": 1
+    },
+    "romanized": {
+      "n": 2,
+      "passed": 0,
+      "failed": 2
+    },
+    "hinglish": {
+      "n": 2,
+      "passed": 0,
+      "failed": 2
+    },
+    "misinfo_health": {
+      "n": 15,
+      "passed": 12,
+      "failed": 3
+    },
+    "fr": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "misinfo_civic": {
+      "n": 7,
+      "passed": 7,
+      "failed": 0
+    },
+    "benign_false_positive": {
+      "n": 14,
+      "passed": 14,
+      "failed": 0
+    },
+    "fact_check": {
+      "n": 3,
+      "passed": 3,
+      "failed": 0
+    },
+    "leetspeak": {
+      "n": 3,
+      "passed": 3,
+      "failed": 0
+    },
+    "threat": {
+      "n": 8,
+      "passed": 8,
+      "failed": 0
+    },
+    "self_harm_directed_at_other": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "homoglyph": {
+      "n": 4,
+      "passed": 4,
+      "failed": 0
+    },
+    "hate": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "scam": {
+      "n": 6,
+      "passed": 6,
+      "failed": 0
+    },
+    "zero_width": {
+      "n": 2,
+      "passed": 2,
+      "failed": 0
+    },
+    "pii": {
+      "n": 4,
+      "passed": 4,
+      "failed": 0
+    },
+    "euphemism": {
+      "n": 3,
+      "passed": 3,
+      "failed": 0
+    },
+    "child_safety": {
+      "n": 4,
+      "passed": 4,
+      "failed": 0
+    },
+    "illegal_goods": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "romance": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "crypto": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "qr": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "lookalike_domain": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "bn": {
+      "n": 2,
+      "passed": 2,
+      "failed": 0
+    },
+    "url_risk": {
+      "n": 2,
+      "passed": 2,
+      "failed": 0
+    },
+    "shortener": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "minority_language": {
+      "n": 3,
+      "passed": 3,
+      "failed": 0
+    }
+  },
+  "child_safety_recall": 1.0,
+  "privacy_leak_precision": 1.0,
+  "protected_speech_false_positive": 0.0,
+  "minority_language_false_positive": 0.0,
+  "expected_calibration_error": 0.27647887323943654,
+  "failures": [
+    {
+      "case_id": "sh_cs_ru_001",
+      "language": "ru",
+      "tags": [
+        "adversarial",
+        "self_harm",
+        "code_switch",
+        "transliteration",
+        "cyrillic",
+        "ru"
+      ],
+      "expected": {
+        "category": 2,
+        "severity_at_least": 3,
+        "reason_codes_must_include": [
+          "LEXICON_HIT"
+        ]
+      },
+      "actual": {
+        "category": 0,
+        "severity": 0,
+        "confidence": 0.05,
+        "reason_codes": [],
+        "rationale_id": "safe_benign_v1"
+      },
+      "notes": "category=0 want 2; severity=0 >= 3; reason_codes missing ['LEXICON_HIT']"
+    },
+    {
+      "case_id": "sh_cs_el_001",
+      "language": "el",
+      "tags": [
+        "adversarial",
+        "self_harm",
+        "code_switch",
+        "transliteration",
+        "greek",
+        "el"
+      ],
+      "expected": {
+        "category": 2,
+        "severity_at_least": 3,
+        "reason_codes_must_include": [
+          "LEXICON_HIT"
+        ]
+      },
+      "actual": {
+        "category": 0,
+        "severity": 0,
+        "confidence": 0.05,
+        "reason_codes": [],
+        "rationale_id": "safe_benign_v1"
+      },
+      "notes": "category=0 want 2; severity=0 >= 3; reason_codes missing ['LEXICON_HIT']"
+    },
+    {
+      "case_id": "sh_cs_vi_001",
+      "language": "vi",
+      "tags": [
+        "adversarial",
+        "self_harm",
+        "code_switch",
+        "transliteration",
+        "vi"
+      ],
+      "expected": {
+        "category": 2,
+        "severity_at_least": 3,
+        "reason_codes_must_include": [
+          "LEXICON_HIT"
+        ]
+      },
+      "actual": {
+        "category": 0,
+        "severity": 0,
+        "confidence": 0.05,
+        "reason_codes": [],
+        "rationale_id": "safe_benign_v1"
+      },
+      "notes": "category=0 want 2; severity=0 >= 3; reason_codes missing ['LEXICON_HIT']"
+    },
+    {
+      "case_id": "sh_cs_ar_arabizi_001",
+      "language": "ar",
+      "tags": [
+        "adversarial",
+        "self_harm",
+        "code_switch",
+        "transliteration",
+        "arabizi",
+        "ar"
+      ],
+      "expected": {
+        "category": 2,
+        "severity_at_least": 3,
+        "reason_codes_must_include": [
+          "LEXICON_HIT"
+        ]
+      },
+      "actual": {
+        "category": 0,
+        "severity": 0,
+        "confidence": 0.05,
+        "reason_codes": [],
+        "rationale_id": "safe_benign_v1"
+      },
+      "notes": "category=0 want 2; severity=0 >= 3; reason_codes missing ['LEXICON_HIT']"
+    },
+    {
+      "case_id": "sh_cs_hi_hinglish_001",
+      "language": "hi",
+      "tags": [
+        "adversarial",
+        "self_harm",
+        "code_switch",
+        "romanized",
+        "hinglish",
+        "hi"
+      ],
+      "expected": {
+        "category": 2,
+        "severity_at_least": 3,
+        "reason_codes_must_include": [
+          "LEXICON_HIT"
+        ]
+      },
+      "actual": {
+        "category": 0,
+        "severity": 0,
+        "confidence": 0.05,
+        "reason_codes": [],
+        "rationale_id": "safe_benign_v1"
+      },
+      "notes": "category=0 want 2; severity=0 >= 3; reason_codes missing ['LEXICON_HIT']"
+    },
+    {
+      "case_id": "mh_cs_ru_001",
+      "language": "ru",
+      "tags": [
+        "adversarial",
+        "misinfo_health",
+        "code_switch",
+        "transliteration",
+        "cyrillic",
+        "ru"
+      ],
+      "expected": {
+        "category": 13,
+        "severity_at_least": 3,
+        "reason_codes_must_include": [
+          "LEXICON_HIT"
+        ]
+      },
+      "actual": {
+        "category": 0,
+        "severity": 0,
+        "confidence": 0.05,
+        "reason_codes": [],
+        "rationale_id": "safe_benign_v1"
+      },
+      "notes": "category=0 want 13; severity=0 >= 3; reason_codes missing ['LEXICON_HIT']"
+    },
+    {
+      "case_id": "mh_cs_el_001",
+      "language": "el",
+      "tags": [
+        "adversarial",
+        "misinfo_health",
+        "code_switch",
+        "transliteration",
+        "greek",
+        "el"
+      ],
+      "expected": {
+        "category": 13,
+        "severity_at_least": 3,
+        "reason_codes_must_include": [
+          "LEXICON_HIT"
+        ]
+      },
+      "actual": {
+        "category": 0,
+        "severity": 0,
+        "confidence": 0.05,
+        "reason_codes": [],
+        "rationale_id": "safe_benign_v1"
+      },
+      "notes": "category=0 want 13; severity=0 >= 3; reason_codes missing ['LEXICON_HIT']"
+    },
+    {
+      "case_id": "mh_cs_hi_hinglish_001",
+      "language": "hi",
+      "tags": [
+        "adversarial",
+        "misinfo_health",
+        "code_switch",
+        "romanized",
+        "hinglish",
+        "hi"
+      ],
+      "expected": {
+        "category": 13,
+        "severity_at_least": 3,
+        "reason_codes_must_include": [
+          "LEXICON_HIT"
+        ]
+      },
+      "actual": {
+        "category": 0,
+        "severity": 0,
+        "confidence": 0.05,
+        "reason_codes": [],
+        "rationale_id": "safe_benign_v1"
+      },
+      "notes": "category=0 want 13; severity=0 >= 3; reason_codes missing ['LEXICON_HIT']"
+    }
+  ],
+  "gates": {
+    "passed": true,
+    "failures": []
+  }
+}

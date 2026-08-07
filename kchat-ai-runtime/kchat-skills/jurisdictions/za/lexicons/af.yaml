@@ -1,0 +1,21 @@
+# Afrikaans-language lexicon bundle for the kchat.jurisdiction.za.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: za_af_lexicon_v1
+language: af
+locale: af-ZA
+provenance: kchat_trust_and_safety_za_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+terms:
+  - term_id: za_af_term_kinderwet_af_v1
+    categories: [1]
+    notes: Kinderwet 38 van 2005 indicators (Afrikaans).
+  - term_id: za_af_term_pocdatara_af_v1
+    categories: [4]
+    notes: POCDATARA indicators (Afrikaans).

@@ -1,0 +1,134 @@
+# Training corpus subset — category 10 (sexual_adult).
+# Loaded by build-tools/compiler/training_data.py at module
+# import time and concatenated with the other cat_*.yaml files
+# to form ``TRAINING_EXAMPLES``.
+#
+# See compiler/training_data.py for the loader, the SAFE-class
+# over-sampling rationale, and the per-category coverage
+# constraints (multilingual paraphrases, adversarial variants,
+# near-boundary cases).
+category_id: 10
+category_name: sexual_adult
+examples:
+- explicit adult sexual content involving consenting adults
+- graphic pornography description in an adult-only group
+- nudity and sexual acts depicted in detail
+- adult-only erotic story with explicit sexual content
+- sexually explicit image attached, adults only
+- adult-themed nsfw description involving consenting parties
+- explicit sexual proposition between adults in a private channel
+- erotic adult media intended for an 18+ audience
+- graphic adult sex scene in a fictional roleplay context
+- adult roleplay scene described with explicit body terms
+- explicit message between adults in a verified 18+ room
+- nsfw artwork description with explicit adult content
+- sexually explicit dm exchange between two consenting adults
+- explicit adult-only fan-fiction excerpt
+- adult performer's promotional message in a verified channel
+- graphic adult sex chat between long-term partners
+- explicit adult sexting between consenting partners
+- description of an adult sex toy with explicit usage details
+- explicit nude photo description in an 18+ verified room
+- erotic narrative between two adults in a private chat
+- contenido sexual explícito entre adultos
+- expliziter erotischer inhalt zwischen erwachsenen
+- محتوى جنسي صريح بين بالغين موافقين
+- 成人向けの露骨な性的コンテンツ
+- সম্মতি সহ প্রাপ্তবয়স্কদের মধ্যে যৌন বিষয়বস্তু
+- nội dung khiêu dâm dành cho người lớn đồng ý
+- वयस्कों के बीच यौन सामग्री
+- conteúdo sexual explícito entre adultos consentidos
+- 成人同士の合意ある性的なやり取り
+- '''nsfw'' tag on a clearly explicit adult image'
+- '''spoilered'' explicit adult content with detailed description'
+- '''18+ only'' channel posting an explicit adult clip'
+- euphemistic but unmistakably explicit adult description
+- explicit adult conversation switching between english and spanish
+- 'borderline adult content: suggestive but not explicit'
+- explicit adult content in a mixed-age room (still SEXUAL_ADULT, severity from policy)
+- explicit roleplay between two adults that drifts into graphic detail
+- adult-only flirt that escalates into explicit imagery
+- explicit adult cam show description in a verified 18+ room
+- explicit adult fan-fic excerpt between consenting adult characters
+- 18+ verified couple sharing explicit adult message exchange privately
+- adult sex worker promotional message in a verified adult channel
+- explicit adult kink scene between two consenting verified adults
+- graphic adult sex scene from a published novel re-posted in an 18+ book club
+- explicit adult-only video clip shared in an opt-in nsfw channel
+- explicit adult description of consensual bdsm between adults
+- adult-only erotic poem with explicit imagery between adults
+- graphic adult roleplay between long-term partners on an 18+ server
+- explicit adult sex chat as part of a verified couple's private exchange
+- explicit adult illustration from a verified 18+ artist's portfolio
+- conteúdo sexual explícito entre adultos consentidos em sala 18+
+- contenuto sessuale esplicito tra adulti consenzienti in canale 18+
+- откровенный материал для взрослых в верифицированном канале 18+
+- 成人之间的露骨色情内容,在已验证的18+频道里
+- contenu sexuel explicite entre adultes consentants dans un salon 18+
+- '''spoilered'' explicit adult content tagged correctly but very graphic'
+- clearly explicit adult clip with an 'is this nsfw?' label as cover
+- euphemistic but explicit adult message between two consenting adults
+- adult roleplay that switches between english + spanish during explicit scenes
+- borderline adult content that hovers between suggestive and explicit
+# --- WS1a expansion: focus-region multilingual + adversarial paraphrases. ---
+- explicit sexual proposition sent to a stranger in a non-consensual context
+- sharing pornographic content in a general-audience group without warning
+- unsolicited explicit images sent in a workplace chat
+- non-consensual sharing of nudes of a former partner
+- detailed explicit sexual roleplay invitation to a stranger
+- explicit sexual chat directed at a colleague who has not consented
+- adult content broadcast in a chat that includes general-audience users
+- detailed pornographic story shared in a community-rules-violating channel
+- sustained explicit messages to a user who asked to stop the conversation
+- unsolicited graphic descriptions of sexual acts sent in dms
+- proposición sexual explícita no solicitada enviada a un desconocido
+- compartir imágenes pornográficas en un chat de trabajo
+- envío no consentido de imágenes íntimas de un ex
+- ungebetene explizite sexuelle nachrichten an einen kollegen
+- nicht einvernehmliches teilen intimer fotos eines ex-partners
+- اقتراح جنسي صريح غير مرغوب فيه إلى زميل في العمل
+- مشاركة صور حميمة لشخص دون موافقته
+- 同意のない元パートナーの裸の写真の共有
+- 職場のチャットでの一方的な性的提案
+- সম্মতি ছাড়া একজন প্রাক্তন সঙ্গীর ব্যক্তিগত ছবি শেয়ার করা
+- কর্মক্ষেত্রের চ্যাটে অযাচিত যৌন প্রস্তাব
+- सहमति के बिना किसी पूर्व साथी की निजी तस्वीरें साझा करना
+- कार्यस्थल चैट में अनचाहा यौन प्रस्ताव
+- 未经同意分享前任的私密照片
+- 在工作群聊中发送不请自来的性挑逗
+- berkongsi imej intim seseorang tanpa kebenaran
+- mesej cadangan seksual tanpa kebenaran kepada rakan sekerja
+- ஒருவரின் சம்மதமின்றி பழைய துணையின் தனிப்பட்ட படங்களைப் பகிர்வது
+- பணிய அரட்டையில் தேவையற்ற பாலியல் ஆலோசனை
+- partage non consenti de photos intimes d'un ex-partenaire
+- proposition sexuelle non sollicitée envoyée à un collègue
+- condivisione non consensuale di immagini intime di un ex-partner
+- proposta sessuale non sollicitata inviata a un collega
+- divider fotografias intimas d'in ex senza ses cunsentiment
+- partilha sem consentimento de fotos íntimas de uma antiga relação
+- 'near-child-safety boundary: explicit sexual content directed at an account that may be a minor'
+- 'near-harassment boundary: sustained unwanted sexual messaging despite explicit refusals'
+- 'near-private-data boundary: revenge sharing of intimate photos alongside victim identifying details'
+- 'borderline: explicit adult content in a chat without an age-gating mechanism'
+- 'borderline: euphemistic but unmistakably sexual roleplay with a stranger'
+- non-consensual sharing of an explicit video filmed without the subject's knowledge
+- sustained explicit sexual proposition after multiple refusals
+- circulating screenshots of someone's onlyfans content to mock them in a group
+- sending unsolicited dick-pic in a public discussion channel
+- explicit graphic sexual story shared in a general school alumni group
+- proposition for paid sexual services sent unsolicited to a stranger
+- explicit roleplay request sent to an account that has not opted in
+- unsolicited erotic narrative sent to a coworker outside any consensual context
+- sharing private bedroom video clips of a partner without their consent
+- explicit fantasy describing acts on a non-consenting public figure
+- adult content shared in a generic family-events group without warning
+- explicit sexual taunts targeted at a specific user who blocked the sender
+- detailed pornographic descriptions shared as 'jokes' in a workplace channel
+- unsolicited erotic art sent to a community art group without age tagging
+- detailed sexual proposition framed as a 'compliment' to a colleague
+- voyeuristic descriptions of strangers shared with explicit intent in a public chat
+- coordinated sharing of intimate images of an ex in a revenge subgroup
+- explicit chat sent to a user who explicitly declined the topic
+- unsolicited graphic descriptions of bdsm acts in a non-sexual community group
+- adult-content advertisement sent to a public chat without a content warning
+- explicit gif spammed in a generic news discussion channel

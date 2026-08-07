@@ -1,0 +1,118 @@
+# kchat.jurisdiction.ke.guardrail.v1
+#
+# Kenya jurisdiction overlay — country pack.
+# Layered on top of kchat.global.guardrail.baseline.
+# Concrete values below reflect the primary legal framework summarised as:
+#   Children Act 2022; Prevention of Terrorism Act 2012.
+# Legal and cultural reviewers are named in ``signers``; overlays
+# inherit the privacy-contract rule against embedded harm strings,
+# so everything below is catalogue-only.
+
+skill_id: kchat.jurisdiction.ke.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+# ~18 months from 2026-04-29 — the maximum permitted by the compiler.
+expires_on: "2027-10-29"
+signers: [trust_and_safety, legal_review, cultural_review]
+
+# --------------------------------------------------------------------------
+# Activation
+# --------------------------------------------------------------------------
+activation:
+  criteria:
+    - user_selected_region: ke
+    - group_declared_jurisdiction: ke
+    - app_store_install_region: ke
+    - enterprise_managed_policy: ke
+  forbidden_criteria:
+    - gps_location
+    - ip_geolocation
+    - inferred_nationality
+    - inferred_ethnicity
+    - inferred_religion
+
+# --------------------------------------------------------------------------
+# Local definitions
+# --------------------------------------------------------------------------
+local_definitions:
+  legal_age_general: 18
+  legal_age_sexual_content_consumer: 18
+  legal_age_marketplace_alcohol: 18
+  legal_age_marketplace_tobacco: 18
+  # Protected-class enumeration from Constitution Art. 27 + National Cohesion and Integration Act.
+  protected_classes:
+    - race
+    - sex
+    - pregnancy
+    - marital_status
+    - health_status
+    - ethnic_or_social_origin
+    - colour
+    - age
+    - disability
+    - religion
+    - conscience
+    - belief
+    - culture
+    - dress
+    - language
+    - birth
+  listed_extremist_orgs:
+    - ke_listed_extremist_orgs_v1
+  restricted_symbols:
+    - ke_restricted_symbols_catalogue_v1
+  election_rules:
+    civic_window_open:  "2027-05-01"
+    civic_window_close: "2027-08-31"
+    authority_resource_id: ke_iebc_authority_v1
+
+# --------------------------------------------------------------------------
+# Local language assets
+# --------------------------------------------------------------------------
+local_language_assets:
+  primary_languages: [en, sw]
+  lexicons:
+    - lexicon_id: ke_en_lexicon_v1
+      language: en
+      categories: [1, 4]
+      provenance: kchat_trust_and_safety_ke_v1
+    - lexicon_id: ke_sw_lexicon_v1
+      language: sw
+      categories: [1, 4]
+      provenance: kchat_trust_and_safety_ke_v1
+  normalization:
+    nfkc: true
+    case_fold: true
+    homoglyph_map_id: homoglyph_core_v1
+    transliteration_refs: [translit_core_v1]
+
+# --------------------------------------------------------------------------
+# Overrides
+# --------------------------------------------------------------------------
+overrides:
+  - category: 1   # CHILD_SAFETY
+    severity_floor: 5
+    note: >-
+      Children Act 2022 (Act No. 29 of 2022) — child protection. Protected-speech contexts (quoted speech, news, education, counterspeech) remain permitted.
+  - category: 4   # EXTREMISM
+    severity_floor: 4
+    note: >-
+      Prevention of Terrorism Act 2012. Protected-speech contexts (quoted speech, news, education, counterspeech) remain permitted.
+
+# --------------------------------------------------------------------------
+# Allowed contexts — preserve all four protected-speech carve-outs.
+# --------------------------------------------------------------------------
+allowed_contexts:
+  - QUOTED_SPEECH_CONTEXT
+  - NEWS_CONTEXT
+  - EDUCATION_CONTEXT
+  - COUNTERSPEECH_CONTEXT
+
+# --------------------------------------------------------------------------
+# User notice
+# --------------------------------------------------------------------------
+user_notice:
+  visible_pack_summary: >-
+    Kenya safety pack. Raises floors on child protection (Children Act 2022) and anti-terrorism (POTA 2012). Protected speech remains permitted.
+  appeal_resource_id: ke_appeal_resource_v1
+  opt_out_allowed: true

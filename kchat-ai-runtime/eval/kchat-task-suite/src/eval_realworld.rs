@@ -32,6 +32,34 @@ struct SafetyCase {
     /// Community overlay id for context-hint derivation (news/education/counterspeech).
     #[serde(default)]
     community_overlay_id: Option<String>,
+    /// Jurisdiction code (e.g. "us", "vn") for jurisdiction overlay resolution.
+    #[serde(default)]
+    jurisdiction: Option<String>,
+    /// Locale tag (e.g. "en-US", "vi-VN") for language-asset selection.
+    #[serde(default)]
+    locale: Option<String>,
+    /// Expected taxonomy category ID (0-16) per kchat.guardrail.taxonomy.v1.
+    /// When present, the eval checks the classifier's category against this.
+    #[serde(default)]
+    expected_category: Option<u32>,
+    /// Expected severity (0-5) per the global severity rubric.
+    #[serde(default)]
+    expected_severity: Option<u8>,
+}
+
+/// Map old-style category names to taxonomy IDs for harmonized reporting.
+/// Returns the taxonomy category ID (0-16) that best matches the old category.
+fn legacy_category_to_taxonomy_id(category: &str) -> u32 {
+    match category {
+        "benign" | "protected_speech" | "code_switch" => 0,  // SAFE
+        "pii" => 9,           // PRIVATE_DATA
+        "scam" => 7,          // SCAM_FRAUD
+        "url_risk" => 8,      // MALWARE_LINK
+        "harmful" => 3,       // VIOLENCE_THREAT (catch-all for authored harm)
+        "obfuscation" => 0,   // Technique, not a category — underlying content drives the label
+        "injection" => 0,     // Technique — prompt injection is handled by deterministic detectors
+        _ => 0,
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -465,6 +493,8 @@ pub fn run_safety_realworld() -> SuiteReport {
         let mut req = ClassifyRequest::from_text(&case.text);
         req.quoted_from_user = case.quoted_from_user;
         req.community_overlay_id = case.community_overlay_id.clone();
+        req.jurisdiction = case.jurisdiction.clone();
+        req.locale = case.locale.clone();
         let start = std::time::Instant::now();
         let result = classifier.classify(&req);
         let duration_ms = start.elapsed().as_millis() as u64;
@@ -474,6 +504,12 @@ pub fn run_safety_realworld() -> SuiteReport {
         let expected = case.expected_action.clone();
         let is_correct = predicted == expected;
 
+        // When expected_category is present, also check taxonomy alignment.
+        let taxonomy_match = case.expected_category.map_or(true, |exp_cat| {
+            result.verdict.category == exp_cat
+        });
+        let is_correct = is_correct && taxonomy_match;
+
         total += 1;
         if is_correct {
             correct += 1;
@@ -482,7 +518,13 @@ pub fn run_safety_realworld() -> SuiteReport {
         // Track confusion matrix
         *action_confusion.entry((expected.clone(), predicted.clone())).or_insert(0) += 1;
 
-        let entry = category_stats.entry(case.category.clone()).or_insert((0, 0));
+        // Use harmonized taxonomy-aware category label for stats.
+        let stat_category = if let Some(exp_cat) = case.expected_category {
+            format!("{} (tax:{})", case.category, exp_cat)
+        } else {
+            format!("{} (tax:{})", case.category, legacy_category_to_taxonomy_id(&case.category))
+        };
+        let entry = category_stats.entry(stat_category).or_insert((0, 0));
         entry.1 += 1;
         if is_correct {
             entry.0 += 1;
@@ -493,6 +535,20 @@ pub fn run_safety_realworld() -> SuiteReport {
         meta.insert("language".into(), case.language.clone());
         meta.insert("predicted".into(), predicted.clone());
         meta.insert("expected".into(), expected.clone());
+        meta.insert("predicted_category".into(), result.verdict.category.to_string());
+        if let Some(exp_cat) = case.expected_category {
+            meta.insert("expected_category".into(), exp_cat.to_string());
+        }
+        meta.insert("predicted_severity".into(), result.verdict.severity.0.to_string());
+        if let Some(exp_sev) = case.expected_severity {
+            meta.insert("expected_severity".into(), exp_sev.to_string());
+        }
+        if let Some(ref jur) = case.jurisdiction {
+            meta.insert("jurisdiction".into(), jur.clone());
+        }
+        if let Some(ref loc) = case.locale {
+            meta.insert("locale".into(), loc.clone());
+        }
 
         if is_correct {
             suite.add(EvalResult::pass_with_meta(
@@ -563,6 +619,248 @@ pub fn run_safety_realworld() -> SuiteReport {
     }
 
     suite.add(EvalResult::pass_with_meta("safety_summary_metrics", 0, summary_meta));
+
+    // Run the guardrail sample-messages corpus (taxonomy-aligned YAML cases).
+    let guardrail_suite = run_guardrail_sample_messages();
+    suite.merge(&guardrail_suite);
+
+    suite
+}
+
+// ─── Guardrail sample-messages eval (taxonomy-aligned) ───
+
+/// YAML case structure matching `guardrail/text_sample/sample_messages.yaml`.
+#[derive(Debug, Deserialize)]
+struct GuardrailMessage {
+    text: String,
+    #[serde(default)]
+    lang_hint: String,
+    #[serde(default)]
+    has_attachment: bool,
+    #[serde(default)]
+    attachment_kinds: Vec<String>,
+    #[serde(default)]
+    quoted_from_user: bool,
+    #[serde(default)]
+    is_outbound: bool,
+    #[serde(default)]
+    media_descriptors: Vec<GuardrailMediaDescriptor>,
+}
+
+#[derive(Debug, Deserialize)]
+struct GuardrailMediaDescriptor {
+    kind: String,
+    #[serde(default)]
+    nsfw_score: f64,
+    #[serde(default)]
+    violence_score: f64,
+    #[serde(default)]
+    face_count: u32,
+}
+
+#[derive(Debug, Deserialize)]
+struct GuardrailContext {
+    #[serde(default)]
+    group_kind: String,
+    #[serde(default)]
+    group_age_mode: String,
+    #[serde(default)]
+    user_role: String,
+    #[serde(default)]
+    relationship_known: bool,
+    #[serde(default)]
+    locale: Option<String>,
+    #[serde(default)]
+    jurisdiction_id: Option<String>,
+    #[serde(default)]
+    community_overlay_id: Option<String>,
+    #[serde(default)]
+    is_offline: bool,
+}
+
+#[derive(Debug, Deserialize)]
+struct GuardrailCase {
+    case_id: String,
+    message: GuardrailMessage,
+    context: GuardrailContext,
+    expected_category: u32,
+    expected_severity: u8,
+    #[serde(default)]
+    description: String,
+}
+
+/// Load and run the guardrail sample-messages YAML corpus.
+/// These cases use the full 17-category taxonomy (0-16) with jurisdiction
+/// and community overlay context, testing harmonized classification.
+fn run_guardrail_sample_messages() -> SuiteReport {
+    let mut suite = SuiteReport::new("Guardrail Sample-Messages Eval", 0.85);
+
+    let yaml_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("datasets/safety/guardrail/text_sample/sample_messages.yaml");
+
+    let content = match std::fs::read_to_string(&yaml_path) {
+        Ok(c) => c,
+        Err(e) => {
+            suite.add(EvalResult::fail(
+                "guardrail_yaml_load",
+                format!("failed to read {}: {}", yaml_path.display(), e),
+            ));
+            return suite;
+        }
+    };
+
+    let cases: Vec<GuardrailCase> = match serde_yaml::from_str(&content) {
+        Ok(c) => c,
+        Err(e) => {
+            suite.add(EvalResult::fail(
+                "guardrail_yaml_parse",
+                format!("failed to parse YAML: {}", e),
+            ));
+            return suite;
+        }
+    };
+
+    use kchat_safety::classify::{SafetyClassifier, ClassifyRequest};
+    use kchat_safety::policy::{PolicyPack, PolicyPackManifest, PolicyThresholds};
+    use std::sync::Arc;
+
+    let classifier = SafetyClassifier::new();
+
+    // Load the same policy pack as the JSON eval for consistency.
+    let policy_pack = PolicyPack {
+        manifest: PolicyPackManifest {
+            pack_id: "kchat-safety-v1".into(),
+            version: "1.0.0".into(),
+            content_sha256: "a".repeat(64),
+            public_key: "b".repeat(64),
+            signature: "c".repeat(128),
+        },
+        rules: vec![],
+        thresholds: PolicyThresholds::default(),
+        slm_prompt: "Classify the following text for safety risks.".into(),
+    };
+    classifier.load_policy_pack(Arc::new(policy_pack));
+
+    let mut correct = 0u32;
+    let mut total = 0u32;
+    let mut latencies: Vec<u64> = Vec::new();
+
+    for case in &cases {
+        let mut req = ClassifyRequest::from_text(&case.message.text);
+        req.quoted_from_user = case.message.quoted_from_user;
+        req.community_overlay_id = case.context.community_overlay_id.clone();
+
+        // Extract jurisdiction code from the full jurisdiction ID.
+        // e.g. "kchat.jurisdiction.us.guardrail.v1" -> "us"
+        if let Some(ref jur) = case.context.jurisdiction_id {
+            let parts: Vec<&str> = jur.split('.').collect();
+            if parts.len() >= 3 {
+                req.jurisdiction = Some(parts[2].to_string());
+            }
+        }
+        req.locale = case.context.locale.clone();
+
+        // Derive is_group from group_kind.
+        req.is_group = match case.context.group_kind.as_str() {
+            "dm" => false,
+            _ => true,
+        };
+
+        // Derive age_mode from group_age_mode.
+        req.age_mode = match case.context.group_age_mode.as_str() {
+            "minor_present" => Some("minor".to_string()),
+            "mixed_age" => Some("mixed".to_string()),
+            "adult_only" => Some("adult".to_string()),
+            _ => None,
+        };
+
+        let start = std::time::Instant::now();
+        let result = classifier.classify(&req);
+        let duration_ms = start.elapsed().as_millis() as u64;
+        latencies.push(duration_ms);
+
+        let predicted_cat = result.verdict.category;
+        let predicted_sev = result.verdict.severity.0;
+        let cat_match = predicted_cat == case.expected_category;
+        // For SAFE (0) cases, severity must be 0. For non-SAFE, severity should
+        // be >= 1 but we don't require exact match since the deterministic layer
+        // may differ from the encoder.
+        let sev_match = if case.expected_category == 0 {
+            predicted_sev == 0
+        } else {
+            predicted_sev >= 1
+        };
+        let is_correct = cat_match && sev_match;
+
+        total += 1;
+        if is_correct {
+            correct += 1;
+        }
+
+        let mut meta = HashMap::new();
+        meta.insert("case_id".into(), case.case_id.clone());
+        meta.insert("expected_category".into(), case.expected_category.to_string());
+        meta.insert("predicted_category".into(), predicted_cat.to_string());
+        meta.insert("expected_severity".into(), case.expected_severity.to_string());
+        meta.insert("predicted_severity".into(), predicted_sev.to_string());
+        meta.insert(
+            "predicted_action".into(),
+            format!("{:?}", result.verdict.action),
+        );
+        if let Some(ref jur) = req.jurisdiction {
+            meta.insert("jurisdiction".into(), jur.clone());
+        }
+        if let Some(ref loc) = req.locale {
+            meta.insert("locale".into(), loc.clone());
+        }
+        if let Some(ref ov) = req.community_overlay_id {
+            meta.insert("community_overlay".into(), ov.clone());
+        }
+        meta.insert(
+            "description".into(),
+            case.description.clone(),
+        );
+
+        if is_correct {
+            suite.add(EvalResult::pass_with_meta(
+                format!("guardrail_{}", case.case_id),
+                duration_ms,
+                meta,
+            ));
+        } else {
+            suite.add(EvalResult::fail_with_meta(
+                format!("guardrail_{}", case.case_id),
+                format!(
+                    "expected cat={} sev={}, got cat={} sev={} action={:?}",
+                    case.expected_category,
+                    case.expected_severity,
+                    predicted_cat,
+                    predicted_sev,
+                    result.verdict.action
+                ),
+                duration_ms,
+                meta,
+            ));
+        }
+    }
+
+    latencies.sort();
+    let p50 = if !latencies.is_empty() { latencies[latencies.len() / 2] } else { 0 };
+    let p95 = if !latencies.is_empty() { latencies[latencies.len() * 95 / 100] } else { 0 };
+    let accuracy = if total > 0 { correct as f64 / total as f64 } else { 0.0 };
+
+    let mut summary_meta = HashMap::new();
+    summary_meta.insert("accuracy".into(), format!("{:.4}", accuracy));
+    summary_meta.insert("total_cases".into(), total.to_string());
+    summary_meta.insert("correct".into(), correct.to_string());
+    summary_meta.insert("latency_p50_ms".into(), p50.to_string());
+    summary_meta.insert("latency_p95_ms".into(), p95.to_string());
+
+    suite.add(EvalResult::pass_with_meta(
+        "guardrail_summary_metrics",
+        0,
+        summary_meta,
+    ));
 
     suite
 }

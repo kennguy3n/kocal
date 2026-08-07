@@ -1,0 +1,21 @@
+# EN (Ethiopia) lexicon bundle for the kchat.jurisdiction.et.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: et_en_lexicon_v1
+language: en
+locale: en-ET
+provenance: kchat_trust_and_safety_et_v1
+categories:
+  - 1
+  - 4
+terms:
+  - term_id: et_en_term_child_protection_v1
+    categories: [1]
+    notes: English-locale Criminal Code Art. 644 indicators.
+  - term_id: et_en_term_anti_terror_proc_v1
+    categories: [4]
+    notes: English-locale Anti-Terrorism Proclamation indicators.

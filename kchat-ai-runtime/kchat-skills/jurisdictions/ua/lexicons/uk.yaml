@@ -1,0 +1,21 @@
+# UK (Ukraine) lexicon bundle for the kchat.jurisdiction.ua.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: ua_uk_lexicon_v1
+language: uk
+locale: uk-UA
+provenance: kchat_trust_and_safety_ua_v1
+categories:
+  - 1
+  - 4
+terms:
+  - term_id: ua_uk_term_child_protection_v1
+    categories: [1]
+    notes: Law on Child Protection (1995) indicators (catalogue-only).
+  - term_id: ua_uk_term_anti_terror_v1
+    categories: [4]
+    notes: Law on Combating Terrorism (2003) indicators (catalogue-only).

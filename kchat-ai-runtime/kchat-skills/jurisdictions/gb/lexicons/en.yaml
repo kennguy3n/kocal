@@ -1,0 +1,25 @@
+# English-language lexicon bundle for the kchat.jurisdiction.gb.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: gb_en_lexicon_v1
+language: en
+locale: en-GB
+provenance: kchat_trust_and_safety_gb_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+  - 7   # SCAM_FRAUD
+terms:
+  - term_id: gb_en_term_poca_1978_child_v1
+    categories: [1]
+    notes: Protection of Children Act 1978 indicator phrases.
+  - term_id: gb_en_term_terrorism_act_2000_proscribed_v1
+    categories: [4]
+    notes: Terrorism Act 2000 §12/13 proscribed-org indicators.
+  - term_id: gb_en_term_fraud_act_2006_consumer_v1
+    categories: [7]
+    notes: Fraud Act 2006 consumer-fraud indicators.

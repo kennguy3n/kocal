@@ -1,0 +1,21 @@
+# Arabic-language lexicon bundle for the kchat.jurisdiction.sa.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: sa_ar_lexicon_v1
+language: ar
+locale: ar-SA
+provenance: kchat_trust_and_safety_sa_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+terms:
+  - term_id: sa_ar_term_nizam_himayat_tifl_v1
+    categories: [1]
+    notes: Child Protection System indicators (Arabic).
+  - term_id: sa_ar_term_nizam_irhab_2017_v1
+    categories: [4]
+    notes: Anti-Terrorism Law 2017 indicators.

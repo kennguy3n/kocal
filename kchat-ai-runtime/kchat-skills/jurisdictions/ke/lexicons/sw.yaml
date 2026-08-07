@@ -1,0 +1,21 @@
+# Swahili-language lexicon bundle for the kchat.jurisdiction.ke.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: ke_sw_lexicon_v1
+language: sw
+locale: sw-KE
+provenance: kchat_trust_and_safety_ke_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+terms:
+  - term_id: ke_sw_term_sheria_watoto_2022_sw_v1
+    categories: [1]
+    notes: Sheria ya Watoto 2022 indicators (Swahili).
+  - term_id: ke_sw_term_pota_2012_sw_v1
+    categories: [4]
+    notes: Sheria ya Kuzuia Ugaidi 2012 indicators.

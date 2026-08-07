@@ -1,0 +1,25 @@
+# Community Overlay — kchat.community.adult_only.guardrail.v1
+#
+# Explicitly opt-in adult overlay. Loosens SEXUAL_ADULT to label-only
+# (still gated by jurisdiction overlays where category 10 is illegal).
+# All other categories remain at the global baseline; child safety floor
+# is unaffected and remains 5.
+
+skill_id: kchat.community.adult_only.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: adult_only
+  age_mode: adult_only
+  visibility: members_only_summary
+  set_by: group_admin
+
+rules:
+  - category: 10   # SEXUAL_ADULT
+    action: label_only
+    note: >-
+      Adult sexual content is permitted between consenting adults and
+      labeled rather than warned. Jurisdiction overlays that forbid
+      category 10 still take precedence (most-protective wins).

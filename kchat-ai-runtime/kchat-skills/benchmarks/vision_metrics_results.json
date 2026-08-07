@@ -1,0 +1,166 @@
+{
+  "schema": "kchat.guardrail.vision_metrics.v1",
+  "timestamp_utc": "2026-08-07T07:44:55.298706+00:00",
+  "eval_corpus": "kchat-skills/eval/held_out_vision.yaml",
+  "adapter": "MockEncoderAdapter",
+  "total_cases": 244,
+  "descriptor_decidable_cases": 76,
+  "encoder_required_cases": 168,
+  "gates_passed": true,
+  "vision_metric_verdicts": {
+    "vision_child_safety_recall": {
+      "metric_id": "vision_child_safety_recall",
+      "operator": ">=",
+      "threshold": 0.95,
+      "actual": 1.0,
+      "passed": true,
+      "sample_size": 22
+    },
+    "vision_nsfw_precision": {
+      "metric_id": "vision_nsfw_precision",
+      "operator": ">=",
+      "threshold": 0.9,
+      "actual": 1.0,
+      "passed": true,
+      "sample_size": 19
+    },
+    "vision_violence_recall": {
+      "metric_id": "vision_violence_recall",
+      "operator": ">=",
+      "threshold": 0.85,
+      "actual": 1.0,
+      "passed": true,
+      "sample_size": 22
+    },
+    "vision_age_escalation_accuracy": {
+      "metric_id": "vision_age_escalation_accuracy",
+      "operator": ">=",
+      "threshold": 0.98,
+      "actual": 1.0,
+      "passed": true,
+      "sample_size": 22
+    },
+    "vision_deepfake_recall": {
+      "metric_id": "vision_deepfake_recall",
+      "operator": ">=",
+      "threshold": 0.85,
+      "actual": 1.0,
+      "passed": true,
+      "sample_size": 0
+    },
+    "vision_benign_child_fp": {
+      "metric_id": "vision_benign_child_fp",
+      "operator": "<=",
+      "threshold": 0.05,
+      "actual": 0.0,
+      "passed": true,
+      "sample_size": 0
+    }
+  },
+  "encoder_required_gate_verdicts": {
+    "vision_deepfake_recall": {
+      "metric_id": "vision_deepfake_recall",
+      "operator": ">=",
+      "threshold": 0.85,
+      "actual": 1.0,
+      "passed": true,
+      "sample_size": 0
+    }
+  },
+  "encoder_required_gate_verdicts_doc": "Vision gates whose positives are all encoder-required (e.g. vision_deepfake_recall for DEEPFAKE_SYNTHETIC). Not decidable on the descriptor-only subset (sample_size 0 => vacuous 1.0), so excluded from gates_passed and surfaced here as reserved with its true sample_size. Measuring it for real requires a MobileCLIP-S2 image-encoder run against the sourced deepfake benchmarks; that image-encoder vision evaluation is out of scope for this descriptor-path tool.",
+  "descriptor_decidable_breakdown": {
+    "total": 76,
+    "matched": 76,
+    "match_rate": 1.0,
+    "per_category": {
+      "0": {
+        "matched": 13,
+        "total": 13
+      },
+      "1": {
+        "matched": 22,
+        "total": 22
+      },
+      "3": {
+        "matched": 22,
+        "total": 22
+      },
+      "10": {
+        "matched": 19,
+        "total": 19
+      }
+    }
+  },
+  "encoder_required_breakdown": {
+    "total": 168,
+    "matched": 0,
+    "match_rate": 0.0,
+    "per_category": {
+      "2": {
+        "matched": 0,
+        "total": 22
+      },
+      "4": {
+        "matched": 0,
+        "total": 23
+      },
+      "5": {
+        "matched": 0,
+        "total": 20
+      },
+      "6": {
+        "matched": 0,
+        "total": 8
+      },
+      "7": {
+        "matched": 0,
+        "total": 19
+      },
+      "8": {
+        "matched": 0,
+        "total": 6
+      },
+      "9": {
+        "matched": 0,
+        "total": 6
+      },
+      "11": {
+        "matched": 0,
+        "total": 20
+      },
+      "12": {
+        "matched": 0,
+        "total": 6
+      },
+      "13": {
+        "matched": 0,
+        "total": 6
+      },
+      "14": {
+        "matched": 0,
+        "total": 6
+      },
+      "15": {
+        "matched": 0,
+        "total": 6
+      },
+      "16": {
+        "matched": 0,
+        "total": 20
+      }
+    }
+  },
+  "tag_coverage": {
+    "benign_false_positive": 13,
+    "election_window": 5,
+    "encoder_required": 168,
+    "minority_language": 203,
+    "temporal": 5,
+    "vision": 244,
+    "vision_age_escalation": 22,
+    "vision_deepfake": 20,
+    "vision_nsfw": 40,
+    "vision_video": 105,
+    "vision_violence": 22
+  }
+}

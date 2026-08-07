@@ -1,0 +1,21 @@
+# English-language lexicon bundle for the kchat.jurisdiction.za.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: za_en_lexicon_v1
+language: en
+locale: en-ZA
+provenance: kchat_trust_and_safety_za_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+terms:
+  - term_id: za_en_term_childrens_act_za_v1
+    categories: [1]
+    notes: Children's Act 38/2005 indicators.
+  - term_id: za_en_term_pocdatara_za_v1
+    categories: [4]
+    notes: POCDATARA 2004 indicators.

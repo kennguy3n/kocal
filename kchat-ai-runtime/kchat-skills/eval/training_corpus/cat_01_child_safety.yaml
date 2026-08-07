@@ -1,0 +1,144 @@
+# Training corpus subset — category 1 (child_safety).
+# Loaded by build-tools/compiler/training_data.py at module
+# import time and concatenated with the other cat_*.yaml files
+# to form ``TRAINING_EXAMPLES``.
+#
+# See compiler/training_data.py for the loader, the SAFE-class
+# over-sampling rationale, and the per-category coverage
+# constraints (multilingual paraphrases, adversarial variants,
+# near-boundary cases).
+category_id: 1
+category_name: child_safety
+examples:
+- a minor is being targeted with grooming behaviour by an adult
+- a child is in danger and someone is asking for inappropriate photos
+- an adult is requesting private images from a teenager
+- predatory message attempting to isolate a minor from their family
+- child exploitation material reported in this conversation
+- an adult is sending sexual messages to someone underage
+- 'grooming pattern: an adult is asking a minor to keep secrets'
+- an adult is offering gifts to a child in exchange for a private meeting
+- attempt to move a conversation with a minor to an unmonitored channel
+- offering a teenager money to send revealing photos
+- repeated late-night messaging from an adult to a child
+- sextortion attempt threatening a teen with leaked images
+- an adult is asking a child for their home address and school name
+- encouraging a minor to lie to their parents about who they are talking to
+- an older user is grooming a younger user through compliments and gifts
+- solicitation of a private video from someone identified as underage
+- an adult is asking a teen to skip school and meet alone
+- inappropriate sexual content directed at a teenage account
+- strangers offering minors a ride home after school in private chat
+- coercion of a child into deleting messages from a stranger
+- un menor está siendo manipulado por un adulto desconocido
+- một người lớn đang nhắn tin không phù hợp với trẻ em
+- ein erwachsener sendet unangemessene nachrichten an ein kind
+- شخص بالغ يطلب صورًا خاصة من قاصر
+- 成人が未成年者に不適切なメッセージを送っている
+- একজন প্রাপ্তবয়স্ক একটি শিশুর কাছে অনুপযুক্ত বার্তা পাঠাচ্ছে
+- एक वयस्क एक नाबालिग से अनुचित बातचीत कर रहा है
+- một người lạ đang dụ dỗ trẻ vị thành niên đi gặp riêng
+- intento de explotación sexual de un menor en un chat privado
+- messaging a teen with euphemistic language to test for vulnerability
+- vague 'are your parents home' opener from a stranger to a child account
+- adult complimenting a minor's appearance and asking for selfies
+- asking a minor 'do you trust me' before requesting a private image
+- offering a minor in-game currency in exchange for private contact
+- 'ambiguous chat: adult asks a younger user to keep their friendship private'
+- teacher account messaging student privately about non-school topics
+- borderline gift offer from an adult to a minor in a public group
+- repeated unwanted dms from an adult account to a child account
+- an older account is offering 'modeling opportunities' to a teen
+- predator coaching a minor on how to delete their browser history
+- adult sending a child inappropriate jokes and pressuring them to respond
+- offer to 'review' photos of a minor for a 'modelling agency'
+- attempt to get a minor to switch chat platforms to evade parental controls
+- flattery escalating to requests for revealing images of a teen
+- instruction to a minor to delete this thread after reading
+- offering a child a video game in exchange for sending photos
+- targeting a minor with gifts after they shared family difficulties
+- an adult is asking a 13-year-old to call them by a pet name
+- predator instructing a child to keep their friendship a secret
+- solicitation of an underage account through video-chat invitations
+- um adulto está pedindo imagens privadas a um adolescente
+- interazione inappropriata di un adulto con un minore
+- взрослый предлагает несовершеннолетнему отправить личные фотографии
+- 成人正在引诱未成年人进行私下会面
+- un adulte demande à un mineur des photos intimes
+- '''between us'' messaging that pressures a child to keep secrets from parents'
+- euphemistic 'art project' framing as a pretext to get private images of a minor
+- offering a child 'a special account' that bypasses parental review
+- adult building rapport with a teen specifically to isolate them from friends
+- '''i won''t tell anyone'' framing aimed at coaxing a minor into private chat'
+# --- WS1a expansion: focus-region multilingual + adversarial paraphrases. ---
+- predator pressuring a minor to share their school schedule and home address
+- adult bribing a child with mobile credit in exchange for explicit photos
+- groomer using gaming voice chat to isolate a younger player
+- offering a teen 'modelling work' that escalates to demanding nude shots
+- coercion of a minor into sending a 'proof of trust' image to a stranger
+- adult pretending to be a peer to extract personal details from a child
+- repeated requests for a minor to switch to an encrypted chat app
+- '''special friend'' framing escalating into requests for private content from a child'
+- predator offering a child cryptocurrency for compromising photos
+- adult instructing a teen to lie about their age to access private chat
+- yêu cầu một học sinh cấp hai chia sẻ ảnh riêng tư qua tin nhắn riêng
+- una persona adulta está intentando ganarse la confianza de un menor para abusar de él
+- adulto que ofrece regalos a un adolescente a cambio de imágenes sexuales
+- ein erwachsener fordert eine minderjährige auf, ein nacktbild zu schicken
+- ein älterer benutzer drängt ein kind, das gespräch geheim zu halten
+- شخص بالغ يحاول إقناع طفل بمقابلته بمفرده دون علم الوالدين
+- محاولة ابتزاز قاصر بتهديد نشر صوره الخاصة
+- 大人がオンラインゲームで未成年者に個人情報をしつこく聞き出している
+- 子供に親に内緒で会おうと誘っている成人
+- একজন প্রাপ্তবয়স্ক ব্যক্তি একজন কিশোরকে গোপন ছবি পাঠাতে চাপ দিচ্ছে
+- শিশুর সাথে অনুপযুক্ত আচরণের পরিকল্পনা
+- एक वयस्क एक स्कूली बच्चे से अंतरंग तस्वीरें मांग रहा है
+- नाबालिग को धमका कर निजी फोटो भेजने के लिए दबाव डालना
+- 一名成年人正以礼物诱使未成年人发送私密照片
+- 试图绕过家长监控与一名儿童进行私下聊天
+- seorang dewasa cuba memujuk remaja menghantar gambar peribadi
+- pengguna dewasa meminta pelajar bawah umur untuk bertemu secara sulit
+- ஒரு பெரியவர் சிறுவனிடம் தனிப்பட்ட புகைப்படங்களை அனுப்பும்படி அழுத்தம் கொடுக்கிறார்
+- வயது வந்த ஒருவர் ஒரு பள்ளி மாணவியிடம் தனிமையில் சந்திக்க கேட்கிறார்
+- un adulte demande à un enfant de cacher leur conversation à ses parents
+- un homme adulte propose à une adolescente de l'argent contre des photos intimes
+- un adulto chiede a un minorenne di mandare immagini intime in privato
+- un utente adulto cerca di isolare un adolescente dai suoi amici
+- in adult dumonda ad in uffant da trametter fotografias intimas en privat
+- thaa ulir cumenza a cuntactar in giuven sin sappientescha dals geniturs
+- adulte au québec demande à une mineure d'envoyer des photos par snap
+- person adultă încearcă să convingă un minor să trimită imagini sexuale
+- adult d3manding nud3 phot0s from a minor via ephemeral chat
+- gr00mer asking a 1 4-year-old to send 's3lfies' on a hidden account
+- 4dult promising a teen 'm0deling' work in exchange for private im4ges
+- pred4tor coaching a chi1d on how to bypass parental m0nitoring
+- adult using a private discord server to coach a minor on hiding messages
+- groomer leveraging family conflict to position themselves as 'the only one who understands' a teen
+- 'how about you tell me what you''re wearing right now sweetie - directed at a flagged minor account'
+- offering a child paid gift cards if they keep the conversation hidden
+- adult offering a minor 'photography mentorship' that requires private shoots
+- predator suggesting a minor delete the chat after every conversation
+- coercion of a teen by threatening to share previously sent images with their school
+- adult sending suggestive emojis and asking a teen to 'guess what they mean'
+- groomer rehearsing what a child should say if their parents ask about the chat
+- adult asking a minor to confirm if their parents are out of the house
+- predator framing inappropriate requests as 'a normal part of growing up'
+- adult offering to ship a phone to a minor 'just for our chats'
+- 'borderline: an adult is asking a 17-year-old about their dating life with escalating detail'
+- 'borderline: a coach is requesting a private one-on-one video call with a student at night'
+- 'borderline: an older relative sending late-night affectionate messages to a young teen'
+- 'near-extremism boundary: groomer is radicalising a minor into a movement that isolates them'
+- 'near-harassment boundary: adult is harassing a teen with a campaign of unwanted dms'
+- 'near-sexual-adult boundary: explicit content is being sent specifically to an account flagged as a minor'
+- pessoa adulta a chantagear um adolescente com fotos antigas
+- ein erwachsener droht einer minderjährigen mit der veröffentlichung von bildern
+- depredador en línea ofreciendo dinero a un adolescente por fotos
+- 一个成年人威胁未成年人发送私密内容
+- shukon dewasa memaksa pelajar berkongsi gambar bogel
+- ഒരു മുതിർന്നയാൾ ഒരു കുട്ടിയോട് സ്വകാര്യ ചിത്രങ്ങൾ അയക്കാൻ ആവശ്യപ്പെടുന്നു
+- 'i can teach you things your parents wont -- predatory framing aimed at minors'
+- offering an underage user paid streaming subscriptions for compromising content
+- "report: an adult account repeatedly asks a teenager to meet alone and keep it from their parents"
+- "observed: a member keeps pressuring a minor to send private photos and move to a hidden chat"
+- "thread describing a stranger offering a child gifts in exchange for secret late-night meetings"
+- "tường thuật: một tài khoản người lớn liên tục dụ một em nhỏ trò chuyện riêng và giấu gia đình"

@@ -1,0 +1,21 @@
+# Catalan-language lexicon bundle for the kchat.jurisdiction.es.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: es_ca_lexicon_v1
+language: ca
+locale: ca-ES
+provenance: kchat_trust_and_safety_es_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+terms:
+  - term_id: es_ca_term_lopjm_menor_ca_v1
+    categories: [1]
+    notes: LOPJM protecció de menors (Catalan catalogue).
+  - term_id: es_ca_term_cp_terrorisme_ca_v1
+    categories: [4]
+    notes: Codi penal — terrorisme (Catalan catalogue).

@@ -1,0 +1,456 @@
+# Adversarial / obfuscation corpus.
+#
+# Spec reference: "Adversarial / obfuscation test
+# corpus". Each case describes an evasion technique a hostile
+# sender might apply to bypass deterministic detectors. The pipeline's
+# normalization step (pipeline.normalize_text) is expected to neutralise
+# most of these so downstream detectors still match.
+#
+# Privacy contract: cases must NOT contain literal harmful payloads.
+# Scam URLs are obviously fake (e.g. "paypa1-verify.example"); slur
+# archetypes are represented with placeholder tokens (e.g.
+# "<SLUR_TOKEN_A>"). ``expected_detection`` states whether the
+# pipeline's *normalized* form should allow a downstream detector /
+# encoder classifier to recognise the underlying category.
+
+schema_version: 1
+
+homoglyph_attacks:
+  - case_id: homoglyph-001-paypal-cyrillic
+    technique: homoglyph_attacks
+    category: 7   # SCAM_FRAUD
+    text: "Click here to confirm your раyраl.com login and аvoid суspension."
+    expected_detection: true
+    notes: |
+      Cyrillic 'р' (U+0440) and 'а' (U+0430) substitute for Latin 'p'
+      and 'a'. Normalization homoglyph map maps both to ASCII, so the
+      scam keyword trigger ("confirm" + "login") still hits.
+
+  - case_id: homoglyph-002-verify-account-greek
+    technique: homoglyph_attacks
+    category: 7
+    text: "We detected suspicious activity, vεrify your αccount now."
+    expected_detection: true
+    notes: Greek epsilon (U+03B5) + alpha (U+03B1).
+
+  - case_id: homoglyph-003-fullwidth-digits
+    technique: homoglyph_attacks
+    category: 7
+    text: "Your tracking number ２０２４ has been delayed; update address."
+    expected_detection: true
+    notes: Fullwidth digits neutralised by NFKC.
+
+  - case_id: homoglyph-004-cyrillic-suspended
+    technique: homoglyph_attacks
+    category: 7
+    text: "Your ассount will be ѕuspended unless you verify immediately."
+    expected_detection: true
+    notes: Cyrillic 'с', 'с' and 'ѕ' (U+0455).
+
+  - case_id: homoglyph-005-mixed-script-drug
+    technique: homoglyph_attacks
+    category: 11  # DRUGS_WEAPONS
+    text: "Selling сheap p1lls and bаrs, DM for prices."
+    expected_detection: true
+    notes: Cyrillic + digit-1 substitution for "l"/"i".
+
+  - case_id: homoglyph-006-giveaway-fullwidth
+    technique: homoglyph_attacks
+    category: 7
+    text: "ＣＯＮＧＲＡＴＵＬＡＴＩＯＮＳ! You have won a prize, claim at example.xyz."
+    expected_detection: true
+    notes: Fullwidth Latin mapped to ASCII by NFKC.
+
+  - case_id: homoglyph-007-love-scam-cyrillic
+    technique: homoglyph_attacks
+    category: 7
+    text: "Hi dear, send mе a small gift via wire trаnsfer to continue."
+    expected_detection: true
+    notes: Cyrillic 'е' and 'а' — scam pattern persists post-normalization.
+
+  - case_id: homoglyph-008-benign-greek-greeting
+    technique: homoglyph_attacks
+    category: 0
+    text: "Xαίρετε, hope you have a wonderful afternoon today!"
+    expected_detection: false
+    notes: |
+      Control case — benign Greek greeting. Should NOT trigger any
+      scam pattern even after normalization.
+
+  - case_id: homoglyph-009-phishing-login
+    technique: homoglyph_attacks
+    category: 7
+    text: "Please login to your secure bаnk portal via https://example.top/verify ."
+    expected_detection: true
+    notes: Cyrillic 'а'. URL pattern + login keyword remains visible.
+
+  - case_id: homoglyph-010-mixed-latin-cyrillic
+    technique: homoglyph_attacks
+    category: 7
+    text: "Update password immediately — cоnfirm the reset link from our team."
+    expected_detection: true
+    notes: Cyrillic 'о'. Credential-harvest pattern.
+
+leetspeak:
+  - case_id: leet-001-violence
+    technique: leetspeak
+    category: 3   # VIOLENCE_THREAT
+    text: "I'm gonna k1ll you l8r if you don't stop."
+    expected_detection: true
+    notes: Numeric '1' and '8' substitutions for 'i' and 'ate'.
+
+  - case_id: leet-002-drugs
+    technique: leetspeak
+    category: 11
+    text: "S3lling dr0gs cheap, d3livery t0day."
+    expected_detection: true
+    notes: Classic '3'→e, '0'→o substitution.
+
+  - case_id: leet-003-hate
+    technique: leetspeak
+    category: 6   # HATE
+    text: "I h4t3 those p30ple and their music too."
+    expected_detection: true
+    notes: Numeric leetspeak.
+
+  - case_id: leet-004-scam-credentials
+    technique: leetspeak
+    category: 7
+    text: "V3rify your acc0unt at example.xyz/l0gin or face cl0sure."
+    expected_detection: true
+    notes: Scam pattern + leet URL.
+
+  - case_id: leet-005-weapons
+    technique: leetspeak
+    category: 11
+    text: "G0t n3w gl0cks for sale, msg for pr1ce list."
+    expected_detection: true
+    notes: Weapons marketplace indicator.
+
+  - case_id: leet-006-benign-recipe
+    technique: leetspeak
+    category: 0
+    text: "h4v3 a gr8 day, try the n3w r3cipe for the kids."
+    expected_detection: false
+    notes: |
+      Control case — leetspeak greeting with no harmful payload.
+      Normalization should NOT flag this.
+
+  - case_id: leet-007-self-harm
+    technique: leetspeak
+    category: 2   # SELF_HARM
+    text: "I w4nt to h4rm myself tonight, nothing matters."
+    expected_detection: true
+    notes: Self-harm ideation.
+
+  - case_id: leet-008-extremism
+    technique: leetspeak
+    category: 4   # EXTREMISM
+    text: "j01n the c4use, we fight t0gether against them all."
+    expected_detection: true
+    notes: Extremism recruitment leet.
+
+  - case_id: leet-009-sexual-adult
+    technique: leetspeak
+    category: 10  # SEXUAL_ADULT
+    text: "Click 4 fr33 4dult c0nt3nt, uncens0red previews tonight."
+    expected_detection: true
+    notes: Adult-content solicitation with numeric substitutions.
+
+  - case_id: leet-010-malware-link
+    technique: leetspeak
+    category: 8   # MALWARE_LINK
+    text: "Download the cr4ck3d app from example.top/s3tup.exe, free k3ys."
+    expected_detection: true
+    notes: Malware distribution leet.
+
+code_switching:
+  - case_id: cs-001-scam-en-es
+    technique: code_switching
+    category: 7
+    text: "Hola amigo, I need you to wire transfer una advance fee for the inheritance deal."
+    expected_detection: true
+    notes: English/Spanish scam pattern.
+
+  - case_id: cs-002-threat-en-fr
+    technique: code_switching
+    category: 3
+    text: "Je vais kill you if tu continues à me déranger like this."
+    expected_detection: true
+    notes: French/English threat.
+
+  - case_id: cs-003-drugs-en-zh
+    technique: code_switching
+    category: 11
+    text: "想买药吗? I can sell you pills 明天 in downtown, cash only."
+    expected_detection: true
+    notes: Chinese/English drug solicitation.
+
+  - case_id: cs-004-hate-en-de
+    technique: code_switching
+    category: 6
+    text: "Those Leute are disgusting, I hate them all egal wo they go."
+    expected_detection: true
+    notes: German/English hate fragment.
+
+  - case_id: cs-005-benign-en-it
+    technique: code_switching
+    category: 0
+    text: "Let's grab a pizza e un gelato after work, una bella serata ahead."
+    expected_detection: false
+    notes: Control case — benign Italian/English switch.
+
+  - case_id: cs-006-scam-en-ru
+    technique: code_switching
+    category: 7
+    text: "Привет friend, please confirm your пароль login для verification."
+    expected_detection: true
+    notes: Russian/English credential harvest.
+
+  - case_id: cs-007-extremism-en-ar
+    technique: code_switching
+    category: 4
+    text: "انضم إلى our cause and help us fight the enemy حتى النهاية."
+    expected_detection: true
+    notes: Arabic/English extremism recruitment.
+
+  - case_id: cs-008-sexual-adult-en-ja
+    technique: code_switching
+    category: 10
+    text: "Click 無料 adult contents at example.xyz, 登録なし, 今すぐ."
+    expected_detection: true
+    notes: Japanese/English adult solicitation.
+
+  - case_id: cs-009-harassment-en-pt
+    technique: code_switching
+    category: 5   # HARASSMENT
+    text: "You're worthless, tão estúpido, volta pra casa you loser."
+    expected_detection: true
+    notes: Portuguese/English harassment fragment.
+
+  - case_id: cs-010-misinfo-civic-en-hi
+    technique: code_switching
+    category: 14  # MISINFORMATION_CIVIC
+    text: "Polling officer ने vote bags burn कर दिए yesterday, share कर dhyan से."
+    expected_detection: true
+    notes: Hindi/English election-integrity misinformation fragment.
+
+unicode_tricks:
+  - case_id: unicode-001-zwj-scam
+    technique: unicode_tricks
+    category: 7
+    text: "Verify\u200d your\u200d account\u200d at example.xyz/login\u200d now."
+    expected_detection: true
+    notes: Zero-width joiners inserted between words.
+
+  - case_id: unicode-002-combining-marks
+    technique: unicode_tricks
+    category: 11
+    text: "Se\u0301lli\u0301ng che\u0301ap pi\u0301lls onli\u0301ne."
+    expected_detection: true
+    notes: |
+      Combining acute accents applied to each letter — NFKC collapses
+      them into precomposed forms when available; downstream matching
+      relies on casefold stripping marks for the remainder.
+
+  - case_id: unicode-003-bidi-override
+    technique: unicode_tricks
+    category: 7
+    text: "\u202etxt.exe\u202c looks like a safe document, open it."
+    expected_detection: true
+    notes: Right-to-left override spoofing file extensions.
+
+  - case_id: unicode-004-mathematical-bold
+    technique: unicode_tricks
+    category: 7
+    text: "𝐂𝐨𝐧𝐟𝐢𝐫𝐦 𝐲𝐨𝐮𝐫 𝐚𝐜𝐜𝐨𝐮𝐧𝐭 𝐧𝐨𝐰 at example.top/verify ."
+    expected_detection: true
+    notes: Mathematical Bold letters — NFKC folds to ASCII.
+
+  - case_id: unicode-005-tag-characters
+    technique: unicode_tricks
+    category: 4
+    text: "Join the cause\U000E0074\U000E0061\U000E0067\U000E0073 message me for details."
+    expected_detection: true
+    notes: Invisible Unicode TAG characters (U+E00xx) inserted.
+
+  - case_id: unicode-006-fullwidth-latin
+    technique: unicode_tricks
+    category: 7
+    text: "Ｖｅｒｉｆｙ ｙｏｕｒ ｌｏｇｉｎ immediately at example.zip/reset ."
+    expected_detection: true
+    notes: Fullwidth Latin — NFKC folds to ASCII.
+
+  - case_id: unicode-007-soft-hyphen
+    technique: unicode_tricks
+    category: 11
+    text: "Se\u00adllin\u00adg chea\u00adp pi\u00adlls in downtown."
+    expected_detection: true
+    notes: Soft hyphens (U+00AD) inserted between letters.
+
+  - case_id: unicode-008-variation-selector
+    technique: unicode_tricks
+    category: 6
+    text: "I ha\ufe0fte them\ufe0f all and want them gone."
+    expected_detection: true
+    notes: Variation selectors (VS16) inserted.
+
+  - case_id: unicode-009-benign-math-italic
+    technique: unicode_tricks
+    category: 0
+    text: "𝐻𝑎𝑝𝑝𝑦 𝑏𝑖𝑟𝑡ℎ𝑑𝑎𝑦 to you, hope you have a lovely day."
+    expected_detection: false
+    notes: |
+      Control case — benign Mathematical Italic script normalises
+      to ASCII without matching any category.
+
+  - case_id: unicode-010-hebrew-bidi
+    technique: unicode_tricks
+    category: 7
+    text: "The file \u202eexe.repaper\u202c is safe to execute, trust me."
+    expected_detection: true
+    notes: BiDi override spoofing file extension (paper.exe → exe.repaper).
+
+whitespace_insertion:
+  - case_id: ws-001-spaces-in-slur
+    technique: whitespace_insertion
+    category: 6
+    text: "I h a t e them all and wish them the worst possible outcome."
+    expected_detection: true
+    notes: Single spaces between letters — normalizer should fold.
+
+  - case_id: ws-002-tabs-in-drug
+    technique: whitespace_insertion
+    category: 11
+    text: "s\tel\tli\tng\tche\tap\tpi\tlls\tin downtown today, msg me."
+    expected_detection: true
+    notes: Tab characters mid-word.
+
+  - case_id: ws-003-nbsp-in-scam
+    technique: whitespace_insertion
+    category: 7
+    text: "Verify\u00a0your\u00a0account\u00a0or\u00a0face\u00a0suspension."
+    expected_detection: true
+    notes: Non-breaking spaces.
+
+  - case_id: ws-004-zerowidth-space
+    technique: whitespace_insertion
+    category: 4
+    text: "Jo\u200bin t\u200bhe ca\u200buse a\u200bnd fi\u200bght wi\u200bth us."
+    expected_detection: true
+    notes: Zero-width spaces inserted.
+
+  - case_id: ws-005-linebreaks-in-threat
+    technique: whitespace_insertion
+    category: 3
+    text: "I'm\ngoing\nto\nhurt\nyou\ntonight, no escape."
+    expected_detection: true
+    notes: Line breaks splitting threatening phrase.
+
+  - case_id: ws-006-ideographic-space
+    technique: whitespace_insertion
+    category: 7
+    text: "Confirm\u3000your\u3000login\u3000now\u3000at example.xyz/verify ."
+    expected_detection: true
+    notes: Ideographic space (U+3000) — NFKC folds to ASCII space.
+
+  - case_id: ws-007-benign-multi-space
+    technique: whitespace_insertion
+    category: 0
+    text: "Hello  there,  hope  you  have  a  wonderful  afternoon  today."
+    expected_detection: false
+    notes: Control case — benign double spacing.
+
+  - case_id: ws-008-figure-space
+    technique: whitespace_insertion
+    category: 7
+    text: "Your\u2007account\u2007needs\u2007verification\u2007asap\u2007."
+    expected_detection: true
+    notes: Figure space (U+2007).
+
+  - case_id: ws-009-em-space
+    technique: whitespace_insertion
+    category: 11
+    text: "Se\u2003ll\u2003ing\u2003c\u2003ha\u2003rs in downtown, cash only."
+    expected_detection: true
+    notes: Em spaces inserted mid-word.
+
+  - case_id: ws-010-hair-space
+    technique: whitespace_insertion
+    category: 6
+    text: "I\u200ah\u200aate\u200athem\u200aall completely."
+    expected_detection: true
+    notes: Hair space (U+200A).
+
+image_text_evasion:
+  - case_id: img-001-ocr-extremist-symbol
+    technique: image_text_evasion
+    category: 4
+    text: "[image attached: flag with swastika-like emblem painted in red]"
+    expected_detection: true
+    notes: OCR/media descriptor references extremist iconography.
+
+  - case_id: img-002-ocr-slur-image
+    technique: image_text_evasion
+    category: 6
+    text: "[image attached: text reads <SLUR_TOKEN_A> scrawled across a wall]"
+    expected_detection: true
+    notes: Media descriptor placeholder for slur content in image.
+
+  - case_id: img-003-ocr-scam-qr
+    technique: image_text_evasion
+    category: 7
+    text: "[image attached: QR code labeled 'scan to verify your banking login']"
+    expected_detection: true
+    notes: QR-code phishing via media descriptor.
+
+  - case_id: img-004-ocr-weapon-ad
+    technique: image_text_evasion
+    category: 11
+    text: "[image attached: photo of handgun with price tag $400 and phone number]"
+    expected_detection: true
+    notes: Weapons marketplace image descriptor.
+
+  - case_id: img-005-ocr-drug-menu
+    technique: image_text_evasion
+    category: 11
+    text: "[image attached: handwritten menu listing controlled substances with prices]"
+    expected_detection: true
+    notes: Drug marketplace image descriptor.
+
+  - case_id: img-006-ocr-sexual-csam-indicator
+    technique: image_text_evasion
+    category: 1   # CHILD_SAFETY
+    text: "[image attached: media descriptor flags <CSAM_INDICATOR_TOKEN>]"
+    expected_detection: true
+    notes: |
+      Placeholder for CSAM indicator — actual detectors use hash-based
+      fingerprinting; descriptor-level flag must route to cat 1.
+
+  - case_id: img-007-ocr-extortion
+    technique: image_text_evasion
+    category: 7
+    text: "[image attached: screenshot saying 'pay 1 BTC to this address or we release your photos']"
+    expected_detection: true
+    notes: Extortion-style image.
+
+  - case_id: img-008-ocr-benign-landscape
+    technique: image_text_evasion
+    category: 0
+    text: "[image attached: photograph of a mountain landscape at sunrise, no text]"
+    expected_detection: false
+    notes: Control case — benign descriptor.
+
+  - case_id: img-009-ocr-leet-wall
+    technique: image_text_evasion
+    category: 4
+    text: "[image attached: spray-painted wall reads 'j01n the r3v0lution k1ll them all']"
+    expected_detection: true
+    notes: OCR descriptor includes leetspeak extremism.
+
+  - case_id: img-010-ocr-phishing-login-page
+    technique: image_text_evasion
+    category: 7
+    text: "[image attached: fake bank login page screenshot at example.zip/bank]"
+    expected_detection: true
+    notes: Phishing page image.

@@ -18,16 +18,37 @@ pub mod classify;
 pub mod crypto;
 pub mod detectors;
 pub mod encoder;
+pub mod media;
 pub mod normalize;
 pub mod policy;
 pub mod verdict;
 
+#[cfg(feature = "text-pipeline")]
+pub mod policy_interpreter;
+
+#[cfg(feature = "skill-pack")]
+pub mod skillpack;
+
+#[cfg(feature = "onnx-runtime-vision")]
+pub mod vision;
+#[cfg(feature = "onnx-runtime-vision")]
+pub mod vision_bridge;
+
 pub use classify::{ClassifyRequest, ClassifyResult, SafetyClassifier};
 pub use encoder::{MockEncoder, MockSlmAdjudicator, SlmDecision};
+pub use media::{MediaDescriptor, MediaDescriptorInput, extract_media_descriptors};
 #[cfg(feature = "onnx-runtime")]
 pub use encoder::OnnxEncoder;
 pub use policy::{PolicyPack, PolicyPackManifest, PolicyRule, RiskCategory};
 pub use verdict::{Action, Verdict, VerdictBuilder};
+
+#[cfg(feature = "onnx-runtime-vision")]
+pub use vision::{
+    VisionEncoderAdapter, VisionEncoderAdapterBuilder, VisionEncoderError,
+    VisionEncoderVerdict, VisionImageClassifier,
+};
+#[cfg(feature = "onnx-runtime-vision")]
+pub use vision_bridge::{VisionBridge, classify_image as classify_image_with_vision};
 
 /// Re-export core types for convenience.
 pub use kchat_core::ids::PolicyPackId;

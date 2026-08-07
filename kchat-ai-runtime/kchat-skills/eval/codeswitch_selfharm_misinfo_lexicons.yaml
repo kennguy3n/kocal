@@ -1,0 +1,61 @@
+# Code-switch / transliteration lexicon for SELF_HARM + MISINFO
+# (Stream I companion to ``default_lexicons.yaml``).
+#
+# These tokens are authored in the *folded Latin matching space* that
+# ``transliterate_for_matching`` (translit_core_v1) produces — i.e. the
+# phonetic romanization of each script, NOT native script. The orchestrator
+# runs every lexicon over the UNION of search views (canonical normalized +
+# defanged + transliterated), so a token authored here fires when a message
+# written in native script / diacritics / Arabizi digits folds onto it.
+#
+# Why a separate file (mirrors ``codeswitch_lexicons.yaml``):
+#   * ``default_lexicons.yaml`` carries the *native-script* tokens (they
+#     match the canonical normalized view directly).
+#   * The transliteration view only gains recall for tokens authored in the
+#     *folded* space. Keeping them here lets the Stream-I eval
+#     (``build-tools/tests/test_selfharm_misinfo_deterministic_eval.py``)
+#     measure the before/after recall the fold contributes, in isolation,
+#     and prove ZERO benign false positives.
+#
+# Token-matching contract is identical to ``default_lexicons.yaml``: tokens
+# are matched with ``\b<token>\b`` against each search view, case-folded by
+# the matcher. Every folded form below was produced by feeding the native
+# phrase through ``normalize_text(text, homoglyph_map={})`` then
+# ``transliterate_for_matching(..., ['translit_core_v1'])`` — exactly the
+# pipeline path — so they are reproducible, not hand-guessed.
+#
+# Precision posture is the same as the native banks: SELF_HARM tokens are
+# second-person encouragement or first-person resolved intent; MISINFO_HEALTH
+# tokens are harmful action-directives ("don't vaccinate your kids"), never
+# bare claims. Harm text is paraphrased harm-intent / directive, never slurs.
+#
+# Category ids: 2=SELF_HARM, 13=MISINFO_HEALTH.
+schema_version: 1
+default_lexicons:
+  - lexicon_id: codeswitch_self_harm_v1
+    category: 2
+    weight: 0.94   # matches default_self_harm_v1 (above VIOLENCE_THREAT 0.93)
+    tokens:
+      # romanized Cyrillic (ru)
+      - "ya pokonchu s soboi"   # "я покончу с собой" (I'll end myself)
+      - "ubei sebya"            # "убей себя"          (kill yourself)
+      # Greeklish (el) — folded from Greek script
+      - "tha aytoktoniso"       # "θα αυτοκτονήσω"     (I'll commit suicide)
+      - "skotosoy"              # "σκοτώσου"           (kill yourself)
+      # romanized Vietnamese — diacritics folded
+      - "toi se tu tu toi nay"  # "tôi sẽ tự tử tối nay" (I'll kill myself tonight)
+      # Arabizi (Arabic chat alphabet) — digit→phoneme folds
+      - "rah atol nafsi"        # "rah a2tol nafsi"   (I'm going to kill myself)
+      - "atol nafsak"           # "a2tol nafsak"      (kill yourself)
+      # Hinglish / romanized Devanagari (hi)
+      - "khudkushi kar lunga"   # (I'll commit suicide)
+  - lexicon_id: codeswitch_misinfo_health_v1
+    category: 13
+    weight: 0.80
+    tokens:
+      # romanized Cyrillic (ru) — anti-vaccine directive
+      - "ne privivaite detei"            # "не прививайте детей" (don't vaccinate kids)
+      # Greeklish (el) — anti-vaccine directive
+      - "min emvoliazete ta paidia sas"  # "μην εμβολιάζετε τα παιδιά σας"
+      # Hinglish (hi) — anti-vaccine directive
+      - "bachon ko vaccine mat lagao"    # (don't vaccinate the kids)

@@ -1,0 +1,21 @@
+# HE (Israel) lexicon bundle for the kchat.jurisdiction.il.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: il_he_lexicon_v1
+language: he
+locale: he-IL
+provenance: kchat_trust_and_safety_il_v1
+categories:
+  - 1
+  - 4
+terms:
+  - term_id: il_he_term_child_protection_v1
+    categories: [1]
+    notes: Israeli Penal Code 214 indicators (catalogue-only).
+  - term_id: il_he_term_anti_terror_v1
+    categories: [4]
+    notes: Counter-Terrorism Law 5776-2016 indicators (catalogue-only).

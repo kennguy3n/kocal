@@ -1,0 +1,159 @@
+# Private data / doxxing imagery dataset sourcing manifest
+# (kchat.guardrail.dataset_sourcing.v1)
+#
+# SCAFFOLD ONLY — this manifest documents the external benchmarks that a
+# future, credentialed bake/evaluation host would pull to harden the
+# PRIVATE_DATA (taxonomy id 9) visual detection capability. It deliberately
+# ships NO downloaded media, NO live download URLs, and NO credentials:
+# every entry below is either synthetically generated under strict PII
+# controls or sourced from a licenced document-image provider behind a
+# signed access agreement. The on-device SDK never ships these datasets;
+# they are used only off-device to (a) calibrate the MobileCLIP-S2 vision
+# prototype bank and (b) measure recall / precision for the held-out
+# vision corpus.
+#
+# Privacy & licence posture
+# -------------------------
+# * Private-data imagery (photographs of identity documents, bank
+#   statements, medical records, address labels, credit cards, and other
+#   PII-bearing surfaces) is inherently privacy-sensitive. Real-world
+#   exemplars contain genuine PII that must never be collected, stored,
+#   or redistributed without a lawful basis and strict data-minimisation.
+# * The preferred sourcing path is SYNTHETIC generation: template-based
+#   rendering of fictitious PII onto realistic document layouts, so no
+#   real individual's data is involved. Where real-world exemplars are
+#   necessary (e.g. to benchmark OCR / layout-variant robustness),
+#   access is restricted to licenced, PII-redacted document-image
+#   datasets from credentialed providers.
+# * Each benchmark is redistribution-restricted. We record only the
+#   provider, the access process, and the licence class — never a mirror.
+# * Negative (benign document imagery) sources are included so the
+#   precision gate (no false positives on non-PII documents) can be
+#   measured, not just recall.
+# * `status: scaffold` means "documented access path, not yet ingested".
+#   An operator with credentials flips this to `ingested` in their private
+#   overlay; this checked-in file stays `scaffold`.
+#
+# This file is intentionally inert: nothing in the build imports media
+# from here. `tools/build_vision_category_prototypes.py` bakes prototypes
+# from text prompts (`vision_prototypes_source.yaml`); these corpora are
+# the *evaluation* and future *image-centroid* sourcing path.
+
+schema_id: kchat.guardrail.dataset_sourcing.v1
+schema_version: 1
+category_id: 9
+category_name: PRIVATE_DATA
+status: scaffold
+
+# --------------------------------------------------------------------------
+# Positive benchmarks — PII-bearing document imagery
+# (PRIVATE_DATA POSITIVES).
+# --------------------------------------------------------------------------
+positive_benchmarks:
+  - id: synthetic_id_documents
+    name: Synthetically generated identity-document imagery
+    role: positive
+    modality: image
+    purpose: >-
+      Template-rendered images of fictitious identity documents (passports,
+      national IDs, driver licences) containing entirely synthetic PII.
+      Primary recall corpus for PRIVATE_DATA visual signals covering
+      document-doxxing scenarios. No real individual's data is present.
+    licence_class: synthetic_internal
+    redistribution: internal_only
+    credentials_required: false
+    access_process: >-
+      Generate using an internal template-rendering pipeline that
+      composites fictitious PII (synthetic names, numbers, addresses
+      from a faker library) onto realistic document layouts. The
+      generation pipeline must be audited to confirm zero overlap with
+      real identity data. Output is for internal evaluation only; do
+      not redistribute generated images outside the evaluation
+      environment.
+    provenance_note: >-
+      All PII in generated documents is fictitious. Document the
+      generation pipeline version, template set, and faker seed
+      when reporting evaluation results.
+  - id: licenced_redacted_documents
+    name: Licenced, PII-redacted real-document imagery
+    role: positive
+    modality: image
+    purpose: >-
+      Real-world document images (financial statements, medical records,
+      address labels) that have been professionally redacted to remove
+      all genuine PII. Harder positives that stress layout-variant and
+      OCR-edge-case robustness beyond synthetic templates.
+    licence_class: commercial_licenced
+    redistribution: prohibited
+    credentials_required: true
+    access_process: >-
+      Licence a PII-redacted document-image dataset from a credentialed
+      data provider specialising in document-AI training data (e.g.
+      enterprise document-intelligence vendors). The provider must
+      supply a signed data-processing agreement (DPA) certifying that
+      all genuine PII has been redacted or replaced and that the
+      dataset complies with applicable data-protection regulations
+      (GDPR Art. 6, CCPA, etc.). No public mirror; no redistribution.
+    provenance_note: >-
+      Cite the data provider, DPA reference, and redaction methodology.
+      Verify the provider's PII-redaction certification before use.
+  - id: synthetic_financial_pii
+    name: Synthetically generated financial-PII imagery
+    role: positive
+    modality: image
+    purpose: >-
+      Template-rendered images of fictitious financial documents (credit
+      card photos, bank-statement screenshots, cheque images) containing
+      entirely synthetic account numbers, names, and addresses. Covers
+      the financial-doxxing sub-category of PRIVATE_DATA.
+    licence_class: synthetic_internal
+    redistribution: internal_only
+    credentials_required: false
+    access_process: >-
+      Generate using the same internal template-rendering pipeline as
+      synthetic_id_documents, with financial-document templates. All
+      account numbers, sort codes, and cardholder names are fictitious.
+      The generation pipeline must be audited to confirm zero overlap
+      with real financial data. Output is for internal evaluation only.
+    provenance_note: >-
+      All financial data is fictitious. Document the generation pipeline
+      version and faker seed when reporting results.
+
+# --------------------------------------------------------------------------
+# Negative sources — benign document imagery that MUST NOT be flagged as
+# private-data exposure. These calibrate the precision gate
+# (benign_false_positive cases in held_out_vision.yaml).
+# --------------------------------------------------------------------------
+negative_sources:
+  - id: benign_document_imagery
+    name: Public, non-PII document and form imagery (licence-clean)
+    role: negative
+    modality: image
+    purpose: >-
+      Photographs of blank forms, public government notices, redacted
+      example documents, and non-PII paperwork — the canonical
+      false-positive guard for PRIVATE_DATA.
+    licence_class: public_or_cc
+    redistribution: per_source_licence
+    credentials_required: false
+    access_process: >-
+      Curate from licence-clean public collections (e.g. CC-licensed
+      document photography, public-domain government form templates).
+      Exclude any image containing real, unredacted PII of any
+      individual.
+    provenance_note: >-
+      Negatives must contain no real PII; pair each with the document
+      context used in the held-out negatives.
+
+# Operator hook: a credentialed evaluation host overrides this file in a
+# private overlay, sets per-entry `local_path` + `status: ingested`, and
+# runs tools/eval_vision_metrics.py over the encoder-required vision cases.
+# The checked-in copy remains a credential-free scaffold.
+ingestion_hook:
+  consumes: kchat-skills/eval/held_out_vision.yaml
+  partition_tag: encoder_required
+  evaluator: tools/eval_vision_metrics.py
+  note: >-
+    No automated download runs from this repo. Ingestion is an explicit,
+    out-of-band operator step gated by the signed licences, DPAs, and
+    PII-handling requirements above.

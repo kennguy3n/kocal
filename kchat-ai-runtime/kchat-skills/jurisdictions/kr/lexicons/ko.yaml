@@ -1,0 +1,21 @@
+# Korean-language lexicon bundle for the kchat.jurisdiction.kr.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: kr_ko_lexicon_v1
+language: ko
+locale: ko-KR
+provenance: kchat_trust_and_safety_kr_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+terms:
+  - term_id: kr_ko_term_apcysa_child_v1
+    categories: [1]
+    notes: 청소년성보호법 §11 child-protection indicators.
+  - term_id: kr_ko_term_nsa_7_v1
+    categories: [4]
+    notes: National Security Act §7 anti-state indicators.

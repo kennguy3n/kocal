@@ -1,0 +1,21 @@
+# DA (Denmark) lexicon bundle for the kchat.jurisdiction.dk.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: dk_da_lexicon_v1
+language: da
+locale: da-DK
+provenance: kchat_trust_and_safety_dk_v1
+categories:
+  - 1
+  - 4
+terms:
+  - term_id: dk_da_term_straffeloven_235_v1
+    categories: [1]
+    notes: Straffeloven §235 child-protection indicators (catalogue-only).
+  - term_id: dk_da_term_straffeloven_114_v1
+    categories: [4]
+    notes: Straffeloven §114 terrorism indicators (catalogue-only).

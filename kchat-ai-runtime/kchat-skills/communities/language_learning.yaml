@@ -1,0 +1,28 @@
+# Community Overlay — kchat.community.language_learning.guardrail.v1
+#
+# Language-learning overlay. Allows discussion of slurs / hate
+# vocabulary in clearly educational contexts.
+
+skill_id: kchat.community.language_learning.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: language_learning
+  age_mode: mixed_age
+  visibility: public_summary
+  set_by: group_admin
+
+rules:
+  - category: 6   # HATE
+    action: warn
+    note: >-
+      Hate-vocabulary discussion warns rather than blocks —
+      educational context with allowed-context carve-outs.
+  - category: 5   # HARASSMENT
+    action: warn
+    suggest_mute: true
+    note: >-
+      Targeted harassment toward learners warns and offers a
+      peer-mute.

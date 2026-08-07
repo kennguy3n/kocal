@@ -1,0 +1,21 @@
+# Spanish-language lexicon bundle for the kchat.jurisdiction.cl.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: cl_es_lexicon_v1
+language: es
+locale: es-CL
+provenance: kchat_trust_and_safety_cl_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+terms:
+  - term_id: cl_es_term_ley_21057_ninez_v1
+    categories: [1]
+    notes: Ley 21.057 child-protection indicators (catalogue-only).
+  - term_id: cl_es_term_ley_18314_terrorismo_v1
+    categories: [4]
+    notes: Ley 18.314 terrorism recruitment indicators.

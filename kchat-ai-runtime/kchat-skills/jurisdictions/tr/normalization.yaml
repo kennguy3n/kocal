@@ -1,0 +1,8 @@
+# Normalization rules for the Türkiye jurisdiction overlay.
+
+schema_version: 1
+nfkc: true
+case_fold: true
+homoglyph_map_id: homoglyph_core_v1
+transliteration_refs:
+  - translit_core_v1

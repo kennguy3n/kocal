@@ -1,0 +1,199 @@
+{
+  "datasets_root": "datasets/video",
+  "downloaded_count": 8,
+  "encoder_note": "Clips are classified by tools/benchmark_video.py with the MobileCLIP-S2 image tower against the baked vision_category_prototypes.npz bank.",
+  "entries": [
+    {
+      "attribution": "\u0628\u0627\u0633\u0645",
+      "commons_title": "File:Calico kitten playing.webm",
+      "expected_category": 0,
+      "expected_category_name": "Safe",
+      "group": "safe",
+      "id": "Calico_kitten_playing.webm",
+      "license": "CC BY-SA 4.0",
+      "note": "Domestic kitten playing \u2014 benign everyday footage.",
+      "relative_path": "datasets/video/safe/Calico_kitten_playing.webm",
+      "sha256": "f4007400ceedaabe4e38b3288ad10232577e5b3e3c06042781a6f850eba4c439",
+      "size_bytes": 784751,
+      "source": "wikimedia_commons",
+      "source_url": "https://upload.wikimedia.org/wikipedia/commons/d/d2/Calico_kitten_playing.webm",
+      "status": "downloaded"
+    },
+    {
+      "attribution": "Nesnad",
+      "commons_title": "File:Kitten playing - Tokyo - Jan 7 2020.webm",
+      "expected_category": 0,
+      "expected_category_name": "Safe",
+      "group": "safe",
+      "id": "Kitten_playing_-_Tokyo_-_Jan_7_2020.webm",
+      "license": "CC BY 4.0",
+      "note": "Domestic kitten \u2014 benign everyday footage.",
+      "relative_path": "datasets/video/safe/Kitten_playing_-_Tokyo_-_Jan_7_2020.webm",
+      "sha256": "c2a29c29c38d3b2352434e4684ed4de7d618db78579df996fc8a149608866451",
+      "size_bytes": 2173987,
+      "source": "wikimedia_commons",
+      "source_url": "https://upload.wikimedia.org/wikipedia/commons/f/f3/Kitten_playing_-_Tokyo_-_Jan_7_2020.webm",
+      "status": "downloaded"
+    },
+    {
+      "attribution": "Mostafameraji",
+      "commons_title": "File:Ocean surface waves 06.ogv",
+      "expected_category": 0,
+      "expected_category_name": "Safe",
+      "group": "safe",
+      "id": "Ocean_surface_waves_06.ogv",
+      "license": "CC0",
+      "note": "Ocean waves \u2014 benign nature footage (CC0).",
+      "relative_path": "datasets/video/safe/Ocean_surface_waves_06.ogv",
+      "sha256": "4b9e690dce0108898809314213cab90945c1f9dc0c4c46831e650a871c598d3e",
+      "size_bytes": 12085009,
+      "source": "wikimedia_commons",
+      "source_url": "https://upload.wikimedia.org/wikipedia/commons/0/08/Ocean_surface_waves_06.ogv",
+      "status": "downloaded"
+    },
+    {
+      "attribution": "Sea Cow",
+      "commons_title": "File:Fireworks Naperville 2022.webm",
+      "expected_category": 0,
+      "expected_category_name": "Safe",
+      "group": "safe",
+      "id": "Fireworks_Naperville_2022.webm",
+      "license": "CC BY-SA 4.0",
+      "note": "Celebratory fireworks display \u2014 benign, but visually busy (stresses the over-flag guard).",
+      "relative_path": "datasets/video/safe/Fireworks_Naperville_2022.webm",
+      "sha256": "36488c3629714849c3094a4a6418801a8a23a30aaf7d6b772437fd32468f96db",
+      "size_bytes": 2312817,
+      "source": "wikimedia_commons",
+      "source_url": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Fireworks_Naperville_2022.webm",
+      "status": "downloaded"
+    },
+    {
+      "attribution": "Pittigrilli",
+      "commons_title": "File:Video of tabletop fireplace (or fire pit) burning with removed limiter grid - don't try this at home, just for demo.webm",
+      "expected_category": 0,
+      "expected_category_name": "Safe",
+      "group": "safe",
+      "id": "Video_of_tabletop_fireplace_or_fire_pit_burning_with_removed_limiter_grid_-_don_t_try_this_at_home_just_for_demo.webm",
+      "license": "CC BY 4.0",
+      "note": "Controlled tabletop fire \u2014 benign, stresses fire/violence confusion.",
+      "relative_path": "datasets/video/safe/Video_of_tabletop_fireplace_or_fire_pit_burning_with_removed_limiter_grid_-_don_t_try_this_at_home_just_for_demo.webm",
+      "sha256": "d95a504326559f1dc8d5ab8e2cb0ebbe22051b1250017f78caa43e182ed632bf",
+      "size_bytes": 2269467,
+      "source": "wikimedia_commons",
+      "source_url": "https://upload.wikimedia.org/wikipedia/commons/6/6d/Video_of_tabletop_fireplace_%28or_fire_pit%29_burning_with_removed_limiter_grid_-_don%27t_try_this_at_home%2C_just_for_demo.webm",
+      "status": "downloaded"
+    },
+    {
+      "attribution": "[1]",
+      "commons_title": "File:Gun shooting AR15 strong.webm",
+      "expected_category": 11,
+      "expected_category_name": "DrugsWeapons",
+      "group": "weapons",
+      "id": "Gun_shooting_AR15_strong.webm",
+      "license": "CC BY 2.0",
+      "note": "Firearm being discharged at a range \u2014 weapons depiction.",
+      "relative_path": "datasets/video/weapons/Gun_shooting_AR15_strong.webm",
+      "sha256": "3a044561325bf6eead97bfbd0acd27e028e48b06291e77e9d96776b1d3711cbb",
+      "size_bytes": 5098618,
+      "source": "wikimedia_commons",
+      "source_url": "https://upload.wikimedia.org/wikipedia/commons/c/c2/Gun_shooting_AR15_strong.webm",
+      "status": "downloaded"
+    },
+    {
+      "attribution": "[1]",
+      "commons_title": "File:Brad Shoots - gun range nra.webm",
+      "expected_category": 11,
+      "expected_category_name": "DrugsWeapons",
+      "group": "weapons",
+      "id": "Brad_Shoots_-_gun_range_nra.webm",
+      "license": "CC BY-SA 2.0",
+      "note": "Firearm at a shooting range \u2014 weapons depiction.",
+      "relative_path": "datasets/video/weapons/Brad_Shoots_-_gun_range_nra.webm",
+      "sha256": "8aa3eb29a8682da3b0fffff0fd09661cfb2bd4746d70019042a3050c5f607ba0",
+      "size_bytes": 3741320,
+      "source": "wikimedia_commons",
+      "source_url": "https://upload.wikimedia.org/wikipedia/commons/0/08/Brad_Shoots_-_gun_range_nra.webm",
+      "status": "downloaded"
+    },
+    {
+      "attribution": "PainTelevision",
+      "commons_title": "File:Explosion in Institute, WV-7D0j-gaO37U.webm",
+      "expected_category": 3,
+      "expected_category_name": "ViolenceThreat",
+      "group": "violence",
+      "id": "Explosion_in_Institute_WV-7D0j-gaO37U.webm",
+      "license": "CC BY 3.0",
+      "note": "Industrial explosion / blast \u2014 violent event footage.",
+      "relative_path": "datasets/video/violence/Explosion_in_Institute_WV-7D0j-gaO37U.webm",
+      "sha256": "f991784e8de38b74525a305cef2daeab6d455e6d31c794420890324390aa1e4a",
+      "size_bytes": 2208512,
+      "source": "wikimedia_commons",
+      "source_url": "https://upload.wikimedia.org/wikipedia/commons/d/db/Explosion_in_Institute%2C_WV-7D0j-gaO37U.webm",
+      "status": "downloaded"
+    }
+  ],
+  "gap_count": 4,
+  "gaps": [
+    {
+      "expected_categories": [
+        0,
+        3
+      ],
+      "expected_category_names": [
+        "Safe",
+        "ViolenceThreat"
+      ],
+      "license": "CC-BY-4.0 annotations; clips are YouTube-hosted (per-video terms)",
+      "reason": "Full set is ~450 GB of YouTube URLs requiring yt-dlp and is subject to per-video YouTube terms; many clips are delisted. Not fetchable deterministically without an account/quota.",
+      "source": "Kinetics-400 (full)",
+      "status": "skipped_scale_and_terms"
+    },
+    {
+      "expected_categories": [
+        3,
+        12
+      ],
+      "expected_category_names": [
+        "ViolenceThreat",
+        "IllegalGoods"
+      ],
+      "license": "Research-use agreement",
+      "reason": "Distributed via a Dropbox/registration link behind a research-use agreement; consists of real surveillance footage of identifiable individuals \u2014 excluded on both credential and privacy grounds.",
+      "source": "UCF-Crime",
+      "status": "skipped_no_credentials_privacy"
+    },
+    {
+      "expected_categories": [
+        3
+      ],
+      "expected_category_names": [
+        "ViolenceThreat"
+      ],
+      "license": "Research-use agreement",
+      "reason": "Requires emailing the authors for the download link; real-incident footage of identifiable individuals \u2014 excluded on credential and privacy grounds.",
+      "source": "XD-Violence",
+      "status": "skipped_no_credentials_privacy"
+    },
+    {
+      "expected_categories": [
+        0
+      ],
+      "expected_category_names": [
+        "Safe"
+      ],
+      "license": "Pexels License (permissive)",
+      "reason": "Pexels content is permissive but its API requires a personal API key (PEXELS_API_KEY) not available in this environment.",
+      "source": "Pexels free stock video",
+      "status": "skipped_no_credentials"
+    }
+  ],
+  "generated_utc": "2026-06-10T15:14:09+00:00",
+  "license_allowlist": [
+    "cc0",
+    "cc by",
+    "public domain",
+    "pd-",
+    "pd "
+  ],
+  "schema": "kchat.guardrail.video_dataset_manifest.v1"
+}

@@ -1,0 +1,21 @@
+# Malay-language lexicon bundle for the kchat.jurisdiction.my.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: my_ms_lexicon_v1
+language: ms
+locale: ms-MY
+provenance: kchat_trust_and_safety_my_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+terms:
+  - term_id: my_ms_term_akta_611_kanak_v1
+    categories: [1]
+    notes: Akta Kanak-Kanak 2001 indicators.
+  - term_id: my_ms_term_sosma_2012_v1
+    categories: [4]
+    notes: SOSMA 2012 indicators.

@@ -1,0 +1,45 @@
+# US English lexicon bundle for the kchat.jurisdiction.us.guardrail.v1
+# overlay.
+#
+# Lexicon entries are token-id references into the resource
+# catalogue, not literal strings. Per the privacy contract, no
+# raw harmful content (slurs, CSAM strings, scam scripts) is
+# checked into the repo; the catalogue is the only place those
+# tokens live, behind reviewer gating.
+
+schema_version: 1
+lexicon_id: us_en_lexicon_v1
+language: en
+locale: en-US
+provenance: kchat_trust_and_safety_us_v1
+categories:
+  # The taxonomy ids this lexicon contributes signals to.
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+  - 6   # HATE
+  - 7   # SCAM_FRAUD
+  - 10  # SEXUAL_ADULT
+  - 11  # DRUGS_WEAPONS
+
+terms:
+  # Each entry references a catalogue id, the categories it signals,
+  # and the protected contexts in which it is allowed. The compiler
+  # never expands these into raw strings.
+  - term_id: us_en_term_csam_indicators_v1
+    categories: [1]
+    notes: CSAM indicator phrases (catalogued; never embedded inline).
+  - term_id: us_en_term_fto_recruitment_v1
+    categories: [4]
+    notes: Foreign terrorist org recruitment phrases (FTO list).
+  - term_id: us_en_term_protected_class_slurs_v1
+    categories: [6]
+    notes: Protected-class slurs (federal civil-rights enumeration).
+  - term_id: us_en_term_wire_fraud_phrases_v1
+    categories: [7]
+    notes: Wire-fraud / advance-fee / IRS-scam phrasing.
+  - term_id: us_en_term_adult_solicitation_v1
+    categories: [10]
+    notes: Adult-content solicitation patterns.
+  - term_id: us_en_term_drug_marketplace_v1
+    categories: [11]
+    notes: Controlled-substance marketplace patterns (DEA Schedule I/II).

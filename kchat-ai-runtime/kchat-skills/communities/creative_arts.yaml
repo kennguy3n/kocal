@@ -1,0 +1,28 @@
+# Community Overlay — kchat.community.creative_arts.guardrail.v1
+#
+# Creative-arts / artist collective overlay. Allows artistic adult
+# content under a warn (not block), and surfaces COMMUNITY_RULE for
+# member-defined content guidelines.
+
+skill_id: kchat.community.creative_arts.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: creative_arts
+  age_mode: mixed_age
+  visibility: public_summary
+  set_by: group_admin
+
+rules:
+  - category: 10  # SEXUAL_ADULT
+    action: warn
+    note: >-
+      Adult sexual content in an artistic context warns rather than
+      blocks; members can opt out.
+  - category: 15  # COMMUNITY_RULE
+    action: warn
+    note: >-
+      Community-defined artistic content rules (nudity disclosure,
+      content warnings) labelled and warned.

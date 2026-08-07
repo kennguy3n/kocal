@@ -1,0 +1,75 @@
+# Community Overlay — kchat.community.school.guardrail.v1
+#
+# Minors-aware overlay for school groups. Activates the child-safety
+# floor (severity 5) globally, blocks adult sexual content outright, and
+# tightens harassment and drugs/weapons handling.
+
+skill_id: kchat.community.school.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: school
+  age_mode: minor_present
+  visibility: public_summary
+  set_by: group_admin
+
+rules:
+  - category: 10   # SEXUAL_ADULT
+    action: block
+    note: >-
+      Adult sexual content is fully disallowed in school groups; the
+      preview is blocked and the report flow surfaces.
+  - category: 5    # HARASSMENT
+    action: strong_warn
+    suggest_mute: true
+    note: >-
+      Targeted harassment, bullying, and pile-on are tightened above the
+      baseline `warn` to require explicit acknowledgement before display.
+  - category: 11   # DRUGS_WEAPONS
+    action: strong_warn
+    note: >-
+      Sale or facilitation of drugs / firearms / regulated goods is
+      tightened in school contexts.
+  - category: 2    # SELF_HARM
+    action: warn
+    note: >-
+      Self-harm ideation in school contexts warns and surfaces crisis
+      resources. Unlike peer-support overlays, school groups do not
+      loosen to label_only because minors may lack context to interpret
+      self-harm references safely.
+  - category: 6    # HATE
+    action: strong_warn
+    note: >-
+      Hate speech and slurs targeting protected classes are tightened
+      to a hard modal warning in school contexts where bullying impact
+      is elevated.
+  - category: 3    # VIOLENCE_THREAT
+    action: strong_warn
+    note: >-
+      Credible threats of violence, doxxing, and incitement are
+      tightened in school contexts given the risk of school violence.
+  - category: 8    # MALWARE_LINK
+    action: warn
+    note: >-
+      Malware and phishing links are warned in school contexts where
+      students may be less security-aware.
+  - category: 13   # MISINFORMATION_HEALTH
+    action: warn
+    note: >-
+      Health misinformation is warned in school contexts to protect
+      minors from harmful medical claims.
+  - category: 14   # MISINFORMATION_CIVIC
+    action: warn
+    note: >-
+      Civic and election misinformation is warned in school contexts
+      to support civic education integrity.
+
+group_risk_counters:
+  - counter_id: group_violence_threats_7d
+    method: device_local_expiring_counter
+    window: 7d
+    thresholds:
+      label_at:        1
+      escalate_at:     3

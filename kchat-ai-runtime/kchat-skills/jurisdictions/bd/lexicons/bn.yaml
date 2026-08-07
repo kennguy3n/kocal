@@ -1,0 +1,21 @@
+# Bengali-language lexicon bundle for the kchat.jurisdiction.bd.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: bd_bn_lexicon_v1
+language: bn
+locale: bn-BD
+provenance: kchat_trust_and_safety_bd_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+terms:
+  - term_id: bd_bn_term_children_act_2013_bn_v1
+    categories: [1]
+    notes: Children Act 2013 indicators (Bengali catalogue).
+  - term_id: bd_bn_term_ata_2009_bn_v1
+    categories: [4]
+    notes: ATA 2009 anti-terrorism indicators.

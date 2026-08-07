@@ -1,0 +1,72 @@
+# Community Overlay — kchat.community.dating.guardrail.v1
+#
+# Dating / matchmaking overlay (adult-only). Loosens adult-content
+# labels but tightens scam (catfishing) and harassment handling.
+
+skill_id: kchat.community.dating.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: dating
+  age_mode: adult_only
+  visibility: members_only_summary
+  set_by: group_admin
+
+rules:
+  - category: 10  # SEXUAL_ADULT
+    action: label_only
+    note: >-
+      Adult sexual content surfaces a label only — explicitly
+      adult-only audience.
+  - category: 7   # SCAM_FRAUD
+    action: strong_warn
+    note: >-
+      Romance / catfishing / advance-fee scams tightened to a hard
+      modal warning.
+  - category: 5   # HARASSMENT
+    action: strong_warn
+    suggest_mute: true
+    note: >-
+      Targeted harassment after a rejection tightened above the
+      baseline warn before display.
+
+slm_prompt_suffix: >-
+  Dating community: apply extra scrutiny to romance-scam patterns
+  including catfishing, love-bombing followed by financial requests,
+  military-deployment money requests, and sob-story advance-fee
+  demands. Treat requests for gift cards, wire transfers, or crypto
+  from new connections as elevated scam risk. Watch for profile
+  photos that don't match claimed identity and requests to move
+  off-platform quickly.
+
+scam_phrase_additions:
+  - key: en_dating_scam
+    language: en
+    entries:
+      - phrase: deployed soldier needs money
+        weight: 0.9
+      - phrase: stuck at customs fee
+        weight: 0.85
+      - phrase: send iTunes gift card
+        weight: 0.85
+      - phrase: love bombing financial request
+        weight: 0.8
+      - phrase: move to WhatsApp immediately
+        weight: 0.7
+      - phrase: oil rig worker emergency
+        weight: 0.85
+      - phrase: inherited gold needs shipping fee
+        weight: 0.9
+      - phrase: video camera broken send money
+        weight: 0.8
+
+group_risk_counters:
+  - counter_id: group_scam_links_24h
+    method: device_local_expiring_counter
+    window: 24h
+    thresholds:
+      label_at: 3
+      strong_label_at: 6
+      escalate_at: 10

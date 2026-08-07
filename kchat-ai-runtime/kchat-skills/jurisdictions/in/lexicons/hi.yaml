@@ -1,0 +1,26 @@
+# Hindi lexicon bundle for the kchat.jurisdiction.in.guardrail.v1
+# overlay.
+
+schema_version: 1
+lexicon_id: in_hi_lexicon_v1
+language: hi
+locale: hi-IN
+provenance: kchat_trust_and_safety_in_v1
+categories:
+  - 4   # EXTREMISM
+  - 6   # HATE
+  - 10  # SEXUAL_ADULT
+
+terms:
+  - term_id: in_hi_term_uapa_recruitment_v1
+    categories: [4]
+    notes: UAPA-listed extremist org recruitment indicator phrases.
+  - term_id: in_hi_term_ipc_153a_v1
+    categories: [6]
+    notes: IPC §153A protected-class enmity indicator phrases.
+  - term_id: in_hi_term_ipc_295a_v1
+    categories: [6]
+    notes: IPC §295A religious-sentiments indicator phrases.
+  - term_id: in_hi_term_it_act_67_v1
+    categories: [10]
+    notes: IT Act §67 obscene-material indicator phrases.

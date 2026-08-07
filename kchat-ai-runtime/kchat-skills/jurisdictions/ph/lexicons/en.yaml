@@ -1,0 +1,21 @@
+# English-language lexicon bundle for the kchat.jurisdiction.ph.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: ph_en_lexicon_v1
+language: en
+locale: en-PH
+provenance: kchat_trust_and_safety_ph_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+terms:
+  - term_id: ph_en_term_ra_7610_child_ph_v1
+    categories: [1]
+    notes: RA 7610 child-protection indicators.
+  - term_id: ph_en_term_ra_11479_terrorism_ph_v1
+    categories: [4]
+    notes: RA 11479 anti-terrorism indicators.

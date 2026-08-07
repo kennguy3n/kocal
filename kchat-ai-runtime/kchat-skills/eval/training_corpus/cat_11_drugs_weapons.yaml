@@ -1,0 +1,137 @@
+# Training corpus subset — category 11 (drugs_weapons).
+# Loaded by build-tools/compiler/training_data.py at module
+# import time and concatenated with the other cat_*.yaml files
+# to form ``TRAINING_EXAMPLES``.
+#
+# See compiler/training_data.py for the loader, the SAFE-class
+# over-sampling rationale, and the per-category coverage
+# constraints (multilingual paraphrases, adversarial variants,
+# near-boundary cases).
+category_id: 11
+category_name: drugs_weapons
+examples:
+- selling illegal narcotics, please dm for prices
+- offering unregistered firearms for sale, no questions asked
+- trading prescription drugs without a prescription
+- buying ammunition without a license
+- selling cocaine and methamphetamine in this group
+- looking to buy illegal weapons for self defense
+- dealer offering hard drugs to anonymous buyers
+- trafficking heroin and fentanyl across borders
+- homemade firearm assembly instructions for sale
+- vendor listing meth for sale in a marketplace channel
+- offering a kilo of cocaine for wholesale buyers only
+- 3d-printed firearm files traded for crypto
+- conversion kit for converting a semi-auto to full-auto
+- selling stolen pistols out of the trunk after a sale
+- offering controlled-substance pills by the strip in dm
+- vendor offering bulk discount on a controlled stimulant
+- wholesale trade in unregistered rifles between private parties
+- dm-only catalogue of opioids and benzos for resale
+- offering a build kit for an unserialised handgun
+- trade thread for restricted ammunition without licence checks
+- vendo armas de fuego sin licencia
+- ich verkaufe nicht registrierte schusswaffen, keine fragen
+- بيع أسلحة غير مرخصة بدون أسئلة
+- 無許可の銃器を販売、質問なし
+- আমি নিবন্ধনহীন আগ্নেয়াস্ত্র বিক্রি করছি
+- bán súng không đăng ký, không hỏi nguồn gốc
+- मैं अनरजिस्टर्ड हथियार बेच रहा हूँ, कोई सवाल नहीं
+- vendo armas sem registro, qualquer comprador
+- 私は登録されていない銃を販売します
+- '''got that white if you need it tonight, hit me up'''
+- '''fire sale on hardware, no paper'''
+- '''pharma without scripts, dm only'''
+- '''building a personal device, looking for unserialised parts'''
+- '''green and party stuff, prices in dm'''
+- ambiguous offer to 'help with prescriptions you can't get'
+- offer of a 'spare pistol' with vague licensing claims
+- post that toggles between 'just a collector' and pricing terms
+- '''know a guy'' broker offer that crosses into drugs/weapons sale'
+- vendor catalogue offering controlled stimulants by the gram in dm
+- trade thread for unserialised firearm receivers with shipping included
+- looking to buy a kilo of cocaine, leave price in dm
+- offering 50 oxycodone tablets without prescription, cash only
+- selling 3d-printed glock frames to anyone with a credit card
+- trafficking heroin across state lines, looking for couriers
+- selling kits to convert semi-auto rifles to full-auto
+- offering meth in bulk to wholesale buyers only
+- selling ar-15 lower receivers without serial numbers via private courier
+- dm-only listing of mdma at festival-time bulk prices
+- offer to forward-purchase unregistered handguns through a straw buyer
+- vendor offering benzos by the strip without any script
+- vendo armas de fogo sem registro, somente dinheiro
+- vendo armi non registrate, solo contanti
+- продаю незарегистрированное огнестрельное оружие, только наличные
+- 出售无证枪支,只收现金
+- je vends des armes non enregistrées, espèces uniquement
+- '''spicy mints'' available in dm, you know what to ask for'
+- '''hardware special'' running this week, no serial, no questions'
+- '''pharma assist'' messages disguised as a wellness service'
+- '''glass merchant'' selling meth via coded marketplace listings'
+- ambiguous private-sale offer of a firearm that drops licensing requirements
+# --- WS1a expansion: focus-region multilingual + adversarial paraphrases. ---
+- request for instructions on synthesising fentanyl from precursors
+- detailed guide on converting a semi-automatic rifle to fully automatic
+- step-by-step guide for assembling an untraceable ghost gun
+- instructions on extracting morphine from poppies for unregulated sale
+- guide for converting an air rifle into a lethal firearm
+- detailed instructions on synthesising methamphetamine from common chemicals
+- 3d-print files for an undetectable handgun shared in a chat
+- 'sale post: bulk quantity of black-market handguns available'
+- guide for making a chemical weapon from household ingredients
+- 'darknet listing: untraceable narcotics with shipping instructions'
+- solicitud de instrucciones para sintetizar metanfetamina
+- guía paso a paso para fabricar un arma de fuego no rastreable
+- envío de instrucciones para convertir un rifle semiautomático en automático
+- anleitung zur synthese von methamphetamin aus haushaltschemikalien
+- bauplan für eine unauffindbare schusswaffe per 3d-druck
+- إرشادات لتصنيع المخدرات من مواد كيميائية شائعة
+- دليل لتحويل بندقية شبه آلية إلى أوتوماتيكية
+- 自宅で覚せい剤を合成する手順
+- 半自動小銃を全自動に改造する方法
+- ঘরে মেথামফেটামিন সংশ্লেষণের নির্দেশিকা
+- আধা-স্বয়ংক্রিয় বন্দুক স্বয়ংক্রিয় বানানোর নির্দেশনা
+- घर पर मेथेम्फेटामाइन बनाने का तरीका
+- अर्ध-स्वचालित बंदूक को पूर्ण स्वचालित में बदलने का तरीका
+- 在家中合成甲基苯丙胺的指南
+- 将半自动步枪改装为全自动的步骤
+- panduan menyintesis dadah daripada bahan kimia rumah
+- arahan menukar senapang separuh automatik kepada automatik penuh
+- வீட்டில் மெத்தாம்பேட்டமைன் தயாரிக்கும் வழிமுறை
+- அரை தானியங்கி துப்பாக்கியை முழு தானியங்கியாக மாற்றுவதற்கான வழிமுறைகள்
+- guide pour synthétiser de la méthamphétamine à partir de produits ménagers
+- instructions pour convertir un fusil semi-automatique en automatique
+- guida per sintetizzare metamfetamina da prodotti domestici
+- istruzioni per convertire un fucile semi-automatico in automatico
+- instrucziuns per converter ina fusilla semi-automatica en automatica
+- guia para sintetizar metanfetamina em casa
+- instruct1ons f0r 3d-print1ng an untrac3able gh0st gun
+- gu1de to extr4cting f3ntanyl pr3cursors fr0m c0mmon chemic4ls
+- pr0duction guide for c0nverting ar-15 to f1ll auto wi5h a sw1tch
+- 'near-extremism boundary: weapons-trafficking forum recruiting members for a militant group'
+- 'near-scam boundary: counterfeit narcotics being sold on a fake online pharmacy'
+- 'borderline: tutorial on legally building a single-shot black-powder firearm'
+- 'borderline: discussing prescription drug doses for off-label use'
+- detailed synthesis route for a schedule-i hallucinogen
+- guide on extracting cocaine alkaloid from coca leaves for sale
+- listing for sale of converted full-auto switches mailed to buyers
+- instructions on building a silencer for an unregistered firearm
+- guide for producing crystal meth in a residential garage
+- detailed recipe for making mdma from precursor chemicals
+- diy guide for sawn-off shotgun conversion for concealment
+- guide on importing untraceable firearms via parcel post
+- detailed instructions on building a pressure-cooker bomb
+- guide on synthesising gbl as a date-rape substance
+- listing for sale of black-market hand grenades and explosives
+- detailed instructions for cooking heroin at scale
+- recipe for synthesising carfentanil at residential scale
+- guide on building a 9mm submachine gun in a home workshop
+- detailed extraction of dmt from natural sources for unregulated sale
+- instructions for converting a glock with an auto-sear switch
+- recipe for synthesising mescaline from cactus precursors
+- bulk-order listing for unregistered ar-pattern lower receivers
+- guide for synthesising amphetamine from over-the-counter precursors
+- listing for sale of chemical warfare precursors shipped via mail
+- "report: a member is openly offering controlled-substance pills to the group and posting prices"
+- "observed: an account keeps advertising unregistered handguns for sale to anyone who messages"

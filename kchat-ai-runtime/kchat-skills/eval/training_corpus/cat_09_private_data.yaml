@@ -1,0 +1,136 @@
+# Training corpus subset — category 9 (private_data).
+# Loaded by build-tools/compiler/training_data.py at module
+# import time and concatenated with the other cat_*.yaml files
+# to form ``TRAINING_EXAMPLES``.
+#
+# See compiler/training_data.py for the loader, the SAFE-class
+# over-sampling rationale, and the per-category coverage
+# constraints (multilingual paraphrases, adversarial variants,
+# near-boundary cases).
+category_id: 9
+category_name: private_data
+examples:
+- disclosure of email address and home phone number in a public chat
+- personally identifying information shared without consent
+- credit card number and expiry date posted in plaintext
+- government id number leaked in a group conversation
+- account credentials including password shared with a third party
+- social security number disclosure to an unknown contact
+- home address and phone number posted publicly
+- medical record information shared without authorisation
+- bank account details posted in a public marketplace channel
+- passport scan attached to a public chat thread
+- driver licence photo accidentally posted in a public channel
+- api key and database password pasted in a public help channel
+- a colleague's salary disclosed without their knowledge
+- a customer's full name + dob shared in a non-secure room
+- home address of a private citizen revealed in a heated thread
+- an ex's new phone number posted in a public chat
+- a child's school name and pickup time posted to a public forum
+- a co-worker's medical diagnosis shared without consent
+- disclosure of a private chat log between two other people
+- financial account balance and statement screenshot shared publicly
+- compartió su número de tarjeta de crédito en el chat
+- eine kreditkartennummer wurde im chat gepostet
+- تم نشر رقم بطاقة الائتمان في محادثة عامة
+- クレジットカード番号がチャットに投稿された
+- একটি ক্রেডিট কার্ড নম্বর প্রকাশ্যে শেয়ার করা হয়েছে
+- số thẻ tín dụng bị tiết lộ trong cuộc trò chuyện
+- क्रेडिट कार्ड नंबर एक सार्वजनिक चैट में पोस्ट किया गया
+- um número de cartão de crédito foi exposto na conversa
+- 住所と電話番号がパブリックチャットで共有された
+- '''forget the dashes, my card is one-two-three-four ...'' (verbalised)'
+- '''just sending the full passport number in a screenshot below'''
+- '''my otp is on the way, lemme paste it here so you can see'''
+- '''reading my driver''s licence out loud for everyone'''
+- '''here''s my routing number and account number, please confirm'''
+- 'ambiguous PII share: ''my address starts with 123 X street ...'''
+- 'partial credentials shared: just username + last 4 digits of card'
+- '''i''ll send my id later'' but already sent the long-form number'
+- photo of a return address label posted in a public group
+- disclosure of full credit card number with cvv in a public help thread
+- posting a customer's full passport scan in a general work channel
+- api token and database url leaked into a public bug-report thread
+- dm with full bank account + routing + ssn pasted to a stranger
+- posting a colleague's home address + phone in a hostile group chat
+- sharing a patient's mri report in a non-clinical channel
+- posting a child's school + pickup time in a public neighbourhood group
+- disclosing a coworker's salary and home address in a public thread
+- posting a friend's mental-health diagnosis without their consent
+- dropping a full set of ssh private keys into a public help channel
+- posting a private chat log of two other people to embarrass them
+- revealing a former partner's new address to a hostile thread
+- vazamento de número de cartão e código de segurança em uma conversa pública
+- fuga di numero di carta e cvv in una conversazione pubblica
+- утечка номера карты и cvv в общедоступном чате
+- 信用卡号和安全码被泄露到公开聊天中
+- fuite d'un numéro de carte et du cvv dans un canal public
+- '''card number: four one one one - one one one one - ...'' verbalised in a voice note'
+- photo of a credit card with the cvv partially blurred but readable
+- posting a screenshot of an unredacted government id 'for verification'
+- dropping a full call-log with phone numbers into a public help thread
+- ambiguous 'partial credentials' share that still includes recoverable secrets
+# --- WS1a expansion: focus-region multilingual + adversarial paraphrases. ---
+- request asking another user to share their full social security number
+- 'doxing: posting the home address and workplace of a specific person without consent'
+- sharing the unredacted national-id of a person in a public group
+- request for someone's medical records to be sent over plaintext chat
+- posting a private phone number of a journalist in a forum demanding harassment
+- coordinated effort to collect the daily routine of a target person for stalking
+- 'sharing leaked passport scans in a group chat'
+- 'posting screenshots of someone''s bank statements without consent'
+- 'sharing private dms of a minor with personal identifying details in a public forum'
+- requesting a stranger's home address under pretext of sending a gift
+- alguien pide el número de seguro social completo de otro usuario
+- publicar la dirección de casa y el lugar de trabajo de una persona sin permiso
+- compartir un escaneo del pasaporte de alguien sin su consentimiento
+- jemand fordert die vollständige sozialversicherungsnummer einer person
+- veröffentlichung der wohnadresse einer person ohne deren zustimmung
+- شخص يطلب رقم البطاقة الوطنية الكامل لمستخدم آخر
+- نشر العنوان المنزلي لشخص دون موافقته
+- 個人の社会保障番号を要求するメッセージ
+- 住所と勤務先を許可なく公開する行為
+- কারো পূর্ণ জাতীয় পরিচয়পত্র নম্বর জনসমক্ষে শেয়ার করা
+- অনুমতি ছাড়া কারো বাড়ির ঠিকানা প্রকাশ
+- किसी का पूरा आधार नंबर साझा करने का अनुरोध
+- बिना अनुमति किसी का घर का पता प्रकाशित करना
+- 公开他人完整身份证号码的请求
+- 未经许可发布个人住址和工作地点
+- permintaan untuk berkongsi nombor kad pengenalan penuh seseorang
+- penerbitan alamat rumah seseorang tanpa kebenaran
+- ஒருவரின் முழு ஆதார் எண்ணைப் பகிர வேண்டுமென கோரிக்கை
+- அனுமதியின்றி ஒருவரின் வீட்டு முகவரியை வெளியிடுவது
+- demande de partager le numéro de sécurité sociale complet de quelqu'un
+- publication de l'adresse personnelle d'une personne sans son consentement
+- richiesta di condividere il codice fiscale completo di un'altra persona
+- pubblicazione dell'indirizzo di casa di qualcuno senza il suo consenso
+- dumonda da partir il numer da segirezza social cumplet d'in'autra persuna
+- pedido para partilhar o número de identidade completo de outra pessoa
+- d0xing thr3at including a v1ctim's hom3 addr3ss and emp10yer
+- p0st1ng leak3d c0pies of s0meone's p4ssport scans
+- sh4ring v1ctim's b4nk stat3ments wi5h ph0to ident1fication
+- 'near-harassment boundary: doxing a public figure to incite mob harassment'
+- 'near-scam boundary: collecting personal data via a fake hr survey'
+- 'borderline: posting someone''s linkedin url alongside derogatory commentary'
+- 'borderline: tagging a user with their employer in a critical post about them'
+- 'leak: dumping a database of customer emails and addresses publicly'
+- 'pii harvest: phishing form requesting full date of birth and ssn'
+- request to share another user's geolocation history with a stalker
+- posting medical-history details of a coworker in a public group
+- sharing intimate images of a former partner without consent
+- coordinated effort to dox a domestic-violence survivor
+- request for the daily school schedule of a named teenager
+- sharing copies of utility bills that reveal someone's home address
+- compiling and distributing a list of activists with their home addresses
+- request to share salary slips of a coworker in a public chat
+- posting fertility-clinic records of a coworker in a group chat
+- sharing biometric data of citizens scraped from a government portal
+- crowd-sourced effort to identify a private citizen from a viral video
+- distributing screenshots of someone's private therapy session
+- requesting copy of someone's birth certificate without authorization
+- swatting attempt that requires the target's home address to be leaked
+- posting tax-return documents of a private citizen in a public group
+- sharing screenshots from a child's school portal with personal info
+- requesting full bank account numbers in a chat under a pretext
+- posting medical-diagnostic results of a colleague to embarrass them
+- sharing visa application documents of an applicant publicly

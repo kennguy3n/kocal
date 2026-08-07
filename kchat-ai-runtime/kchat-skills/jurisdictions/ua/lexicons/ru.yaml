@@ -1,0 +1,21 @@
+# RU (Ukraine) lexicon bundle for the kchat.jurisdiction.ua.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: ua_ru_lexicon_v1
+language: ru
+locale: ru-UA
+provenance: kchat_trust_and_safety_ua_v1
+categories:
+  - 1
+  - 4
+terms:
+  - term_id: ua_ru_term_child_protection_v1
+    categories: [1]
+    notes: Russian-language child-protection indicators in UA locale.
+  - term_id: ua_ru_term_anti_terror_v1
+    categories: [4]
+    notes: Russian-language anti-terror indicators in UA locale.

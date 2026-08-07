@@ -1,0 +1,67 @@
+# Community Overlay — kchat.community.gaming.guardrail.v1
+#
+# Large public gaming community overlay. Mixed-age default. Warns on
+# harassment, hard-warns on adult sexual content, and tracks violence
+# threats via a local expiring counter.
+
+skill_id: kchat.community.gaming.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: gaming
+  age_mode: mixed_age
+  visibility: public_summary
+  set_by: group_admin
+
+rules:
+  - category: 5    # HARASSMENT
+    action: warn
+    suggest_mute: true
+    note: >-
+      Targeted insults and pile-on warn before display and offer a
+      peer-mute.
+  - category: 10   # SEXUAL_ADULT
+    action: strong_warn
+    note: >-
+      Adult sexual content surfaces a hard modal warning in mixed-age
+      gaming channels.
+
+slm_prompt_suffix: >-
+  Gaming community: apply extra scrutiny to in-game item scams,
+  account-takeover phishing, fake game currency sellers, skin
+  giveaway scams, and tournament-prize advance-fee demands. Treat
+  links to external sites offering free V-Bucks, Robux, or skins as
+  elevated scam risk. Watch for credential-harvesting login prompts
+  and fake trade URLs. Minor-present groups: apply child-safety
+  floor on all categories.
+
+scam_phrase_additions:
+  - key: en_gaming_scam
+    language: en
+    entries:
+      - phrase: free V-Bucks generator
+        weight: 0.9
+      - phrase: free Robux no survey
+        weight: 0.9
+      - phrase: free skins giveaway
+        weight: 0.85
+      - phrase: login to claim reward
+        weight: 0.8
+      - phrase: trade URL scam
+        weight: 0.85
+      - phrase: tournament prize fee
+        weight: 0.8
+      - phrase: account verification required
+        weight: 0.75
+      - phrase: game currency discount
+        weight: 0.7
+
+group_risk_counters:
+  - counter_id: group_violence_threats_7d
+    method: device_local_expiring_counter
+    window: 7d
+    thresholds:
+      label_at:        1
+      escalate_at:     3

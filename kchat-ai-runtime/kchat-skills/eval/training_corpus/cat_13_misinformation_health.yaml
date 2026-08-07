@@ -1,0 +1,160 @@
+# Training corpus subset — category 13 (misinformation_health).
+# Loaded by build-tools/compiler/training_data.py at module
+# import time and concatenated with the other cat_*.yaml files
+# to form ``TRAINING_EXAMPLES``.
+#
+# See compiler/training_data.py for the loader, the SAFE-class
+# over-sampling rationale, and the per-category coverage
+# constraints (multilingual paraphrases, adversarial variants,
+# near-boundary cases).
+category_id: 13
+category_name: misinformation_health
+examples:
+- vaccines cause autism — this is a dangerous medical falsehood
+- drinking bleach cures coronavirus, a known harmful claim
+- essential oils cure cancer, no need for chemotherapy
+- anti-vaccine conspiracy theory denying basic immunology
+- homeopathy can replace antibiotics for serious infections
+- hiv is a hoax invented by pharmaceutical companies
+- ivermectin cures every disease, doctors are hiding this
+- dangerous medical claim that sun exposure cures all skin disease
+- anti-mask conspiracy theory claiming masks cause oxygen deprivation
+- false claim that a single supplement cures alzheimer's
+- dangerous detox protocol promising to 'flush out' an illness
+- claim that 5g towers cause respiratory illnesses
+- false claim that a cancer diagnosis can be cured by fasting alone
+- anti-fluoride conspiracy claiming municipal water is poisoning kids
+- false claim that asthma inhalers are 'addictive and unnecessary'
+- dangerous instruction to give children high-dose vitamin a to 'cure measles'
+- anti-insulin conspiracy telling diabetics to skip injections
+- false claim that wifi causes brain tumours in children
+- anti-statins conspiracy telling heart patients to stop their meds
+- dangerous claim that miscarriages can be reversed with herbal teas
+- desinformación médica diciendo que las vacunas causan daños graves
+- falsche medizinische behauptung, dass impfstoffe ernsthafte schäden verursachen
+- ادعاء طبي كاذب يقول إن اللقاحات تسبب التوحد
+- ワクチンが自閉症を引き起こすという誤った医療情報
+- ভ্যাকসিন অটিজম সৃষ্টি করে এমন একটি বিপজ্জনক চিকিৎসা মিথ্যা
+- thông tin sai lệch nói rằng vắc-xin gây tự kỷ
+- एक खतरनाक चिकित्सा दावा कि वैक्सीन ऑटिज्म का कारण बनते हैं
+- desinformação médica afirmando que vacinas causam autismo
+- 漂白剤を飲むとコロナが治るという危険な主張
+- '''doctors don''t want you to know this one weird trick to cure cancer'''
+- '''mrna vaccines change your dna'' - long-debunked but still circulating'
+- '''wellness influencer'' selling a non-evidence-based diabetes ''reversal'''
+- '''natural cure'' for hiv promoted in a closed wellness group'
+- framing chemotherapy as 'poison' to discourage cancer treatment
+- ambiguous 'alternative medicine' post that crosses into harmful advice
+- scepticism about a specific vaccine that drifts into outright denialism
+- unfounded claim about a common over-the-counter drug being 'unsafe'
+- inaccurate dosage advice for an over-the-counter medication
+- '''natural cure'' for type 1 diabetes told to skip insulin'
+- post telling pregnant women to avoid prenatal vitamins because they are 'toxic'
+- dangerous diy 'home remedy' that uses turpentine to 'cleanse the gut'
+- '''doctors are paid to push vaccines that harm children'' - long debunked claim'
+- '''hospital-acquired covid is fake'' rumour discouraging hospital visits during outbreaks'
+- '''high-dose vitamin c cures cancer at home'' - dangerous misinformation'
+- '''mrna jabs cause infertility'' - widely debunked claim still circulating'
+- '''silver colloid cures all infections'' - long-debunked alt-medicine claim'
+- '''asthma inhalers are addictive, your child should suffer it out'''
+- '''do not vaccinate your baby — they need to build immunity naturally'''
+- '''cancer is just acidity, drink alkaline water to cure it'''
+- '''epilepsy can be cured by removing wifi from your house'''
+- '''a vacina é veneno, não dê ao seu filho'' desinformação médica perigosa'
+- '''i vaccini sono veleno, non darli ai vostri figli'' disinformazione medica'
+- '''вакцины — это яд, не делайте их детям'' опасная медицинская дезинформация'
+- '''疫苗是毒药,不要给孩子打'' 危险的医学虚假信息'
+- '''les vaccins sont des poisons, ne les donnez pas à vos enfants'' désinformation médicale dangereuse'
+- '''i''m not a doctor but ...'' opening that introduces fabricated medical claims'
+- '''wellness coach'' suggesting cancer patients quit chemo for a herbal protocol'
+- '''natural protocol'' that claims to cure type 1 diabetes by diet alone'
+- '''big pharma is hiding this'' framing for a discredited supplement'
+- '''just my experience'' anecdote framed as proof that a real medical treatment is ''fake'''
+# --- WS1a expansion: focus-region multilingual + adversarial paraphrases. ---
+- claim that drinking bleach cures viral infections
+- post advising parents to skip childhood vaccinations because of fabricated risks
+- claim that a herbal tea reverses stage-4 cancer in one week
+- false statement that hiv can be cured by drinking specific juices
+- post claiming a common over-the-counter drug at high doses cures covid
+- dangerous claim that vitamin megadoses replace insulin for diabetics
+- statement that ingesting hydrogen peroxide kills cancer cells safely
+- claim that drinking colloidal silver prevents any infectious disease
+- post urging pregnant women to take a herbal abortifacient with severe side effects
+- claim that fasting for 30 days cures autoimmune diseases without medical care
+- afirmación de que beber lejía cura infecciones virales
+- consejo de evitar vacunas infantiles citando riesgos inventados
+- afirmación de que un té herbal cura el cáncer terminal
+- behauptung, dass bleichmittel virale infektionen heilt
+- rat, kinderimpfungen aufgrund erfundener risiken zu meiden
+- ادعاء بأن شرب المبيض يعالج الالتهابات الفيروسية
+- نصيحة بتجنب لقاحات الأطفال بسبب مخاطر مختلقة
+- 漂白剤を飲むとウイルス感染が治るという主張
+- 架空のリスクを根拠に子どもの予防接種を避ける助言
+- ব্লিচ পান করলে ভাইরাস সংক্রমণ সারে এমন দাবি
+- বানোয়াট ঝুঁকির ভিত্তিতে শিশু টিকা এড়াতে পরামর্শ
+- दावा कि ब्लीच पीने से वायरल संक्रमण ठीक होता है
+- काल्पनिक जोखिमों का हवाला देकर बच्चों के टीके न लगाने की सलाह
+- 声称喝漂白剂能治愈病毒感染
+- 引用虚假风险建议跳过儿童疫苗接种
+- dakwaan bahawa meminum peluntur menyembuhkan jangkitan virus
+- nasihat mengelak vaksin kanak-kanak berdasarkan risiko rekaan
+- ப்ளீச் குடித்தால் வைரஸ் தொற்று குணமாகும் என்ற கூற்று
+- கற்பனை அபாயங்களைச் சுட்டி குழந்தைகள் தடுப்பூசி தவிர்க்கச் சொல்வது
+- affirmation que boire de l'eau de javel soigne les infections virales
+- conseil d'éviter les vaccins infantiles en raison de risques inventés
+- affermazione che bere candeggina cura le infezioni virali
+- consiglio di evitare i vaccini infantili basato su rischi inventati
+- afirmaziun ch'il sblanchiment risana infecziuns virosas
+- alegação de que beber alvejante cura infecções virais
+- cl4im that dr1nking ble4ch cur3s coronav1rus
+- s0-called natur4l rem3dy that st0ps in5ulin requirem3nt overn1ght
+- pr0moting ivermect1n megad0ses for covid w1thout ev1dence
+- 'near-scam boundary: pseudoscience cancer cure being marketed as a paid subscription'
+- 'near-extremism boundary: anti-vaccine propaganda recruiting followers into a movement'
+- 'borderline: outdated medical advice still being circulated as current'
+- 'borderline: unproven supplement claims that are not strictly dangerous but unsupported'
+- claim that 5g networks cause covid-19 infection
+- false claim that masks lower oxygen to dangerous levels
+- claim that the moderna mrna vaccine alters human dna
+- false claim that vaccines cause autism in children
+- claim that aluminum in vaccines causes alzheimer's
+- fabricated story that doctors are paid to misdiagnose cancer
+- claim that hydroxychloroquine megadoses cure all viral diseases
+- false claim that drinking urine prevents covid-19
+- false claim that breast cancer is caused by underwire bras
+- claim that homeopathic remedies replace all chemotherapy
+- claim that pcr tests for covid produce 100% false positives
+- false claim that vitamin c megadoses cure stage 4 cancers
+- claim that ingesting silver kills hiv in the bloodstream
+- false claim that wearing copper bracelets cures arthritis
+- claim that a specific essential oil reverses parkinson's
+- false claim that drinking turpentine cures parasites
+- claim that grapefruit seed extract kills all viruses on contact
+- false claim that pregnant women should avoid all conventional medicine
+- claim that an electromagnetic device cures cancer
+- false claim that intermittent fasting alone cures type 1 diabetes
+- "shocking: hospitals are hiding that a common kitchen spice reverses diabetes overnight, share before they remove it"
+- "warning: stop taking your prescribed pills, this herbal tea cures everything, forward to everyone you know"
+- "they don't want you to know: a glass of this homemade mixture clears any infection in a day, repost fast"
+- "cảnh báo: bác sĩ giấu bạn rằng uống loại lá này mỗi sáng sẽ chữa khỏi ung thư, chia sẻ ngay lập tức"
+# --- Stream-B expansion: direct, message-style dangerous health falsehoods
+# across languages (distinct from kchat-skills/eval/held_out_multilingual.yaml).
+- "throw away your insulin, cinnamon water cures diabetes in a week, doctors hide this"
+- "never take antibiotics again, this raw garlic paste kills any infection overnight"
+- "5g towers are what actually cause the virus, you don't need a test or a vaccine"
+- "big pharma doesn't want you to know this kitchen cure beats every prescription"
+- "forward this before they delete it, lemon and baking soda dissolves tumours fast"
+- "tira tu insulina, el agua con canela cura la diabetes, los médicos lo ocultan"
+- "las torres 5g causan el virus, no hacen falta ni pruebas ni vacunas"
+- "wirf dein insulin weg, zimtwasser heilt diabetes, die ärzte verschweigen das"
+- "jette ton insuline, l'eau à la cannelle guérit le diabète, les médecins le cachent"
+- "jogue fora a insulina, água com canela cura diabetes, os médicos escondem isso"
+- "تخلص من الإنسولين، ماء القرفة يشفي السكري، والأطباء يخفون الحقيقة"
+- "أبراج الجيل الخامس هي سبب الفيروس، لا حاجة للفحص أو اللقاح"
+- "인슐린 버려, 계피물이 당뇨를 낫게 해, 의사들이 일부러 숨기는 거야"
+- "5g 기지국이 바이러스의 진짜 원인이야, 검사도 백신도 필요 없어"
+- "इंसुलिन फेंक दो, दालचीनी का पानी मधुमेह ठीक कर देता है, डॉक्टर छुपाते हैं"
+- "5जी टावर ही असली वायरस की वजह हैं, न जाँच की ज़रूरत है न टीके की"
+- "インスリンを捨てろ、シナモン水で糖尿病は治る、医者は隠している"
+- "把胰岛素扔了，肉桂水一周就能治好糖尿病，医生都瞒着你"
+- "выброси инсулин, вода с корицей лечит диабет, врачи это скрывают"

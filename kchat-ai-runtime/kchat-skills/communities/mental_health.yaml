@@ -1,0 +1,44 @@
+# Community Overlay — kchat.community.mental_health.guardrail.v1
+#
+# Mental-health peer-support overlay (adult-only). Loosens self-harm to
+# a label so peer support can mention recovery, and tightens health
+# misinformation.
+
+skill_id: kchat.community.mental_health.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: mental_health
+  age_mode: adult_only
+  visibility: members_only_summary
+  set_by: group_admin
+
+rules:
+  - category: 2   # SELF_HARM
+    action: label_only
+    note: >-
+      Self-harm references surface a label only — peer-support
+      context, follows the health_support pattern.
+  - category: 13  # MISINFORMATION_HEALTH
+    action: warn
+    note: >-
+      Mental-health misinformation (clinical claims, medication)
+      warns before display.
+  - category: 5   # HARASSMENT
+    action: warn
+    suggest_mute: true
+    note: >-
+      Targeted harassment in mental-health contexts warns before
+      display and offers a peer-mute.
+  - category: 6   # HATE
+    action: warn
+    note: >-
+      Hate speech targeting individuals based on mental health
+      conditions is warned to protect vulnerable community members.
+  - category: 7   # SCAM_FRAUD
+    action: warn
+    note: >-
+      Scams targeting mental-health community members (fake therapy,
+      insurance fraud, medication scams) are warned.

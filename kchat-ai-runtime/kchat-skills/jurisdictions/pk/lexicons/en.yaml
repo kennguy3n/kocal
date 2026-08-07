@@ -1,0 +1,21 @@
+# English-language lexicon bundle for the kchat.jurisdiction.pk.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: pk_en_lexicon_v1
+language: en
+locale: en-PK
+provenance: kchat_trust_and_safety_pk_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+terms:
+  - term_id: pk_en_term_ppc_292_en_pk_v1
+    categories: [1]
+    notes: PPC §292 child-protection indicators.
+  - term_id: pk_en_term_ata_1997_en_v1
+    categories: [4]
+    notes: ATA 1997 anti-terrorism indicators.

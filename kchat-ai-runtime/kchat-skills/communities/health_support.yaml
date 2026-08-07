@@ -1,0 +1,55 @@
+# Community Overlay — kchat.community.health_support.guardrail.v1
+#
+# Peer-support overlay. Loosens SELF_HARM to label-only inside a
+# supportive context so that disclosures and recovery talk are not
+# blocked outright; tightens medical misinformation to warn.
+#
+# The child-safety floor (severity 5) is independent of this overlay and
+# always applies in minor_present groups.
+
+skill_id: kchat.community.health_support.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: health_support
+  age_mode: mixed_age
+  visibility: members_only_summary
+  set_by: group_admin
+
+rules:
+  - category: 2    # SELF_HARM
+    action: label_only
+    note: >-
+      Peer disclosures, recovery narratives, and supportive replies are
+      labeled rather than warned. Crisis resources still surface via the
+      baseline child-safety / SELF_HARM resource link IDs.
+  - category: 13   # MISINFORMATION_HEALTH
+    action: warn
+    note: >-
+      Health claims contradicting public-health consensus warn before
+      display in peer-support contexts; authoritative resource links
+      surface.
+  - category: 5    # HARASSMENT
+    action: warn
+    suggest_mute: true
+    note: >-
+      Targeted harassment in health-support contexts warns before
+      display and offers a peer-mute.
+  - category: 6    # HATE
+    action: warn
+    note: >-
+      Hate speech targeting individuals based on health conditions is
+      warned to protect vulnerable community members.
+  - category: 14   # MISINFORMATION_CIVIC
+    action: label_only
+    note: >-
+      Civic misinformation in health-support contexts is labeled only
+      to avoid suppressing political discussion that may reference
+      health policy.
+  - category: 7    # SCAM_FRAUD
+    action: warn
+    note: >-
+      Scams targeting health-support community members (fake cures,
+      insurance fraud, medication scams) are warned.

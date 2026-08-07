@@ -1,0 +1,21 @@
+# NB (Norway) lexicon bundle for the kchat.jurisdiction.no.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: no_nb_lexicon_v1
+language: nb
+locale: nb-NO
+provenance: kchat_trust_and_safety_no_v1
+categories:
+  - 1
+  - 4
+terms:
+  - term_id: no_nb_term_straffeloven_311_v1
+    categories: [1]
+    notes: Bokmål Straffeloven §311 indicators (catalogue-only).
+  - term_id: no_nb_term_straffeloven_131_v1
+    categories: [4]
+    notes: Bokmål Straffeloven §131 terrorism indicators (catalogue-only).

@@ -1,0 +1,165 @@
+# Training corpus subset — category 2 (self_harm).
+# Loaded by build-tools/compiler/training_data.py at module
+# import time and concatenated with the other cat_*.yaml files
+# to form ``TRAINING_EXAMPLES``.
+#
+# See compiler/training_data.py for the loader, the SAFE-class
+# over-sampling rationale, and the per-category coverage
+# constraints (multilingual paraphrases, adversarial variants,
+# near-boundary cases).
+category_id: 2
+category_name: self_harm
+examples:
+- i don't want to be here anymore, everything feels hopeless
+- i've been thinking about hurting myself again tonight
+- nothing matters and i can't see a way out of this
+- 'disclosure: i''ve been struggling with self-harm urges'
+- i feel like ending it all, i can't take another day
+- i've been cutting again, i'm not okay
+- i don't want to wake up tomorrow
+- eating disorder relapse, can't keep food down
+- i feel completely alone and i've stopped eating
+- i keep thinking about jumping off bridges, i need help
+- i wrote a goodbye letter today, in case
+- i started purging again after months of being ok
+- i counted pills last night just to see how many i have
+- i can't see the point of continuing
+- i am tired of fighting and i don't think i can keep going
+- i have been hiding cuts on my arms for weeks
+- my urges are stronger than they have been in years
+- i'm scared of what i might do tonight if i'm alone
+- nothing helps, the meds aren't working and i'm slipping
+- i feel invisible and like the world wouldn't notice if i was gone
+- estoy pensando en hacerme daño otra vez
+- 私は自分を傷つけたい、もう疲れた
+- ich denke darüber nach mir etwas anzutun, ich bin müde
+- أريد أن أنهي حياتي، لم أعد قادرًا على التحمل
+- আমি আর বাঁচতে চাই না, সব কিছু অসহ্য লাগছে
+- tôi muốn tự làm hại mình, mọi thứ quá nặng nề
+- मैं अब और जीना नहीं चाहता, सब कुछ बहुत भारी है
+- não consigo mais, quero acabar com tudo
+- もう何も意味がない、消えてしまいたい
+- kind of want to disappear tonight, you know what i mean
+- thinking about taking the long sleep again
+- i'm not going to be around much longer if this keeps up
+- the urges came back, you know which ones
+- just don't want to be here anymore, hard to explain
+- i'm in a really dark place tonight, can someone talk to me
+- i'm not safe with myself right now, please dm
+- 'disclosure: relapsed on disordered eating after six months clean'
+- i can't stop thinking about hurting myself, i need a crisis line
+- disclosure of recurring suicidal thoughts at night
+- i've been cutting since middle school and it's getting worse
+- relapsed after six months clean, the urges are overwhelming
+- i've been skipping meals on purpose to lose weight, can't stop
+- i feel like i'm a burden and everyone would be better off without me
+- i can't keep food down anymore, eating disorder is back
+- starting to plan a way out, can someone help me reach a hotline
+- i don't trust myself with the medication right now
+- i bought razor blades today, i should not have
+- i can hear the voice telling me to do it again tonight
+- i am running out of reasons to keep going
+- i want the pain to stop and i don't care how
+- eu não consigo mais, quero acabar com a minha vida
+- non posso più, voglio farla finita stanotte
+- я больше не хочу жить, всё слишком тяжело
+- 我不想活了,一切都没有意义
+- je ne veux plus vivre, c'est trop dur
+- '''unaliving myself'' tonight, can someone please come over'
+- '''kms'' for real this time, the meds aren''t working'
+- planning to 'check out' permanently, made up my mind
+- '''sewer slide'' season for me tonight, lost the will'
+- i'm so tired i don't want to wake up, please call me
+# --- WS1a expansion: focus-region multilingual + adversarial paraphrases. ---
+- user is asking for the most effective dosage of medication to overdose on
+- message describing concrete plans to die by suicide tonight
+- person says they have a method and a date and have written goodbye letters
+- repeated ideation about cutting and detailed wound descriptions
+- user says they are standing on a ledge and have decided to jump
+- crisis-level rumination about ending one's life immediately
+- user describing detailed self-injury plans and asking for guidance
+- repeated 'i can't do this anymore, tonight is the night' ideation
+- statement that the person has acquired the means to end their life
+- ideation about specific lethal methods with timeline urgency
+- người dùng đang lên kế hoạch tự tử ngay đêm nay với phương tiện cụ thể
+- alguien está describiendo planes concretos para suicidarse esta noche
+- ein nutzer beschreibt konkrete pläne, sich heute das leben zu nehmen
+- المستخدم يصف خططًا محددة لإيذاء نفسه الليلة
+- شخص قرر إنهاء حياته بطريقة محددة الليلة
+- ユーザーが今夜自殺する具体的な計画を説明しています
+- 利用者が薬の致死量を尋ねている
+- ব্যবহারকারী আজ রাতে আত্মহত্যার বিস্তারিত পরিকল্পনা বর্ণনা করছে
+- কেউ ঔষধের প্রাণঘাতী মাত্রা জিজ্ঞাসা করছে
+- उपयोगकर्ता आज रात आत्महत्या की विस्तृत योजना का वर्णन कर रहा है
+- कोई दवा की घातक खुराक के बारे में पूछ रहा है
+- 用户正在描述今晚自杀的具体计划
+- 用户询问药物的致死剂量
+- pengguna sedang merancang untuk membunuh diri malam ini dengan kaedah tertentu
+- seseorang bertanya tentang dos ubat yang membawa maut
+- பயனர் இன்றிரவு தற்கொலை செய்து கொள்ள விரிவான திட்டத்தை விவரிக்கிறார்
+- மருந்தின் கொடிய அளவை யாரோ கேட்கிறார்
+- l'utilisateur décrit des plans concrets pour mettre fin à sa vie ce soir
+- une personne demande la dose létale d'un médicament
+- l'utente sta descrivendo piani concreti per suicidarsi stanotte
+- qualcuno chiede il dosaggio letale di un farmaco
+- ina persuna scriva planisaziuns concretas per s'ammazzar questa notg
+- in utilisader dumonda davart la dosa mortala d'in medicament
+- pessoa descrevendo planos detalhados para se suicidar esta noite
+- un utilisateur canadien décrit un plan détaillé pour se suicider ce soir
+- s3lf-h4rm ideation with explicit method and timeline tonight
+- describing how to t1e a noose and asking for confirmation
+- user asking for the m1nimum d0se of insulin to k1ll themselves
+- 'borderline: user is describing relapse into cutting and asking for guidance'
+- 'borderline: user is asking how long it takes for an overdose of common painkillers'
+- 'borderline: long passive ideation post about not wanting to wake up tomorrow'
+- 'near-misinformation_health boundary: user asking for lethal dosing presented as a chemistry question'
+- 'near-violence boundary: user threatening suicide unless someone meets their demands'
+- 'near-sexual boundary: user describing self-harm linked to past abuse'
+- repeated cutting behaviour confirmed by photos sent to a group
+- user mentioning a plan to walk into traffic intentionally tonight
+- person describing a recent suicide attempt and asking how to do it 'properly' next time
+- ideation about jumping from a specific building height
+- user describing how they will use a firearm in their home tonight
+- adolescent describing detailed plans to harm themselves with bleach
+- describing precise medication mixing that would be lethal
+- يصف المستخدم خطة محددة للقفز من جسر الليلة
+- شخص يطلب وصفًا تفصيليًا لكيفية ربط حبل المشنقة
+- 利用者が今夜橋から飛び降りる計画を詳しく説明している
+- 致死量の薬の組み合わせを質問している利用者
+- ব্যবহারকারী আজ রাতে একটি সেতু থেকে লাফ দেওয়ার বিস্তারিত পরিকল্পনা বর্ণনা করছে
+- ein konkretes plan, sich heute nacht von einer brücke zu stürzen
+- användaren beskriver en detaljerad plan att hoppa från en bro ikväll
+- benutzer beschreibt aktive selbstverletzung und bittet um anleitung
+- usuario describe lesiones autoinfligidas en curso y pide consejo
+- l'utente descrive autolesionismo in corso e chiede istruzioni
+- l'utilisateur décrit une automutilation en cours et demande des conseils
+- 'cry-for-help post escalating: user has just taken a handful of pills'
+- 'imminent: user has just cut deeply and is bleeding heavily, asking what to do'
+- ideation involving a specific time tonight and a specific location near a railway
+- user says 'goodbye everyone' after detailing means and timeline
+- detailed plan to use carbon-monoxide poisoning in a closed garage tonight
+- explicit count-down message - '24 hours left' - with a stated method
+- person describing detailed plans to harm themselves using household chemicals
+- "report: someone says they have been planning to end their life and have given away their belongings"
+- "observed: a user keeps posting that everyone would be better off without them and wants it to stop"
+- "meldung: ein nutzer schreibt, dass er sich das leben nehmen möchte und seine sachen verschenkt hat"
+# --- Stream-B expansion: direct, message-style first/second-person phrasing
+# across languages (distinct from kchat-skills/eval/held_out_multilingual.yaml).
+- "ya no le veo sentido a nada, solo quiero dejar de existir esta noche"
+- "guardé las pastillas toda la semana y hoy por fin me las voy a tomar todas"
+- "ich halte das nicht mehr aus, niemand würde mich vermissen, wenn ich weg wäre"
+- "ich habe keine kraft mehr, ich will einfach für immer einschlafen"
+- "je n'en peux plus, je veux juste m'endormir et ne jamais me réveiller"
+- "non ce la faccio più, voglio solo sparire per sempre da questo mondo"
+- "não aguento mais, só queria dormir e nunca mais acordar"
+- "mình không còn thấy lý do để sống nữa, chỉ muốn biến mất mãi mãi"
+- "تعبت من كل شيء ولا أريد أن أستيقظ غدًا، أريد أن أختفي إلى الأبد"
+- "لم يعد لحياتي أي معنى، سأضع حدًا لكل هذا الألم الليلة"
+- "이제 아침에 눈 뜨는 게 너무 싫어, 그냥 영원히 사라지고 싶어"
+- "다 끝내 버리고 싶어, 어차피 아무도 날 그리워하지 않을 거야"
+- "너 같은 건 살 가치도 없어, 그냥 알아서 사라져 버려"
+- "अब जीने का कोई मतलब नहीं लगता, मैं बस हमेशा के लिए सो जाना चाहता हूँ"
+- "मैंने हफ्तों से गोलियाँ जमा की हैं, आज रात सब एक साथ खा लूँगा"
+- "もう朝起きる意味がわからない、このまま消えてしまいたい"
+- "我真的撑不下去了，只想永远睡过去，再也不要醒来"
+- "я больше не вижу смысла жить, просто хочу исчезнуть навсегда"

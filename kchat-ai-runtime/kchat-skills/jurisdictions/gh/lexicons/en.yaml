@@ -1,0 +1,21 @@
+# EN (Ghana) lexicon bundle for the kchat.jurisdiction.gh.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: gh_en_lexicon_v1
+language: en
+locale: en-GH
+provenance: kchat_trust_and_safety_gh_v1
+categories:
+  - 1
+  - 4
+terms:
+  - term_id: gh_en_term_childrens_act_v1
+    categories: [1]
+    notes: Children's Act 1998 (Act 560) indicators (catalogue-only).
+  - term_id: gh_en_term_anti_terror_v1
+    categories: [4]
+    notes: Anti-Terrorism Act 2008 (Act 762) indicators (catalogue-only).

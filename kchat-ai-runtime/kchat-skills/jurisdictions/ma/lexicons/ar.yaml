@@ -1,0 +1,21 @@
+# AR (Morocco) lexicon bundle for the kchat.jurisdiction.ma.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: ma_ar_lexicon_v1
+language: ar
+locale: ar-MA
+provenance: kchat_trust_and_safety_ma_v1
+categories:
+  - 1
+  - 4
+terms:
+  - term_id: ma_ar_term_child_protection_v1
+    categories: [1]
+    notes: Code Pénal Art. 503 indicators (catalogue-only).
+  - term_id: ma_ar_term_loi_03_03_v1
+    categories: [4]
+    notes: Loi 03-03 anti-terror indicators (catalogue-only).

@@ -1,0 +1,485 @@
+{
+  "n_cases": 44,
+  "n_passed": 35,
+  "n_failed": 9,
+  "per_language": {
+    "ru": {
+      "n": 3,
+      "passed": 1,
+      "failed": 2
+    },
+    "el": {
+      "n": 3,
+      "passed": 1,
+      "failed": 2
+    },
+    "vi": {
+      "n": 6,
+      "passed": 4,
+      "failed": 2
+    },
+    "hi": {
+      "n": 2,
+      "passed": 1,
+      "failed": 1
+    },
+    "ar": {
+      "n": 5,
+      "passed": 3,
+      "failed": 2
+    },
+    "en": {
+      "n": 16,
+      "passed": 16,
+      "failed": 0
+    },
+    "es": {
+      "n": 4,
+      "passed": 4,
+      "failed": 0
+    },
+    "de": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "ja": {
+      "n": 2,
+      "passed": 2,
+      "failed": 0
+    },
+    "bn": {
+      "n": 2,
+      "passed": 2,
+      "failed": 0
+    }
+  },
+  "per_tag": {
+    "adversarial": {
+      "n": 38,
+      "passed": 29,
+      "failed": 9
+    },
+    "code_switch": {
+      "n": 17,
+      "passed": 8,
+      "failed": 9
+    },
+    "transliteration": {
+      "n": 9,
+      "passed": 0,
+      "failed": 9
+    },
+    "cyrillic": {
+      "n": 3,
+      "passed": 1,
+      "failed": 2
+    },
+    "ru": {
+      "n": 3,
+      "passed": 1,
+      "failed": 2
+    },
+    "greek": {
+      "n": 3,
+      "passed": 1,
+      "failed": 2
+    },
+    "el": {
+      "n": 3,
+      "passed": 1,
+      "failed": 2
+    },
+    "vietnamese": {
+      "n": 4,
+      "passed": 2,
+      "failed": 2
+    },
+    "vi": {
+      "n": 6,
+      "passed": 4,
+      "failed": 2
+    },
+    "devanagari": {
+      "n": 2,
+      "passed": 1,
+      "failed": 1
+    },
+    "hi": {
+      "n": 2,
+      "passed": 1,
+      "failed": 1
+    },
+    "arabizi": {
+      "n": 3,
+      "passed": 1,
+      "failed": 2
+    },
+    "ar": {
+      "n": 5,
+      "passed": 3,
+      "failed": 2
+    },
+    "benign_false_positive": {
+      "n": 6,
+      "passed": 6,
+      "failed": 0
+    },
+    "minority_language": {
+      "n": 9,
+      "passed": 9,
+      "failed": 0
+    },
+    "leetspeak": {
+      "n": 3,
+      "passed": 3,
+      "failed": 0
+    },
+    "threat": {
+      "n": 8,
+      "passed": 8,
+      "failed": 0
+    },
+    "en": {
+      "n": 18,
+      "passed": 18,
+      "failed": 0
+    },
+    "self_harm_directed_at_other": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "es": {
+      "n": 4,
+      "passed": 4,
+      "failed": 0
+    },
+    "homoglyph": {
+      "n": 4,
+      "passed": 4,
+      "failed": 0
+    },
+    "hate": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "scam": {
+      "n": 6,
+      "passed": 6,
+      "failed": 0
+    },
+    "zero_width": {
+      "n": 2,
+      "passed": 2,
+      "failed": 0
+    },
+    "pii": {
+      "n": 4,
+      "passed": 4,
+      "failed": 0
+    },
+    "euphemism": {
+      "n": 3,
+      "passed": 3,
+      "failed": 0
+    },
+    "child_safety": {
+      "n": 4,
+      "passed": 4,
+      "failed": 0
+    },
+    "illegal_goods": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "de": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "ja": {
+      "n": 2,
+      "passed": 2,
+      "failed": 0
+    },
+    "romance": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "crypto": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "qr": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "lookalike_domain": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "bn": {
+      "n": 2,
+      "passed": 2,
+      "failed": 0
+    },
+    "self_harm": {
+      "n": 2,
+      "passed": 2,
+      "failed": 0
+    },
+    "url_risk": {
+      "n": 2,
+      "passed": 2,
+      "failed": 0
+    },
+    "shortener": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    }
+  },
+  "child_safety_recall": 1.0,
+  "privacy_leak_precision": 1.0,
+  "protected_speech_false_positive": 0.0,
+  "minority_language_false_positive": 0.0,
+  "expected_calibration_error": 0.21000000000000002,
+  "failures": [
+    {
+      "case_id": "cs_translit_threat_ru_001",
+      "language": "ru",
+      "tags": [
+        "adversarial",
+        "code_switch",
+        "transliteration",
+        "cyrillic",
+        "ru"
+      ],
+      "expected": {
+        "severity_at_least": 3,
+        "reason_codes_must_include": [
+          "LEXICON_HIT"
+        ]
+      },
+      "actual": {
+        "category": 0,
+        "severity": 0,
+        "confidence": 0.05,
+        "reason_codes": [],
+        "rationale_id": "safe_benign_v1"
+      },
+      "notes": "severity=0 >= 3; reason_codes missing ['LEXICON_HIT']"
+    },
+    {
+      "case_id": "cs_translit_threat_ru_002",
+      "language": "ru",
+      "tags": [
+        "adversarial",
+        "code_switch",
+        "transliteration",
+        "cyrillic",
+        "ru"
+      ],
+      "expected": {
+        "severity_at_least": 3,
+        "reason_codes_must_include": [
+          "LEXICON_HIT"
+        ]
+      },
+      "actual": {
+        "category": 0,
+        "severity": 0,
+        "confidence": 0.05,
+        "reason_codes": [],
+        "rationale_id": "safe_benign_v1"
+      },
+      "notes": "severity=0 >= 3; reason_codes missing ['LEXICON_HIT']"
+    },
+    {
+      "case_id": "cs_translit_threat_el_001",
+      "language": "el",
+      "tags": [
+        "adversarial",
+        "code_switch",
+        "transliteration",
+        "greek",
+        "el"
+      ],
+      "expected": {
+        "severity_at_least": 3,
+        "reason_codes_must_include": [
+          "LEXICON_HIT"
+        ]
+      },
+      "actual": {
+        "category": 0,
+        "severity": 0,
+        "confidence": 0.05,
+        "reason_codes": [],
+        "rationale_id": "safe_benign_v1"
+      },
+      "notes": "severity=0 >= 3; reason_codes missing ['LEXICON_HIT']"
+    },
+    {
+      "case_id": "cs_translit_threat_el_002",
+      "language": "el",
+      "tags": [
+        "adversarial",
+        "code_switch",
+        "transliteration",
+        "greek",
+        "el"
+      ],
+      "expected": {
+        "severity_at_least": 3,
+        "reason_codes_must_include": [
+          "LEXICON_HIT"
+        ]
+      },
+      "actual": {
+        "category": 0,
+        "severity": 0,
+        "confidence": 0.05,
+        "reason_codes": [],
+        "rationale_id": "safe_benign_v1"
+      },
+      "notes": "severity=0 >= 3; reason_codes missing ['LEXICON_HIT']"
+    },
+    {
+      "case_id": "cs_translit_threat_vi_001",
+      "language": "vi",
+      "tags": [
+        "adversarial",
+        "code_switch",
+        "transliteration",
+        "vietnamese",
+        "vi"
+      ],
+      "expected": {
+        "severity_at_least": 3,
+        "reason_codes_must_include": [
+          "LEXICON_HIT"
+        ]
+      },
+      "actual": {
+        "category": 0,
+        "severity": 0,
+        "confidence": 0.05,
+        "reason_codes": [],
+        "rationale_id": "safe_benign_v1"
+      },
+      "notes": "severity=0 >= 3; reason_codes missing ['LEXICON_HIT']"
+    },
+    {
+      "case_id": "cs_translit_threat_vi_002",
+      "language": "vi",
+      "tags": [
+        "adversarial",
+        "code_switch",
+        "transliteration",
+        "vietnamese",
+        "vi"
+      ],
+      "expected": {
+        "severity_at_least": 3,
+        "reason_codes_must_include": [
+          "LEXICON_HIT"
+        ]
+      },
+      "actual": {
+        "category": 0,
+        "severity": 0,
+        "confidence": 0.05,
+        "reason_codes": [],
+        "rationale_id": "safe_benign_v1"
+      },
+      "notes": "severity=0 >= 3; reason_codes missing ['LEXICON_HIT']"
+    },
+    {
+      "case_id": "cs_translit_threat_hi_001",
+      "language": "hi",
+      "tags": [
+        "adversarial",
+        "code_switch",
+        "transliteration",
+        "devanagari",
+        "hi"
+      ],
+      "expected": {
+        "severity_at_least": 3,
+        "reason_codes_must_include": [
+          "LEXICON_HIT"
+        ]
+      },
+      "actual": {
+        "category": 0,
+        "severity": 0,
+        "confidence": 0.05,
+        "reason_codes": [],
+        "rationale_id": "safe_benign_v1"
+      },
+      "notes": "severity=0 >= 3; reason_codes missing ['LEXICON_HIT']"
+    },
+    {
+      "case_id": "cs_translit_threat_ar_001",
+      "language": "ar",
+      "tags": [
+        "adversarial",
+        "code_switch",
+        "transliteration",
+        "arabizi",
+        "ar"
+      ],
+      "expected": {
+        "severity_at_least": 3,
+        "reason_codes_must_include": [
+          "LEXICON_HIT"
+        ]
+      },
+      "actual": {
+        "category": 0,
+        "severity": 0,
+        "confidence": 0.05,
+        "reason_codes": [],
+        "rationale_id": "safe_benign_v1"
+      },
+      "notes": "severity=0 >= 3; reason_codes missing ['LEXICON_HIT']"
+    },
+    {
+      "case_id": "cs_translit_threat_ar_002",
+      "language": "ar",
+      "tags": [
+        "adversarial",
+        "code_switch",
+        "transliteration",
+        "arabizi",
+        "ar"
+      ],
+      "expected": {
+        "severity_at_least": 3,
+        "reason_codes_must_include": [
+          "LEXICON_HIT"
+        ]
+      },
+      "actual": {
+        "category": 0,
+        "severity": 0,
+        "confidence": 0.05,
+        "reason_codes": [],
+        "rationale_id": "safe_benign_v1"
+      },
+      "notes": "severity=0 >= 3; reason_codes missing ['LEXICON_HIT']"
+    }
+  ],
+  "gates": {
+    "passed": true,
+    "failures": []
+  }
+}

@@ -262,6 +262,102 @@ impl ModelRegistry {
             quantization: "INT8".into(),
         });
 
+        // --- Vision models (MobileCLIP-S2) ---
+
+        // Low tier: MobileCLIP-S2 INT8 for image classification
+        // 70MB, 512-dim embeddings, 17 categories
+        models.push(RegistryEntry {
+            pack_id: "mobileclip-s2-image-int8".into(),
+            version: "1.0.0".into(),
+            pack_type: "vision".into(),
+            download_url: "https://cdn.kchat.dev/models/mobileclip-s2-image-int8/1.0.0/mobileclip-s2-image-int8.onnx".into(),
+            sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
+            size_bytes: 70_000_000,
+            min_tier: MinTier::Low,
+            task_capabilities: vec!["image_classify".into(), "image_embed".into()],
+            languages: vec!["en".into()],
+            quantization: "INT8".into(),
+        });
+
+        // Medium tier: MobileCLIP-S2 FP32 for higher-accuracy image classification
+        // 137MB, same 512-dim / 17 categories
+        models.push(RegistryEntry {
+            pack_id: "mobileclip-s2-image-fp32".into(),
+            version: "1.0.0".into(),
+            pack_type: "vision".into(),
+            download_url: "https://cdn.kchat.dev/models/mobileclip-s2-image-fp32/1.0.0/mobileclip-s2-image-fp32.onnx".into(),
+            sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
+            size_bytes: 137_000_000,
+            min_tier: MinTier::Medium,
+            task_capabilities: vec!["image_classify".into(), "image_embed".into()],
+            languages: vec!["en".into()],
+            quantization: "FP32".into(),
+        });
+
+        // Medium tier: MobileCLIP-S2 INT8 for video frame classification
+        // 70MB, used with frame sampler + temporal aggregation
+        models.push(RegistryEntry {
+            pack_id: "mobileclip-s2-video-int8".into(),
+            version: "1.0.0".into(),
+            pack_type: "vision".into(),
+            download_url: "https://cdn.kchat.dev/models/mobileclip-s2-video-int8/1.0.0/mobileclip-s2-video-int8.onnx".into(),
+            sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
+            size_bytes: 70_000_000,
+            min_tier: MinTier::Medium,
+            task_capabilities: vec!["video_classify".into()],
+            languages: vec!["en".into()],
+            quantization: "INT8".into(),
+        });
+
+        // --- ASR models (Whisper) ---
+
+        // Low tier: Whisper Tiny INT8 for audio transcription
+        // 40MB, 39M params, 75+ languages
+        models.push(RegistryEntry {
+            pack_id: "whisper-tiny-int8".into(),
+            version: "1.0.0".into(),
+            pack_type: "asr".into(),
+            download_url: "https://cdn.kchat.dev/models/whisper-tiny-int8/1.0.0/whisper-tiny-int8.onnx".into(),
+            sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
+            size_bytes: 40_000_000,
+            min_tier: MinTier::Low,
+            task_capabilities: vec!["transcribe".into()],
+            languages: vec!["en".into(), "vi".into(), "zh".into(), "ja".into(), "ko".into(), "es".into(), "fr".into(), "de".into(), "ar".into(), "hi".into(), "th".into()],
+            quantization: "INT8".into(),
+        });
+
+        // Medium tier: Whisper Base INT8 for higher-accuracy transcription
+        // 90MB, 74M params
+        models.push(RegistryEntry {
+            pack_id: "whisper-base-int8".into(),
+            version: "1.0.0".into(),
+            pack_type: "asr".into(),
+            download_url: "https://cdn.kchat.dev/models/whisper-base-int8/1.0.0/whisper-base-int8.onnx".into(),
+            sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
+            size_bytes: 90_000_000,
+            min_tier: MinTier::Medium,
+            task_capabilities: vec!["transcribe".into()],
+            languages: vec!["en".into(), "vi".into(), "zh".into(), "ja".into(), "ko".into(), "es".into(), "fr".into(), "de".into(), "ar".into(), "hi".into(), "th".into()],
+            quantization: "INT8".into(),
+        });
+
+        // --- Safety encoder variant ---
+
+        // Low tier: 4-bit safety encoder for low-tier devices
+        // 15MB, INT4 quantized
+        models.push(RegistryEntry {
+            pack_id: "safety-classifier-int4".into(),
+            version: "1.0.0".into(),
+            pack_type: "safety".into(),
+            download_url: "https://cdn.kchat.dev/models/safety-classifier-int4/1.0.0/safety-classifier-int4.onnx".into(),
+            sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
+            size_bytes: 15_000_000,
+            min_tier: MinTier::Low,
+            task_capabilities: vec!["safety".into()],
+            languages: vec!["en".into(), "vi".into(), "zh".into(), "ja".into(), "ko".into(), "es".into()],
+            quantization: "INT4".into(),
+        });
+
         Self { models }
     }
 }
@@ -401,9 +497,9 @@ quantization = "INT8"
     }
 
     #[test]
-    fn test_default_registry_has_ten_entries() {
+    fn test_default_registry_has_sixteen_entries() {
         let registry = ModelRegistry::default_registry();
-        assert_eq!(registry.list().len(), 10);
+        assert_eq!(registry.list().len(), 16);
     }
 
     #[test]
@@ -420,6 +516,12 @@ quantization = "INT8"
         assert!(ids.contains(&"multilingual-e5-small-int8"));
         assert!(ids.contains(&"safety-classifier-int8"));
         assert!(ids.contains(&"cross-encoder-miniLM-int8"));
+        assert!(ids.contains(&"mobileclip-s2-image-int8"));
+        assert!(ids.contains(&"mobileclip-s2-image-fp32"));
+        assert!(ids.contains(&"mobileclip-s2-video-int8"));
+        assert!(ids.contains(&"whisper-tiny-int8"));
+        assert!(ids.contains(&"whisper-base-int8"));
+        assert!(ids.contains(&"safety-classifier-int4"));
     }
 
     #[test]
@@ -548,9 +650,21 @@ quantization = "INT8"
     #[test]
     fn test_default_registry_find_for_task_safety_on_medium() {
         let registry = ModelRegistry::default_registry();
+        // Medium tier can run both safety-classifier-int8 (medium) and safety-classifier-int4 (low)
         let results = registry.find_for_task("safety", MinTier::Medium);
+        assert_eq!(results.len(), 2);
+        let ids: Vec<&str> = results.iter().map(|e| e.pack_id.as_str()).collect();
+        assert!(ids.contains(&"safety-classifier-int8"));
+        assert!(ids.contains(&"safety-classifier-int4"));
+    }
+
+    #[test]
+    fn test_default_registry_find_for_task_safety_on_low() {
+        let registry = ModelRegistry::default_registry();
+        // Low tier can only run safety-classifier-int4
+        let results = registry.find_for_task("safety", MinTier::Low);
         assert_eq!(results.len(), 1);
-        assert_eq!(results[0].pack_id, "safety-classifier-int8");
+        assert_eq!(results[0].pack_id, "safety-classifier-int4");
     }
 
     #[test]
@@ -582,6 +696,59 @@ quantization = "INT8"
         // (Bonsai-1.7B-MLX, Bonsai-1.7B-GGUF, 0.8B-Q4, Bonsai-4B, Macaw, Bonsai-8B, Q8)
         let high = registry.find_for_task("summarize", MinTier::High);
         assert_eq!(high.len(), 7);
+    }
+
+    #[test]
+    fn test_default_registry_vision_packs_span_all_tiers() {
+        let registry = ModelRegistry::default_registry();
+        // Low tier: only mobileclip-s2-image-int8
+        let low = registry.find_for_task("image_classify", MinTier::Low);
+        assert_eq!(low.len(), 1);
+        assert_eq!(low[0].pack_id, "mobileclip-s2-image-int8");
+
+        // Medium tier: image-int8 + image-fp32
+        let medium = registry.find_for_task("image_classify", MinTier::Medium);
+        assert_eq!(medium.len(), 2);
+
+        // High tier: same 2 image models
+        let high = registry.find_for_task("image_classify", MinTier::High);
+        assert_eq!(high.len(), 2);
+    }
+
+    #[test]
+    fn test_default_registry_video_pack_is_medium_tier() {
+        let registry = ModelRegistry::default_registry();
+        let video = registry.find("mobileclip-s2-video-int8").expect("video");
+        assert_eq!(video.min_tier, MinTier::Medium);
+        assert_eq!(video.pack_type, "vision");
+        assert_eq!(video.size_bytes, 70_000_000);
+        // Low tier cannot run video
+        assert!(registry.find_for_task("video_classify", MinTier::Low).is_empty());
+        // Medium tier can
+        assert_eq!(registry.find_for_task("video_classify", MinTier::Medium).len(), 1);
+    }
+
+    #[test]
+    fn test_default_registry_asr_packs_span_all_tiers() {
+        let registry = ModelRegistry::default_registry();
+        // Low tier: only whisper-tiny-int8
+        let low = registry.find_for_task("transcribe", MinTier::Low);
+        assert_eq!(low.len(), 1);
+        assert_eq!(low[0].pack_id, "whisper-tiny-int8");
+
+        // Medium tier: both whisper-tiny + whisper-base
+        let medium = registry.find_for_task("transcribe", MinTier::Medium);
+        assert_eq!(medium.len(), 2);
+    }
+
+    #[test]
+    fn test_default_registry_safety_int4_is_low_tier() {
+        let registry = ModelRegistry::default_registry();
+        let safety = registry.find("safety-classifier-int4").expect("safety-int4");
+        assert_eq!(safety.min_tier, MinTier::Low);
+        assert_eq!(safety.pack_type, "safety");
+        assert_eq!(safety.size_bytes, 15_000_000);
+        assert_eq!(safety.quantization, "INT4");
     }
 
     #[test]

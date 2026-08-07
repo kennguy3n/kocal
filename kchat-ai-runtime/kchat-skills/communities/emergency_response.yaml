@@ -1,0 +1,69 @@
+# Community Overlay — kchat.community.emergency_response.guardrail.v1
+#
+# Emergency-response / disaster-coordination overlay (adult-only).
+# Tightens health misinformation, scam, and private-data handling
+# during incident response.
+
+skill_id: kchat.community.emergency_response.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: emergency_response
+  age_mode: adult_only
+  visibility: members_only_summary
+  set_by: group_admin
+
+rules:
+  - category: 13  # MISINFORMATION_HEALTH
+    action: strong_warn
+    note: >-
+      Disaster / pandemic health misinformation tightened to a hard
+      modal warning.
+  - category: 7   # SCAM_FRAUD
+    action: strong_warn
+    note: >-
+      Disaster-relief / charity-impersonation scams tightened to a
+      hard modal warning.
+  - category: 9   # PRIVATE_DATA
+    action: warn
+    suggest_redact: true
+    note: >-
+      Survivor / responder PII leakage suggests redaction before
+      send.
+
+slm_prompt_suffix: >-
+  Emergency-response community: apply maximum scrutiny to
+  disaster-relief charity impersonation, fake FEMA/red-cross
+  registration links, government-aid advance-fee scams, and
+  supply-price-gouging solicitations. Treat any unsolicited link
+  collecting disaster-relief registrations or donations as critical
+  scam risk. Watch for fake insurance-claim assistance and
+  contractor-fraud post-disaster patterns.
+
+scam_phrase_additions:
+  - key: en_emergency_scam
+    language: en
+    entries:
+      - phrase: FEMA registration fee
+        weight: 0.9
+      - phrase: Red Cross donation link
+        weight: 0.8
+      - phrase: disaster relief advance fee
+        weight: 0.9
+      - phrase: insurance claim assistance fee
+        weight: 0.85
+      - phrase: emergency contractor deposit
+        weight: 0.85
+      - phrase: relief fund processing fee
+        weight: 0.9
+
+group_risk_counters:
+  - counter_id: group_scam_links_24h
+    method: device_local_expiring_counter
+    window: 24h
+    thresholds:
+      label_at: 3
+      strong_label_at: 6
+      escalate_at: 10

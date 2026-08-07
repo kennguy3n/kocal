@@ -1,0 +1,26 @@
+# Community Overlay — kchat.community.pet_owners.guardrail.v1
+#
+# Pet-owners overlay. Tightens scam (fake breeders) and illegal-goods
+# (wildlife trafficking) handling.
+
+skill_id: kchat.community.pet_owners.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: pet_owners
+  age_mode: mixed_age
+  visibility: public_summary
+  set_by: group_admin
+
+rules:
+  - category: 7   # SCAM_FRAUD
+    action: warn
+    note: >-
+      Fake-breeder / pet-rescue scams warn before display.
+  - category: 12  # ILLEGAL_GOODS
+    action: strong_warn
+    note: >-
+      Wildlife trafficking / endangered-species sales tightened to a
+      hard modal warning.

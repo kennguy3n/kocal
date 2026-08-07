@@ -61,7 +61,7 @@ pub mod categories {
 /// The model should have a single output with logits for each category.
 #[cfg(feature = "onnx-runtime")]
 pub struct OnnxEncoder {
-    session: ort::session::Session,
+    session: parking_lot::Mutex<ort::session::Session>,
     tokenizer: tokenizers::Tokenizer,
     model_name: String,
     max_length: usize,
@@ -72,9 +72,11 @@ impl OnnxEncoder {
     /// Create a new ONNX encoder from a model file and tokenizer.
     pub fn new(model_path: &str, tokenizer_path: &str) -> Result<Self, EncoderError> {
         let session = ort::session::Session::builder()
-            .and_then(|b| b.with_optimization_level(ort::session::GraphOptimizationLevel::Level3))
-            .and_then(|b| b.with_intra_threads(2))
             .map_err(|e| EncoderError::InferenceFailed(format!("session builder: {e}")))?
+            .with_optimization_level(ort::session::builder::GraphOptimizationLevel::Level3)
+            .map_err(|e| EncoderError::InferenceFailed(format!("optimization level: {e}")))?
+            .with_intra_threads(2)
+            .map_err(|e| EncoderError::InferenceFailed(format!("intra threads: {e}")))?
             .commit_from_file(model_path)
             .map_err(|e| EncoderError::InferenceFailed(format!("load model: {e}")))?;
 
@@ -82,7 +84,7 @@ impl OnnxEncoder {
             .map_err(|e| EncoderError::InferenceFailed(format!("tokenizer: {e}")))?;
 
         Ok(Self {
-            session,
+            session: parking_lot::Mutex::new(session),
             tokenizer,
             model_name: "safety-classifier-int8".into(),
             max_length: 512,
@@ -105,7 +107,6 @@ impl OnnxEncoder {
 impl EncoderAdapter for OnnxEncoder {
     fn classify(&self, text: &str) -> Result<EncoderVerdict, EncoderError> {
         use ndarray::Array2;
-        use ort::session::inputs;
 
         // Truncate text to max_length tokens
         let encoding = self
@@ -121,44 +122,46 @@ impl EncoderAdapter for OnnxEncoder {
         let input_ids = &input_ids[..seq_len];
         let attention_mask = &attention_mask[..seq_len];
 
-        let input_ids_arr = Array2::from_shape_vec((1, seq_len), input_ids.to_vec())
+        let input_ids_arr = Array2::from_shape_vec((1, seq_len), input_ids.iter().map(|&v| v as i64).collect())
             .map_err(|e| EncoderError::InferenceFailed(format!("array: {e}")))?;
-        let attention_arr = Array2::from_shape_vec((1, seq_len), attention_mask.to_vec())
+        let attention_arr = Array2::from_shape_vec((1, seq_len), attention_mask.iter().map(|&v| v as i64).collect())
             .map_err(|e| EncoderError::InferenceFailed(format!("array: {e}")))?;
 
-        let inputs = inputs! {
-            "input_ids" => input_ids_arr.view(),
-            "attention_mask" => attention_arr.view(),
-        }
-        .map_err(|e| EncoderError::InferenceFailed(format!("inputs: {e}")))?;
+        let input_ids_tensor = ort::value::Tensor::from_array(input_ids_arr)
+            .map_err(|e| EncoderError::InferenceFailed(format!("input_ids tensor: {e}")))?;
+        let attention_tensor = ort::value::Tensor::from_array(attention_arr)
+            .map_err(|e| EncoderError::InferenceFailed(format!("attention tensor: {e}")))?;
 
-        let outputs = self
-            .session
+        let inputs = ort::inputs! {
+            "input_ids" => input_ids_tensor,
+            "attention_mask" => attention_tensor,
+        };
+
+        let mut session = self.session.lock();
+        let outputs = session
             .run(inputs)
             .map_err(|e| EncoderError::InferenceFailed(format!("run: {e}")))?;
 
-        // Extract logits
-        let logits = outputs
-            .get(0)
-            .ok_or_else(|| EncoderError::InferenceFailed("no output".into()))?
+        // Extract logits — ort 2.0.0-rc.10 returns (Shape, &[f32])
+        let (logits_shape, logits_data) = outputs[0]
             .try_extract_tensor::<f32>()
             .map_err(|e| EncoderError::InferenceFailed(format!("extract: {e}")))?;
 
-        let logits_view = logits.view();
-        let num_classes = logits_view.shape().last().copied().unwrap_or(0);
+        let dims: &[i64] = logits_shape;
+        let _num_classes = dims.last().copied().unwrap_or(0) as usize;
 
         // Get logits for the first (and only) sequence
-        let logits_slice: Vec<f32> = if logits_view.ndim() == 2 {
-            logits_view.row(0).to_vec()
-        } else if logits_view.ndim() == 3 {
+        let logits_slice: Vec<f32> = if dims.len() == 2 {
+            // [1, num_classes]
+            logits_data.to_vec()
+        } else if dims.len() == 3 {
             // [batch, seq, hidden] → take last token
-            logits_view
-                .slice(ndarray::s![0, seq_len - 1, ..])
-                .to_vec()
+            let hidden = dims[2] as usize;
+            let offset = (seq_len - 1) * hidden;
+            logits_data[offset..offset + hidden].to_vec()
         } else {
             return Err(EncoderError::InferenceFailed(format!(
-                "unexpected output shape: {:?}",
-                logits_view.shape()
+                "unexpected output shape: {dims:?}"
             )));
         };
 

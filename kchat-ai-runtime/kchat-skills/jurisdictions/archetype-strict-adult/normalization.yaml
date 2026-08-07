@@ -1,0 +1,18 @@
+# Normalization rules for the archetype-strict-adult jurisdiction overlay.
+#
+# Normalization runs before deterministic detectors and encoder classifier inference.
+# Every jurisdiction pack MUST include these four fields; the compiler
+# rejects packs that omit any of them. See ARCHITECTURE.md
+# "Local Language Assets".
+
+schema_version: 1
+# Unicode NFKC normalization. Required.
+nfkc: true
+# ASCII / Unicode case fold. Required.
+case_fold: true
+# Homoglyph map id. Concrete country packs replace this with a
+# language-specific map where needed; the archetype uses the core map.
+homoglyph_map_id: homoglyph_core_v1
+# Transliteration rule-sets for scripts that need romanisation.
+transliteration_refs:
+  - translit_core_v1

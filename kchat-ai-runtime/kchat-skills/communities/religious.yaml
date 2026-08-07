@@ -1,0 +1,37 @@
+# Community Overlay — kchat.community.religious.guardrail.v1
+#
+# Religious / faith group overlay. Tightens hate and harassment given
+# mixed-age congregations and protected-class sensitivity.
+
+skill_id: kchat.community.religious.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: religious
+  age_mode: mixed_age
+  visibility: public_summary
+  set_by: group_admin
+
+rules:
+  - category: 6   # HATE
+    action: strong_warn
+    note: >-
+      Hate / Volksverhetzung-equivalent speech tightened to a strong
+      warn given protected-class exposure in faith communities.
+  - category: 5   # HARASSMENT
+    action: strong_warn
+    suggest_mute: true
+    note: >-
+      Targeted harassment / pile-on tightened above the baseline warn
+      before display.
+
+group_risk_counters:
+  - counter_id: group_scam_links_24h
+    method: device_local_expiring_counter
+    window: 24h
+    thresholds:
+      label_at: 3
+      strong_label_at: 6
+      escalate_at: 10

@@ -1,0 +1,131 @@
+# Violence / threat dataset sourcing manifest
+# (kchat.guardrail.dataset_sourcing.v1)
+#
+# SCAFFOLD ONLY — this manifest documents the external benchmarks that a
+# future, credentialed bake/evaluation host would pull to harden the
+# VIOLENCE_THREAT (taxonomy id 3) capability. It deliberately ships NO
+# downloaded media, NO live download URLs, and NO credentials: every entry
+# below is research-licensed or trust-and-safety-gated behind a signed
+# access agreement that the operator must complete out-of-band. The
+# on-device SDK never ships these datasets; they are used only off-device
+# to (a) calibrate the MobileCLIP-S2 vision prototype bank and
+# (b) measure recall / precision for the held-out vision corpus.
+#
+# Privacy & licence posture
+# -------------------------
+# * Graphic violence and credible-threat imagery is harmful to collect,
+#   store, and redistribute. Sourcing is restricted to credentialed T&S
+#   research partnerships or academic institutions with appropriate
+#   ethics-committee oversight.
+# * Each benchmark is redistribution-restricted. We record only the
+#   provider, the access process, and the licence class — never a mirror.
+# * Negative (legitimate news / documentary) sources are included so the
+#   precision gate (no false positives on editorial violence reporting)
+#   can be measured, not just recall.
+# * `status: scaffold` means "documented access path, not yet ingested".
+#   An operator with credentials flips this to `ingested` in their private
+#   overlay; this checked-in file stays `scaffold`.
+#
+# This file is intentionally inert: nothing in the build imports media
+# from here. `tools/build_vision_category_prototypes.py` bakes prototypes
+# from text prompts (`vision_prototypes_source.yaml`); these corpora are
+# the *evaluation* and future *image-centroid* sourcing path.
+
+schema_id: kchat.guardrail.dataset_sourcing.v1
+schema_version: 1
+category_id: 3
+category_name: VIOLENCE_THREAT
+status: scaffold
+
+# --------------------------------------------------------------------------
+# Positive benchmarks — graphic violence / threat imagery
+# (VIOLENCE_THREAT POSITIVES).
+# --------------------------------------------------------------------------
+positive_benchmarks:
+  - id: ts_graphic_violence
+    name: Trust-and-safety graphic violence corpus
+    role: positive
+    modality: image
+    purpose: >-
+      Curated images depicting graphic violence, credible threats of
+      physical harm, and weapons-brandishing in threatening contexts.
+      Primary recall corpus for VIOLENCE_THREAT visual signals. Sourced
+      from trust-and-safety research partnerships with appropriate
+      content-handling protocols.
+    licence_class: research_ts_gated
+    redistribution: prohibited
+    credentials_required: true
+    access_process: >-
+      Establish a credentialed trust-and-safety research partnership
+      with a recognised provider (e.g. platform T&S research programme,
+      university-led violence-in-media study). The provider supplies
+      access under a signed data-sharing agreement with strict handling
+      and data-destruction requirements. No public mirror; do not commit
+      the media. Researchers must document ethics-committee or IRB
+      approval and adhere to vicarious-trauma safeguards for annotators.
+    provenance_note: >-
+      Data must originate from an IRB-approved or ethics-board-reviewed
+      study. Cite the originating programme and approval reference when
+      reporting evaluation results.
+  - id: ts_threat_signalling
+    name: Visual threat-signalling and intimidation corpus
+    role: positive
+    modality: image
+    purpose: >-
+      Imagery containing credible visual threat indicators (e.g. targeted
+      threat messages overlaid on images, menacing gestures with weapons
+      directed at identifiable targets). Harder positives that stress
+      the boundary between general violence depiction and directed threat.
+    licence_class: research_ts_gated
+    redistribution: prohibited
+    credentials_required: true
+    access_process: >-
+      Access through a trust-and-safety research partnership or law
+      enforcement research programme focused on online threat detection.
+      Provider grants access under a signed data-sharing agreement with
+      strict handling requirements. No public mirror; no redistribution
+      permitted.
+    provenance_note: >-
+      Data must be sourced under ethics-committee oversight or lawful
+      law-enforcement research mandate. Cite the originating programme
+      when reporting results.
+
+# --------------------------------------------------------------------------
+# Negative sources — legitimate news, documentary, and educational
+# violence reporting that MUST NOT be flagged as threats. These calibrate
+# the precision gate (benign_false_positive cases in held_out_vision.yaml).
+# --------------------------------------------------------------------------
+negative_sources:
+  - id: editorial_violence_reporting
+    name: Editorial news and documentary violence imagery (public, licence-clean)
+    role: negative
+    modality: image
+    purpose: >-
+      Legitimate news photography, documentary stills, and historical
+      archive imagery depicting conflict or violence in an editorial
+      context — the canonical false-positive guard for VIOLENCE_THREAT.
+    licence_class: public_or_cc
+    redistribution: per_source_licence
+    credentials_required: false
+    access_process: >-
+      Curate from licence-clean public collections (e.g. CC-licensed
+      photojournalism archives, public-domain historical imagery).
+      Exclude any image that constitutes a credible directed threat
+      or that glorifies violence outside an editorial context.
+    provenance_note: >-
+      Negatives must be clearly editorial, documentary, or educational;
+      pair each with the news/journalism context used in the held-out
+      negatives.
+
+# Operator hook: a credentialed evaluation host overrides this file in a
+# private overlay, sets per-entry `local_path` + `status: ingested`, and
+# runs tools/eval_vision_metrics.py over the encoder-required vision cases.
+# The checked-in copy remains a credential-free scaffold.
+ingestion_hook:
+  consumes: kchat-skills/eval/held_out_vision.yaml
+  partition_tag: encoder_required
+  evaluator: tools/eval_vision_metrics.py
+  note: >-
+    No automated download runs from this repo. Ingestion is an explicit,
+    out-of-band operator step gated by the signed licences and ethics
+    approvals above.

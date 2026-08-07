@@ -1,0 +1,23 @@
+# Brazilian-Portuguese lexicon bundle for the
+# kchat.jurisdiction.br.guardrail.v1 overlay.
+
+schema_version: 1
+lexicon_id: br_pt_lexicon_v1
+language: pt
+locale: pt-BR
+provenance: kchat_trust_and_safety_br_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 6   # HATE
+  - 14  # MISINFORMATION_CIVIC
+
+terms:
+  - term_id: br_pt_term_eca_csam_v1
+    categories: [1]
+    notes: ECA child-safety indicator phrases (catalogue-only).
+  - term_id: br_pt_term_lei_7716_slurs_v1
+    categories: [6]
+    notes: Lei 7.716/89 protected-class slur indicators.
+  - term_id: br_pt_term_tse_election_misinformation_v1
+    categories: [14]
+    notes: TSE-flagged civic-process misinformation patterns.

@@ -1,0 +1,36 @@
+# Community Overlay — kchat.community.travel.guardrail.v1
+#
+# Travel / nomad overlay (adult-only). Tightens scam (booking / visa
+# fraud) and private-data (passport, itinerary) handling.
+
+skill_id: kchat.community.travel.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: travel
+  age_mode: adult_only
+  visibility: members_only_summary
+  set_by: group_admin
+
+rules:
+  - category: 7   # SCAM_FRAUD
+    action: strong_warn
+    note: >-
+      Booking / visa-fraud scams tightened to a hard modal warning.
+  - category: 9   # PRIVATE_DATA
+    action: warn
+    suggest_redact: true
+    note: >-
+      Passport, itinerary, and home-address leakage suggests
+      redaction before send.
+
+group_risk_counters:
+  - counter_id: group_scam_links_24h
+    method: device_local_expiring_counter
+    window: 24h
+    thresholds:
+      label_at: 3
+      strong_label_at: 6
+      escalate_at: 10

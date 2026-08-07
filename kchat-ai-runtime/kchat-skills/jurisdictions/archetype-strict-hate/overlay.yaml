@@ -1,0 +1,130 @@
+# kchat.jurisdiction.archetype-strict-hate.guardrail.v1
+#
+# Strict hate / extremism jurisdiction archetype: severity floor 4-5
+# on categories 4 and 6, with explicit protected contexts so counter-
+# speech, news, and education remain unblocked. See ARCHITECTURE.md
+# "Skill Layering Model".
+#
+# EXTREMISM (category 4) is pinned to severity floor 5 (jurisdictional
+# ban); HATE (category 6) is pinned to severity floor 4 (strong warn).
+# The archetype explicitly preserves the four protected-speech contexts
+# so news, education, counterspeech, and quoted speech remain allowed.
+
+skill_id: kchat.jurisdiction.archetype-strict-hate.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+# ~18 months from 2026-04-29 — maximum permitted expiry.
+expires_on: "2027-10-29"
+signers: [trust_and_safety, legal_review, cultural_review]
+
+# --------------------------------------------------------------------------
+# Activation
+# --------------------------------------------------------------------------
+activation:
+  criteria:
+    - user_selected_region: archetype-strict-hate
+    - group_declared_jurisdiction: archetype-strict-hate
+    - app_store_install_region: archetype-strict-hate
+    - enterprise_managed_policy: archetype-strict-hate
+  forbidden_criteria:
+    - gps_location
+    - ip_geolocation
+    - inferred_nationality
+    - inferred_ethnicity
+    - inferred_religion
+
+# --------------------------------------------------------------------------
+# Local definitions — archetype placeholders. Concrete country packs
+# replace these with jurisdiction-specific statute references
+# (listed extremist orgs, protected-class enumeration, etc.).
+# --------------------------------------------------------------------------
+local_definitions:
+  legal_age_general: 18
+  legal_age_sexual_content_consumer: 18
+  legal_age_marketplace_alcohol: 18
+  legal_age_marketplace_tobacco: 18
+  # Placeholder set — real packs enumerate the jurisdiction's
+  # anti-discrimination protected-class ids.
+  protected_classes:
+    - race
+    - ethnicity
+    - religion
+    - national_origin
+    - sexual_orientation
+    - gender_identity
+    - disability
+  # Placeholder; real packs list concrete org ids with provenance.
+  listed_extremist_orgs:
+    - archetype_strict_hate_listed_org_v1
+  restricted_symbols:
+    - archetype_strict_hate_restricted_symbol_v1
+  election_rules:
+    civic_window_open:  "1970-01-01"
+    civic_window_close: "1970-01-01"
+    authority_resource_id: archetype_strict_hate_authority_v1
+
+# --------------------------------------------------------------------------
+# Local language assets — archetype uses English only. Concrete country
+# packs layer additional language bundles under lexicons/ and
+# normalization.yaml.
+# --------------------------------------------------------------------------
+local_language_assets:
+  primary_languages: [en]
+  lexicons:
+    - lexicon_id: archetype_strict_hate_extremism_v1
+      language: en
+      categories: [4]   # EXTREMISM
+      provenance: kchat_trust_and_safety_archetype_v1
+    - lexicon_id: archetype_strict_hate_hate_v1
+      language: en
+      categories: [6]   # HATE
+      provenance: kchat_trust_and_safety_archetype_v1
+  normalization:
+    nfkc: true
+    case_fold: true
+    homoglyph_map_id: homoglyph_core_v1
+    transliteration_refs: [translit_core_v1]
+
+# --------------------------------------------------------------------------
+# Overrides
+#   category 4 EXTREMISM -> severity floor 5 (jurisdictional ban).
+#   category 6 HATE      -> severity floor 4 (strong warn).
+# Protected speech reason codes must remain untouched; see
+# allowed_contexts below.
+# --------------------------------------------------------------------------
+overrides:
+  - category: 4   # EXTREMISM
+    severity_floor: 5
+    note: >-
+      Recruitment / glorification of listed extremist orgs is treated
+      as a jurisdictional ban (severity 5, critical_intervention).
+  - category: 6   # HATE
+    severity_floor: 4
+    note: >-
+      Dehumanising speech against a protected class is treated as a
+      strong-warn jurisdictional escalation (severity 4). Protected
+      contexts (news, education, counterspeech, quoted speech) remain
+      permitted.
+
+# --------------------------------------------------------------------------
+# Allowed contexts — explicit protected-speech carve-outs. Called out
+# in ARCHITECTURE.md for this archetype specifically.
+# --------------------------------------------------------------------------
+allowed_contexts:
+  - QUOTED_SPEECH_CONTEXT
+  - NEWS_CONTEXT
+  - EDUCATION_CONTEXT
+  - COUNTERSPEECH_CONTEXT
+
+# --------------------------------------------------------------------------
+# User notice
+# --------------------------------------------------------------------------
+user_notice:
+  visible_pack_summary: >-
+    Strict hate / extremism archetype. Recruitment for listed
+    extremist orgs is treated as a ban (severity 5); dehumanising
+    speech against a protected class produces a hard warn (severity
+    4). News, education, counterspeech, and quoted speech are
+    preserved.
+  appeal_resource_id: archetype_strict_hate_appeal_v1
+  opt_out_allowed: false

@@ -1,0 +1,21 @@
+# Zulu-language lexicon bundle for the kchat.jurisdiction.za.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: za_zu_lexicon_v1
+language: zu
+locale: zu-ZA
+provenance: kchat_trust_and_safety_za_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+terms:
+  - term_id: za_zu_term_umthetho_wezingane_zu_v1
+    categories: [1]
+    notes: Children's Act indicators (Zulu).
+  - term_id: za_zu_term_pocdatara_zu_v1
+    categories: [4]
+    notes: POCDATARA indicators (Zulu).

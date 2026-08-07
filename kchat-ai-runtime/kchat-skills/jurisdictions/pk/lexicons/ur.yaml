@@ -1,0 +1,21 @@
+# Urdu-language lexicon bundle for the kchat.jurisdiction.pk.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: pk_ur_lexicon_v1
+language: ur
+locale: ur-PK
+provenance: kchat_trust_and_safety_pk_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+terms:
+  - term_id: pk_ur_term_ppc_292_ur_v1
+    categories: [1]
+    notes: PPC §292 child-protection indicators (Urdu).
+  - term_id: pk_ur_term_ata_1997_ur_v1
+    categories: [4]
+    notes: ATA 1997 anti-terrorism indicators (Urdu).

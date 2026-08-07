@@ -1,0 +1,21 @@
+# SW (Tanzania) lexicon bundle for the kchat.jurisdiction.tz.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: tz_sw_lexicon_v1
+language: sw
+locale: sw-TZ
+provenance: kchat_trust_and_safety_tz_v1
+categories:
+  - 1
+  - 4
+terms:
+  - term_id: tz_sw_term_law_of_child_v1
+    categories: [1]
+    notes: Law of the Child Act 2009 indicators (catalogue-only).
+  - term_id: tz_sw_term_anti_terror_v1
+    categories: [4]
+    notes: Prevention of Terrorism Act 2002 indicators (catalogue-only).

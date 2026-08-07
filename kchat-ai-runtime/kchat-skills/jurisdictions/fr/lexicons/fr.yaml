@@ -1,0 +1,25 @@
+# French-language lexicon bundle for the kchat.jurisdiction.fr.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: fr_fr_lexicon_v1
+language: fr
+locale: fr-FR
+provenance: kchat_trust_and_safety_fr_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+  - 6   # HATE
+terms:
+  - term_id: fr_fr_term_code_penal_227_mineur_v1
+    categories: [1]
+    notes: Code pénal Art. 227-22/24 protection-de-l'enfant indicators.
+  - term_id: fr_fr_term_apologie_terrorisme_v1
+    categories: [4]
+    notes: Code pénal Art. 421-2-5 apologie du terrorisme indicators.
+  - term_id: fr_fr_term_loi_gayssot_haine_v1
+    categories: [6]
+    notes: Loi Gayssot / Art. 24 loi 1881 hate-speech indicators.

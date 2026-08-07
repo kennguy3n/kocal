@@ -1,0 +1,21 @@
+# EL (Greece) lexicon bundle for the kchat.jurisdiction.gr.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: gr_el_lexicon_v1
+language: el
+locale: el-GR
+provenance: kchat_trust_and_safety_gr_v1
+categories:
+  - 1
+  - 4
+terms:
+  - term_id: gr_el_term_child_protection_v1
+    categories: [1]
+    notes: Greek child-protection statute indicators (catalogue-only).
+  - term_id: gr_el_term_law_3251_v1
+    categories: [4]
+    notes: Law 3251/2004 anti-terror indicators (catalogue-only).

@@ -1,0 +1,109 @@
+# kchat.jurisdiction.bd.guardrail.v1
+#
+# Bangladesh jurisdiction overlay — country pack.
+# Layered on top of kchat.global.guardrail.baseline.
+# Concrete values below reflect the primary legal framework summarised as:
+#   Children Act 2013; Anti-Terrorism Act 2009; Digital Security Act.
+# Legal and cultural reviewers are named in ``signers``; overlays
+# inherit the privacy-contract rule against embedded harm strings,
+# so everything below is catalogue-only.
+
+skill_id: kchat.jurisdiction.bd.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+# ~18 months from 2026-04-29 — the maximum permitted by the compiler.
+expires_on: "2027-10-29"
+signers: [trust_and_safety, legal_review, cultural_review]
+
+# --------------------------------------------------------------------------
+# Activation
+# --------------------------------------------------------------------------
+activation:
+  criteria:
+    - user_selected_region: bd
+    - group_declared_jurisdiction: bd
+    - app_store_install_region: bd
+    - enterprise_managed_policy: bd
+  forbidden_criteria:
+    - gps_location
+    - ip_geolocation
+    - inferred_nationality
+    - inferred_ethnicity
+    - inferred_religion
+
+# --------------------------------------------------------------------------
+# Local definitions
+# --------------------------------------------------------------------------
+local_definitions:
+  legal_age_general: 18
+  legal_age_sexual_content_consumer: 18
+  legal_age_marketplace_alcohol: 21
+  legal_age_marketplace_tobacco: 18
+  # Protected-class enumeration from Constitution Art. 28.
+  protected_classes:
+    - religion
+    - race
+    - ethnic_origin
+    - tribe
+    - sex
+    - gender_identity
+    - age
+    - disability
+    - language
+    - place_of_birth
+    - political_opinion
+  listed_extremist_orgs:
+    - bd_listed_extremist_orgs_v1
+  restricted_symbols:
+    - bd_restricted_symbols_catalogue_v1
+  election_rules:
+    civic_window_open:  "2028-12-01"
+    civic_window_close: "2029-02-28"
+    authority_resource_id: bd_ec_authority_v1
+
+# --------------------------------------------------------------------------
+# Local language assets
+# --------------------------------------------------------------------------
+local_language_assets:
+  primary_languages: [bn]
+  lexicons:
+    - lexicon_id: bd_bn_lexicon_v1
+      language: bn
+      categories: [1, 4]
+      provenance: kchat_trust_and_safety_bd_v1
+  normalization:
+    nfkc: true
+    case_fold: true
+    homoglyph_map_id: homoglyph_core_v1
+    transliteration_refs: [translit_core_v1, translit_bengali_v1]
+
+# --------------------------------------------------------------------------
+# Overrides
+# --------------------------------------------------------------------------
+overrides:
+  - category: 1   # CHILD_SAFETY
+    severity_floor: 5
+    note: >-
+      Children Act 2013 §70 — child protection and offences against children. Protected-speech contexts (quoted speech, news, education, counterspeech) remain permitted.
+  - category: 4   # EXTREMISM
+    severity_floor: 4
+    note: >-
+      Anti-Terrorism Act 2009 as amended. Protected-speech contexts (quoted speech, news, education, counterspeech) remain permitted.
+
+# --------------------------------------------------------------------------
+# Allowed contexts — preserve all four protected-speech carve-outs.
+# --------------------------------------------------------------------------
+allowed_contexts:
+  - QUOTED_SPEECH_CONTEXT
+  - NEWS_CONTEXT
+  - EDUCATION_CONTEXT
+  - COUNTERSPEECH_CONTEXT
+
+# --------------------------------------------------------------------------
+# User notice
+# --------------------------------------------------------------------------
+user_notice:
+  visible_pack_summary: >-
+    Bangladesh safety pack. Raises floors on child protection (Children Act 2013) and anti-terrorism (ATA 2009). Protected speech remains permitted.
+  appeal_resource_id: bd_appeal_resource_v1
+  opt_out_allowed: false

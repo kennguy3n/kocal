@@ -1,0 +1,25 @@
+# English-language lexicon bundle for the kchat.jurisdiction.ca.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: ca_en_lexicon_v1
+language: en
+locale: en-CA
+provenance: kchat_trust_and_safety_ca_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+  - 7   # SCAM_FRAUD
+terms:
+  - term_id: ca_en_term_criminal_code_163_child_v1
+    categories: [1]
+    notes: Criminal Code §163.1 child-safety indicator phrases.
+  - term_id: ca_en_term_terrorism_listed_entities_v1
+    categories: [4]
+    notes: Criminal Code Part II.1 listed-entity recruitment indicators.
+  - term_id: ca_en_term_competition_act_fraud_v1
+    categories: [7]
+    notes: Competition Act §52 fraud marketplace patterns.

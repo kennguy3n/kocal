@@ -1,0 +1,83 @@
+# MobileCLIP-S2 image-exemplar manifest (hybrid prototype bake).
+#
+# Consumed by `tools/build_vision_category_prototypes.py --image-exemplars`.
+# Names, per taxonomy category, the LICENSE-CLEARED image sources whose
+# MobileCLIP-S2 *image*-tower embeddings seed that category's prototype
+# centroid. Two source kinds are pooled per category:
+#   * video clips        -> `source_video_manifest` + `image_exemplar_categories`
+#   * labelled image files -> `source_image_manifests` + `image_file_categories`
+# Every category NOT grounded by either source falls back to its text-prompt
+# centroid at bake time (recorded as such in the NPZ sidecar's
+# `provenance_per_category`).
+#
+# Why this exists
+# ---------------
+# The legacy production bank was built purely from MobileCLIP-S2 *text*-prompt
+# centroids. Text prompts and natural-image embeddings sit on slightly
+# different cones of the CLIP joint space (the "modality gap"), which on the
+# zero-shot cosine-vs-bank path collapses recall and badly over-flags benign
+# images (e.g. benign child photos read as harmful). Baking a category from
+# REAL image embeddings removes that gap for that row. Image data is only
+# license-cleared for the categories below, so this is a hybrid (image where
+# available, text elsewhere) bank.
+#
+# Sourcing + licensing
+# --------------------
+# Video clips resolve from the committed video corpus manifest
+# (`datasets/video/manifest.json`) — the license-allowlisted Wikimedia Commons
+# set the video benchmark uses. Image files resolve from the committed corpus
+# manifests listed in `source_image_manifests`:
+#   * datasets/vision_bake/manifest.json  — Open Images v5 validation photos
+#       (CC BY 2.0 images / CC BY 4.0 annotations). Held strictly DISJOINT from
+#       the 240-image eval set in datasets/vision so centroids are never baked
+#       from the photographs the benchmark scores against. Safe (incl. benign
+#       child hard-negatives) -> cat 0; weapons -> cat 11.
+#   * datasets/screenshots/manifest.json  — synthetic Pillow-rendered chat
+#       screenshots (CC0). Harassment(5), ScamFraud(7), MalwareLink(8),
+#       MisinfoHealth(13), MisinfoCivic(14).
+# All image bytes are gitignored (only the manifests are committed); stage them
+# locally with `python tools/source_video_datasets.py`,
+# `python tools/source_vision_datasets.py --out-dir datasets/vision_bake
+#   --exclude-manifest datasets/vision/manifest.json ...`, and
+# `python tools/source_screenshot_datasets.py` before baking. NEVER add
+# fabricated exemplars beyond these reproducible, license-cleared corpora.
+#
+# Expanding coverage
+# ------------------
+# To image-ground more categories, license + add sources for them (clips to the
+# video manifest, or image files to a corpus manifest listed here) and add the
+# category id to `image_exemplar_categories` and/or `image_file_categories`. No
+# code change is required — the baker picks them up automatically.
+schema: kchat.guardrail.vision_image_exemplars.v2
+encoder_model_id: apple/MobileCLIP-S2
+
+# --- Video-frame exemplars ---------------------------------------------------
+source_video_manifest: datasets/video/manifest.json
+
+# Frames sampled (uniformly) per exemplar clip. Override at the CLI with
+# --frames-per-clip.
+frames_per_clip: 4
+
+# Categories baked (partly) from video frames. Must each have >=1 downloaded
+# clip in the source video manifest. Taxonomy ids:
+#   0 = Safe, 3 = ViolenceThreat, 11 = DrugsWeapons.
+image_exemplar_categories: [0, 3, 11]
+
+# --- Image-file exemplars ----------------------------------------------------
+# Corpus manifests (repo-relative) whose `images[*].expected_category` selects
+# the image files pooled per category. Each image's `relative_path` resolves
+# against that manifest's own directory.
+source_image_manifests:
+  - datasets/vision_bake/manifest.json
+  - datasets/screenshots/manifest.json
+
+# Categories baked (partly) from labelled image files. Pooled with any video
+# frames above for the same category. Taxonomy ids:
+#   0  = Safe (Open Images photos incl. benign child hard-negatives)
+#   5  = Harassment        (synthetic screenshots)
+#   7  = ScamFraud         (synthetic screenshots)
+#   8  = MalwareLink       (synthetic screenshots)
+#   11 = DrugsWeapons      (Open Images weapon photos)
+#   13 = MisinfoHealth     (synthetic screenshots)
+#   14 = MisinfoCivic      (synthetic screenshots)
+image_file_categories: [0, 5, 7, 8, 11, 13, 14]

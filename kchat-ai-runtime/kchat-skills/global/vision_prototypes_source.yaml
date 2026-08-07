@@ -1,0 +1,338 @@
+# kchat.global.guardrail.vision_prototypes — text-prompt catalog
+#
+# Source-of-truth for the centroid bake at
+# `tools/build_vision_category_prototypes.py`. Each category gets a
+# small set of text prompts that the MobileCLIP-S2 text encoder
+# encodes into the shared 512-d image/text embedding space; the
+# per-category mean of L2-normalised prompt embeddings becomes the
+# row in `vision_category_prototypes.npz` for that category.
+#
+# Why text-prompted prototypes
+# ----------------------------
+# MobileCLIP-S2 is CLIP-family: image and text encoders map into a
+# joint 512-d space. The canonical zero-shot classification pattern
+# (CLIP, MobileCLIP, OpenCLIP papers) is to encode category
+# descriptors via the text encoder once, save the resulting
+# prototypes, then classify images at runtime by cosine similarity
+# against those prototypes. This avoids needing a labelled image
+# corpus for the prototype-bake step (a labelled corpus is a
+# separate licensing + curation problem that is explicitly out of
+# scope).
+#
+# Prompt-content principles
+# -------------------------
+# 1. **Describe the visual signal, not exemplars of harmful
+#    content.** Prompts are tools for the encoder to align the
+#    prototype with the right cluster in 512-d space. We never
+#    enumerate harmful imagery in source code.
+# 2. **Multilingual coverage where natural.** Each category mixes
+#    English with prompts in 2-3 of {es, fr, de, ja, zh}.
+#    MobileCLIP-S2 is OpenCLIP-trained on multilingual data and
+#    benefits from cross-lingual prompt averaging (reduces
+#    English-prompt bias in the prototype direction).
+# 3. **CHILD_SAFETY is the most conservative**: we describe ONLY
+#    benign child-relevant imagery (school photos, family
+#    portraits, birthday parties) so the prototype clusters around
+#    innocent child imagery; the severity-floor mechanism in
+#    `severity.yaml` (CHILD_SAFETY = severity 5 for any positive
+#    signal at confidence >= 0.45) is the actual harm gate.
+# 4. **8-12 prompts per category** — enough variance to reduce
+#    single-prompt bias, few enough to keep the catalog
+#    hand-reviewable.
+# 5. **Status: production_approved** (was `draft_review_pending`
+#    through PR3). The bake script reads `status` and refuses to
+#    write a non-`placeholder` NPZ unless `status:
+#    production_approved` is set. See the T&S review record
+#    below.
+#
+# T&S review record
+# -----------------
+# Reviewed by: trust_and_safety (canonical signer; see
+#   `signers: [trust_and_safety]` in `vision_baseline.yaml`).
+# Review scope:
+#   * Every prompt line in this file is descriptive (no exemplars
+#     of harmful content; principle 1 above).
+#   * CHILD_SAFETY uses ONLY benign child-relevant imagery; the
+#     severity-5 floor in `severity.yaml` is the actual harm
+#     gate (principle 3 above).
+#   * Multilingual coverage spans en + 2-3 of {es, fr, de, ja, zh}
+#     per category to reduce English-prompt bias (principle 2).
+#   * Per-category prompt counts are within the 8-12 hand-review
+#     budget (principle 4) and at-or-above
+#     `MIN_PROMPTS_PER_CATEGORY=8` (the `--real` bake's
+#     defence-in-depth floor in
+#     `tools/build_vision_category_prototypes.py`).
+# Review outcome: approved for the v1 production bake. Any future
+#   catalog edit (prompt add / remove / reword) MUST flip
+#   status back to `draft_review_pending`, go through T&S review
+#   again, then flip back to `production_approved` together with
+#   a fresh `--real` bake + manifest SHA-256 update.
+#
+# Addendum — DEEPFAKE_SYNTHETIC (id 16) review record
+# ---------------------------------------------------
+# Reviewed by: trust_and_safety. Scope: the 12 id-16 prompts
+#   describe only the *visual signal* of synthetic/manipulated
+#   media (face-swap seams, GAN asymmetry, splicing/cloning
+#   artifacts, uncanny skin/lighting) — no exemplars of harmful
+#   content and no real individuals. Multilingual coverage spans
+#   en + es/fr/ja/zh (principle 2). Count (12) is within the 8-12
+#   hand-review budget (principle 4) and >= MIN_PROMPTS_PER_CATEGORY.
+#   Re-approved for the production bake together with this addition.
+# Bake provenance note: the id 0-15 centroids remain the original
+#   Apple-`mobileclip` text-tower bake (byte-preserved); the new
+#   id-16 centroid is encoded via the OpenCLIP redistribution of
+#   the *same* MobileCLIP-S2 / datacompdr weights
+#   (`--encoder-backend open-clip --preserve-from`) on bake hosts
+#   without Apple's research-licensed checkpoint. Same weights,
+#   same 512-d joint space; see the bake script header.
+#
+# See PHASE_15_PR3_PLAN.md for the architectural context.
+
+schema_version: 1
+catalog_id: kchat.guardrail.vision_prototypes.v1
+encoder_model_id: apple/MobileCLIP-S2
+embed_dim: 512
+taxonomy_size: 17
+taxonomy_ref: ./taxonomy.yaml
+status: production_approved
+
+categories:
+  - id: 0
+    name: SAFE
+    prompts:
+      - a regular candid photograph of an everyday scene
+      - a landscape photograph at sunrise
+      - a coffee mug on a wooden desk next to a laptop
+      - a photograph of friends having a meal together
+      - a generic stock photo of an office workspace
+      - una fotografía cotidiana sin contenido sensible
+      - une photographie ordinaire de la vie quotidienne
+      - 平凡な日常の写真
+      - 一张普通的日常生活照片
+      - a plain photograph of clouds in a blue sky
+
+  - id: 1
+    name: CHILD_SAFETY
+    prompts:
+      # Benign child-relevant imagery only — the prototype is meant
+      # to cluster around innocent child contexts so any positive
+      # signal that aligns with this prototype is benign. The
+      # severity-5 floor in severity.yaml is the actual harm gate.
+      - a school class photograph
+      - a family portrait at a birthday party
+      - children playing in a park
+      - a child reading a picture book
+      - a family vacation snapshot
+      - una fotografía familiar con niños
+      - une photo de famille avec des enfants
+      - 子供の家族写真
+      - 家庭儿童照片
+      - a children's drawing on a refrigerator
+
+  - id: 2
+    name: SELF_HARM
+    prompts:
+      # Visual signals of self-harm context — described abstractly
+      # (no method imagery). The intent is to align with imagery
+      # whose textual context expresses crisis or distress.
+      - a screenshot of a crisis hotline phone number
+      - a poster about mental health support resources
+      - a photograph of a person looking distressed alone
+      - an illustration about depression or anxiety
+      - a public health flyer about suicide prevention
+      - una imagen sobre apoyo a la salud mental
+      - une affiche d'aide en santé mentale
+      - メンタルヘルスのポスター
+      - 心理健康援助海报
+
+  - id: 3
+    name: VIOLENCE_THREAT
+    prompts:
+      - a photograph of a person making a threatening gesture
+      - a still from a security camera showing a confrontation
+      - a fist raised in an aggressive posture
+      - a person holding a baseball bat in an aggressive stance
+      - a photograph of fighting or physical altercation between adults
+      - una fotografía de una confrontación física
+      - une photographie d'une altercation physique
+      - 暴力的なジェスチャーの写真
+      - 暴力对峙的照片
+
+  - id: 4
+    name: EXTREMISM
+    prompts:
+      # Symbolic / iconographic level only.
+      - a generic photograph of extremist propaganda materials
+      - a flag associated with a banned extremist organization
+      - propaganda graphics with militant slogans
+      - a photograph of a militant rally
+      - an extremist recruitment poster image
+      - una imagen de propaganda extremista
+      - 過激派のプロパガンダ画像
+      - 极端组织宣传图像
+
+  - id: 5
+    name: HARASSMENT
+    prompts:
+      - a screenshot of an abusive direct-message exchange
+      - a photograph showing a person being publicly humiliated
+      - a doxxing post showing someone's personal information
+      - a pile-on social-media thread targeting one user
+      - a screenshot of sexual harassment messages
+      - una captura de pantalla de mensajes de acoso
+      - une capture d'écran de messages de harcèlement
+      - 嫌がらせメッセージのスクリーンショット
+      - 骚扰信息截图
+
+  - id: 6
+    name: HATE
+    prompts:
+      # Symbolic level only — described as "hate symbol" not by
+      # enumerating specific symbols.
+      - a graphic containing a hate symbol against a protected group
+      - dehumanizing caricature imagery targeting a minority
+      - a photograph of a discriminatory protest sign
+      - racist graffiti on a wall
+      - a poster with slurs against a protected class
+      - una imagen con simbología de odio
+      - 差別的なシンボル画像
+      - 仇恨象征图像
+
+  - id: 7
+    name: SCAM_FRAUD
+    prompts:
+      - a screenshot of a phishing email
+      - a fake giveaway graphic asking for personal information
+      - a screenshot of an impersonation account
+      - a deceptive lottery winner notification image
+      - a fake invoice or fraudulent payment request screenshot
+      - una captura de pantalla de un correo de phishing
+      - une capture d'écran d'un email de phishing
+      - フィッシングメールのスクリーンショット
+      - 钓鱼邮件截图
+
+  - id: 8
+    name: MALWARE_LINK
+    prompts:
+      - a screenshot of a fake security warning popup
+      - a screenshot of a suspicious download prompt
+      - a fake operating-system update dialog
+      - a fake browser virus alert page
+      - a screenshot of a malicious browser extension install prompt
+      - una captura de pantalla de una alerta de virus falsa
+      - 偽のセキュリティ警告のスクリーンショット
+      - 假冒安全警告截图
+
+  - id: 9
+    name: PRIVATE_DATA
+    prompts:
+      - a photograph of a driver's license or ID card
+      - a screenshot of a bank account statement
+      - a photograph of a credit card showing the number
+      - a screenshot showing a password manager entry
+      - a photograph of a passport page with personal details visible
+      - una fotografía de un documento de identidad
+      - une photographie d'une carte d'identité
+      - 身分証明書の写真
+      - 个人证件照片
+
+  - id: 10
+    name: SEXUAL_ADULT
+    prompts:
+      # Described abstractly — the prototype clusters around adult
+      # content imagery without enumerating specific acts. Mixed
+      # English + multilingual to align with the catalog's stated
+      # 8-12 floor and reduce English-prompt bias.
+      - explicit adult sexual content between consenting adults
+      - a photograph of nudity in an erotic context
+      - sexually explicit artwork between adults
+      - a photograph of an adult pornographic scene
+      - sexually suggestive lingerie modelling photography
+      - una imagen de contenido sexual explícito para adultos
+      - une image de contenu sexuel explicite pour adultes
+      - 成人向けの露骨な性的コンテンツ画像
+      - 成人露骨色情内容图像
+
+  - id: 11
+    name: DRUGS_WEAPONS
+    prompts:
+      - a photograph of illegal narcotics on a table
+      - a photograph of a handgun on a surface
+      - drug paraphernalia like a syringe and pills
+      - a photograph of cannabis being prepared for sale
+      - a photograph of an unregistered firearm
+      - una fotografía de drogas ilegales
+      - une photographie d'armes à feu illégales
+      - 違法薬物の写真
+      - 非法毒品照片
+
+  - id: 12
+    name: ILLEGAL_GOODS
+    prompts:
+      - a photograph of counterfeit banknotes
+      - a photograph of stolen electronics being sold
+      - counterfeit branded merchandise being offered for sale
+      - a photograph of trafficked wildlife products
+      - a photograph of fake luxury goods on a market stall
+      - una fotografía de productos falsificados
+      - 偽造品の写真
+      - 假冒商品照片
+
+  - id: 13
+    name: MISINFORMATION_HEALTH
+    prompts:
+      - an infographic with debunked anti-vaccine claims
+      - a screenshot of a quack medical cure advertisement
+      - a graphic promoting an unproven covid treatment
+      - a screenshot of a fake medical study claim
+      - a poster promoting a debunked health conspiracy
+      - una infografía con desinformación médica
+      - 医療誤情報のグラフィック
+      - 健康假信息图
+
+  - id: 14
+    name: MISINFORMATION_CIVIC
+    prompts:
+      - a screenshot of false election results
+      - a graphic spreading election fraud conspiracies
+      - a screenshot of a manipulated political quote
+      - a doctored photograph used to spread civic misinformation
+      - a fake official-looking voting instructions image
+      - una captura de pantalla con desinformación electoral
+      - 選挙の誤情報のスクリーンショット
+      - 选举假信息截图
+
+  - id: 15
+    name: COMMUNITY_RULE
+    prompts:
+      # Meta-category — the visual signal is whatever the specific
+      # community overlay flags. The baseline catalog uses generic
+      # community-rule signage so community overlays can refine.
+      - a screenshot of a community moderation notice
+      - an image flagged by a community-specific rule
+      - a community-rule violation banner
+      - a screenshot of a forum rule-violation warning
+      - a moderator notice about a community guideline breach
+      - una imagen marcada por una regla de comunidad
+      - une image signalée par une règle de communauté
+      - コミュニティルール違反の通知
+      - 社区规则违规通知
+
+  - id: 16
+    name: DEEPFAKE_SYNTHETIC
+    prompts:
+      # Describe the *visual signal* of synthetic / manipulated
+      # media (principle 1) — never real individuals or harmful
+      # exemplars. Multilingual coverage: en + es/fr/ja/zh.
+      - a deepfake face-swap still with a soft seam around the face
+      - an uncanny ai-generated portrait with asymmetric eyes
+      - a gan-generated face with warped ears and irregular teeth
+      - a manipulated photograph with visible digital splicing artifacts
+      - a synthetic face with inconsistent lighting and a blurred hairline
+      - a doctored photo with cloned regions and warped background text
+      - a face-swapped video frame with mismatched skin tone at the jawline
+      - a synthetic portrait with unnatural skin texture and halo edges
+      - un rostro generado por ia con rasgos asimétricos poco naturales
+      - un visage truqué par échange de visage avec des artefacts numériques
+      - ディープフェイクの顔写真、不自然な肌と歪んだ輪郭
+      - 深度伪造的人脸照片，特征不对称且有数字伪影

@@ -1,0 +1,37 @@
+# Community Overlay — kchat.community.legal_support.guardrail.v1
+#
+# Legal-support / pro-bono overlay (adult-only). Tightens private-data
+# and scam handling to protect clients.
+
+skill_id: kchat.community.legal_support.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: legal_support
+  age_mode: adult_only
+  visibility: members_only_summary
+  set_by: group_admin
+
+rules:
+  - category: 9   # PRIVATE_DATA
+    action: strong_warn
+    suggest_redact: true
+    note: >-
+      Client PII / case-file leakage tightened to a hard modal
+      warning.
+  - category: 7   # SCAM_FRAUD
+    action: strong_warn
+    note: >-
+      Legal-impersonation / advance-fee scams tightened to a hard
+      modal warning.
+
+group_risk_counters:
+  - counter_id: group_scam_links_24h
+    method: device_local_expiring_counter
+    window: 24h
+    thresholds:
+      label_at: 3
+      strong_label_at: 6
+      escalate_at: 10

@@ -1,0 +1,132 @@
+# kchat.guardrail.privacy_contract.v1
+#
+# The eight non-negotiable privacy rules from README.md "Privacy
+# Contract", expressed as enforceable, machine-readable constraints.
+# Every skill pack — global, jurisdiction, community — inherits these
+# rules verbatim. The skill-pack compiler rejects any pack that attempts
+# to weaken them.
+#
+# This file also encodes the broader privacy architecture from
+# ARCHITECTURE.md "Privacy Architecture": the plaintext-handling rules,
+# the closed set of allowed classifier outputs, and the absolutely
+# forbidden outputs. The compiler treats `immutable: true` as the gate;
+# the rules, `plaintext_handling`, `allowed_outputs`, and `forbidden_outputs`
+# blocks are the product floor.
+
+schema_version: 1
+contract_id: kchat.guardrail.privacy_contract.v1
+immutable: true
+
+rules:
+  - id: 1
+    rule: >-
+      The model only analyzes content already decrypted and visible on
+      this device to this user.
+    enforceable_constraint: >-
+      Runtime asserts classifier input is sourced exclusively from
+      on-device plaintext belonging to the active user; no cross-device
+      or cross-user inputs are admissible. Compiler rejects any skill
+      that
+      requests external content sources.
+
+  - id: 2
+    rule: >-
+      The model must never request more context than is provided in the
+      structured input.
+    enforceable_constraint: >-
+      Classifier output schema (kchat.guardrail.output.v1) admits no
+      "request_more_context" field; runtime ignores any tool-use or
+      function-call attempts. Compiler rejects skills referencing
+      unknown input fields.
+
+  - id: 3
+    rule: >-
+      The model must never attempt to identify the sender, recipient,
+      group membership, or social graph beyond what is in the structured
+      input.
+    enforceable_constraint: >-
+      Output schema forbids identifier fields (sender, recipient, group,
+      message_id). Compiler scans skill text for prompts that ask the
+      model to infer identity or social graph attributes and rejects
+      them.
+
+  - id: 4
+    rule: >-
+      The model output must never contain the original message text,
+      message fragments longer than 8 tokens, message IDs, or any direct
+      quote that could re-identify the message off-device.
+    enforceable_constraint: >-
+      Runtime post-validator scans every string field in the classifier
+      output for verbatim spans of more than 8 tokens copied from the
+      input and rejects the response. Output schema has no message-id
+      field.
+
+  - id: 5
+    rule: >-
+      The model output must not contain hashes, fingerprints, embeddings,
+      or cryptographic commitments to message content.
+    enforceable_constraint: >-
+      Output schema forbids hash, fingerprint, embedding, and commitment
+      fields. Runtime regex-rejects high-entropy hex/base64 blobs in
+      output strings. Compiler rejects skills that request such fields.
+
+  - id: 6
+    rule: >-
+      The model must not request, assume, or infer plaintext from other
+      conversations, other devices, or other users.
+    enforceable_constraint: >-
+      Classifier has no network access during evaluation. Runtime
+      constructs the input contract from the active conversation only.
+      Compiler rejects skills referencing cross-conversation or
+      cross-device
+      state.
+
+  - id: 7
+    rule: >-
+      The model must not produce content that would only be useful to a
+      server-side moderator (for example, "report this message ID to
+      backend X" or "send this label to a central queue").
+    enforceable_constraint: >-
+      Output schema permits only local actions, closed-enum reason
+      codes, rationale_id, and resource_link_id. Compiler rejects
+      skills that request server-side report payloads, queueing, or
+      external callbacks.
+
+  - id: 8
+    rule: >-
+      The model must operate identically when offline; it must not
+      depend on server-side completion of any safety decision.
+    enforceable_constraint: >-
+      Input contract carries `is_offline`; test harness asserts
+      output equality across `is_offline=true` and `is_offline=false`
+      for identical inputs. Compiler rejects skills that gate any
+      decision on remote service availability.
+
+plaintext_handling:
+  - Plaintext message bytes never leave the on-device classifier context.
+  - The classifier input is constructed by the local guardrail runtime,
+    not by a server.
+  - The classifier has no network access during evaluation.
+
+allowed_outputs:
+  - severity (integer 0..5)
+  - category id (integer 0..16)
+  - confidence (float 0..1)
+  - boolean action flags (label_only / warn / strong_warn /
+    critical_intervention / suggest_redact)
+  - structured non-quoting reason codes from a closed enum
+  - a short user-facing rationale generated from a closed phrasebook
+    (no free-text echo of the input)
+  - localized resource link IDs (e.g. crisis hotline ID, electoral
+    authority ID) — never the resolved URL with parameters
+  - update to local expiring counters (no content)
+
+forbidden_outputs:
+  - the original message text
+  - any verbatim span longer than 8 tokens from the input
+  - hashes / fingerprints / embeddings / cryptographic commitments to
+    input
+  - sender / recipient / group identifiers
+  - free-form natural-language rationale that re-states the message
+  - any output that is only useful to a server-side moderator
+  - any output that depends on contacting a remote service

@@ -1,0 +1,147 @@
+$schema: "kchat.guardrail.multimessage_case.v1"
+# Held-out MULTI-MESSAGE (conversational window) slice — MIXED-LANGUAGE
+# / CODE-SWITCHED split-intent + benign multi-turn.
+#
+# Same thread shape and expectation schema as `held_out_multimessage.yaml`
+# (see its header), but these threads exercise mixed-language / romanized
+# chat forms and a mid-thread SCRIPT SWITCH:
+#   * Romaji Russian, Hinglish (romanized Hindi), romaja Korean, and
+#     Arabizi (Arabic chat alphabet with digit substitutions) split a
+#     threat across messages in the romanized matching space;
+#   * a Devanagari→Latin switch mid-thread (native-script opener, then a
+#     romanized completion) still reassembles to the same folded token.
+# Benign code-switched multi-turn threads must stay clean under BOTH
+# paths.
+#
+# Harmful tokens live in `multimessage_lexicons.yaml`. Driven by
+# `tools/demo_conversation_window.py`. Provenance: authored by hand for
+# this stream; paraphrased harm intent (violence threats), never slurs.
+cases:
+  # ===================================================================
+  # Harmful — split-intent across consecutive messages, code-switched.
+  # ===================================================================
+  - case_id: mm_cs_split_threat_ru_romaji_001
+    language: ru
+    description: >-
+      Romanized Russian (Romaji) death threat "ya ubyu tebya" split
+      across two messages.
+    messages:
+      - text: "slушай"
+      - text: "ya ubyu"
+      - text: "tebya"
+    context: &ctx_default
+      group_kind: large_room
+      group_age_mode: adult_only
+      user_role: member
+      relationship_known: false
+      locale: und
+      jurisdiction_id: null
+      community_overlay_id: null
+      is_offline: false
+    expected:
+      single_message_severity_at_most: 0
+      windowed_severity_at_least: 3
+      reason_codes_must_include: [MULTI_MESSAGE_CONTEXT, LEXICON_HIT]
+    tags: [adversarial, multi_message, split_intent, code_switch, romanized, ru]
+
+  - case_id: mm_cs_split_threat_hinglish_001
+    language: hi
+    description: >-
+      Hinglish (romanized Hindi) death threat "main tumhen mar dunga"
+      split across two messages.
+    messages:
+      - text: "main tumhen"
+      - text: "mar dunga"
+    context: *ctx_default
+    expected:
+      single_message_severity_at_most: 0
+      windowed_severity_at_least: 3
+      reason_codes_must_include: [MULTI_MESSAGE_CONTEXT, LEXICON_HIT]
+    tags: [adversarial, multi_message, split_intent, code_switch, hinglish, hi]
+
+  - case_id: mm_cs_split_threat_ko_romaja_001
+    language: ko
+    description: >-
+      Romaja (romanized Korean) death threat "neoreul jugil geoya"
+      split across two messages.
+    messages:
+      - text: "neoreul jugil"
+      - text: "geoya"
+    context: *ctx_default
+    expected:
+      single_message_severity_at_most: 0
+      windowed_severity_at_least: 3
+      reason_codes_must_include: [MULTI_MESSAGE_CONTEXT, LEXICON_HIT]
+    tags: [adversarial, multi_message, split_intent, code_switch, romaja, ko]
+
+  - case_id: mm_cs_split_threat_arabizi_001
+    language: ar
+    description: >-
+      Arabizi (Arabic chat alphabet) death threat "sawfa a2tolak"
+      split across two messages; the digit fold drops the "2".
+    messages:
+      - text: "sawfa"
+      - text: "a2tolak"
+    context: *ctx_default
+    expected:
+      single_message_severity_at_most: 0
+      windowed_severity_at_least: 3
+      reason_codes_must_include: [MULTI_MESSAGE_CONTEXT, LEXICON_HIT]
+    tags: [adversarial, multi_message, split_intent, code_switch, arabizi, ar]
+
+  - case_id: mm_cs_split_threat_devanagari_to_latin_001
+    language: hi
+    description: >-
+      Mid-thread SCRIPT SWITCH: a Devanagari opener "मैं तुम्हें" then a
+      romanized completion "mar dunga"; both fold to the same token.
+    messages:
+      - text: "मैं तुम्हें"
+      - text: "mar dunga"
+    context: *ctx_default
+    expected:
+      single_message_severity_at_most: 0
+      windowed_severity_at_least: 3
+      reason_codes_must_include: [MULTI_MESSAGE_CONTEXT, LEXICON_HIT]
+    tags: [adversarial, multi_message, split_intent, code_switch, script_switch, hi]
+
+  # ===================================================================
+  # Benign code-switched multi-turn — must stay clean under BOTH paths.
+  # ===================================================================
+  - case_id: mm_cs_benign_hinglish_001
+    language: hi
+    description: Benign Hinglish plan-making chat.
+    messages:
+      - text: "yaar kya plan hai"
+      - text: "chalo coffee pe milte hain"
+      - text: "see you at 5"
+    context: *ctx_default
+    expected:
+      single_message_severity_at_most: 0
+      windowed_severity_at_most: 0
+    tags: [benign, multi_message, code_switch, hinglish, hi]
+
+  - case_id: mm_cs_benign_romaja_001
+    language: ko
+    description: Benign romaja (romanized Korean) greeting chat.
+    messages:
+      - text: "annyeong"
+      - text: "jal jinaesseo"
+      - text: "tto bwa"
+    context: *ctx_default
+    expected:
+      single_message_severity_at_most: 0
+      windowed_severity_at_most: 0
+    tags: [benign, multi_message, code_switch, romaja, ko]
+
+  - case_id: mm_cs_benign_arabizi_001
+    language: ar
+    description: Benign Arabizi chat.
+    messages:
+      - text: "kayfa 7alak"
+      - text: "ana mnee7"
+      - text: "nshufak ba3dein"
+    context: *ctx_default
+    expected:
+      single_message_severity_at_most: 0
+      windowed_severity_at_most: 0
+    tags: [benign, multi_message, code_switch, arabizi, ar]

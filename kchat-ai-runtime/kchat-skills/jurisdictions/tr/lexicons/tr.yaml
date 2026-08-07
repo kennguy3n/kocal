@@ -1,0 +1,21 @@
+# Turkish-language lexicon bundle for the kchat.jurisdiction.tr.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: tr_tr_lexicon_v1
+language: tr
+locale: tr-TR
+provenance: kchat_trust_and_safety_tr_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+terms:
+  - term_id: tr_tr_term_tck_103_cocuk_v1
+    categories: [1]
+    notes: TCK Art. 103 indicators.
+  - term_id: tr_tr_term_tmk_3713_v1
+    categories: [4]
+    notes: TMK 3713 indicators.

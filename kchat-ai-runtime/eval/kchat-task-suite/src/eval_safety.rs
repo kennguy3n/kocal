@@ -123,6 +123,9 @@ fn test_group_escalation() -> EvalResult {
         slm_available: true,
         quoted_from_user: false,
         community_overlay_id: None,
+        jurisdiction: None,
+        locale: None,
+        media_descriptors: Vec::new(),
     };
     let _result = classifier.classify(&req);
 
@@ -141,6 +144,9 @@ fn test_minor_escalation() -> EvalResult {
         slm_available: true,
         quoted_from_user: false,
         community_overlay_id: None,
+        jurisdiction: None,
+        locale: None,
+        media_descriptors: Vec::new(),
     };
     let _result = classifier.classify(&req);
 

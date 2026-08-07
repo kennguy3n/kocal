@@ -1,0 +1,27 @@
+# Community Overlay — kchat.community.photography.guardrail.v1
+#
+# Photography / hobbyist overlay. Watches for adult-image surfaces and
+# private-data leakage in geotagged imagery.
+
+skill_id: kchat.community.photography.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: photography
+  age_mode: mixed_age
+  visibility: public_summary
+  set_by: group_admin
+
+rules:
+  - category: 10  # SEXUAL_ADULT
+    action: warn
+    note: >-
+      Adult sexual imagery warns before display.
+  - category: 9   # PRIVATE_DATA
+    action: strong_warn
+    suggest_redact: true
+    note: >-
+      EXIF GPS, location, and identifiable subjects tightened to a
+      hard modal warning.

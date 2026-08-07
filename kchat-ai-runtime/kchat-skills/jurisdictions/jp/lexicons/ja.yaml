@@ -1,0 +1,29 @@
+# Japanese lexicon bundle for the kchat.jurisdiction.jp.guardrail.v1
+# overlay.
+
+schema_version: 1
+lexicon_id: jp_ja_lexicon_v1
+language: ja
+locale: ja-JP
+provenance: kchat_trust_and_safety_jp_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 7   # SCAM_FRAUD
+  - 11  # DRUGS_WEAPONS
+
+terms:
+  - term_id: jp_ja_term_csa_jp_v1
+    categories: [1]
+    notes: Child-safety indicators under Japanese law.
+  - term_id: jp_ja_term_tokushoho_v1
+    categories: [7]
+    notes: Specified-commercial-transactions / consumer-fraud indicators.
+  - term_id: jp_ja_term_furikome_sagi_v1
+    categories: [7]
+    notes: Furikome-sagi (振り込め詐欺) bank-transfer-fraud indicators.
+  - term_id: jp_ja_term_drugs_weapons_jp_v1
+    categories: [11]
+    notes: Cannabis Control Act / Stimulants Control Act indicators.
+  - term_id: jp_ja_term_firearm_sword_law_v1
+    categories: [11]
+    notes: Firearm and Sword Control Law restricted-weapon indicators.

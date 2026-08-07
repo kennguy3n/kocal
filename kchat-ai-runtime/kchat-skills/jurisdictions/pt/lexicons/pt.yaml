@@ -1,0 +1,21 @@
+# Portuguese-language lexicon bundle for the kchat.jurisdiction.pt.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: pt_pt_lexicon_v1
+language: pt
+locale: pt-PT
+provenance: kchat_trust_and_safety_pt_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+terms:
+  - term_id: pt_pt_term_cp_171_menor_v1
+    categories: [1]
+    notes: Código Penal Art. 171-176 indicators.
+  - term_id: pt_pt_term_lei_52_2003_terrorismo_v1
+    categories: [4]
+    notes: Lei 52/2003 terrorism indicators.

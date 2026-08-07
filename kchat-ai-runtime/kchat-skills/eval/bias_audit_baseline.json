@@ -1,0 +1,69 @@
+{
+  "encoder_kind": "stub",
+  "flagged_classes": [],
+  "flagged_languages": [],
+  "gates": {
+    "allow_pipeline_errors": false,
+    "max_disparity": 0.05,
+    "max_per_group_fp_rate": 0.07,
+    "min_cases": 10
+  },
+  "n_cases": 52,
+  "overall_minority_language_fp_rate": 0.0,
+  "overall_protected_class_fp_rate": 0.0,
+  "pack_id": "kchat.guardrail.held_out",
+  "passed": true,
+  "per_class_results": {
+    "disability": [
+      0.0,
+      5
+    ],
+    "political_opinion": [
+      0.0,
+      20
+    ],
+    "race": [
+      0.0,
+      7
+    ],
+    "sexual_orientation": [
+      0.0,
+      3
+    ],
+    "unspecified": [
+      0.0,
+      17
+    ]
+  },
+  "per_language_results": {
+    "ar": [
+      0.0,
+      4
+    ],
+    "bn": [
+      0.0,
+      4
+    ],
+    "de": [
+      0.0,
+      5
+    ],
+    "en": [
+      0.0,
+      23
+    ],
+    "es": [
+      0.0,
+      6
+    ],
+    "ja": [
+      0.0,
+      4
+    ],
+    "vi": [
+      0.0,
+      6
+    ]
+  },
+  "pipeline_exception_counts": {}
+}

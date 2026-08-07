@@ -1,0 +1,291 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "kchat.guardrail.local_signal.v1",
+  "title": "KChat Guardrail Encoder Classifier Input Contract",
+  "description": "Structured input contract passed to the on-device encoder classifier. The local guardrail runtime constructs this object from on-device signals and runtime context. The classifier reasons over local descriptors, never over raw bytes. See ARCHITECTURE.md 'Encoder Classifier Execution Contract'.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["message", "context", "local_signals", "constraints"],
+  "properties": {
+    "message": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "lang_hint",
+        "has_attachment",
+        "attachment_kinds",
+        "quoted_from_user",
+        "is_outbound"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "Already on-device plaintext. May be empty."
+        },
+        "lang_hint": {
+          "type": ["string", "null"],
+          "description": "IETF BCP 47 language tag (e.g. 'en', 'es-419'). Optional."
+        },
+        "has_attachment": { "type": "boolean" },
+        "attachment_kinds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["image", "video", "audio", "file", "link"]
+          },
+          "uniqueItems": false
+        },
+        "quoted_from_user": {
+          "type": "boolean",
+          "description": "True if this message quotes earlier on-device content."
+        },
+        "is_outbound": {
+          "type": "boolean",
+          "description": "True if the user is about to send this message."
+        }
+      }
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "group_kind",
+        "group_age_mode",
+        "user_role",
+        "relationship_known",
+        "locale",
+        "jurisdiction_id",
+        "community_overlay_id",
+        "is_offline"
+      ],
+      "properties": {
+        "group_kind": {
+          "type": "string",
+          "enum": ["dm", "small_group", "large_group", "public_channel"]
+        },
+        "group_age_mode": {
+          "type": "string",
+          "enum": ["minor_present", "mixed_age", "adult_only"]
+        },
+        "user_role": {
+          "type": "string",
+          "enum": ["member", "admin", "guest", "self"]
+        },
+        "relationship_known": { "type": "boolean" },
+        "locale": {
+          "type": "string",
+          "description": "IETF BCP 47 locale tag."
+        },
+        "jurisdiction_id": {
+          "type": ["string", "null"],
+          "description": "Only set if a jurisdiction overlay is explicitly activated."
+        },
+        "community_overlay_id": {
+          "type": ["string", "null"],
+          "description": "Set if a community overlay is active for this group."
+        },
+        "is_offline": {
+          "type": "boolean",
+          "description": "When true, the classifier must produce identical output as when online."
+        }
+      }
+    },
+    "local_signals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "url_risk",
+        "pii_patterns_hit",
+        "scam_patterns_hit",
+        "lexicon_hits",
+        "media_descriptors",
+        "context_hints"
+      ],
+      "properties": {
+        "url_risk": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Aggregate URL risk score from the local URL detector."
+        },
+        "pii_patterns_hit": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "EMAIL",
+              "PHONE",
+              "GOVERNMENT_ID",
+              "CREDIT_CARD",
+              "BANK_ACCOUNT",
+              "PASSWORD",
+              "API_KEY",
+              "PRIVATE_KEY",
+              "STREET_ADDRESS",
+              "GEO_COORDINATES",
+              "DATE_OF_BIRTH",
+              "MEDICAL_ID"
+            ]
+          },
+          "uniqueItems": false
+        },
+        "scam_patterns_hit": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "ADVANCE_FEE",
+              "PHISHING_LINK",
+              "FAKE_GIVEAWAY",
+              "IMPERSONATION",
+              "CRYPTO_INVESTMENT",
+              "ROMANCE_SCAM",
+              "CREDENTIAL_HARVEST",
+              "SUPPORT_IMPERSONATION",
+              "JOB_OFFER_SCAM",
+              "PACKAGE_DELIVERY_SCAM",
+              "TAX_AUTHORITY_IMPERSONATION"
+            ]
+          },
+          "uniqueItems": false
+        },
+        "lexicon_hits": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["lexicon_id", "category", "weight"],
+            "properties": {
+              "lexicon_id": { "type": "string", "minLength": 1 },
+              "category": { "type": "integer", "minimum": 0, "maximum": 16 },
+              "weight": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+            }
+          }
+        },
+        "media_descriptors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind"],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": ["image", "video", "audio"]
+              },
+              "nsfw_score": {
+                "type": ["number", "null"],
+                "minimum": 0.0,
+                "maximum": 1.0
+              },
+              "violence_score": {
+                "type": ["number", "null"],
+                "minimum": 0.0,
+                "maximum": 1.0
+              },
+              "self_harm_score": {
+                "type": ["number", "null"],
+                "minimum": 0.0,
+                "maximum": 1.0,
+                "description": "Self-harm imagery score (cutting, suicide methods, pro-ana imagery) from on-device vision model."
+              },
+              "hate_score": {
+                "type": ["number", "null"],
+                "minimum": 0.0,
+                "maximum": 1.0,
+                "description": "Hate imagery score (hate symbols, supremacist iconography) from on-device vision model."
+              },
+              "harassment_score": {
+                "type": ["number", "null"],
+                "minimum": 0.0,
+                "maximum": 1.0,
+                "description": "Harassment imagery score (revenge porn, targeted doxxing photos) from on-device vision model."
+              },
+              "drugs_weapons_score": {
+                "type": ["number", "null"],
+                "minimum": 0.0,
+                "maximum": 1.0,
+                "description": "Drug/weapon imagery score (controlled substances, firearms) from on-device vision model."
+              },
+              "extremism_score": {
+                "type": ["number", "null"],
+                "minimum": 0.0,
+                "maximum": 1.0,
+                "description": "Extremist imagery score (terrorist propaganda, extremist iconography) from on-device vision model."
+              },
+              "child_safety_score": {
+                "type": ["number", "null"],
+                "minimum": 0.0,
+                "maximum": 1.0,
+                "description": "Child safety imagery score (CSAM indicators, child exploitation) from on-device vision model."
+              },
+              "deepfake_score": {
+                "type": ["number", "null"],
+                "minimum": 0.0,
+                "maximum": 1.0,
+                "description": "Synthetic media detection score (deepfake, AI-generated impersonation) from on-device vision model."
+              },
+              "malware_score": {
+                "type": ["number", "null"],
+                "minimum": 0.0,
+                "maximum": 1.0,
+                "description": "Malware/phishing screenshot score (fake login pages captured in screenshots) from on-device vision model."
+              },
+              "face_count": {
+                "type": ["integer", "null"],
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "context_hints": {
+          "type": "array",
+          "description": "Pipeline-derived protected-speech / context flags. Forwarded by the classifier into output.reason_codes; the threshold policy demotes non-CHILD_SAFETY non-SAFE verdicts carrying these hints back to SAFE.",
+          "items": {
+            "type": "string",
+            "enum": [
+              "NEWS_CONTEXT",
+              "EDUCATION_CONTEXT",
+              "COUNTERSPEECH_CONTEXT",
+              "QUOTED_SPEECH_CONTEXT"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "minor_present": {
+          "type": "boolean",
+          "description": "Structured flag derived from context.group_age_mode == 'minor_present'. When true, a deterministic NSFW-media hit escalates to the CHILD_SAFETY floor (category 1, severity 5) instead of the adult-sexual label (category 10)."
+        }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "max_output_tokens",
+        "temperature",
+        "output_format",
+        "schema_id"
+      ],
+      "properties": {
+        "max_output_tokens": {
+          "type": "integer",
+          "const": 600
+        },
+        "temperature": {
+          "type": "number",
+          "const": 0.0
+        },
+        "output_format": {
+          "type": "string",
+          "const": "json"
+        },
+        "schema_id": {
+          "type": "string",
+          "const": "kchat.guardrail.output.v1"
+        }
+      }
+    }
+  }
+}

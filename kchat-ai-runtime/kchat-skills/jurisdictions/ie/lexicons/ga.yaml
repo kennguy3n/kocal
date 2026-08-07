@@ -1,0 +1,21 @@
+# GA (Ireland) lexicon bundle for the kchat.jurisdiction.ie.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: ie_ga_lexicon_v1
+language: ga
+locale: ga-IE
+provenance: kchat_trust_and_safety_ie_v1
+categories:
+  - 1
+  - 4
+terms:
+  - term_id: ie_ga_term_child_protection_v1
+    categories: [1]
+    notes: Irish-language child-protection indicators (catalogue-only).
+  - term_id: ie_ga_term_anti_terror_v1
+    categories: [4]
+    notes: Irish-language anti-terror indicators (catalogue-only).

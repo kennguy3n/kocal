@@ -1,0 +1,21 @@
+# RO (Romania) lexicon bundle for the kchat.jurisdiction.ro.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: ro_ro_lexicon_v1
+language: ro
+locale: ro-RO
+provenance: kchat_trust_and_safety_ro_v1
+categories:
+  - 1
+  - 4
+terms:
+  - term_id: ro_ro_term_legea_272_v1
+    categories: [1]
+    notes: Legea 272/2004 child-protection indicators (catalogue-only).
+  - term_id: ro_ro_term_legea_535_v1
+    categories: [4]
+    notes: Legea 535/2004 anti-terror indicators (catalogue-only).

@@ -1,0 +1,28 @@
+# Community Overlay — kchat.community.journalism.guardrail.v1
+#
+# Journalism / newsroom overlay (adult-only). Loosens extremism to a
+# label and softens violence-threat handling so news coverage of these
+# topics is preserved.
+
+skill_id: kchat.community.journalism.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: journalism
+  age_mode: adult_only
+  visibility: members_only_summary
+  set_by: group_admin
+
+rules:
+  - category: 4   # EXTREMISM
+    action: label_only
+    note: >-
+      Extremism material surfaces a label only — news context with
+      NEWS_CONTEXT carve-out.
+  - category: 3   # VIOLENCE_THREAT
+    action: warn
+    note: >-
+      Violence-threat coverage in news contexts warns rather than
+      escalating.

@@ -47,6 +47,14 @@ pub struct DeviceProfile {
     pub expected_model_pack: Option<&'static str>,
     /// Expected backend type string
     pub expected_backend: Option<&'static str>,
+    /// Expected vision model pack ID (None = no vision model)
+    pub expected_vision_pack: Option<&'static str>,
+    /// Expected ASR model pack ID (None = no ASR model)
+    pub expected_asr_pack: Option<&'static str>,
+    /// Expected safety encoder pack ID
+    pub expected_safety_pack: &'static str,
+    /// Expected video model pack ID (None = no video, low-tier devices)
+    pub expected_video_pack: Option<&'static str>,
 }
 
 impl DeviceProfile {
@@ -114,6 +122,10 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_tier: DeviceTier::High,
             expected_model_pack: Some("macaw-4bit-mlx"),
             expected_backend: Some("mlx"),
+            expected_vision_pack: Some("mobileclip-s2-image-fp32"),
+            expected_asr_pack: Some("whisper-base-int8"),
+            expected_safety_pack: "safety-classifier-int8",
+            expected_video_pack: Some("mobileclip-s2-video-int8"),
         },
         DeviceProfile {
             name: "iPhone 14 (6GB, A15)",
@@ -135,6 +147,10 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_tier: DeviceTier::Medium,
             expected_model_pack: Some("qwen3.5-0.8b-q4"),
             expected_backend: Some("llama.cpp_metal"),
+            expected_vision_pack: Some("mobileclip-s2-image-fp32"),
+            expected_asr_pack: Some("whisper-base-int8"),
+            expected_safety_pack: "safety-classifier-int8",
+            expected_video_pack: Some("mobileclip-s2-video-int8"),
         },
         DeviceProfile {
             name: "iPhone SE 2022 (4GB, A15)",
@@ -156,6 +172,10 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_tier: DeviceTier::Low,
             expected_model_pack: Some("ternary-bonsai-1.7b-mlx-2bit"),
             expected_backend: Some("mlx"),
+            expected_vision_pack: Some("mobileclip-s2-image-int8"),
+            expected_asr_pack: Some("whisper-tiny-int8"),
+            expected_safety_pack: "safety-classifier-int4",
+            expected_video_pack: None,
         },
         // === Mobile: Android ===
         DeviceProfile {
@@ -178,6 +198,10 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_tier: DeviceTier::High,
             expected_model_pack: Some("ternary-bonsai-4b-q2_0"),
             expected_backend: Some("llama.cpp_vulkan"),
+            expected_vision_pack: Some("mobileclip-s2-image-fp32"),
+            expected_asr_pack: Some("whisper-base-int8"),
+            expected_safety_pack: "safety-classifier-int8",
+            expected_video_pack: Some("mobileclip-s2-video-int8"),
         },
         DeviceProfile {
             name: "Pixel 7a (8GB, Tensor G2)",
@@ -199,6 +223,10 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_tier: DeviceTier::Medium,
             expected_model_pack: Some("qwen3.5-0.8b-q4"),
             expected_backend: Some("llama.cpp_vulkan"),
+            expected_vision_pack: Some("mobileclip-s2-image-fp32"),
+            expected_asr_pack: Some("whisper-base-int8"),
+            expected_safety_pack: "safety-classifier-int8",
+            expected_video_pack: Some("mobileclip-s2-video-int8"),
         },
         DeviceProfile {
             name: "Galaxy A14 (4GB, Helio G80)",
@@ -220,6 +248,10 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_tier: DeviceTier::Low,
             expected_model_pack: Some("ternary-bonsai-1.7b-q2_0"),
             expected_backend: Some("llama.cpp_vulkan"),
+            expected_vision_pack: Some("mobileclip-s2-image-int8"),
+            expected_asr_pack: Some("whisper-tiny-int8"),
+            expected_safety_pack: "safety-classifier-int4",
+            expected_video_pack: None,
         },
         // === Desktop: macOS ===
         DeviceProfile {
@@ -242,6 +274,10 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_tier: DeviceTier::High,
             expected_model_pack: Some("macaw-4bit-mlx"),
             expected_backend: Some("mlx"),
+            expected_vision_pack: Some("mobileclip-s2-image-fp32"),
+            expected_asr_pack: Some("whisper-base-int8"),
+            expected_safety_pack: "safety-classifier-int8",
+            expected_video_pack: Some("mobileclip-s2-video-int8"),
         },
         DeviceProfile {
             name: "MacBook Air M2 (8GB)",
@@ -263,6 +299,10 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_tier: DeviceTier::Low,
             expected_model_pack: Some("ternary-bonsai-1.7b-mlx-2bit"),
             expected_backend: Some("mlx"),
+            expected_vision_pack: Some("mobileclip-s2-image-int8"),
+            expected_asr_pack: Some("whisper-tiny-int8"),
+            expected_safety_pack: "safety-classifier-int4",
+            expected_video_pack: None,
         },
         DeviceProfile {
             name: "Intel NUC (8GB, i3)",
@@ -284,6 +324,10 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_tier: DeviceTier::Low,
             expected_model_pack: Some("ternary-bonsai-1.7b-mlx-2bit"),
             expected_backend: Some("mlx"),
+            expected_vision_pack: Some("mobileclip-s2-image-int8"),
+            expected_asr_pack: Some("whisper-tiny-int8"),
+            expected_safety_pack: "safety-classifier-int4",
+            expected_video_pack: None,
         },
         // === Desktop: Windows ===
         DeviceProfile {
@@ -306,6 +350,10 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_tier: DeviceTier::High,
             expected_model_pack: Some("ternary-bonsai-8b-q2_0"),
             expected_backend: Some("llama.cpp_vulkan"),
+            expected_vision_pack: Some("mobileclip-s2-image-fp32"),
+            expected_asr_pack: Some("whisper-base-int8"),
+            expected_safety_pack: "safety-classifier-int8",
+            expected_video_pack: Some("mobileclip-s2-video-int8"),
         },
         DeviceProfile {
             name: "Windows Surface 8 (16GB)",
@@ -327,6 +375,10 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_tier: DeviceTier::Low,
             expected_model_pack: Some("ternary-bonsai-1.7b-q2_0"),
             expected_backend: Some("llama.cpp_vulkan"),
+            expected_vision_pack: Some("mobileclip-s2-image-int8"),
+            expected_asr_pack: Some("whisper-tiny-int8"),
+            expected_safety_pack: "safety-classifier-int4",
+            expected_video_pack: None,
         },
         DeviceProfile {
             name: "Windows Legacy (8GB, i5)",
@@ -348,6 +400,10 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_tier: DeviceTier::Low,
             expected_model_pack: Some("ternary-bonsai-1.7b-q2_0"),
             expected_backend: Some("llama.cpp_vulkan"),
+            expected_vision_pack: Some("mobileclip-s2-image-int8"),
+            expected_asr_pack: Some("whisper-tiny-int8"),
+            expected_safety_pack: "safety-classifier-int4",
+            expected_video_pack: None,
         },
     ]
 }
@@ -391,6 +447,50 @@ pub fn tier_to_min_tier(tier: DeviceTier) -> MinTier {
         DeviceTier::Low => MinTier::Low,
         DeviceTier::Medium => MinTier::Medium,
         DeviceTier::High => MinTier::High,
+    }
+}
+
+/// Select the appropriate vision model for a tier.
+///
+/// - Low tier: mobileclip-s2-image-int8 (70MB, INT8)
+/// - Medium/High tier: mobileclip-s2-image-fp32 (137MB, FP32)
+pub fn select_vision_model_for_tier(tier: DeviceTier) -> Option<&'static str> {
+    match tier {
+        DeviceTier::Low => Some("mobileclip-s2-image-int8"),
+        DeviceTier::Medium | DeviceTier::High => Some("mobileclip-s2-image-fp32"),
+    }
+}
+
+/// Select the appropriate video model for a tier.
+///
+/// - Low tier: None (deterministic media descriptors only)
+/// - Medium/High tier: mobileclip-s2-video-int8 (70MB, INT8)
+pub fn select_video_model_for_tier(tier: DeviceTier) -> Option<&'static str> {
+    match tier {
+        DeviceTier::Low => None,
+        DeviceTier::Medium | DeviceTier::High => Some("mobileclip-s2-video-int8"),
+    }
+}
+
+/// Select the appropriate ASR model for a tier.
+///
+/// - Low tier: whisper-tiny-int8 (40MB, INT8)
+/// - Medium/High tier: whisper-base-int8 (90MB, INT8)
+pub fn select_asr_model_for_tier(tier: DeviceTier) -> Option<&'static str> {
+    match tier {
+        DeviceTier::Low => Some("whisper-tiny-int8"),
+        DeviceTier::Medium | DeviceTier::High => Some("whisper-base-int8"),
+    }
+}
+
+/// Select the appropriate safety encoder model for a tier.
+///
+/// - Low tier: safety-classifier-int4 (15MB, INT4)
+/// - Medium/High tier: safety-classifier-int8 (25MB, INT8)
+pub fn select_safety_model_for_tier(tier: DeviceTier) -> &'static str {
+    match tier {
+        DeviceTier::Low => "safety-classifier-int4",
+        DeviceTier::Medium | DeviceTier::High => "safety-classifier-int8",
     }
 }
 
@@ -492,6 +592,14 @@ pub fn run() -> SuiteReport {
     suite.add(test_registry_finds_no_model_for_low_tier(&registry));
     suite.add(test_registry_finds_embedding_for_medium(&registry));
     suite.add(test_registry_finds_safety_for_medium(&registry));
+
+    // --- Vision / ASR / Safety model selection tests ---
+    for p in &profiles {
+        suite.add(test_vision_model_selection(p, &registry));
+        suite.add(test_asr_model_selection(p, &registry));
+        suite.add(test_safety_model_selection(p, &registry));
+        suite.add(test_video_model_selection(p, &registry));
+    }
 
     suite
 }
@@ -1288,8 +1396,134 @@ fn test_registry_finds_safety_for_medium(registry: &ModelRegistry) -> EvalResult
         EvalResult::fail("registry_safety_medium", "no safety models found for Medium tier")
     } else {
         let mut meta = HashMap::new();
-        meta.insert("pack_id".into(), results[0].pack_id.clone());
-        meta.insert("size_mb".into(), format!("{}", results[0].size_bytes / (1024 * 1024)));
-        EvalResult::pass_with_meta("registry_safety_medium", 0, meta)
+        meta.insert("count".into(), format!("{}", results.len()));
+        meta.insert("pack_ids".into(), results.iter().map(|e| e.pack_id.as_str()).collect::<Vec<_>>().join(", "));
+        // Medium tier should find both safety-classifier-int8 and safety-classifier-int4
+        if results.len() != 2 {
+            EvalResult::fail(
+                "registry_safety_medium",
+                format!("expected 2 safety models for Medium tier, got {}", results.len()),
+            )
+        } else {
+            EvalResult::pass_with_meta("registry_safety_medium", 0, meta)
+        }
+    }
+}
+
+fn test_vision_model_selection(p: &DeviceProfile, registry: &ModelRegistry) -> EvalResult {
+    let caps = p.to_caps();
+    let tier = TierSelection::select(&caps).unwrap_or(DeviceTier::Low);
+    let selected = select_vision_model_for_tier(tier);
+
+    if selected == p.expected_vision_pack {
+        if let Some(pack_id) = selected {
+            if let Some(entry) = registry.find(pack_id) {
+                if !entry.min_tier.satisfied_by(tier_to_min_tier(tier)) {
+                    return EvalResult::fail(
+                        format!("vision_select: {}", p.name),
+                        format!("vision model {} min_tier not satisfied by device tier {:?}", pack_id, tier),
+                    );
+                }
+            } else {
+                return EvalResult::fail(
+                    format!("vision_select: {}", p.name),
+                    format!("vision model {} not found in registry", pack_id),
+                );
+            }
+        }
+        EvalResult::pass(format!("vision_select: {}", p.name))
+    } else {
+        EvalResult::fail(
+            format!("vision_select: {}", p.name),
+            format!("expected {:?}, got {:?}", p.expected_vision_pack, selected),
+        )
+    }
+}
+
+fn test_asr_model_selection(p: &DeviceProfile, registry: &ModelRegistry) -> EvalResult {
+    let caps = p.to_caps();
+    let tier = TierSelection::select(&caps).unwrap_or(DeviceTier::Low);
+    let selected = select_asr_model_for_tier(tier);
+
+    if selected == p.expected_asr_pack {
+        if let Some(pack_id) = selected {
+            if let Some(entry) = registry.find(pack_id) {
+                if !entry.min_tier.satisfied_by(tier_to_min_tier(tier)) {
+                    return EvalResult::fail(
+                        format!("asr_select: {}", p.name),
+                        format!("ASR model {} min_tier not satisfied by device tier {:?}", pack_id, tier),
+                    );
+                }
+            } else {
+                return EvalResult::fail(
+                    format!("asr_select: {}", p.name),
+                    format!("ASR model {} not found in registry", pack_id),
+                );
+            }
+        }
+        EvalResult::pass(format!("asr_select: {}", p.name))
+    } else {
+        EvalResult::fail(
+            format!("asr_select: {}", p.name),
+            format!("expected {:?}, got {:?}", p.expected_asr_pack, selected),
+        )
+    }
+}
+
+fn test_safety_model_selection(p: &DeviceProfile, registry: &ModelRegistry) -> EvalResult {
+    let caps = p.to_caps();
+    let tier = TierSelection::select(&caps).unwrap_or(DeviceTier::Low);
+    let selected = select_safety_model_for_tier(tier);
+
+    if selected == p.expected_safety_pack {
+        if let Some(entry) = registry.find(selected) {
+            if !entry.min_tier.satisfied_by(tier_to_min_tier(tier)) {
+                return EvalResult::fail(
+                    format!("safety_select: {}", p.name),
+                    format!("safety model {} min_tier not satisfied by device tier {:?}", selected, tier),
+                );
+            }
+        } else {
+            return EvalResult::fail(
+                format!("safety_select: {}", p.name),
+                format!("safety model {} not found in registry", selected),
+            );
+        }
+        EvalResult::pass(format!("safety_select: {}", p.name))
+    } else {
+        EvalResult::fail(
+            format!("safety_select: {}", p.name),
+            format!("expected {}, got {}", p.expected_safety_pack, selected),
+        )
+    }
+}
+
+fn test_video_model_selection(p: &DeviceProfile, registry: &ModelRegistry) -> EvalResult {
+    let caps = p.to_caps();
+    let tier = TierSelection::select(&caps).unwrap_or(DeviceTier::Low);
+    let selected = select_video_model_for_tier(tier);
+
+    if selected == p.expected_video_pack {
+        if let Some(pack_id) = selected {
+            if let Some(entry) = registry.find(pack_id) {
+                if !entry.min_tier.satisfied_by(tier_to_min_tier(tier)) {
+                    return EvalResult::fail(
+                        format!("video_select: {}", p.name),
+                        format!("video model {} min_tier not satisfied by device tier {:?}", pack_id, tier),
+                    );
+                }
+            } else {
+                return EvalResult::fail(
+                    format!("video_select: {}", p.name),
+                    format!("video model {} not found in registry", pack_id),
+                );
+            }
+        }
+        EvalResult::pass(format!("video_select: {}", p.name))
+    } else {
+        EvalResult::fail(
+            format!("video_select: {}", p.name),
+            format!("expected {:?}, got {:?}", p.expected_video_pack, selected),
+        )
     }
 }

@@ -1,0 +1,36 @@
+# Community Overlay — kchat.community.sports.guardrail.v1
+#
+# Sports / fan club overlay. Tightens harassment (rivalry pile-on) and
+# violence-threat handling.
+
+skill_id: kchat.community.sports.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: sports
+  age_mode: mixed_age
+  visibility: public_summary
+  set_by: group_admin
+
+rules:
+  - category: 5   # HARASSMENT
+    action: warn
+    suggest_mute: true
+    note: >-
+      Fan-rivalry harassment warns and offers a peer-mute before
+      display.
+  - category: 3   # VIOLENCE_THREAT
+    action: strong_warn
+    note: >-
+      Threats of violence in match-day or rivalry contexts surface a
+      hard modal warning.
+
+group_risk_counters:
+  - counter_id: group_violence_threats_7d
+    method: device_local_expiring_counter
+    window: 7d
+    thresholds:
+      label_at: 1
+      escalate_at: 3

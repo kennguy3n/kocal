@@ -1,0 +1,102 @@
+# kchat.jurisdiction.archetype-strict-adult.guardrail.v1
+#
+# Strict adult-content jurisdiction archetype: severity floor 5 on
+# category 10 (SEXUAL_ADULT). One of three archetype overlays that
+# validate the jurisdiction layering model before concrete country
+# packs ship. See ARCHITECTURE.md "Skill Layering Model".
+#
+# The archetype deliberately pins SEXUAL_ADULT (category 10) at the
+# jurisdictional-ban floor (severity 5), while preserving the global
+# protected-speech contexts so news, education, counterspeech, and
+# quoted speech are not swept up by the stricter floor.
+
+skill_id: kchat.jurisdiction.archetype-strict-adult.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+# ~18 months from 2026-04-29 — the maximum permitted by the compiler
+# under the anti-misuse controls in ARCHITECTURE.md.
+expires_on: "2027-10-29"
+signers: [trust_and_safety, legal_review, cultural_review]
+
+# --------------------------------------------------------------------------
+# Activation
+# --------------------------------------------------------------------------
+activation:
+  criteria:
+    - user_selected_region: archetype-strict-adult
+    - group_declared_jurisdiction: archetype-strict-adult
+    - app_store_install_region: archetype-strict-adult
+    - enterprise_managed_policy: archetype-strict-adult
+  forbidden_criteria:
+    - gps_location
+    - ip_geolocation
+    - inferred_nationality
+    - inferred_ethnicity
+    - inferred_religion
+
+# --------------------------------------------------------------------------
+# Local definitions — archetype placeholders; concrete country packs
+# replace these values with jurisdiction-specific statute references.
+# --------------------------------------------------------------------------
+local_definitions:
+  legal_age_general: 18
+  legal_age_sexual_content_consumer: 18
+  legal_age_marketplace_alcohol: 21
+  legal_age_marketplace_tobacco: 21
+  protected_classes: []
+  listed_extremist_orgs: []
+  restricted_symbols: []
+  election_rules:
+    civic_window_open:  "1970-01-01"
+    civic_window_close: "1970-01-01"
+    authority_resource_id: archetype_strict_adult_authority_v1
+
+# --------------------------------------------------------------------------
+# Local language assets — archetype uses English only. Concrete country
+# packs layer additional language asset bundles under lexicons/ and
+# normalization.yaml.
+# --------------------------------------------------------------------------
+local_language_assets:
+  primary_languages: [en]
+  lexicons:
+    - lexicon_id: archetype_strict_adult_lexicon_v1
+      language: en
+      categories: [10]  # SEXUAL_ADULT
+      provenance: kchat_trust_and_safety_archetype_v1
+  normalization:
+    nfkc: true
+    case_fold: true
+    homoglyph_map_id: homoglyph_core_v1
+    transliteration_refs: [translit_core_v1]
+
+# --------------------------------------------------------------------------
+# Overrides
+#   category 10 SEXUAL_ADULT -> severity floor 5 (jurisdictional ban).
+# --------------------------------------------------------------------------
+overrides:
+  - category: 10   # SEXUAL_ADULT
+    severity_floor: 5
+    note: >-
+      Adult sexual content is banned in this jurisdictional archetype.
+      Any positive signal at or above the label_only threshold is
+      pinned to severity 5 (critical_intervention).
+
+# --------------------------------------------------------------------------
+# Allowed contexts — preserve the global protected-speech carve-outs.
+# --------------------------------------------------------------------------
+allowed_contexts:
+  - QUOTED_SPEECH_CONTEXT
+  - NEWS_CONTEXT
+  - EDUCATION_CONTEXT
+  - COUNTERSPEECH_CONTEXT
+
+# --------------------------------------------------------------------------
+# User notice
+# --------------------------------------------------------------------------
+user_notice:
+  visible_pack_summary: >-
+    Strict adult-content archetype. Adult sexual content is treated as
+    a jurisdictional ban (severity 5). Protected speech — news,
+    education, counterspeech, quoted speech — is preserved.
+  appeal_resource_id: archetype_strict_adult_appeal_v1
+  opt_out_allowed: false

@@ -1,0 +1,161 @@
+# Training corpus subset — category 6 (hate).
+# Loaded by build-tools/compiler/training_data.py at module
+# import time and concatenated with the other cat_*.yaml files
+# to form ``TRAINING_EXAMPLES``.
+#
+# See compiler/training_data.py for the loader, the SAFE-class
+# over-sampling rationale, and the per-category coverage
+# constraints (multilingual paraphrases, adversarial variants,
+# near-boundary cases).
+category_id: 6
+category_name: hate
+examples:
+- dehumanising language about an ethnic minority group
+- slur-based attack on a religious community
+- hate speech denying the humanity of a protected group
+- racist generalisation comparing a group to animals
+- homophobic insult calling for the removal of LGBTQ people
+- xenophobic message blaming immigrants for all problems
+- antisemitic conspiracy theory about a religious group
+- misogynistic dehumanisation of women in a workplace context
+- transphobic slur and harassment based on gender identity
+- ableist language mocking people with disabilities
+- anti-muslim slur calling for the deportation of an entire community
+- denial of historical atrocities targeting a specific ethnic group
+- ageist dehumanisation of older workers as a 'burden'
+- caste-based slur dehumanising a community
+- anti-indigenous slur and calls to deny land rights
+- anti-roma generalisations framing a community as inherently criminal
+- misogynoir attack combining racial and gendered slurs
+- nationalist diatribe calling a minority 'invaders' in their own country
+- anti-asian rhetoric blaming a pandemic on an entire ethnicity
+- religious slur portraying believers as fundamentally dangerous
+- propaganda racista contra una minoría étnica
+- ヘイトスピーチで宗教的少数派を非難している
+- rassistische beleidigung gegen eine ethnische minderheit
+- شتائم عنصرية ضد أقلية دينية
+- একটি জাতিগত গোষ্ঠীর বিরুদ্ধে ঘৃণামূলক বক্তব্য
+- ngôn từ phân biệt chủng tộc đối với một dân tộc thiểu số
+- एक धार्मिक समूह के खिलाफ नफरत भरा भाषण
+- xingamentos racistas contra uma minoria religiosa
+- 私たちはその民族を人間として見ない発言を非難する
+- dog-whistle attack using coded slurs to dehumanise a group
+- hate symbol used as a profile picture with a slur in the bio
+- euphemistic call to 'send them back' aimed at an immigrant community
+- number-based codeword for a known hate slogan
+- '''parasites'' as a euphemism for a religious minority'
+- hostile but ambiguous comment about an ethnic group's customs
+- policy criticism that slides into dehumanising rhetoric about a community
+- political 'opinion' framed as ethnic insult
+- backhanded compliment that reduces a community to a stereotype
+- dehumanising a religious group as 'a disease that must be cured'
+- calling for the expulsion of a named ethnic minority from a country
+- transphobic slur calling trans people 'predators by definition'
+- antisemitic blood libel restated as 'historical fact'
+- anti-black trope that frames a community as inherently criminal
+- anti-asian slur tied to a public-health scapegoating campaign
+- homophobic rhetoric calling for criminalising same-sex relationships
+- misogynist 'biological inferiority' rhetoric aimed at female colleagues
+- anti-roma stereotype framing the community as 'natural thieves'
+- anti-immigrant dehumanisation comparing new arrivals to 'pests'
+- anti-muslim conspiracy theory framing followers as 'fifth columnists'
+- anti-indigenous trope claiming a community has 'no real history'
+- retórica que deshumaniza a una minoría religiosa como 'parásitos'
+- retorica che paragona una minoranza a 'animali'
+- риторика, дегуманизирующая национальное меньшинство
+- 把某个民族比作动物的非人化言论
+- propos déshumanisants comparant un groupe ethnique à 'des nuisibles'
+- dog whistle code numbers tied to a white-supremacist slogan
+- '''globalists'' as a coded slur for a religious minority'
+- '''invaders'' framing for refugees as part of a coded hate campaign'
+- triple-parentheses notation used to mark out members of a religious group
+- policy critique that crosses into hateful generalisation about a community
+# --- WS1a expansion: focus-region multilingual + adversarial paraphrases. ---
+- dehumanising slur directed at people of a specific ethnicity
+- post calling a religious group vermin and demanding their removal
+- claim that members of a national-origin group are subhuman and undeserving of rights
+- propaganda framing women as inferior and unworthy of full citizenship
+- post mocking a disabled person using slurs to dehumanise them
+- 'meme: depicting a religious minority as cockroaches infesting a country'
+- statement that interracial families are an abomination and must be punished
+- dehumanising language toward refugees, calling them parasites
+- conspiracy theory framing a religious group as a global plot needing eradication
+- denial of the holocaust paired with mockery of jewish victims
+- comentario racista deshumanizante contra un grupo étnico
+- discurso de odio contra musulmanes calificándolos de plaga
+- afirmación de que los inmigrantes son inferiores y peligrosos
+- rassistische beleidigung gegen menschen einer bestimmten ethnischen herkunft
+- hasspost, der eine religiöse minderheit als ungeziefer darstellt
+- خطاب كراهية يصف مجموعة عرقية بأنها وباء
+- إنكار محرقة اليهود مع السخرية من ضحاياها
+- 特定の民族集団に対する非人間化の中傷
+- ホロコースト否定とユダヤ人犠牲者への嘲笑
+- একটি জাতিগোষ্ঠীকে অমানবিক করে তুলে ধরা ঘৃণাত্মক পোস্ট
+- ধর্মীয় সংখ্যালঘুদের প্রতি ঘৃণাত্মক প্রচার
+- एक जातीय समूह को अमानवीय बनाने वाली नफरत भरी टिप्पणी
+- धार्मिक अल्पसंख्यकों के खिलाफ षड्यंत्रकारी प्रचार
+- 针对特定民族群体的非人化仇恨言论
+- 否认大屠杀并嘲笑犹太人受害者的帖子
+- ucapan kebencian yang menghina kumpulan etnik tertentu
+- propaganda yang menjelekkan agama minoriti sebagai ancaman
+- ஒரு குறிப்பிட்ட இனத்தைச் சேர்ந்தவர்களை அவமதிக்கும் வெறுப்புக் கருத்து
+- மதச் சிறுபான்மையினரை ஆபத்தாக சித்தரிக்கும் வெறுப்புப் பிரச்சாரம்
+- discours haineux qualifiant un groupe ethnique de parasites
+- propagande raciste niant l'humanité d'une minorité religieuse
+- discorso d'odio che descrive un gruppo etnico come parassiti
+- propaganda razzista che disumanizza una minoranza religiosa
+- discurs d'odi che descriva ina gruppa ethnica sco parasits
+- discurso de ódio chamando um grupo étnico de praga
+- d3humanizing sl1r d1rected at p3ople of a sp3cific ethn1city
+- h0locaust den1al mocking j3wish v1ctims and gl0rifying perpetrators
+- 'near-extremism boundary: hate speech that escalates into a call to expel a religious group'
+- 'near-harassment boundary: sustained slur-based attacks on a single user from a minority group'
+- 'borderline: ethnic stereotypes presented as humour that still dehumanise the targeted group'
+- 'borderline: religious criticism that crosses into calling believers subhuman'
+- referring to a national group as cockroaches deserving extermination
+- meme accusing a religious community of being engineered by a foreign power to destroy our nation
+- post claiming queer people are mentally ill and should be removed from society
+- dehumanising language toward indigenous communities and their cultures
+- claim that an entire caste is genetically inferior and should be segregated
+- racist tropes blaming an ethnic group for an economic downturn
+- statement that women should not have the right to vote because they are intellectually lesser
+- celebrating a hate crime as a justified act against a minority group
+- calling for the boycott of a religious community's businesses to drive them out
+- mocking a specific tribe's traditional dress and labelling them primitive
+- referring to Roma people with slurs and calling for their forced relocation
+- claim that mixed-race relationships are a crime against nature
+- hate speech directed at sikh men based on their religious appearance
+- dehumanising portrayal of disability-rights activists as exploiting sympathy
+- ridicule of asylum seekers framed as protecting national purity
+- post calling for the deportation of a minority group based solely on ethnicity
+- claim that a particular ethnic group is responsible for all street crime
+- caricatures depicting east-asian people as virus-carriers
+- propaganda blaming a religious group for global financial conspiracies
+- post advocating that lgbtq parents should be banned from raising children
+- sustained slur campaign against a single user because of their faith
+- "report: a message attacks people of a particular ethnicity with a dehumanising slur"
+- "segnalazione: un utente insulta ripetutamente le persone di una certa religione con epiteti d'odio"
+# --- Stream-B expansion: direct, message-style identity-targeted hate, several
+# coded/sarcastic (distinct from kchat-skills/eval/held_out_multilingual.yaml).
+- "they breed like rats and infest every city they touch, send them all back"
+- "a country full of those animals is no country at all, get rid of them"
+- "they're not real people, just savages pretending to be civilised"
+- "funny how crime always spikes the moment that kind moves into a neighbourhood"
+- "such a vibrant culture they bring, said no one who has seen the aftermath"
+- "we all know which community is really behind it, we just can't say it out loud"
+- "esos animales arruinan todo donde llegan, fuera de nuestro país"
+- "no son personas de verdad, son una raza inferior que sobra aquí"
+- "die vermehren sich wie ratten und zerstören jede stadt, schickt sie zurück"
+- "ces animaux gâchent tout là où ils arrivent, qu'ils dégagent de chez nous"
+- "si moltiplicano come topi e rovinano ogni città, rispediteli indietro"
+- "esses animais estragam tudo por onde passam, fora do nosso país"
+- "هؤلاء يتكاثرون كالجرذان ويفسدون كل مدينة، أعيدوهم من حيث أتوا"
+- "ليسوا بشرًا حقيقيين، مجرد عرق منحط لا مكان له بيننا"
+- "걔네는 쥐새끼처럼 번식해서 도시를 다 망쳐, 전부 돌려보내야 해"
+- "진짜 인간도 아니야, 그냥 열등한 족속일 뿐이라니까"
+- "वे चूहों की तरह बढ़ते हैं और हर शहर को बर्बाद कर देते हैं, इन्हें वापस भेजो"
+- "वे असली इंसान नहीं हैं, बस एक घटिया नस्ल हैं जिनकी यहाँ कोई जगह नहीं"
+- "あいつらはネズミみたいに増えて街を壊す、全員追い返せ"
+- "他们像老鼠一样繁殖，把每个城市都毁了，把他们都赶回去"
+- "они плодятся как крысы и портят каждый город, отправьте их обратно"
+- "oh sure, totally a coincidence that everything goes downhill once they arrive"

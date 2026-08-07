@@ -1,0 +1,21 @@
+# ES (Ecuador) lexicon bundle for the kchat.jurisdiction.ec.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: ec_es_lexicon_v1
+language: es
+locale: es-EC
+provenance: kchat_trust_and_safety_ec_v1
+categories:
+  - 1
+  - 4
+terms:
+  - term_id: ec_es_term_cona_v1
+    categories: [1]
+    notes: Código de la Niñez y Adolescencia (CONA) indicators (catalogue-only).
+  - term_id: ec_es_term_coip_anti_terror_v1
+    categories: [4]
+    notes: COIP Art. 366 anti-terror indicators (catalogue-only).

@@ -1,0 +1,141 @@
+{
+  "catalog_id": "kchat.guardrail.vision_prototypes.v1",
+  "catalog_status": "production_approved",
+  "centroids_sha256": "27488cd6c0313e483fc0a7efc523c0d8ba484f5a1b078ca5905ed0d7a4620d79",
+  "embed_dim": 512,
+  "encoder_model_id": "apple/MobileCLIP-S2",
+  "image_exemplar_categories": [
+    0,
+    3,
+    11
+  ],
+  "image_exemplar_manifest": "kchat-skills/global/vision_image_exemplars.yaml",
+  "mode": "hybrid_image_text",
+  "placeholder": false,
+  "prompts_per_category": {
+    "0": 10,
+    "1": 10,
+    "10": 9,
+    "11": 9,
+    "12": 8,
+    "13": 8,
+    "14": 8,
+    "15": 9,
+    "2": 9,
+    "3": 9,
+    "4": 8,
+    "5": 9,
+    "6": 8,
+    "7": 9,
+    "8": 8,
+    "9": 9
+  },
+  "prototypes_sha256": "b5949df1c7570635f3ac4d349c2a82bb40f511457258854063994dec2be592f8",
+  "provenance_per_category": [
+    {
+      "category": 0,
+      "clip_count": 5,
+      "frame_count": 20,
+      "frames_per_clip": 4,
+      "source": "image_exemplar"
+    },
+    {
+      "category": 1,
+      "prompt_count": 10,
+      "source": "text_prompt"
+    },
+    {
+      "category": 2,
+      "prompt_count": 9,
+      "source": "text_prompt"
+    },
+    {
+      "category": 3,
+      "clip_count": 1,
+      "frame_count": 4,
+      "frames_per_clip": 4,
+      "source": "image_exemplar"
+    },
+    {
+      "category": 4,
+      "prompt_count": 8,
+      "source": "text_prompt"
+    },
+    {
+      "category": 5,
+      "prompt_count": 9,
+      "source": "text_prompt"
+    },
+    {
+      "category": 6,
+      "prompt_count": 8,
+      "source": "text_prompt"
+    },
+    {
+      "category": 7,
+      "prompt_count": 9,
+      "source": "text_prompt"
+    },
+    {
+      "category": 8,
+      "prompt_count": 8,
+      "source": "text_prompt"
+    },
+    {
+      "category": 9,
+      "prompt_count": 9,
+      "source": "text_prompt"
+    },
+    {
+      "category": 10,
+      "prompt_count": 9,
+      "source": "text_prompt"
+    },
+    {
+      "category": 11,
+      "clip_count": 2,
+      "frame_count": 8,
+      "frames_per_clip": 4,
+      "source": "image_exemplar"
+    },
+    {
+      "category": 12,
+      "prompt_count": 8,
+      "source": "text_prompt"
+    },
+    {
+      "category": 13,
+      "prompt_count": 8,
+      "source": "text_prompt"
+    },
+    {
+      "category": 14,
+      "prompt_count": 8,
+      "source": "text_prompt"
+    },
+    {
+      "category": 15,
+      "prompt_count": 9,
+      "source": "text_prompt"
+    }
+  ],
+  "seed": 7,
+  "size_bytes": 33042,
+  "taxonomy_size": 16,
+  "text_fallback_categories": [
+    1,
+    2,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12,
+    13,
+    14,
+    15
+  ],
+  "total_prompts": 140
+}

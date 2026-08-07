@@ -1,0 +1,141 @@
+# kchat.jurisdiction.in.guardrail.v1
+#
+# India jurisdiction overlay — first-wave country pack.
+# Layered on top of kchat.global.guardrail.baseline.
+#
+# Notable floors (above the global baseline):
+#   * EXTREMISM     (4)  -> severity_floor 4 (Unlawful Activities
+#                           Prevention Act — UAPA listed orgs).
+#   * HATE          (6)  -> severity_floor 4 (IPC §153A / §295A —
+#                           promoting enmity / outraging religious
+#                           sentiments).
+#   * SEXUAL_ADULT  (10) -> severity_floor 5 (IT Act §67 / §67A —
+#                           transmission of obscene / sexually
+#                           explicit material).
+#
+# Marketplace alcohol age varies by state (some states are dry, some
+# 18, some 21, some 25). The conservative shipping value is 21.
+#
+# Protected classes follow Constitution Articles 15–16 enumeration
+# and the SC/ST (Prevention of Atrocities) Act 1989 + Rights of
+# Persons with Disabilities Act 2016.
+
+skill_id: kchat.jurisdiction.in.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+expires_on: "2027-10-29"
+signers: [trust_and_safety, legal_review, cultural_review]
+
+# --------------------------------------------------------------------------
+# Activation
+# --------------------------------------------------------------------------
+activation:
+  criteria:
+    - user_selected_region: in
+    - group_declared_jurisdiction: in
+    - app_store_install_region: in
+    - enterprise_managed_policy: in
+  forbidden_criteria:
+    - gps_location
+    - ip_geolocation
+    - inferred_nationality
+    - inferred_ethnicity
+    - inferred_religion
+
+# --------------------------------------------------------------------------
+# Local definitions
+# --------------------------------------------------------------------------
+local_definitions:
+  legal_age_general: 18
+  legal_age_sexual_content_consumer: 18
+  # State-by-state variation (Gujarat / Bihar are dry; Maharashtra
+  # 25; Delhi 25; Karnataka 21; etc.). Conservative shipping value
+  # is 21 — covers the vast majority of regulated states without
+  # under-blocking dry-state delivery.
+  legal_age_marketplace_alcohol: 21
+  legal_age_marketplace_tobacco: 18
+  # Constitution Articles 15-16 enumeration + SC/ST PoA Act.
+  protected_classes:
+    - race
+    - religion
+    - caste
+    - sex
+    - place_of_birth
+    - disability
+  listed_extremist_orgs:
+    - in_uapa_listed_orgs_v1
+  restricted_symbols:
+    - in_restricted_symbols_v1
+  election_rules:
+    # Election Commission of India general-election cycle window.
+    civic_window_open:  "2029-03-01"
+    civic_window_close: "2029-06-15"
+    authority_resource_id: in_eci_authority_v1
+
+# --------------------------------------------------------------------------
+# Local language assets — Hindi + Indian English primary.
+# Devanagari transliteration ref added on top of the core ref.
+# --------------------------------------------------------------------------
+local_language_assets:
+  primary_languages: [hi, en-IN]
+  lexicons:
+    - lexicon_id: in_hi_lexicon_v1
+      language: hi
+      categories: [4, 6, 10]
+      provenance: kchat_trust_and_safety_in_v1
+    - lexicon_id: in_en_lexicon_v1
+      language: en
+      categories: [4, 6, 10]
+      provenance: kchat_trust_and_safety_in_v1
+  normalization:
+    nfkc: true
+    case_fold: true
+    homoglyph_map_id: homoglyph_core_v1
+    transliteration_refs:
+      - translit_core_v1
+      - translit_devanagari_v1
+
+# --------------------------------------------------------------------------
+# Overrides
+# --------------------------------------------------------------------------
+overrides:
+  - category: 4   # EXTREMISM
+    severity_floor: 4
+    note: >-
+      UAPA (Unlawful Activities Prevention Act) — recruitment /
+      glorification of MHA-listed terrorist orgs is treated as a
+      strong-warn jurisdictional escalation (severity 4). Protected
+      contexts remain permitted.
+  - category: 6   # HATE
+    severity_floor: 4
+    note: >-
+      IPC §153A (promoting enmity between groups) and IPC §295A
+      (outraging religious sentiments) — speech against a protected
+      class is raised to the strong-warn floor (severity 4).
+  - category: 10  # SEXUAL_ADULT
+    severity_floor: 5
+    note: >-
+      IT Act §67 / §67A — transmission of obscene or sexually
+      explicit material is treated as a critical-intervention ban
+      (severity 5).
+
+# --------------------------------------------------------------------------
+# Allowed contexts
+# --------------------------------------------------------------------------
+allowed_contexts:
+  - QUOTED_SPEECH_CONTEXT
+  - NEWS_CONTEXT
+  - EDUCATION_CONTEXT
+  - COUNTERSPEECH_CONTEXT
+
+# --------------------------------------------------------------------------
+# User notice
+# --------------------------------------------------------------------------
+user_notice:
+  visible_pack_summary: >-
+    India safety pack. UAPA, IPC §153A / §295A, and IT Act §67
+    raise severity floors on extremism, hate, and adult-content
+    categories. News, education, counterspeech, and quoted speech
+    remain protected.
+  appeal_resource_id: in_appeal_resource_v1
+  opt_out_allowed: true

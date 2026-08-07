@@ -1,0 +1,57 @@
+# Community Overlay — kchat.community.political.guardrail.v1
+#
+# Campaign / civic overlay. Tightens civic misinformation to warn and
+# applies a workplace-style harassment policy.
+
+skill_id: kchat.community.political.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: political
+  age_mode: adult_only
+  visibility: public_summary
+  set_by: group_admin
+
+rules:
+  - category: 14   # MISINFORMATION_CIVIC
+    action: warn
+    note: >-
+      Election or civic misinformation surfaces a warning when a
+      jurisdiction-flagged civic window is open. Authoritative
+      electoral-authority resource links surface alongside the warning.
+  - category: 5    # HARASSMENT
+    action: warn
+    suggest_mute: true
+    note: >-
+      Targeted insults, doxxing, and pile-on warn before display and
+      offer a peer-mute.
+  - category: 6    # HATE
+    action: strong_warn
+    note: >-
+      Hate speech targeting protected classes is tightened to a hard
+      modal warning in political contexts where radicalization risk
+      is elevated.
+  - category: 3    # VIOLENCE_THREAT
+    action: strong_warn
+    note: >-
+      Credible threats of political violence, doxxing of public
+      figures, and incitement are tightened given the elevated risk
+      in political contexts.
+  - category: 4    # EXTREMISM
+    action: strong_warn
+    note: >-
+      Extremist content and recruitment are tightened in political
+      contexts where radicalization pathways are most active.
+  - category: 13   # MISINFORMATION_HEALTH
+    action: warn
+    note: >-
+      Health misinformation in political contexts warns to prevent
+      the crossover of political misinformation into health harm
+      (e.g., vaccine politicization).
+  - category: 16   # DEEPFAKE_SYNTHETIC
+    action: strong_warn
+    note: >-
+      Deepfake and synthetic media are tightened in political contexts
+      given the elevated risk of election manipulation.

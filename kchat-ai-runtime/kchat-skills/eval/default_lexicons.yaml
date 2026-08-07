@@ -1,0 +1,283 @@
+# Default lexicons consumed by ``eval_runner.py`` when no jurisdiction
+# overlay is provided.
+#
+# These lexicons are a *deliberately conservative* baseline — they
+# represent the harm-indicative surface tokens that are common across
+# jurisdictions and that the deterministic-detector layer must catch
+# even before any jurisdiction overlay loads. Production deployments
+# replace this file (or merge it with jurisdiction-specific lexicons)
+# by passing their own ``SkillBundle`` to ``GuardrailPipeline``.
+#
+# Token-matching contract (see ``compiler.pipeline.match_lexicons``):
+#
+# * Tokens are matched against the *normalised* text (NFKC, casefold,
+#   homoglyph map, leet defang) using regex ``\b<token>\b``.
+# * Multi-word tokens match as a phrase: ``kill yourself`` will match
+#   the substring "kill yourself" but not "kill them".
+# * Tokens are case-folded by the matcher; do not include uppercase
+#   variants here.
+#
+# Category ids match ``compiler.training_data.CAT_*``:
+#   1=CHILD_SAFETY  2=SELF_HARM  3=VIOLENCE_THREAT  4=EXTREMISM
+#   5=HARASSMENT    6=HATE       7=SCAM_FRAUD       8=MALWARE_LINK
+#   9=PRIVATE_DATA 10=SEXUAL_ADULT 11=DRUGS_WEAPONS 12=ILLEGAL_GOODS
+#  13=MISINFO_HEALTH 14=MISINFO_CIVIC 15=COMMUNITY_RULE
+#
+# Tokens are descriptors of harm intent, not slurs — slur dictionaries
+# live in jurisdiction-specific lexicon files under
+# ``kchat-skills/jurisdictions/<cc>/lexicons/`` and are intentionally
+# absent here so the eval runner stays culturally neutral.
+schema_version: 1
+default_lexicons:
+  - lexicon_id: default_child_safety_v1
+    category: 1
+    weight: 0.95
+    tokens:
+      - "underage"
+      - "no clothes"
+      - "send nudes"
+      - "between us"
+      - "keep it secret"
+      - "our secret"
+      - "send pictures"
+      - "send pics"
+      - "তুমি ছোট"        # vi/bn child indicator phrase (descriptor only)
+      - "গোপন ছবি"        # bn "secret picture"
+      - "menor"           # es minor
+      - "fotos del pequeño"
+      - "amiguito sin ropa"
+      - "no clothes, keep it between us"
+      # Vietnamese grooming directives — the secrecy instruction + photo
+      # solicitation an adult uses on a child, mirroring the EN
+      # "between us" / "don't tell your parents" + "send me a photo"
+      # pattern that the English tokens above already catch. Absent from
+      # benign Vietnamese chat (the secrecy + minor-photo construction is
+      # the grooming signature, not the individual words).
+      - "đừng nói với bố mẹ"          # vi "don't tell mom and dad"
+      - "gửi cho chú một tấm ảnh"     # vi "send uncle a photo first"
+      # Sextortion coercion — the baseline pack lists ``sextortion_patterns``
+      # under the minor-protection detectors. The possession-claim +
+      # threat-to-publish construction is the coercion signature; benign
+      # chat does not reproduce "i have your private pictures … or i post
+      # them" verbatim.
+      - "i have your private pictures"
+      - "or i post them to everyone"
+  - lexicon_id: default_self_harm_v1
+    category: 2
+    # Weight 0.94 sits just above VIOLENCE_THREAT (0.93) and just below
+    # CHILD_SAFETY (0.95). The LEXICON branch resolves a message that
+    # hits several categories by taking the highest-weight hit, so this
+    # ordering ensures a self-directed phrase that also contains a
+    # generic violence verb ("i'm going to kill myself" also matches the
+    # "going to kill" threat token) is classified as SELF_HARM, not
+    # VIOLENCE_THREAT — the more specific, safety-critical outcome.
+    weight: 0.94
+    # Precision contract for SELF_HARM (see PR / stream-I notes):
+    # tokens are EITHER (a) second-person encouragement / suicide-bait
+    # ("kill yourself", "go kill yourself") OR (b) first-person
+    # explicit, resolved intent ("i'm going to kill myself tonight").
+    # Both forms are absent from the benign genres that dominate
+    # self-harm discussion — clinical / support / recovery text uses
+    # third-person or gerund framing ("warning signs of self-harm",
+    # "if you are feeling suicidal", "thoughts of ending your life"),
+    # never the imperative or the first-person resolved phrasing. That
+    # asymmetry — not a runtime context guard — is what keeps these
+    # deterministic hits high-precision.
+    tokens:
+      - "kill yourself"
+      - "kys"
+      - "kms"
+      - "kill urself"
+      - "go kill yourself"
+      - "neck yourself"            # online suicide-bait slang
+      - "unalive yourself"
+      - "unalive myself"
+      - "end it all"
+      - "end your life"
+      - "end yourself"
+      - "should just end it"
+      - "nobody would miss you"
+      - "you should just end it"
+      - "lose the will to live"
+      - "drink bleach and die"     # second-person suicide-bait
+      # First-person resolved intent (method / timeline). Support and
+      # recovery talk does not use this resolved, present-tense form.
+      - "i'm going to kill myself tonight"
+      - "i am going to kill myself tonight"
+      - "i will end my life tonight"
+      - "i've decided to end my life"
+      - "this is my suicide note"
+      - "いなくなった方が"   # ja euphemism "would be better gone"
+      - "いなくなった方がみんな幸せ"  # ja full phrase
+      - "自殺します"          # ja "I will commit suicide"
+      - "今夜死にます"        # ja "I will die tonight"
+      - "我今晚就去自杀"      # zh "I'm going to go commit suicide tonight"
+      - "你去死吧"            # zh second-person "go die"
+      - "오늘 밤 자살할 거예요"   # ko "I'll commit suicide tonight"
+      - "너 자살해"           # ko second-person "kill yourself"
+      - "matarme"
+      - "suicidarme"
+      - "quitarme la vida"
+      - "voy a suicidarme esta noche"   # es "I'll kill myself tonight"
+      - "deberías suicidarte"           # es "you should kill yourself"
+      - "quítate la vida"               # es imperative "take your life"
+      - "vou me matar hoje"             # pt "I'll kill myself today"
+      - "você devia se matar"           # pt "you should kill yourself"
+      - "vou acabar com a minha vida"   # pt "I'll end my life"
+      - "je vais me suicider ce soir"   # fr "I'll kill myself tonight"
+      - "tu devrais te suicider"        # fr "you should kill yourself"
+      - "je veux en finir avec la vie"  # fr "I want to end my life"
+      - "ich bringe mich heute um"      # de "I'm killing myself today"
+      - "du solltest dich umbringen"    # de "you should kill yourself"
+      - "ich will mich umbringen"       # de "I want to kill myself"
+      - "voglio uccidermi stasera"      # it "I want to kill myself tonight"
+      - "dovresti ucciderti"            # it "you should kill yourself"
+      - "سأنتحر الليلة"        # ar "I will commit suicide tonight"
+      - "سوف أنهي حياتي"       # ar "I will end my life"
+      - "يجب أن تقتل نفسك"     # ar "you should kill yourself"
+      - "मैं आत्महत्या कर लूंगा"   # hi "I will commit suicide"
+      - "खुद को मार डालो"        # hi imperative "kill yourself"
+  - lexicon_id: default_violence_threat_v1
+    category: 3
+    weight: 0.93
+    tokens:
+      # Multi-word phrases only — single-word ``die`` / ``kill`` /
+      # ``hurt`` lemmas false-positive on benign chat across
+      # languages (German ``die`` is the definite article, Spanish
+      # ``mate`` is a tea, English ``kill it`` means do well).
+      # Production lexicons add language-specific entries via the
+      # jurisdiction overlay; this baseline is descriptor-only.
+      - "kill them"
+      - "kill them all"
+      - "i'll kill you"
+      - "i'll kill them"
+      - "i will kill"
+      - "going to kill"
+      - "going to hurt"
+      - "gonna kill"
+      - "gonna hurt"
+      - "hope they die"
+      - "hope all of them die"
+      - "hope all of them dıe"   # dotless-i variant
+      - "hurt you"
+      - "hurt yourself"
+      - "beat you up"
+      - "voy a matarte"
+      - "matarte"
+      - "te mato"
+      - "te voy a matar"
+      # Code-switch threats — Spanish auxiliary + English verb.
+      - "voy a hurt"
+      - "te voy a hurt"
+      - "voy a kill"
+      - "te voy a kill"
+      - "أؤذيك"           # ar "i'll hurt you"
+      - "سأقتلك"          # ar "i will kill you"
+      - "জীবন শেষ"        # bn "end your life"
+      - "তোকে দেখে নেব"     # bn threat idiom
+      - "tao sẽ tìm mày"
+      - "mày hối hận"
+  - lexicon_id: default_hate_v1
+    category: 6
+    weight: 0.90
+    tokens:
+      # Multi-word descriptors of dehumanising / eliminationist
+      # rhetoric. Single-word ``hate`` / ``hate them`` false-positive
+      # on counterspeech (``i hate that they say...``) and so are
+      # excluded here — the test corpus's ``benign_counter_*`` cases
+      # rely on this. ``i hate them all`` and ``hate them all`` are
+      # included because the universal-quantifier suffix is what
+      # turns the phrase from a complaint into a group-targeted
+      # statement; counterspeech does not use this construction.
+      - "i hate them all"
+      - "hate them all"
+      - "are vermin"
+      - "are parasites"
+      - "are cockroaches"
+      - "should be wiped out"
+      - "should be eliminated"
+      - "should be exterminated"
+      - "deserve to die"
+      - "deserve death"
+      - "subhuman"
+      - "sub-human"
+      - "untermensch"
+      # Xenophobic exclusion directives (national-origin "leave / you don't
+      # belong here"). Group-targeted exclusionary commands — the same
+      # rationale as ``i hate them all``: the imperative-to-leave
+      # construction turns the phrase from opinion into a targeted attack.
+      # Counterspeech that REPORTS such a message is protected two ways:
+      # it carries ``quoted_from_user`` (QUOTED_SPEECH_CONTEXT demotes the
+      # verdict to SAFE) and it paraphrases / re-quotes rather than issuing
+      # the imperative directly.
+      - "go back to where you came from"
+      - "go back to your own country"
+  - lexicon_id: default_illegal_goods_v1
+    category: 12
+    weight: 0.85
+    tokens:
+      - "got some loud"
+      - "hookup tonight"
+      - "no questions asked"
+      - "no questions, no receipts"
+  - lexicon_id: default_drugs_weapons_v1
+    category: 11
+    weight: 0.85
+    tokens:
+      - "unserialised"
+      - "ghost gun"
+      - "fully auto"
+      - "auto sear"
+      - "no script"
+      - "without prescription"
+  - lexicon_id: default_misinfo_health_v1
+    category: 13
+    weight: 0.80
+    # Precision contract for MISINFORMATION_HEALTH:
+    # deterministic tokens match the harmful DIRECTIVE / dangerous
+    # instruction ("do not vaccinate your children", "drink turpentine
+    # to cleanse your gut"), NEVER a bare claim ("vaccines cause
+    # autism"). Fact-checks, news and quote-to-debunk text reproduce
+    # the bare claim in order to refute it, but they do not reproduce
+    # the action-directive verbatim — they paraphrase it ("posts urging
+    # parents not to vaccinate") or assert the opposite ("vaccinate
+    # your children on schedule"). Matching only the directive form is
+    # what keeps these hits off the debunk / reporting surface. Bare
+    # health claims are deliberately left to the encoder + SLM tiers.
+    tokens:
+      - "do not vaccinate your children"
+      - "vaccines cause autism so don't vaccinate"
+      - "stop chemo and cure cancer naturally"
+      - "skip your insulin and reverse diabetes"
+      - "drink turpentine to cleanse your gut"
+      - "miracle mineral solution cures autism"
+      - "bleach enemas cure autism"
+      - "no vacunes a tus hijos"          # es "don't vaccinate your kids"
+      - "não vacine seus filhos"          # pt "don't vaccinate your kids"
+      - "ne vaccinez pas vos enfants"     # fr "don't vaccinate your kids"
+      - "impft eure kinder nicht"         # de "don't vaccinate your kids"
+      - "لا تطعّم أطفالك"        # ar "don't vaccinate your kids" (with shadda)
+      - "لا تطعم أطفالك"         # ar same directive, diacritic-free (chat-common; NFKC keeps shadda, so both spellings are listed)
+      - "अपने बच्चों को टीका मत लगवाओ"   # hi "don't vaccinate your children"
+  - lexicon_id: default_misinfo_civic_v1
+    category: 14
+    weight: 0.80
+    # Precision contract for MISINFORMATION_CIVIC (intentionally
+    # NARROW): deterministic tokens match only operational
+    # voter-suppression directives — a false instruction that, if
+    # acted on, disenfranchises the reader ("you can vote by text
+    # message", telling one group the wrong election day). As with
+    # health, debunks reproduce these as a NEGATION ("no, you cannot
+    # vote by text") or a paraphrase, not as the bare affirmative
+    # directive, so the affirmative-directive tokens stay off the
+    # fact-check surface. Broad civic / political claims are
+    # deliberately NOT matched deterministically (too high a
+    # quote-to-debunk false-positive risk) — they are left to the
+    # encoder + SLM tiers. This bank is small by design.
+    tokens:
+      - "you can vote by text message"
+      - "vote from home by texting"
+      - "democrats vote on wednesday"
+      - "republicans vote on wednesday"
+      - "puedes votar por mensaje de texto"   # es "you can vote by text"
+      - "vota por texto desde casa"            # es "vote from home by texting"

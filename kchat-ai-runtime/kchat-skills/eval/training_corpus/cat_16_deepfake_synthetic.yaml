@@ -1,0 +1,169 @@
+# Training corpus subset — category 16 (deepfake_synthetic).
+# Loaded by build-tools/compiler/training_data.py at module
+# import time and concatenated with the other cat_*.yaml files
+# to form ``TRAINING_EXAMPLES``.
+#
+# See compiler/training_data.py for the loader, the SAFE-class
+# over-sampling rationale, and the per-category coverage
+# constraints (multilingual paraphrases, adversarial variants,
+# near-boundary cases).
+#
+# Scope: deepfake face-swap, synthetic voice-to-video, AI-generated
+# impersonation, and doctored/spliced media designed to deceive.
+# Examples are short descriptive labels of the *content type*, never
+# instructions for producing it. Legitimate, clearly-disclosed AI art
+# is intentionally excluded here and lives in the SAFE class so the
+# head learns the deception boundary rather than "AI-generated == bad".
+category_id: 16
+category_name: deepfake_synthetic
+examples:
+# --- English: face-swap / impersonation -------------------------------
+- deepfake face-swap video impersonating a public official
+- face-swapped clip putting a celebrity into a scene they never filmed
+- synthetic video of a CEO announcing a fake merger to move markets
+- ai-generated impersonation of a bank manager requesting a transfer
+- deepfake of a politician confessing to a crime they never committed
+- swapped-face video used to fabricate a false alibi
+- forged video call deepfaking a relative to ask for emergency money
+- deepfake of a general ordering troops to stand down
+- synthetic newscast with an AI anchor reading fabricated headlines
+- face-swap putting a private person into an explicit scene to harass
+- deepfake of a judge issuing a ruling that was never made
+- impersonation video cloning a journalist to push a fake story
+- ai face-swap of an executive endorsing a crypto scam
+- deepfake of a doctor recommending a dangerous fake cure
+- synthetic video of a official declaring a fake state of emergency
+# --- English: synthetic voice-to-video / audio --------------------------
+- synthetic voice clone of a parent used in a kidnapping scam call
+- ai voice cloning of a manager authorizing a fraudulent payment
+- voice-to-video deepfake syncing cloned audio to a real speaker
+- cloned-voice robocall impersonating an election official
+- synthetic audio of a candidate making a slur they never said
+- ai-generated voiceover faked onto a real official's footage
+- deepfake audio splicing a confession from unrelated recordings
+- cloned voice of a celebrity hawking a fake giveaway
+# --- English: doctored / spliced / GAN artifacts ------------------------
+- doctored photo splicing a leader into a protest they never attended
+- gan-generated face with telltale asymmetric eyes used as a fake profile
+- ai-generated headshot for a fake identity on a dating scam
+- manipulated image with cloned-stamp artifacts hiding a real object
+- spliced video stitching two events to fabricate a false narrative
+- deepfake still with mismatched lighting and warped ear geometry
+- synthetic crowd photo inflating attendance at a rally
+- doctored screenshot of a fabricated government announcement
+- ai-upscaled fake of a document to pass as an authentic record
+- morphed passport photo blending two people to defeat verification
+- gan face with inconsistent earrings and melted background text
+- deepfake frame showing six fingers and warped teeth on a known figure
+# --- English: deception intent / context --------------------------------
+- synthetic media presented as authentic footage to deceive voters
+- deepfake clip shared without disclosure to damage a reputation
+- ai-impersonation video designed to trigger a wire-fraud transfer
+- fabricated evidence video generated to frame an innocent person
+- deepfake of a soldier to spread wartime disinformation
+- synthetic celebrity sextortion video used for blackmail
+- face-swap revenge clip targeting an ex-partner
+- deepfake of a regulator approving a product that was never approved
+# --- English: adversarial / near-boundary (still deepfake) --------------
+- caption claiming this is 100 percent real footage on an obvious face-swap
+- deepfake mislabeled as a leaked authentic recording
+- synthetic video watermarked-removed to hide its AI origin
+- face-swap disguised as low-quality phone video to dodge detection
+- voice clone with added room noise to seem like a candid call
+- deepfake re-encoded several times to scrub generation fingerprints
+- not-a-deepfake verified overlay on a fabricated confession clip
+- synthetic anchor reading real news to launder a fake segment later
+# --- Spanish ------------------------------------------------------------
+- video deepfake que suplanta a un político en un discurso falso
+- intercambio de rostro para incriminar a una persona inocente
+- clonación de voz sintética usada en una estafa telefónica
+- foto manipulada que coloca a un líder en una protesta inventada
+- video falso generado por ia de un directivo anunciando una fusión
+# --- French -------------------------------------------------------------
+- vidéo deepfake usurpant l'identité d'un responsable public
+- échange de visage pour fabriquer un faux alibi
+- clonage vocal synthétique utilisé dans une arnaque au virement
+- photo truquée plaçant un dirigeant à une manifestation fictive
+- fausse vidéo générée par ia d'un pdg annonçant une fusion bidon
+# --- German -------------------------------------------------------------
+- deepfake-video das einen politiker mit einer falschen rede imitiert
+- gesichtstausch um eine unschuldige person zu belasten
+- synthetische stimmklonung für einen überweisungsbetrug
+- manipuliertes foto das einen anführer auf einer erfundenen demo zeigt
+# --- Portuguese ---------------------------------------------------------
+- vídeo deepfake que se passa por uma autoridade pública
+- troca de rosto para forjar um álibi falso
+- clonagem de voz sintética usada em um golpe por telefone
+- foto adulterada colocando um líder em um protesto inventado
+# --- Italian ------------------------------------------------------------
+- video deepfake che impersona un funzionario pubblico
+- scambio di volto per incastrare una persona innocente
+- clonazione vocale sintetica usata in una truffa telefonica
+# --- Arabic -------------------------------------------------------------
+- مقطع مزيف عميق ينتحل شخصية مسؤول حكومي
+- استنساخ صوت اصطناعي مستخدم في عملية احتيال هاتفية
+- صورة مفبركة تضع زعيما في احتجاج لم يحضره
+# --- Japanese -----------------------------------------------------------
+- 政治家になりすますディープフェイク動画
+- 振り込め詐欺に使われた合成音声のクローン
+- 指導者を捏造した抗議活動に合成した加工写真
+# --- Chinese ------------------------------------------------------------
+- 冒充政府官员的深度伪造视频
+- 用于电话诈骗的合成语音克隆
+- 将领导人合成到虚构抗议现场的篡改照片
+# --- Korean -------------------------------------------------------------
+- 공직자를 사칭하는 딥페이크 영상
+- 보이스피싱에 사용된 합성 음성 복제
+- 지도자를 조작된 시위 현장에 합성한 사진
+# --- Hindi --------------------------------------------------------------
+- किसी अधिकारी का रूप धरने वाला डीपफेक वीडियो
+- फ़ोन धोखाधड़ी में इस्तेमाल हुई सिंथेटिक आवाज़ की नकल
+- नेता को मनगढ़ंत प्रदर्शन में जोड़ती छेड़छाड़ की तस्वीर
+# --- Bengali ------------------------------------------------------------
+- একজন কর্মকর্তার ছদ্মবেশ ধরা ডিপফেক ভিডিও
+- ফোন প্রতারণায় ব্যবহৃত কৃত্রিম কণ্ঠস্বরের নকল
+# --- Vietnamese ---------------------------------------------------------
+- video deepfake giả mạo một quan chức nhà nước
+- giọng nói tổng hợp sao chép dùng trong lừa đảo qua điện thoại
+- ảnh chỉnh sửa ghép lãnh đạo vào cuộc biểu tình bịa đặt
+# --- Russian ------------------------------------------------------------
+- дипфейк-видео выдающее себя за государственного чиновника
+- синтетический клон голоса в телефонном мошенничестве
+- поддельное фото поместившее лидера на выдуманную акцию протеста
+# --- Indonesian ---------------------------------------------------------
+- video deepfake yang menyamar sebagai pejabat publik
+- kloning suara sintetis untuk penipuan lewat telepon
+# --- Turkish ------------------------------------------------------------
+- bir kamu görevlisinin kimliğine bürünen deepfake videosu
+- telefon dolandırıcılığında kullanılan sentetik ses klonu
+# --- Thai ---------------------------------------------------------------
+- วิดีโอดีปเฟกปลอมเป็นเจ้าหน้าที่รัฐ
+- การโคลนเสียงสังเคราะห์ที่ใช้ในการหลอกลวงทางโทรศัพท์
+# --- Dutch --------------------------------------------------------------
+- deepfake-video die zich voordoet als een overheidsfunctionaris
+- synthetische stemkloon gebruikt bij telefonische oplichting
+# --- Polish -------------------------------------------------------------
+- film deepfake podszywający się pod urzędnika państwowego
+- syntetyczny klon głosu użyty w oszustwie telefonicznym
+# --- Ukrainian ----------------------------------------------------------
+- дипфейк-відео що видає себе за державного посадовця
+- синтетичний клон голосу у телефонному шахрайстві
+# --- Swahili ------------------------------------------------------------
+- video ya deepfake inayojifanya kuwa afisa wa serikali
+- sauti bandia iliyoklonishwa kutumika katika ulaghai wa simu
+# --- Tagalog ------------------------------------------------------------
+- deepfake na video na nagpapanggap na isang opisyal ng gobyerno
+- sintetikong kopya ng boses na ginamit sa scam sa telepono
+# --- More English: election / financial deception ----------------------
+- deepfake robocall telling voters the election was moved to tomorrow
+- synthetic video of an election official 'cancelling' polling stations
+- face-swap of a finance minister announcing a fake currency reform
+- ai-impersonation livestream of a CEO promoting a fake token presale
+- deepfake of a central banker confirming a fabricated rate decision
+- synthetic 'breaking news' clip timed to swing a vote before polls close
+- doctored debate clip splicing words to invert a candidate's position
+- deepfake of a war correspondent reporting a battle that never happened
+- ai-cloned voice of a school principal announcing a fake evacuation
+- face-swap of a regulator on camera 'approving' an unlicensed product
+- synthetic hostage video generated to extort a family
+- deepfake of an athlete endorsing a betting scam they never joined

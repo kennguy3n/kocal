@@ -1,0 +1,11 @@
+# Normalization rules for the United States jurisdiction overlay.
+#
+# Required fields per ARCHITECTURE.md "Local Language Assets":
+# nfkc, case_fold, homoglyph_map_id, transliteration_refs.
+
+schema_version: 1
+nfkc: true
+case_fold: true
+homoglyph_map_id: homoglyph_core_v1
+transliteration_refs:
+  - translit_core_v1

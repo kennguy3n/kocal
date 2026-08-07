@@ -1,0 +1,21 @@
+# English-language lexicon bundle for the kchat.jurisdiction.ng.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: ng_en_lexicon_v1
+language: en
+locale: en-NG
+provenance: kchat_trust_and_safety_ng_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+terms:
+  - term_id: ng_en_term_cra_2003_ng_v1
+    categories: [1]
+    notes: Child Rights Act 2003 indicators.
+  - term_id: ng_en_term_tppa_2022_ng_v1
+    categories: [4]
+    notes: TPPA 2022 anti-terrorism indicators.

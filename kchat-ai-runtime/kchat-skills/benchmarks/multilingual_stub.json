@@ -1,0 +1,329 @@
+{
+  "n_cases": 113,
+  "n_passed": 113,
+  "n_failed": 0,
+  "per_language": {
+    "en": {
+      "n": 37,
+      "passed": 37,
+      "failed": 0
+    },
+    "es": {
+      "n": 13,
+      "passed": 13,
+      "failed": 0
+    },
+    "de": {
+      "n": 10,
+      "passed": 10,
+      "failed": 0
+    },
+    "fr": {
+      "n": 5,
+      "passed": 5,
+      "failed": 0
+    },
+    "ar": {
+      "n": 12,
+      "passed": 12,
+      "failed": 0
+    },
+    "ko": {
+      "n": 10,
+      "passed": 10,
+      "failed": 0
+    },
+    "hi": {
+      "n": 9,
+      "passed": 9,
+      "failed": 0
+    },
+    "ja": {
+      "n": 7,
+      "passed": 7,
+      "failed": 0
+    },
+    "pt": {
+      "n": 2,
+      "passed": 2,
+      "failed": 0
+    },
+    "ru": {
+      "n": 2,
+      "passed": 2,
+      "failed": 0
+    },
+    "zh": {
+      "n": 2,
+      "passed": 2,
+      "failed": 0
+    },
+    "vi": {
+      "n": 2,
+      "passed": 2,
+      "failed": 0
+    },
+    "bn": {
+      "n": 2,
+      "passed": 2,
+      "failed": 0
+    }
+  },
+  "per_tag": {
+    "hate": {
+      "n": 13,
+      "passed": 13,
+      "failed": 0
+    },
+    "coded": {
+      "n": 2,
+      "passed": 2,
+      "failed": 0
+    },
+    "en": {
+      "n": 39,
+      "passed": 39,
+      "failed": 0
+    },
+    "sarcasm": {
+      "n": 2,
+      "passed": 2,
+      "failed": 0
+    },
+    "es": {
+      "n": 13,
+      "passed": 13,
+      "failed": 0
+    },
+    "de": {
+      "n": 10,
+      "passed": 10,
+      "failed": 0
+    },
+    "fr": {
+      "n": 5,
+      "passed": 5,
+      "failed": 0
+    },
+    "ar": {
+      "n": 12,
+      "passed": 12,
+      "failed": 0
+    },
+    "low_resource": {
+      "n": 29,
+      "passed": 29,
+      "failed": 0
+    },
+    "ko": {
+      "n": 10,
+      "passed": 10,
+      "failed": 0
+    },
+    "hi": {
+      "n": 9,
+      "passed": 9,
+      "failed": 0
+    },
+    "ja": {
+      "n": 7,
+      "passed": 7,
+      "failed": 0
+    },
+    "pt": {
+      "n": 2,
+      "passed": 2,
+      "failed": 0
+    },
+    "harassment": {
+      "n": 10,
+      "passed": 10,
+      "failed": 0
+    },
+    "ru": {
+      "n": 2,
+      "passed": 2,
+      "failed": 0
+    },
+    "extremism": {
+      "n": 8,
+      "passed": 8,
+      "failed": 0
+    },
+    "misinformation_health": {
+      "n": 8,
+      "passed": 8,
+      "failed": 0
+    },
+    "misinformation_civic": {
+      "n": 8,
+      "passed": 8,
+      "failed": 0
+    },
+    "self_harm": {
+      "n": 10,
+      "passed": 10,
+      "failed": 0
+    },
+    "directed": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "violence_threat": {
+      "n": 6,
+      "passed": 6,
+      "failed": 0
+    },
+    "safe": {
+      "n": 24,
+      "passed": 24,
+      "failed": 0
+    },
+    "hard_negative": {
+      "n": 13,
+      "passed": 13,
+      "failed": 0
+    },
+    "identity": {
+      "n": 4,
+      "passed": 4,
+      "failed": 0
+    },
+    "health": {
+      "n": 2,
+      "passed": 2,
+      "failed": 0
+    },
+    "civic": {
+      "n": 3,
+      "passed": 3,
+      "failed": 0
+    },
+    "self_harm_adjacent": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "zh": {
+      "n": 2,
+      "passed": 2,
+      "failed": 0
+    },
+    "adversarial": {
+      "n": 29,
+      "passed": 29,
+      "failed": 0
+    },
+    "leetspeak": {
+      "n": 3,
+      "passed": 3,
+      "failed": 0
+    },
+    "threat": {
+      "n": 8,
+      "passed": 8,
+      "failed": 0
+    },
+    "self_harm_directed_at_other": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "homoglyph": {
+      "n": 4,
+      "passed": 4,
+      "failed": 0
+    },
+    "scam": {
+      "n": 6,
+      "passed": 6,
+      "failed": 0
+    },
+    "zero_width": {
+      "n": 2,
+      "passed": 2,
+      "failed": 0
+    },
+    "pii": {
+      "n": 4,
+      "passed": 4,
+      "failed": 0
+    },
+    "code_switch": {
+      "n": 2,
+      "passed": 2,
+      "failed": 0
+    },
+    "vi": {
+      "n": 2,
+      "passed": 2,
+      "failed": 0
+    },
+    "euphemism": {
+      "n": 3,
+      "passed": 3,
+      "failed": 0
+    },
+    "child_safety": {
+      "n": 4,
+      "passed": 4,
+      "failed": 0
+    },
+    "illegal_goods": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "romance": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "crypto": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "qr": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "lookalike_domain": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "bn": {
+      "n": 2,
+      "passed": 2,
+      "failed": 0
+    },
+    "url_risk": {
+      "n": 2,
+      "passed": 2,
+      "failed": 0
+    },
+    "shortener": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "minority_language": {
+      "n": 3,
+      "passed": 3,
+      "failed": 0
+    }
+  },
+  "child_safety_recall": 1.0,
+  "privacy_leak_precision": 1.0,
+  "protected_speech_false_positive": 0.0,
+  "minority_language_false_positive": 0.0,
+  "expected_calibration_error": 0.7415044247787611,
+  "failures": [],
+  "gates": {
+    "passed": true,
+    "failures": []
+  }
+}

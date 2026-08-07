@@ -12,6 +12,7 @@
 //! is <150ms on qualified devices.
 
 use crate::detectors;
+use crate::media::MediaDescriptor;
 use crate::normalize;
 use crate::policy::{PolicyPack, PolicyThresholds};
 use crate::verdict::{Action, Severity, Verdict, VerdictBuilder, VerdictSource};
@@ -41,6 +42,15 @@ pub struct ClassifyRequest {
     /// Community overlay id, if any. Used to derive NEWS/EDUCATION/
     /// COUNTERSPEECH context hints via substring match.
     pub community_overlay_id: Option<String>,
+    /// Jurisdiction code (e.g. "us", "vn", "eu") for jurisdiction overlay
+    /// resolution. When set, the classifier loads the matching jurisdiction
+    /// overlay from `kchat-skills/jurisdictions/{code}/overlay.yaml`.
+    pub jurisdiction: Option<String>,
+    /// Locale tag (e.g. "en-US", "vi-VN") for language-asset selection.
+    pub locale: Option<String>,
+    /// Media descriptors from on-device vision models (image/video safety scores).
+    /// When present, the priority chain checks media branches before text signals.
+    pub media_descriptors: Vec<MediaDescriptor>,
 }
 
 impl ClassifyRequest {
@@ -55,6 +65,9 @@ impl ClassifyRequest {
             slm_available: false,
             quoted_from_user: false,
             community_overlay_id: None,
+            jurisdiction: None,
+            locale: None,
+            media_descriptors: Vec::new(),
         }
     }
 
@@ -74,6 +87,24 @@ impl ClassifyRequest {
     /// Set the community overlay id for context-hint derivation.
     pub fn with_overlay(mut self, overlay: impl Into<String>) -> Self {
         self.community_overlay_id = Some(overlay.into());
+        self
+    }
+
+    /// Set the jurisdiction code for jurisdiction overlay resolution.
+    pub fn with_jurisdiction(mut self, jurisdiction: impl Into<String>) -> Self {
+        self.jurisdiction = Some(jurisdiction.into());
+        self
+    }
+
+    /// Set the locale tag for language-asset selection.
+    pub fn with_locale(mut self, locale: impl Into<String>) -> Self {
+        self.locale = Some(locale.into());
+        self
+    }
+
+    /// Attach media descriptors from on-device vision models.
+    pub fn with_media(mut self, media: Vec<MediaDescriptor>) -> Self {
+        self.media_descriptors = media;
         self
     }
 }
@@ -289,7 +320,12 @@ impl SafetyClassifier {
 
         // Step 2: Run deterministic detectors across all views
         let lexicon = self.build_lexicon();
-        let signals = detectors::run_all_detectors(&pattern_text, &lexicon_views, &lexicon);
+        let mut signals = detectors::run_all_detectors(&pattern_text, &lexicon_views, &lexicon);
+
+        // Attach media descriptors from the request (on-device vision scores)
+        if !request.media_descriptors.is_empty() {
+            signals.media_descriptors = request.media_descriptors.clone();
+        }
 
         // Derive protected-speech context hints from request fields.
         let context_hints = derive_context_hints(
@@ -573,6 +609,9 @@ mod tests {
             slm_available: false,
             quoted_from_user: false,
             community_overlay_id: None,
+            jurisdiction: None,
+            locale: None,
+            media_descriptors: Vec::new(),
         };
 
         let result = classifier.classify(&req);
@@ -597,6 +636,9 @@ mod tests {
             slm_available: false,
             quoted_from_user: false,
             community_overlay_id: None,
+            jurisdiction: None,
+            locale: None,
+            media_descriptors: Vec::new(),
         };
 
         let result = classifier.classify(&req);
@@ -806,6 +848,9 @@ mod tests {
             slm_available: false,
             quoted_from_user: false,
             community_overlay_id: None,
+            jurisdiction: None,
+            locale: None,
+            media_descriptors: Vec::new(),
         };
 
         let result = classifier.classify(&req);

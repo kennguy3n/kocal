@@ -1,0 +1,26 @@
+# Community Overlay — kchat.community.hobbyist.guardrail.v1
+#
+# General hobbyist overlay. Lightweight scam and illegal-goods guards
+# for sale / swap activity.
+
+skill_id: kchat.community.hobbyist.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: hobbyist
+  age_mode: mixed_age
+  visibility: public_summary
+  set_by: group_admin
+
+rules:
+  - category: 7   # SCAM_FRAUD
+    action: warn
+    note: >-
+      Hobby-marketplace scams warn before display.
+  - category: 12  # ILLEGAL_GOODS
+    action: warn
+    note: >-
+      Restricted-goods sales (replicas, regulated tools) warn before
+      display.

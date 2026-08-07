@@ -1,0 +1,25 @@
+# French-language lexicon bundle for the kchat.jurisdiction.ca.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: ca_fr_lexicon_v1
+language: fr
+locale: fr-CA
+provenance: kchat_trust_and_safety_ca_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+  - 7   # SCAM_FRAUD
+terms:
+  - term_id: ca_fr_term_code_criminel_163_enfant_v1
+    categories: [1]
+    notes: Code criminel §163.1 indicateurs protection de l'enfant.
+  - term_id: ca_fr_term_terrorisme_entites_inscrites_v1
+    categories: [4]
+    notes: Code criminel Partie II.1 indicateurs de recrutement.
+  - term_id: ca_fr_term_loi_concurrence_fraude_v1
+    categories: [7]
+    notes: Loi sur la concurrence §52 indicateurs de fraude.

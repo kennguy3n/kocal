@@ -1,0 +1,21 @@
+# FI (Finland) lexicon bundle for the kchat.jurisdiction.fi.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: fi_fi_lexicon_v1
+language: fi
+locale: fi-FI
+provenance: kchat_trust_and_safety_fi_v1
+categories:
+  - 1
+  - 4
+terms:
+  - term_id: fi_fi_term_rikoslaki_17_v1
+    categories: [1]
+    notes: Rikoslaki 17 luku §18-§19 indicators (catalogue-only).
+  - term_id: fi_fi_term_rikoslaki_34a_v1
+    categories: [4]
+    notes: Rikoslaki 34a luku terrorism indicators (catalogue-only).

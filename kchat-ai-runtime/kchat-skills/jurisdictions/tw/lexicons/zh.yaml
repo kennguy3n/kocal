@@ -1,0 +1,21 @@
+# Chinese-language lexicon bundle for the kchat.jurisdiction.tw.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: tw_zh_lexicon_v1
+language: zh
+locale: zh-TW
+provenance: kchat_trust_and_safety_tw_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+terms:
+  - term_id: tw_zh_term_er_shao_quan_fa_v1
+    categories: [1]
+    notes: 兒少權法 child-protection indicators.
+  - term_id: tw_zh_term_fan_shen_tou_fa_v1
+    categories: [4]
+    notes: 反滲透法 anti-infiltration indicators.

@@ -1,0 +1,28 @@
+# Community Overlay — kchat.community.education_higher.guardrail.v1
+#
+# Higher-education overlay (university / postgrad). Loosens adult
+# content to a label-only acknowledgement and tightens health
+# misinformation for academic accuracy.
+
+skill_id: kchat.community.education_higher.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: education_higher
+  age_mode: adult_only
+  visibility: members_only_summary
+  set_by: group_admin
+
+rules:
+  - category: 10  # SEXUAL_ADULT
+    action: label_only
+    note: >-
+      Adult sexual content surfaces a label only — adult-only
+      audience and academic context.
+  - category: 13  # MISINFORMATION_HEALTH
+    action: warn
+    note: >-
+      Health misinformation tightened to warn given academic-record
+      expectations.

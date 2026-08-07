@@ -1,0 +1,27 @@
+# Community Overlay — kchat.community.fitness.guardrail.v1
+#
+# Fitness / training overlay. Surfaces health-misinformation guards on
+# supplements / dieting and tightens drugs-and-weapons handling
+# (performance-enhancing drugs).
+
+skill_id: kchat.community.fitness.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: fitness
+  age_mode: mixed_age
+  visibility: public_summary
+  set_by: group_admin
+
+rules:
+  - category: 13  # MISINFORMATION_HEALTH
+    action: warn
+    note: >-
+      Supplement / diet misinformation warns before display.
+  - category: 11  # DRUGS_WEAPONS
+    action: strong_warn
+    note: >-
+      Performance-enhancing drugs / anabolic-steroid marketplace
+      patterns tightened to a hard modal warning.

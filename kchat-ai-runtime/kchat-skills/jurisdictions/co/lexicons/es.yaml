@@ -1,0 +1,21 @@
+# Spanish-language lexicon bundle for the kchat.jurisdiction.co.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: co_es_lexicon_v1
+language: es
+locale: es-CO
+provenance: kchat_trust_and_safety_co_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+terms:
+  - term_id: co_es_term_ley_1098_infancia_v1
+    categories: [1]
+    notes: Ley 1098 child-protection indicators (catalogue-only).
+  - term_id: co_es_term_ley_1121_terrorismo_v1
+    categories: [4]
+    notes: Ley 1121 terrorism recruitment indicators.

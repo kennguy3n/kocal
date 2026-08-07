@@ -1,0 +1,21 @@
+# English-language lexicon bundle for the kchat.jurisdiction.my.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: my_en_lexicon_v1
+language: en
+locale: en-MY
+provenance: kchat_trust_and_safety_my_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+terms:
+  - term_id: my_en_term_child_act_2001_my_v1
+    categories: [1]
+    notes: Child Act 2001 indicators.
+  - term_id: my_en_term_sosma_2012_en_v1
+    categories: [4]
+    notes: SOSMA 2012 indicators (English catalogue).

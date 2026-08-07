@@ -1,0 +1,188 @@
+{
+  "cap_per_category_language": 500,
+  "category_counts": {
+    "HARASSMENT": 6844,
+    "HATE": 4493,
+    "SAFE": 6488,
+    "VIOLENCE_THREAT": 250
+  },
+  "category_language_counts": {
+    "HARASSMENT:ar": 500,
+    "HARASSMENT:de": 479,
+    "HARASSMENT:en": 500,
+    "HARASSMENT:es": 500,
+    "HARASSMENT:fr": 480,
+    "HARASSMENT:hi": 500,
+    "HARASSMENT:it": 500,
+    "HARASSMENT:ja": 500,
+    "HARASSMENT:kn": 499,
+    "HARASSMENT:ml": 386,
+    "HARASSMENT:ru": 500,
+    "HARASSMENT:ta": 500,
+    "HARASSMENT:uk": 500,
+    "HARASSMENT:zh": 500,
+    "HATE:ar": 500,
+    "HATE:de": 500,
+    "HATE:en": 500,
+    "HATE:es": 500,
+    "HATE:fr": 500,
+    "HATE:hi": 493,
+    "HATE:it": 500,
+    "HATE:pt": 500,
+    "HATE:zh": 500,
+    "SAFE:ar": 500,
+    "SAFE:de": 500,
+    "SAFE:en": 500,
+    "SAFE:es": 500,
+    "SAFE:fr": 500,
+    "SAFE:hi": 500,
+    "SAFE:it": 500,
+    "SAFE:ja": 497,
+    "SAFE:kn": 244,
+    "SAFE:ml": 248,
+    "SAFE:pt": 250,
+    "SAFE:ru": 499,
+    "SAFE:ta": 250,
+    "SAFE:uk": 500,
+    "SAFE:zh": 500,
+    "VIOLENCE_THREAT:en": 250
+  },
+  "derived_corpus": {
+    "relative_path": "public_multilingual_corpus.jsonl",
+    "rows": 18075,
+    "sha256": "f6ebe306ab6af56e7d288d3cd7819437674eba35c23c963c9c5909f90d5acac9",
+    "size_bytes": 3533112
+  },
+  "generated_utc": "2026-06-14T16:00:08.661622+00:00",
+  "generator": "tools/source_multilingual_text_datasets.py",
+  "language_counts": {
+    "ar": 1500,
+    "de": 1479,
+    "en": 1750,
+    "es": 1500,
+    "fr": 1480,
+    "hi": 1493,
+    "it": 1500,
+    "ja": 997,
+    "kn": 743,
+    "ml": 634,
+    "pt": 750,
+    "ru": 999,
+    "ta": 750,
+    "uk": 1000,
+    "zh": 1500
+  },
+  "manifest_id": "multilingual_text_corpus",
+  "privacy_note": "Derived JSONL is gitignored; only this manifest is committed. No raw upstream bytes enter the repository.",
+  "schema_version": "kchat.guardrail.text_corpus.v1",
+  "seed": 7,
+  "source_counts": {
+    "civil_comments": 828,
+    "egyptian_arabic_hate_speech": 548,
+    "hatecheck": 247,
+    "measuring_hate_speech": 252,
+    "multilingual_hatecheck": 5128,
+    "offenseval_dravidian": 2127,
+    "textdetox_multilingual": 8945
+  },
+  "sources": [
+    {
+      "hf_path": "textdetox/multilingual_toxicity_dataset",
+      "homepage": "https://huggingface.co/datasets/textdetox/multilingual_toxicity_dataset",
+      "languages": [
+        "en",
+        "ar",
+        "hi",
+        "de",
+        "es",
+        "fr",
+        "it",
+        "ja",
+        "ru",
+        "uk",
+        "zh"
+      ],
+      "license": "OpenRAIL++",
+      "license_url": "https://huggingface.co/datasets/textdetox/multilingual_toxicity_dataset",
+      "notes": "Per-language splits, balanced toxic/non-toxic. toxic==1 -> HARASSMENT, toxic==0 -> SAFE.",
+      "source_id": "textdetox_multilingual"
+    },
+    {
+      "hf_path": "google/civil_comments",
+      "homepage": "https://huggingface.co/datasets/google/civil_comments",
+      "languages": [
+        "en"
+      ],
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "notes": "Fine-grained float labels. identity_attack -> HATE, threat -> VIOLENCE_THREAT, insult/toxicity -> HARASSMENT, all-clean -> SAFE.",
+      "source_id": "civil_comments"
+    },
+    {
+      "hf_path": "Paul/hatecheck",
+      "homepage": "https://huggingface.co/datasets/Paul/hatecheck",
+      "languages": [
+        "en"
+      ],
+      "license": "CC-BY-4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "notes": "Functional hate-speech test suite. hateful -> HATE, non-hateful -> SAFE.",
+      "source_id": "hatecheck"
+    },
+    {
+      "hf_path": "Paul/hatecheck-<language>",
+      "homepage": "https://github.com/rewire-online/multilingual-hatecheck",
+      "languages": [
+        "de",
+        "es",
+        "fr",
+        "pt",
+        "it",
+        "zh",
+        "hi",
+        "ar"
+      ],
+      "license": "CC-BY-4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "notes": "Multilingual functional hate-speech test suites (one Paul/hatecheck-<language> split per language). hateful -> HATE, non-hateful -> SAFE. Closes the mid-resource HATE language gap.",
+      "source_id": "multilingual_hatecheck"
+    },
+    {
+      "hf_path": "ucberkeley-dlab/measuring-hate-speech",
+      "homepage": "https://huggingface.co/datasets/ucberkeley-dlab/measuring-hate-speech",
+      "languages": [
+        "en"
+      ],
+      "license": "CC-BY-4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "notes": "Continuous hate_speech_score. score>=0.5 -> HATE, score<=-1 -> SAFE (dedup on text; the dataset is per-annotator).",
+      "source_id": "measuring_hate_speech"
+    },
+    {
+      "hf_path": "IbrahimAmin/egyptian-arabic-hate-speech",
+      "homepage": "https://huggingface.co/datasets/IbrahimAmin/egyptian-arabic-hate-speech",
+      "languages": [
+        "ar"
+      ],
+      "license": "MIT",
+      "license_url": "https://opensource.org/license/mit",
+      "notes": "Labels: Racism/Sexism/Religious Discrimination -> HATE, Offensive -> HARASSMENT, Neutral -> SAFE.",
+      "source_id": "egyptian_arabic_hate_speech"
+    },
+    {
+      "hf_path": "community-datasets/offenseval_dravidian",
+      "homepage": "https://huggingface.co/datasets/community-datasets/offenseval_dravidian",
+      "languages": [
+        "ta",
+        "ml",
+        "kn"
+      ],
+      "license": "CC-BY-4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "notes": "Code-mixed Tamil/Malayalam/Kannada. Offensive_* -> HARASSMENT, Not_offensive -> SAFE, not-<lang> dropped.",
+      "source_id": "offenseval_dravidian"
+    }
+  ],
+  "taxonomy_ref": "kchat-skills/global/taxonomy.yaml",
+  "total_examples": 18075
+}

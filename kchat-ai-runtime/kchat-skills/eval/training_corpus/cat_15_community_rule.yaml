@@ -1,0 +1,134 @@
+# Training corpus subset — category 15 (community_rule).
+# Loaded by build-tools/compiler/training_data.py at module
+# import time and concatenated with the other cat_*.yaml files
+# to form ``TRAINING_EXAMPLES``.
+#
+# See compiler/training_data.py for the loader, the SAFE-class
+# over-sampling rationale, and the per-category coverage
+# constraints (multilingual paraphrases, adversarial variants,
+# near-boundary cases).
+category_id: 15
+category_name: community_rule
+examples:
+- posting off-topic memes in a serious work channel
+- repeated cross-posting against the group's rules
+- breaking the rule against advertising your own product
+- violating the no-political-talk rule in a sports group
+- posting in the wrong channel after being warned
+- breaking the etiquette of asking a question that's already answered
+- posting low-effort content in a curated discussion thread
+- violating the channel's language rule by posting in english only
+- ignoring the moderator's reminder to read the pinned rules
+- self-promotion in a clearly marked no-self-promo channel
+- posting screenshots when the channel rules ask for code blocks
+- re-asking a faq that the pinned message clearly answers
+- crossposting the same announcement to ten unrelated channels
+- hijacking a help thread to talk about an unrelated product
+- posting affiliate links in a community that bans referrals
+- ignoring the channel's 'serious-mode' rule with low-effort jokes
+- posting in english in a strictly-vi-only channel after a reminder
+- breaking the 'no images' rule of a text-only support channel
+- ignoring the 'use threads' policy and creating ten top-level posts
+- re-opening a closed thread to relitigate a decided issue
+- publicación fuera de tema en un canal específico
+- der nutzer postet werbung in einem werbefreien kanal
+- النشر خارج موضوع القناة بعد التحذير
+- チャンネルのルールに違反したオフトピックの投稿
+- নিয়ম ভঙ্গ করে অপ্রাসঙ্গিক বিষয়বস্তু পোস্ট করা
+- đăng bài lạc chủ đề trong một nhóm có quy định rõ
+- एक नियम-स्पष्ट चैनल में ऑफ-टॉपिक पोस्ट
+- postagem fora de tópico após aviso do moderador
+- チャンネルのトピックを無視した宣伝投稿
+- '''i know this is off-topic but ...'' followed by an unrelated ad'
+- self-promo wrapped as a 'community announcement'
+- '''just one more meme'' in a no-meme thread'
+- rule-skirting cross-post phrased as a 'mod-approved exception'
+- repeating the same suggestion across three already-active threads
+- borderline off-topic post that adds some value but breaks the rule
+- low-effort meme that is technically on-topic in a strict channel
+- question that almost-but-not-quite duplicates a recent thread
+- self-promo post lightly disguised as a 'tutorial'
+- posting low-effort memes in a strict no-meme support channel after a warning
+- aggressive cross-posting of an unrelated product across ten threads
+- referral-link drop in a community that bans affiliate marketing
+- breaking the 'no images' rule of a strictly text-only support channel
+- posting in english in a strictly-vi-only channel after a moderator warning
+- posting in english in a strictly-spanish-only channel after multiple warnings
+- hijacking a bug-report thread to promote a competing product
+- re-asking the same faq daily despite the pinned answer
+- re-opening a moderator-closed thread to relitigate a settled decision
+- self-promo flood from a new account across every general channel
+- posting screenshots instead of code blocks against the channel's style rule
+- creating ten parallel top-level threads instead of using the dedicated thread feature
+- publicação fora de tópico depois de aviso explícito do moderador
+- post fuori tema dopo un avviso esplicito dei moderatori
+- публикация не по теме после явного предупреждения модератора
+- 在版主明确警告后仍发布无关内容
+- publication hors-sujet après un avertissement explicite du modérateur
+- '''community announcement'' that is actually self-promotion'
+- '''mod-approved'' frame used to bypass the no-promo rule without approval'
+- '''just one more meme'' streak in a strict serious-mode channel'
+- '''urgent'' tag misused to bump an unrelated topic to the top'
+- on-topic post that violates the channel's strict format rule (e.g. wrong template)
+# --- WS1a expansion: focus-region multilingual + adversarial paraphrases. ---
+- repeated off-topic promotion of personal merchandise in a focused topic channel
+- spam-tagging unrelated users to drive traffic to an external site
+- repeatedly posting affiliate links in a channel that bans promotion
+- excessive cross-posting of the same advertisement across multiple group channels
+- evading a temporary mute by switching to an alt account
+- doxing-adjacent post that breaks a community privacy norm without crossing into illegality
+- posting nsfw content in a sfw community channel against guidelines
+- continuous self-promotion across every thread despite repeated warnings
+- repeated minor breaches of community decorum that hit the ban threshold
+- chronic violation of a community's no-politics rule across multiple channels
+- promoción repetida y fuera de tema de mercancía propia en un canal específico
+- evasión de una expulsión mediante una cuenta alternativa
+- ban-evasion mit einem zweitkonto in einer community
+- wiederholtes off-topic-werben für eigene produkte trotz hinweisen
+- التهرب من حظر مجتمع باستخدام حساب بديل
+- نشر إعلانات تجارية في قناة تمنع الترويج
+- 主題と無関係な自分の商品の繰り返し宣伝
+- 別アカウントを使った投稿禁止回避
+- কমিউনিটির নিয়ম ভেঙে বারবার বিজ্ঞাপন পোস্ট করা
+- ব্যান এড়াতে বিকল্প অ্যাকাউন্ট ব্যবহার
+- समुदाय के नियमों के विरुद्ध बार-बार विज्ञापन पोस्ट करना
+- प्रतिबंध से बचने के लिए वैकल्पिक खाते का उपयोग
+- 在禁止推广的频道反复发布个人商品广告
+- 使用替代账号规避社区封禁
+- siaran berulang produk peribadi di saluran yang melarang promosi
+- mengelakkan larangan komuniti dengan akaun alternatif
+- ஒரு பகுதியில் தனிப்பட்ட பொருட்களை மீண்டும் மீண்டும் விளம்பரப்படுத்துவது
+- மாற்று கணக்கின் மூலம் சமூக தடையைத் தவிர்த்தல்
+- promotion répétée hors-sujet de marchandise personnelle dans un canal dédié
+- évasion d'un bannissement par un compte alternatif
+- promozione ripetuta fuori tema di merce personale in un canale dedicato
+- evasione di un ban tramite account alternativo
+- promoziun repetida ord il tema da prodots persunals en in canal
+- evasiun d'in ban tras in conto alternativ
+- evasão de banimento usando conta alternativa
+- viol4ting a c0mmunity rul3 by p0sting affil1ate l1nks ev3ry day
+- evad1ng a t1meout by sw1tching to an alt acc0unt
+- exc3ssive cross-p0sting of pe5sonal merchandise in mu1tiple channels
+- 'near-harassment boundary: rule-breaking behaviour that edges into harassment'
+- 'near-spam boundary: repeated low-quality posts that fail community standards'
+- 'borderline: posting content that''s technically allowed but violates spirit of community guidelines'
+- 'borderline: low-effort engagement bait that breaks specific subreddit-style rules'
+- 'meta-violation: harassing moderators in retaliation for enforcement actions'
+- 'rule-bypass: using zero-width characters to evade a banned-word filter'
+- 'circumvention: editing posts after the fact to insert disallowed content'
+- 'evading auto-mod: splitting prohibited phrases across multiple messages'
+- 'brigading: coordinating downvotes from outside a community to game its rules'
+- 'sock-puppet voting: using alternate accounts to artificially boost own posts'
+- 'community rule violation: posting religious recruitment material in a no-religion channel'
+- 'rule-bending: using euphemisms to discuss banned topics within a tight community moderation policy'
+- 'minor evasion: changing avatar+name to look like a different user after a warning'
+- 'serial offender: continuing to break the no-politics rule despite repeated mod warnings'
+- 'cross-channel spam: same self-promotion message posted in 20+ channels overnight'
+- 'rule-violation: posting copyrighted streams in a channel that bans piracy links'
+- 'community norm: discussing private group conversations publicly against agreed norms'
+- 'small-scale rule break: misuse of bot commands to flood the channel'
+- 'minor rule break: posting in incorrect channel category despite reminders'
+- 'rules-evasion: typing slurs with extra characters to bypass the word filter'
+- 'group-norm violation: leaking private group decisions outside the group'
+- 'low-grade rule-breaking: persistent off-topic memes in serious-discussion channels'
+- 'minor violation: posting unsanctioned advertisements in classifieds-style channels'

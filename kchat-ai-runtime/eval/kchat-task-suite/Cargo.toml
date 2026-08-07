@@ -14,6 +14,7 @@ kchat-action = { path = "../../crates/kchat-action" }
 kchat-bindings = { path = "../../crates/kchat-bindings" }
 serde = { workspace = true }
 serde_json = { workspace = true }
+serde_yaml = "0.9"
 anyhow = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }

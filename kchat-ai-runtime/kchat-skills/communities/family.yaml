@@ -1,0 +1,58 @@
+# Community Overlay — kchat.community.family.guardrail.v1
+#
+# Household / kin-group overlay. Mixed-age default. Adult sexual content
+# is hard-warned; harassment is warned with mute suggestion.
+
+skill_id: kchat.community.family.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: family
+  age_mode: mixed_age
+  visibility: members_only_summary
+  set_by: group_admin
+
+rules:
+  - category: 10   # SEXUAL_ADULT
+    action: strong_warn
+    note: >-
+      Adult sexual content surfaces a hard modal warning in mixed-age
+      family groups regardless of jurisdiction.
+  - category: 5    # HARASSMENT
+    action: warn
+    suggest_mute: true
+    note: >-
+      Targeted insults / pile-on warn before display and offer mute on
+      the involved peer.
+  - category: 9    # PRIVATE_DATA
+    action: warn
+    suggest_redact: true
+    note: >-
+      PII / location of family members suggests redaction before send.
+  - category: 2    # SELF_HARM
+    action: warn
+    note: >-
+      Self-harm ideation in family contexts warns and surfaces crisis
+      resources, including family-specific support lines.
+  - category: 7    # SCAM_FRAUD
+    action: warn
+    note: >-
+      Scams targeting families (fake school fees, child tax credit
+      fraud, family emergency impersonation) are warned.
+  - category: 11   # DRUGS_WEAPONS
+    action: warn
+    note: >-
+      Drug or weapon content in family contexts warns given the risk
+      of minor exposure to regulated goods.
+  - category: 6    # HATE
+    action: warn
+    note: >-
+      Hate speech in family contexts warns to protect household
+      members from discriminatory content.
+  - category: 13   # MISINFORMATION_HEALTH
+    action: warn
+    note: >-
+      Health misinformation in family contexts warns to protect
+      household health decisions (vaccines, pediatric care).

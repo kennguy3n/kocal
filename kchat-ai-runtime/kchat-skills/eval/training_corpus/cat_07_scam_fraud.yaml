@@ -1,0 +1,138 @@
+# Training corpus subset — category 7 (scam_fraud).
+# Loaded by build-tools/compiler/training_data.py at module
+# import time and concatenated with the other cat_*.yaml files
+# to form ``TRAINING_EXAMPLES``.
+#
+# See compiler/training_data.py for the loader, the SAFE-class
+# over-sampling rationale, and the per-category coverage
+# constraints (multilingual paraphrases, adversarial variants,
+# near-boundary cases).
+category_id: 7
+category_name: scam_fraud
+examples:
+- congratulations you won a prize, claim it at this suspicious link
+- verify your bank account password at this fake login page
+- nigerian prince advance fee scam asking for wire transfer
+- 'urgent: your account is suspended, click here to reactivate'
+- limited-time offer to invest in a guaranteed crypto doubling scheme
+- send gift cards to confirm your identity, urgent reply
+- phishing email pretending to be from a major bank
+- fake giveaway asking for personal info to claim a prize
+- romance scam asking for emergency money for a stranded traveller
+- 'inheritance scam: a ''lawyer'' needs your bank details to release funds'
+- 'crypto scam: ''send 1 eth, get 2 back from the official giveaway'''
+- 'tech support scam: ''your computer has 73 viruses, call this number'''
+- 'courier scam: ''pay a small customs fee to release your package'''
+- fake invoice from a real-sounding vendor with new payment details
+- ceo impersonation asking finance to wire funds urgently
+- job offer scam asking for 'training fee' upfront
+- 'romance scam: ''i finally got the visa, just need 800 for the ticket'''
+- 'rental scam: ''send deposit and i''ll mail the keys'''
+- fake charity asking for donations after a disaster
+- 'qr-code scam: ''scan to verify your account before midnight'''
+- ganaste un premio, reclámalo en este enlace dudoso
+- ihre bank fragt nach ihrem passwort über diesen link
+- احتيال يطلب إرسال رمز التحقق إلى رقم غريب
+- 'オンライン詐欺: ''アカウント停止、ここをクリック'''
+- একটি প্রতারণামূলক বার্তা যা আপনার পাসওয়ার্ড চাইছে
+- 'lừa đảo: ''tài khoản của bạn bị khoá, nhấp vào đây'''
+- एक धोखाधड़ी संदेश आपके बैंक की जानकारी मांग रहा है
+- um golpe de romance pedindo dinheiro para um voo
+- '詐欺メッセージ: ''保証された投資、今すぐ送金'''
+- '''please confirm your wallet seed phrase to receive the airdrop'''
+- '''we noticed unusual activity, log in here to keep your account safe'''
+- '''apple notice: your iCloud will be deleted, tap the link to renew'''
+- '''last warning, your package will be returned unless you pay duty'''
+- '''we matched and i feel like we have something, can you help me with rent'''
+- a real-sounding offer that fails on small details (bad grammar, wrong domain)
+- ambiguous 'friend in need' message from a hacked account
+- plausible support ticket that asks for credentials over chat
+- aggressive 'limited offer' message asking for upfront payment
+- '''lottery winner'' email asking for processing fee before releasing funds'
+- '''tax refund pending — confirm your bank details'' phishing message'
+- '''package held at customs, pay duty via this link'' courier scam'
+- crypto pump-and-dump promotion in a closed channel
+- fake bank fraud-alert text directing the victim to a spoofed login page
+- recruiter scam asking for a 'background check fee' upfront
+- clone of a real charity site collecting donations after a disaster
+- '''we matched online and i love you, send help for hospital bill'''
+- phishing impersonating a workplace it desk asking for the user's password
+- '''free trial — just $1 shipping'' that hides recurring charges'
+- '''qr code on the parking meter'' redirecting to a fake payment portal'
+- '''your child has been in an accident'' phone scam targeting parents'
+- '''sua conta foi suspensa, confirme aqui'' tentativa de phishing'
+- '''il tuo conto è stato sospeso, conferma qui'' tentativo di phishing'
+- '''ваш счёт заблокирован, подтвердите данные'' попытка фишинга'
+- '''您的账户被冻结,点击链接验证'' 钓鱼诈骗'
+- '''votre compte a été suspendu, cliquez pour confirmer'' tentative de phishing'
+- '''urgent: your boss is in a meeting, please buy gift cards for client'''
+- '''investment club'' pitch promising guaranteed 300% returns within a month'
+- '''as discussed earlier today'' wire-transfer request from a spoofed exec email'
+- crypto 'pig butchering' chat that pivots from friendship to a fake exchange
+- ambiguous 'support agent' dm asking to confirm last four digits of a card
+# --- WS1a expansion: focus-region multilingual + adversarial paraphrases. ---
+- urgent message pretending to be from a bank asking for one-time passcodes
+- romance scammer asking for emergency wire transfer to a foreign account
+- fake job offer demanding upfront fees for processing and equipment
+- impersonation of a tax authority demanding immediate payment in gift cards
+- pyramid scheme recruitment pitch promising guaranteed weekly returns
+- phishing message claiming an invoice is overdue with a payment link
+- 'fake delivery notification: package held, click link to pay customs fee'
+- impostor pretending to be a relative in trouble asking for emergency cash
+- cryptocurrency rug-pull pitch promising 100x returns on a new token
+- fake invoice scam targeting small businesses with a near-identical sender domain
+- estafa romántica pidiendo dinero urgente para una emergencia médica
+- mensaje fraudulento que se hace pasar por el banco pidiendo claves
+- oferta de trabajo falsa que exige un pago inicial para procesar la solicitud
+- betrügerische nachricht, die sich als bank ausgibt und passwörter anfordert
+- gefälschte rechnung mit drohung gerichtlicher schritte bei nichtzahlung
+- رسالة احتيالية تنتحل صفة البنك وتطلب رمز التحقق
+- عرض وظيفة وهمي يطلب رسوم تسجيل مقدمة
+- 銀行を装って認証コードを要求する詐欺メッセージ
+- 偽の請求書を送り付け支払いを迫る詐欺
+- ব্যাংকের নাম করে ওটিপি চাওয়া প্রতারণামূলক বার্তা
+- ভুয়া চাকরির অফার যা আগাম ফি দাবি করছে
+- बैंक होने का दिखावा करते हुए ओटीपी मांगने वाला घोटाला
+- नकली नौकरी का प्रस्ताव जो प्रोसेसिंग शुल्क मांग रहा है
+- 冒充银行索取一次性密码的诈骗信息
+- 虚假快递通知要求支付关税
+- mesej penipuan yang menyamar sebagai bank meminta kata laluan sekali guna
+- tawaran kerja palsu yang menuntut bayaran pendaftaran terlebih dahulu
+- வங்கி என்று நடித்து OTP கேட்கும் மோசடி செய்தி
+- போலி வேலை வாய்ப்பு என்ற பெயரில் முன்பணம் கோரும் மோசடி
+- arnaque par téléphone se faisant passer pour la banque et demandant un code
+- fausse facture menaçant de poursuites en cas de non-paiement
+- truffa che si finge banca e chiede un codice di verifica
+- falsa fattura con minaccia di azioni legali in caso di mancato pagamento
+- engan tras cumbatter cunters bancas che dumonda codas privatas
+- estafa por meio de mensagem fingindo ser do banco pedindo código
+- phish1ng msg claim1ng acc0unt l0cked, click h3re to verify cr3dentials
+- r0mance sc4mmer requ3sting urg3nt wire tr4nsfer overse4s
+- crypto rug-p0ll p1tch prom1sing 100x ret0rns
+- 'near-malware-link boundary: phishing message with a malicious link disguised as a delivery confirmation'
+- 'near-private-data boundary: scam that solicits SSN and date of birth to verify identity'
+- 'borderline: a multi-level marketing pitch that resembles a pyramid scheme but is legally registered'
+- 'borderline: a real charity solicitation that uses high-pressure tactics resembling a scam'
+- impersonation of a CEO asking for a wire transfer to a new vendor
+- fake tech-support call claiming the computer is infected and demanding remote access
+- 'sweetheart scam: weeks of grooming followed by a sudden plea for travel money'
+- 'sextortion: claim that the victim was filmed and demand payment in crypto to keep quiet'
+- fake lottery winning notification asking for a fee to release the prize
+- scam claiming the recipient has been chosen for a government grant requiring upfront tax payment
+- spoof email from a known supplier with altered bank details to redirect payment
+- false promise of guaranteed loan approval in exchange for a processing fee
+- 'business-email-compromise: invoice from a hijacked supplier email with new IBAN'
+- impostor pretending to be a child stuck abroad asking for emergency funds
+- 'investment scam: fake forex platform pressuring deposit before market closes'
+- fake account-recovery service charging a fee to restore a hacked social account
+- pretexting message pretending to be HR and asking for direct-deposit details
+- 'utility scam: threat to disconnect electricity unless payment is sent within an hour'
+- 'shipping label scam: pay a small re-delivery fee to release a held package'
+- 'apartment rental scam: deposit demanded before viewing a property'
+- 'gift-card laundering: scammer instructs the victim to buy gift cards and share codes'
+- 'fake ngo: solicitation for donations claiming to support victims of a recent natural disaster'
+- impersonation of a school principal asking parents to pay tuition by gift cards
+- spear-phishing of an executive's assistant requesting urgent confidential wire
+- 'medicare scam: caller claims to be from medicare and asks for SSN to send a new card'
+- "report: an account promises guaranteed investment returns and asks everyone to wire money first"
+- "observed: a user keeps running a fake prize draw asking members to pay a release fee"

@@ -1,0 +1,56 @@
+# Community Overlay Template
+#
+# Copy this file to kchat-skills/communities/<community-kind>.yaml and
+# fill in the placeholders. The template mirrors ARCHITECTURE.md
+# "Community Overlay Template" (lines 491-535).
+#
+# Required keys:  skill_id, parent, schema_version, signers,
+#                 community_profile, rules
+# Optional key:   group_risk_counters
+#
+# Community overlays may NOT invent new categories, weaken privacy
+# rules, or relax the child-safety floor. The compiler rejects packs
+# that try.
+
+skill_id: kchat.community.<community-kind>.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: <school | family | workplace | adult_only | marketplace |
+         health_support | political | gaming | other>
+  age_mode: <minor_present | mixed_age | adult_only>
+  visibility: <public_summary | members_only_summary>
+  set_by: group_admin
+
+rules:
+  - category: 10   # SEXUAL_ADULT
+    action: <label_only | warn | strong_warn | block>
+    note: <plain-language summary>
+  - category: 13   # MISINFORMATION_HEALTH
+    action: warn
+    note: <peer-support context note for health_support>
+  - category: 5    # HARASSMENT
+    action: warn
+    suggest_mute: true
+  - category: 15   # COMMUNITY_RULE
+    rule_set:
+      - id: <community rule id>
+        label: <short label>
+        action: <label_only | warn | strong_warn>
+
+group_risk_counters:
+  - counter_id: group_scam_links_24h
+    method: device_local_expiring_counter
+    window: 24h
+    thresholds:
+      label_at:        3
+      strong_label_at: 6
+      escalate_at:     10
+  - counter_id: group_violence_threats_7d
+    method: device_local_expiring_counter
+    window: 7d
+    thresholds:
+      label_at:        1
+      escalate_at:     3

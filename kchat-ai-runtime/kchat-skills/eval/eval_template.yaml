@@ -1,0 +1,59 @@
+# Held-out evaluation case schema.
+#
+# Each `held_out_*.yaml` file is a YAML mapping with a top-level
+# `cases` list. Each case is a mapping with the fields below. The
+# pipeline-side runner (`eval_runner.py`) hydrates each case into a
+# `GuardrailPipeline.classify()` call and compares the verdict to
+# the expected verdict.
+#
+# Cases are immutable once merged. Renaming a case_id is a breaking
+# change to the calibration report and the pack passport.
+$schema: "kchat.guardrail.eval_case.v1"
+cases:
+  - case_id: example_news_coverage_001
+    # BCP-47 language tag. The eval runner aggregates per-language
+    # so a regression in any one language is visible.
+    language: en
+    # Free-text human-facing summary of what this case exercises.
+    description: |
+      Reuters-style news coverage of a hate-crime incident. The
+      pipeline must NOT flag — `NEWS_CONTEXT` demotion applies.
+    # The message body the pipeline receives. Must not contain
+    # real PII or live URLs.
+    message:
+      text: "Reuters reports the suspect shouted slurs at the victim before fleeing the scene."
+      quoted_from_user: false
+    # Context envelope as the chat client would set it. Mirrors
+    # `local_signal_schema.json` `context` block.
+    context:
+      group_kind: large_room
+      group_age_mode: adult_only
+      user_role: member
+      relationship_known: false
+      locale: en-US
+      jurisdiction_id: US
+      community_overlay_id: news.reuters
+      is_offline: false
+    # Expected pipeline output. The runner compares severity,
+    # category, and any required `reason_codes`; actions and
+    # confidence are compared softly (within tolerance).
+    expected:
+      category: 0  # SAFE — protected-speech demotion
+      severity: 0
+      reason_codes_must_include:
+        - NEWS_CONTEXT
+      reason_codes_must_exclude: []
+      actions:
+        label_only: false
+        warn: false
+        strong_warn: false
+        critical_intervention: false
+        suggest_redact: false
+    # Optional tags for slicing in the calibration report. Common
+    # tags: "benign_false_positive", "leetspeak", "homoglyph",
+    # "zero_width", "code_switch", "euphemism",
+    # "reclaimed_language", "identity_discussion",
+    # "health_discussion", "political_discourse", "minority_language".
+    tags:
+      - benign_false_positive
+      - news_coverage

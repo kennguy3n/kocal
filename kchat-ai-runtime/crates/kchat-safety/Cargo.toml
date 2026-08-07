@@ -10,7 +10,8 @@ default = ["text-pipeline"]
 text-pipeline = []
 encoder = []
 onnx-runtime = ["encoder", "dep:ort", "dep:tokenizers", "dep:ndarray"]
-skill-pack = ["dep:zip", "dep:serde_yaml"]
+onnx-runtime-vision = ["onnx-runtime", "dep:image"]
+skill-pack = ["text-pipeline", "dep:zip", "dep:serde_yaml", "zip/deflate"]
 
 [dependencies]
 kchat-core = { path = "../kchat-core" }
@@ -28,11 +29,15 @@ unicode-normalization = "0.1"
 caseless = "0.2"
 lru = "0.16"
 hex = "0.4"
+subtle = "2"
 
 # Optional encoder deps
 ort = { version = "=2.0.0-rc.10", default-features = false, features = ["load-dynamic", "ndarray"], optional = true }
 tokenizers = { version = "0.21", default-features = false, features = ["fancy-regex"], optional = true }
 ndarray = { version = "0.16", optional = true }
+
+# Optional vision deps
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif"], optional = true }
 
 # Optional skill-pack deps
 zip = { version = "2", default-features = false, features = ["deflate"], optional = true }

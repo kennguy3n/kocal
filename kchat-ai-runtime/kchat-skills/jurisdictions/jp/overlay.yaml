@@ -1,0 +1,214 @@
+# kchat.jurisdiction.jp.guardrail.v1
+#
+# Japan jurisdiction overlay — first-wave country pack.
+# Layered on top of kchat.global.guardrail.baseline.
+#
+# Notable floors (above the global baseline):
+#   * CHILD_SAFETY    (1)  -> severity_floor 5 (Act on Punishment of
+#                              Activities Relating to Child Prostitution
+#                              and Child Pornography, 1999).
+#   * SCAM_FRAUD      (7)  -> severity_floor 4 (Tokutei Shouhin Torihiki
+#                              Hou — 特定商取引法 Act on Specified Commercial
+#                              Transactions).
+#   * DRUGS_WEAPONS   (11) -> severity_floor 5 (strict drug laws —
+#                              Cannabis Control Act, Stimulants Control
+#                              Act, Narcotics & Psychotropics Control
+#                              Act, plus Firearm and Sword Control Law).
+#
+# Marketplace ages: alcohol 20, tobacco 20 (Minpou — Civil Code —
+# pre-2022 majority age remained 20 for alcohol / tobacco even after
+# the general age of majority was lowered to 18 in 2022).
+#
+# Protected classes follow Article 14 of the Japanese Constitution
+# enumeration plus the Hate Speech Elimination Act (2016) and the
+# Buraku Discrimination Elimination Act (2016).
+
+skill_id: kchat.jurisdiction.jp.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+expires_on: "2027-10-29"
+signers: [trust_and_safety, legal_review, cultural_review]
+
+# --------------------------------------------------------------------------
+# Activation
+# --------------------------------------------------------------------------
+activation:
+  criteria:
+    - user_selected_region: jp
+    - group_declared_jurisdiction: jp
+    - app_store_install_region: jp
+    - enterprise_managed_policy: jp
+  forbidden_criteria:
+    - gps_location
+    - ip_geolocation
+    - inferred_nationality
+    - inferred_ethnicity
+    - inferred_religion
+
+# --------------------------------------------------------------------------
+# Local definitions
+# --------------------------------------------------------------------------
+local_definitions:
+  legal_age_general: 18
+  legal_age_sexual_content_consumer: 18
+  legal_age_marketplace_alcohol: 20
+  legal_age_marketplace_tobacco: 20
+  # Constitution Article 14 + Buraku Discrimination Elimination Act
+  # 2016 + Hate Speech Elimination Act 2016.
+  protected_classes:
+    - race
+    - creed
+    - sex
+    - social_status
+    - family_origin
+    - disability
+  listed_extremist_orgs:
+    - jp_psia_listed_orgs_v1
+  restricted_symbols:
+    - jp_restricted_symbols_v1
+  election_rules:
+    civic_window_open:  "2025-09-01"
+    civic_window_close: "2025-10-31"
+    authority_resource_id: jp_soumu_authority_v1
+
+# --------------------------------------------------------------------------
+# Local language assets — Japanese primary; romaji transliteration
+# ref added so 鮪 / 寿司 etc. are romanised before lexicon matching.
+# --------------------------------------------------------------------------
+local_language_assets:
+  primary_languages: [ja]
+  lexicons:
+    - lexicon_id: jp_ja_lexicon_v1
+      language: ja
+      categories: [1, 7, 11]
+      provenance: kchat_trust_and_safety_jp_v1
+  normalization:
+    nfkc: true
+    case_fold: true
+    homoglyph_map_id: homoglyph_core_v1
+    transliteration_refs:
+      - translit_core_v1
+      - translit_ja_v1
+
+# --------------------------------------------------------------------------
+# Overrides
+# --------------------------------------------------------------------------
+overrides:
+  - category: 1   # CHILD_SAFETY
+    severity_floor: 5
+    note: >-
+      Act on Punishment of Activities Relating to Child Prostitution
+      and Child Pornography (1999, amended 2014) — child sexual
+      abuse material is treated as a critical-intervention ban.
+  - category: 7   # SCAM_FRAUD
+    severity_floor: 4
+    note: >-
+      Tokutei Shouhin Torihiki Hou (特定商取引法) — specified-commercial-
+      transactions / consumer-fraud framework. Raised to the
+      strong-warn floor (severity 4).
+  - category: 11  # DRUGS_WEAPONS
+    severity_floor: 5
+    note: >-
+      Cannabis Control Act + Stimulants Control Act + Narcotics &
+      Psychotropics Control Act + Firearm and Sword Control Law —
+      sale or facilitation of controlled substances or regulated
+      weapons is treated as a critical-intervention ban (severity
+      5). Protected speech contexts remain permitted.
+  - category: 2   # SELF_HARM
+    severity_floor: 3
+    note: >-
+      Mental Health and Welfare Act (精神保健福祉法). Self-harm
+      content is raised to the warn floor to ensure crisis resources
+      surface. Peer-support overlays may loosen to label_only.
+  - category: 3   # VIOLENCE_THREAT
+    severity_floor: 3
+    note: >-
+      Penal Code Article 199 (homicide threats) and Article 222
+      (intimidation). Credible threats are raised to the warn floor.
+  - category: 5   # HARASSMENT
+    severity_floor: 2
+    note: >-
+      Stalker Regulation Act (ストーカー規制法) and Penal Code
+      Article 207 (insults). Harassment is raised to the caution
+      floor.
+  - category: 6   # HATE
+    severity_floor: 3
+    note: >-
+      Hate Speech Elimination Act (2016) and Buraku Discrimination
+      Elimination Act (2016). Hate speech targeting protected
+      classes is raised to the warn floor.
+  - category: 8   # MALWARE_LINK
+    severity_floor: 3
+    note: >-
+      Unauthorized Computer Access Act (不正アクセス行為の禁止等に
+      関する法律). Malware distribution and credential-harvesting
+      links are raised to the warn floor.
+  - category: 13  # MISINFORMATION_HEALTH
+    severity_floor: 2
+    note: >-
+      Pharmaceutical and Medical Device Act (薬機法). Health
+      misinformation contradicting MHLW guidance is raised to the
+      caution floor.
+  - category: 14  # MISINFORMATION_CIVIC
+    severity_floor: 3
+    note: >-
+      Public Office Election Act (公職選挙法). Civic misinformation
+      is raised to the warn floor, especially during the civic
+      window defined in election_rules.
+  - category: 16  # DEEPFAKE_SYNTHETIC
+    severity_floor: 3
+    note: >-
+      Act on Special Measures for Crimes Using AI (2024). Synthetic
+      media intended to deceive is raised to the warn floor; during
+      the civic window, the baseline escalation to severity 5
+      applies.
+
+slm_prompt_suffix: >-
+  Japan jurisdiction: apply tokushoho (特定商取引法) consumer-fraud
+  awareness. Watch for ore-ore fraud (おれおれ詐欺), furikome fraud
+  (振り込め詐欺), fake delivery redelivery scams (再配達詐欺), social
+  insurance number phishing, and crypto investment scams. Japanese
+  and romaji scam patterns are in scope. Raise severity for
+  impersonation of police, tax office, or municipal officials.
+
+scam_phrase_additions:
+  - key: ja_jp_scam
+    language: ja
+    entries:
+      - phrase: おれおれ詐欺
+        weight: 0.9
+      - phrase: 振り込め詐欺
+        weight: 0.9
+      - phrase: 再配達のお知らせ
+        weight: 0.85
+      - phrase: 行政機関を名乗る
+        weight: 0.8
+      - phrase: 暗号資産投資の案内
+        weight: 0.85
+      - phrase: 個人番号カードの確認
+        weight: 0.8
+      - phrase: 警察署から連絡
+        weight: 0.85
+      - phrase: 税務署の還付金
+        weight: 0.85
+
+# --------------------------------------------------------------------------
+# Allowed contexts
+# --------------------------------------------------------------------------
+allowed_contexts:
+  - QUOTED_SPEECH_CONTEXT
+  - NEWS_CONTEXT
+  - EDUCATION_CONTEXT
+  - COUNTERSPEECH_CONTEXT
+
+# --------------------------------------------------------------------------
+# User notice
+# --------------------------------------------------------------------------
+user_notice:
+  visible_pack_summary: >-
+    Japan safety pack. Child-safety, controlled-substance, and
+    consumer-fraud (tokushoho) statutes raise severity floors on
+    a small set of categories. News, education, counterspeech,
+    and quoted speech remain protected.
+  appeal_resource_id: jp_appeal_resource_v1
+  opt_out_allowed: true

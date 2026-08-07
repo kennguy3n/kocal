@@ -1,0 +1,243 @@
+# kchat.jurisdiction.us.guardrail.v1
+#
+# United States jurisdiction overlay — first-wave country pack.
+# Layered on top of kchat.global.guardrail.baseline. Concrete values
+# below are sourced from US federal statute and standing FBI / State
+# Department designations; reviewers carry the legal_review and
+# cultural_review responsibility per ARCHITECTURE.md.
+#
+# Notable floors (above the global baseline):
+#   * CHILD_SAFETY (1)  -> severity_floor 5 (already pinned by baseline;
+#                          re-asserted here so the federal CSAM statute
+#                          provenance is captured at the jurisdiction
+#                          layer).
+#   * EXTREMISM   (4)   -> severity_floor 4 (foreign terrorist orgs
+#                          listed by the State Department).
+#   * SCAM_FRAUD  (7)   -> severity_floor 3 (FTC / wire-fraud framework).
+#
+# Marketplace age gates reflect federal alcohol/tobacco minimums of
+# 21. Protected classes mirror the federal civil-rights statutes
+# (Title VII, ADA, ADEA, GINA, Civil Rights Act §1981).
+
+skill_id: kchat.jurisdiction.us.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+# ~18 months from 2026-04-29 — the maximum permitted by the compiler.
+expires_on: "2027-10-29"
+signers: [trust_and_safety, legal_review, cultural_review]
+
+# --------------------------------------------------------------------------
+# Activation
+# --------------------------------------------------------------------------
+activation:
+  criteria:
+    - user_selected_region: us
+    - group_declared_jurisdiction: us
+    - app_store_install_region: us
+    - enterprise_managed_policy: us
+  forbidden_criteria:
+    - gps_location
+    - ip_geolocation
+    - inferred_nationality
+    - inferred_ethnicity
+    - inferred_religion
+
+# --------------------------------------------------------------------------
+# Local definitions
+# --------------------------------------------------------------------------
+local_definitions:
+  legal_age_general: 18
+  legal_age_sexual_content_consumer: 18
+  # Federal alcohol minimum (National Minimum Drinking Age Act, 1984)
+  # and Tobacco 21 (federal, 2019).
+  legal_age_marketplace_alcohol: 21
+  legal_age_marketplace_tobacco: 21
+  # Title VII (1964) + ADA + ADEA + GINA + §1981 + 42 USC §1981.
+  protected_classes:
+    - race
+    - color
+    - religion
+    - sex
+    - national_origin
+    - disability
+    - age_40_plus
+    - genetic_information
+  # Provenance: US Department of State Foreign Terrorist Organizations
+  # list + FBI designated extremist orgs (kept as id refs, not literal
+  # strings, per anti-misuse "no embedded harm content").
+  listed_extremist_orgs:
+    - us_state_dept_fto_list_v1
+    - us_fbi_designated_extremist_orgs_v1
+  # Restricted symbols catalogue id; literal symbols never embedded
+  # in the YAML (privacy-contract rule against shipped harm content).
+  restricted_symbols:
+    - us_restricted_symbols_catalogue_v1
+  election_rules:
+    # Federal civic window (general election cycle window). Concrete
+    # dates set per cycle by the resource catalogue.
+    civic_window_open:  "2026-09-01"
+    civic_window_close: "2026-11-15"
+    authority_resource_id: us_fec_authority_v1
+
+# --------------------------------------------------------------------------
+# Local language assets — primary US languages.
+# --------------------------------------------------------------------------
+local_language_assets:
+  primary_languages: [en, es]
+  lexicons:
+    - lexicon_id: us_en_lexicon_v1
+      language: en
+      categories: [1, 4, 6, 7, 10, 11]
+      provenance: kchat_trust_and_safety_us_v1
+  normalization:
+    nfkc: true
+    case_fold: true
+    homoglyph_map_id: homoglyph_core_v1
+    transliteration_refs: [translit_core_v1]
+
+# --------------------------------------------------------------------------
+# Overrides
+# --------------------------------------------------------------------------
+overrides:
+  - category: 1   # CHILD_SAFETY
+    severity_floor: 5
+    note: >-
+      Federal CSAM statute (18 USC §2251 / §2252) — child sexual
+      abuse material is treated as a critical-intervention ban
+      regardless of context. Re-asserted at the jurisdiction layer
+      so the statutory provenance is preserved in the compiled
+      prompt.
+  - category: 4   # EXTREMISM
+    severity_floor: 4
+    note: >-
+      Material support / glorification of US-designated foreign
+      terrorist orgs (18 USC §2339B) and domestic extremist orgs
+      (FBI designations) is treated as a strong-warn jurisdictional
+      escalation. Protected speech contexts remain permitted.
+  - category: 7   # SCAM_FRAUD
+    severity_floor: 3
+    note: >-
+      Wire fraud / consumer fraud (FTC Act §5, 18 USC §1343) is
+      raised to the warn floor (severity 3) at the jurisdiction
+      layer.
+  - category: 2   # SELF_HARM
+    severity_floor: 3
+    note: >-
+      Mental Health Parity and Addiction Equity Act (MHPAEA) and
+      SAMHSA crisis-resource mandates. Self-harm content is raised
+      to the warn floor to ensure crisis resources surface. Peer-
+      support overlays may loosen to label_only.
+  - category: 3   # VIOLENCE_THREAT
+    severity_floor: 3
+    note: >-
+      Federal threat statutes (18 USC §875 interstate threats,
+      18 USC §2261A cyberstalking). Credible threats are raised to
+      the warn floor at the jurisdiction layer.
+  - category: 5   # HARASSMENT
+    severity_floor: 2
+    note: >-
+      Title VII (civil rights), 18 USC §2261A (cyberstalking).
+      Harassment is raised to the caution floor; community overlays
+      may tighten further.
+  - category: 6   # HATE
+    severity_floor: 3
+    note: >-
+      Matthew Shepard and James Byrd Jr. Hate Crimes Prevention Act
+      (18 USC §249). Hate speech targeting protected classes is
+      raised to the warn floor. Protected-speech contexts remain
+      permitted via allowed_contexts.
+  - category: 8   # MALWARE_LINK
+    severity_floor: 3
+    note: >-
+      Computer Fraud and Abuse Act (18 USC §1030). Malware
+      distribution and credential-harvesting links are raised to
+      the warn floor.
+  - category: 11  # DRUGS_WEAPONS
+    severity_floor: 3
+    note: >-
+      Controlled Substances Act (21 USC §841) and Gun Control Act
+      (18 USC §922). Sale or facilitation of regulated drugs and
+      firearms is raised to the warn floor.
+  - category: 13  # MISINFORMATION_HEALTH
+    severity_floor: 2
+    note: >-
+      FDA regulations on health claims and CDC public-health
+      guidance. Health misinformation that contradicts public-
+      health consensus is raised to the caution floor.
+  - category: 14  # MISINFORMATION_CIVIC
+    severity_floor: 3
+    note: >-
+      Election integrity (Help America Vote Act, FEC regulations).
+      Civic misinformation is raised to the warn floor, especially
+      during the civic window defined in election_rules.
+  - category: 16  # DEEPFAKE_SYNTHETIC
+    severity_floor: 3
+    note: >-
+      DEFIANCE Act and state deepfake laws. Synthetic media
+      intended to deceive is raised to the warn floor; during the
+      civic window, the baseline escalation to severity 5 applies.
+
+slm_prompt_suffix: >-
+  United States jurisdiction: apply federal fraud framework
+  awareness. IRS impersonation scams, Social Security suspension
+  scams, FTC consumer-fraud patterns, and Medicare/ACA marketplace
+  scams are elevated. Watch for wire-fraud solicitations, fake
+  government-grant offers, and student-loan-forgiveness advance-fee
+  demands. English and Spanish language scam patterns are in scope.
+
+scam_phrase_additions:
+  - key: en_us_scam
+    language: en
+    entries:
+      - phrase: IRS arrest warrant
+        weight: 0.9
+      - phrase: Social Security suspended
+        weight: 0.85
+      - phrase: Medicare card verification
+        weight: 0.8
+      - phrase: government grant fee
+        weight: 0.85
+      - phrase: student loan forgiveness fee
+        weight: 0.85
+      - phrase: FTC complaint notice
+        weight: 0.75
+      - phrase: wire transfer to escrow
+        weight: 0.8
+      - phrase: prepaid card payment
+        weight: 0.75
+  - key: es_us_scam
+    language: es
+    entries:
+      - phrase: orden de arresto del IRS
+        weight: 0.9
+      - phrase: seguro social suspendido
+        weight: 0.85
+      - phrase: tarjeta de Medicare
+        weight: 0.8
+      - phrase: tarjetas de regalo
+        weight: 0.75
+      - phrase: transferencia bancaria urgente
+        weight: 0.8
+      - phrase: beca gubernamental pago
+        weight: 0.85
+
+# --------------------------------------------------------------------------
+# Allowed contexts — preserve all four protected-speech carve-outs.
+# --------------------------------------------------------------------------
+allowed_contexts:
+  - QUOTED_SPEECH_CONTEXT
+  - NEWS_CONTEXT
+  - EDUCATION_CONTEXT
+  - COUNTERSPEECH_CONTEXT
+
+# --------------------------------------------------------------------------
+# User notice
+# --------------------------------------------------------------------------
+user_notice:
+  visible_pack_summary: >-
+    United States safety pack. Federal child-safety, foreign-
+    terrorist-org, and consumer-fraud statutes raise severity
+    floors on a small set of categories. News, education,
+    counterspeech, and quoted speech remain protected.
+  appeal_resource_id: us_appeal_resource_v1
+  opt_out_allowed: true

@@ -1,0 +1,29 @@
+# German-language lexicon bundle for the kchat.jurisdiction.de.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: de_de_lexicon_v1
+language: de
+locale: de-DE
+provenance: kchat_trust_and_safety_de_v1
+categories:
+  - 4   # EXTREMISM
+  - 6   # HATE
+  - 11  # DRUGS_WEAPONS
+
+terms:
+  - term_id: de_de_term_stgb_86a_symbols_v1
+    categories: [4]
+    notes: StGB §86a banned-symbol indicator phrases (catalogue-only).
+  - term_id: de_de_term_bfv_listed_recruitment_v1
+    categories: [4]
+    notes: BfV-listed extremist org recruitment indicator phrases.
+  - term_id: de_de_term_volksverhetzung_v1
+    categories: [6]
+    notes: Volksverhetzung (StGB §130) protected-class slur indicators.
+  - term_id: de_de_term_btmg_drug_marketplace_v1
+    categories: [11]
+    notes: Betäubungsmittelgesetz controlled-substance marketplace patterns.

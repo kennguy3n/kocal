@@ -1,0 +1,25 @@
+# Vietnamese-language lexicon bundle for the kchat.jurisdiction.vn.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: vn_vi_lexicon_v1
+language: vi
+locale: vi-VN
+provenance: kchat_trust_and_safety_vn_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+  - 7   # SCAM_FRAUD
+terms:
+  - term_id: vn_vi_term_luat_tre_em_2016_v1
+    categories: [1]
+    notes: Luật Trẻ em 2016 indicators.
+  - term_id: vn_vi_term_luat_khung_bo_2013_v1
+    categories: [4]
+    notes: Luật phòng chống khủng bố 2013 indicators.
+  - term_id: vn_vi_term_consumer_fraud_v1
+    categories: [7]
+    notes: Consumer-fraud indicators (lừa đảo, mạo danh cơ quan chức năng).

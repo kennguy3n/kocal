@@ -1,0 +1,25 @@
+# Thai-language lexicon bundle for the kchat.jurisdiction.th.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: th_th_lexicon_v1
+language: th
+locale: th-TH
+provenance: kchat_trust_and_safety_th_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+  - 6   # HATE
+terms:
+  - term_id: th_th_term_child_protection_act_2546_v1
+    categories: [1]
+    notes: Child Protection Act B.E. 2546 indicators.
+  - term_id: th_th_term_computer_crime_act_14_3_v1
+    categories: [4]
+    notes: Computer Crime Act §14(3) indicators.
+  - term_id: th_th_term_criminal_code_112_v1
+    categories: [6]
+    notes: Criminal Code §112 indicators.

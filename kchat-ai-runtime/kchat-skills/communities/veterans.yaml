@@ -1,0 +1,48 @@
+# Community Overlay — kchat.community.veterans.guardrail.v1
+#
+# Veterans peer-support overlay (adult-only). Loosens self-harm to a
+# label for peer support, tightens scam (benefits fraud).
+
+skill_id: kchat.community.veterans.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: veterans
+  age_mode: adult_only
+  visibility: members_only_summary
+  set_by: group_admin
+
+rules:
+  - category: 2   # SELF_HARM
+    action: label_only
+    note: >-
+      Self-harm references surface a label only — peer-support
+      context, follows the health_support pattern.
+  - category: 7   # SCAM_FRAUD
+    action: strong_warn
+    note: >-
+      Benefits / VA-impersonation / advance-fee scams tightened to a
+      hard modal warning.
+  - category: 6   # HATE
+    action: warn
+    note: >-
+      Hate speech targeting protected classes is warned in veterans
+      communities where members may include diverse backgrounds.
+  - category: 5   # HARASSMENT
+    action: warn
+    suggest_mute: true
+    note: >-
+      Targeted harassment in veterans communities warns before display
+      and offers a peer-mute.
+  - category: 13  # MISINFORMATION_HEALTH
+    action: warn
+    note: >-
+      Health misinformation relevant to veterans (PTSD claims, VA
+      benefits misinformation, medication disinformation) is warned.
+  - category: 3   # VIOLENCE_THREAT
+    action: warn
+    note: >-
+      Violence threats in veterans communities are warned given the
+      elevated risk of PTSD-related violence.

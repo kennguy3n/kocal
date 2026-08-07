@@ -1,0 +1,21 @@
+# English-language lexicon bundle for the kchat.jurisdiction.nz.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: nz_en_lexicon_v1
+language: en
+locale: en-NZ
+provenance: kchat_trust_and_safety_nz_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+terms:
+  - term_id: nz_en_term_fvpca_123_nz_v1
+    categories: [1]
+    notes: FVPCA §123 indicators.
+  - term_id: nz_en_term_tsa_2002_nz_v1
+    categories: [4]
+    notes: TSA 2002 indicators.

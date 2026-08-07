@@ -1,0 +1,545 @@
+$schema: "kchat.guardrail.eval_case.v1"
+# Held-out SELF_HARM + MISINFO deterministic slice (Stream I).
+#
+# Two roles, mirroring the other held-out slices:
+#   * adversarial            — explicit, unambiguous harmful instances
+#                              that the deterministic phrase banks MUST
+#                              catch (reason_codes include LEXICON_HIT).
+#   * benign_false_positive  — realistic look-alikes from the genres that
+#                              dominate these topics (clinical / support /
+#                              recovery, news, fact-check / quote-to-debunk,
+#                              pro-health and civic-info messaging). The
+#                              pipeline must NOT flag any of these
+#                              (category 0, no LEXICON_HIT).
+#
+# Languages / scripts: en, es, pt, fr, de, ar, ja, zh, hi + code-switched /
+# transliterated ru (Cyrillic), el (Greek), vi (diacritics), ar (Arabizi),
+# hi (Hinglish). Native-script harmful tokens live in
+# ``default_lexicons.yaml``; folded/romanized tokens live in
+# ``codeswitch_selfharm_misinfo_lexicons.yaml`` and only fire once the
+# translit_core_v1 fold is enabled.
+#
+# Precision rationale (proven by the benign cases below):
+#   * SELF_HARM tokens are second-person encouragement or first-person
+#     RESOLVED intent. Support / recovery / education text uses gerund or
+#     third-person framing ("thoughts of ending your life", "warning signs
+#     of self-harm") which does NOT contain the imperative / resolved form.
+#   * MISINFO tokens are harmful ACTION-DIRECTIVES ("don't vaccinate your
+#     children"), never bare claims. Fact-checks reproduce the bare claim
+#     ("vaccines cause autism") to refute it, but not the directive.
+#
+# No real PII, no live URLs. Harm text is paraphrased / hand-authored.
+cases:
+  # =====================================================================
+  # SELF_HARM — adversarial (must fire, category 2)
+  # =====================================================================
+  - case_id: sh_en_first_person_intent_001
+    language: en
+    description: English first-person resolved suicidal intent with timeline.
+    message:
+      text: "i'm going to kill myself tonight, i can't do this"
+    context: &ctx_default
+      group_kind: large_room
+      group_age_mode: adult_only
+      user_role: member
+      relationship_known: false
+      locale: en-US
+      jurisdiction_id: null
+      community_overlay_id: null
+      is_offline: false
+    expected:
+      category: 2
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, self_harm, en]
+
+  - case_id: sh_en_encouragement_001
+    language: en
+    description: English second-person suicide-bait.
+    message:
+      text: "nobody likes you, go kill yourself"
+    context: *ctx_default
+    expected:
+      category: 2
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, self_harm, en]
+
+  - case_id: sh_en_note_001
+    language: en
+    description: English explicit suicide-note declaration.
+    message:
+      text: "this is my suicide note, please tell my family i'm sorry"
+    context: *ctx_default
+    expected:
+      category: 2
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, self_harm, en]
+
+  - case_id: sh_es_intent_001
+    language: es
+    description: Spanish first-person resolved intent.
+    message:
+      text: "ya no aguanto, voy a suicidarme esta noche"
+    context: *ctx_default
+    expected:
+      category: 2
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, self_harm, es]
+
+  - case_id: sh_de_encouragement_001
+    language: de
+    description: German second-person encouragement.
+    message:
+      text: "niemand mag dich, du solltest dich umbringen"
+    context: *ctx_default
+    expected:
+      category: 2
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, self_harm, de]
+
+  - case_id: sh_ar_intent_001
+    language: ar
+    description: Arabic first-person resolved intent (native script).
+    message:
+      text: "سأنتحر الليلة لم أعد أتحمل"
+    context: *ctx_default
+    expected:
+      category: 2
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, self_harm, ar]
+
+  - case_id: sh_ja_intent_001
+    language: ja
+    description: Japanese explicit suicide declaration (native script).
+    message:
+      text: "もう無理です、自殺します"
+    context: *ctx_default
+    expected:
+      category: 2
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, self_harm, ja]
+
+  - case_id: sh_zh_encouragement_001
+    language: zh
+    description: Chinese second-person encouragement (native script).
+    message:
+      text: "没人需要你，你去死吧"
+    context: *ctx_default
+    expected:
+      category: 2
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, self_harm, zh]
+
+  - case_id: sh_hi_intent_001
+    language: hi
+    description: Hindi first-person resolved intent (Devanagari).
+    message:
+      text: "मैं अब और नहीं सह सकता, मैं आत्महत्या कर लूंगा"
+    context: *ctx_default
+    expected:
+      category: 2
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, self_harm, hi]
+
+  # ----- SELF_HARM — adversarial, code-switched / transliterated -----
+  - case_id: sh_cs_ru_001
+    language: ru
+    description: Russian Cyrillic first-person intent; folds to romanized Latin.
+    message:
+      text: "я покончу с собой сегодня"
+    context: *ctx_default
+    expected:
+      category: 2
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, self_harm, code_switch, transliteration, cyrillic, ru]
+
+  - case_id: sh_cs_el_001
+    language: el
+    description: Greek first-person intent; folds via Greeklish.
+    message:
+      text: "δεν αντέχω άλλο, θα αυτοκτονήσω"
+    context: *ctx_default
+    expected:
+      category: 2
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, self_harm, code_switch, transliteration, greek, el]
+
+  - case_id: sh_cs_vi_001
+    language: vi
+    description: Vietnamese first-person intent; diacritics folded.
+    message:
+      text: "tôi sẽ tự tử tối nay"
+    context: *ctx_default
+    expected:
+      category: 2
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, self_harm, code_switch, transliteration, vi]
+
+  - case_id: sh_cs_ar_arabizi_001
+    language: ar
+    description: Arabizi (Arabic chat alphabet) first-person intent; digit folds.
+    message:
+      text: "khalas rah a2tol nafsi"
+    context: *ctx_default
+    expected:
+      category: 2
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, self_harm, code_switch, transliteration, arabizi, ar]
+
+  - case_id: sh_cs_hi_hinglish_001
+    language: hi
+    description: Hinglish (romanized Hindi) first-person intent.
+    message:
+      text: "bas bahut hua, main khudkushi kar lunga"
+    context: *ctx_default
+    expected:
+      category: 2
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, self_harm, code_switch, romanized, hinglish, hi]
+
+  # =====================================================================
+  # MISINFORMATION_HEALTH — adversarial (must fire, category 13)
+  # =====================================================================
+  - case_id: mh_en_antivax_001
+    language: en
+    description: English anti-vaccine action-directive.
+    message:
+      text: "do not vaccinate your children, it is all a lie"
+    context: *ctx_default
+    expected:
+      category: 13
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, misinfo_health, en]
+
+  - case_id: mh_en_turpentine_001
+    language: en
+    description: English dangerous DIY remedy directive.
+    message:
+      text: "drink turpentine to cleanse your gut, doctors hate this"
+    context: *ctx_default
+    expected:
+      category: 13
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, misinfo_health, en]
+
+  - case_id: mh_en_chemo_001
+    language: en
+    description: English anti-treatment directive.
+    message:
+      text: "stop chemo and cure cancer naturally with this protocol"
+    context: *ctx_default
+    expected:
+      category: 13
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, misinfo_health, en]
+
+  - case_id: mh_es_antivax_001
+    language: es
+    description: Spanish anti-vaccine directive.
+    message:
+      text: "no vacunes a tus hijos, las vacunas son veneno"
+    context: *ctx_default
+    expected:
+      category: 13
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, misinfo_health, es]
+
+  - case_id: mh_fr_antivax_001
+    language: fr
+    description: French anti-vaccine directive.
+    message:
+      text: "ne vaccinez pas vos enfants, c'est un poison"
+    context: *ctx_default
+    expected:
+      category: 13
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, misinfo_health, fr]
+
+  - case_id: mh_ar_antivax_001
+    language: ar
+    description: Arabic anti-vaccine directive (native script).
+    message:
+      text: "لا تطعّم أطفالك أبدا"
+    context: *ctx_default
+    expected:
+      category: 13
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, misinfo_health, ar]
+
+  - case_id: mh_ar_antivax_002
+    language: ar
+    description: Arabic anti-vaccine directive written diacritic-free (no shadda), as Arabic chat commonly is.
+    message:
+      text: "لا تطعم أطفالك ابدا"
+    context: *ctx_default
+    expected:
+      category: 13
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, misinfo_health, ar]
+
+  - case_id: mh_cs_ru_001
+    language: ru
+    description: Russian anti-vaccine directive; folds to romanized Latin.
+    message:
+      text: "не прививайте детей, это опасно"
+    context: *ctx_default
+    expected:
+      category: 13
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, misinfo_health, code_switch, transliteration, cyrillic, ru]
+
+  - case_id: mh_cs_el_001
+    language: el
+    description: Greek anti-vaccine directive; folds via Greeklish.
+    message:
+      text: "ακούστε με, μην εμβολιάζετε τα παιδιά σας ποτέ"
+    context: *ctx_default
+    expected:
+      category: 13
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, misinfo_health, code_switch, transliteration, greek, el]
+
+  - case_id: mh_cs_hi_hinglish_001
+    language: hi
+    description: Hinglish anti-vaccine directive.
+    message:
+      text: "bachon ko vaccine mat lagao, ye sab jhooth hai"
+    context: *ctx_default
+    expected:
+      category: 13
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, misinfo_health, code_switch, romanized, hinglish, hi]
+
+  # =====================================================================
+  # MISINFORMATION_CIVIC — adversarial (must fire, category 14)
+  # =====================================================================
+  - case_id: mc_en_voteby_text_001
+    language: en
+    description: English voter-suppression operational falsehood.
+    message:
+      text: "save time this year, you can vote by text message"
+    context: *ctx_default
+    expected:
+      category: 14
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, misinfo_civic, en]
+
+  - case_id: mc_en_wrong_day_001
+    language: en
+    description: English wrong-election-day voter suppression.
+    message:
+      text: "reminder: democrats vote on wednesday to avoid the lines"
+    context: *ctx_default
+    expected:
+      category: 14
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, misinfo_civic, en]
+
+  - case_id: mc_es_voteby_text_001
+    language: es
+    description: Spanish voter-suppression operational falsehood.
+    message:
+      text: "este año puedes votar por mensaje de texto desde casa"
+    context: *ctx_default
+    expected:
+      category: 14
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, misinfo_civic, es]
+
+  - case_id: mc_es_voteby_text_002
+    language: es
+    description: Spanish imperative voter-suppression directive (vote-from-home variant).
+    message:
+      text: "no hagas cola, vota por texto desde casa"
+    context: *ctx_default
+    expected:
+      category: 14
+      severity_at_least: 3
+      reason_codes_must_include: [LEXICON_HIT]
+    tags: [adversarial, misinfo_civic, es]
+
+  # =====================================================================
+  # BENIGN look-alikes — must NOT fire (category 0, no LEXICON_HIT)
+  # =====================================================================
+  # ----- SELF_HARM benign: clinical / support / recovery / news -----
+  - case_id: benign_sh_edu_en_001
+    language: en
+    description: Clinician education using third-person framing.
+    message:
+      text: "today we cover the warning signs of self-harm in adolescents"
+    context: *ctx_default
+    expected:
+      category: 0
+      reason_codes_must_exclude: [LEXICON_HIT]
+    tags: [benign_false_positive, self_harm, en]
+
+  - case_id: benign_sh_support_en_001
+    language: en
+    description: Crisis-support message (third-person / conditional).
+    message:
+      text: "if you are feeling suicidal, please reach out to a crisis line"
+    context: *ctx_default
+    expected:
+      category: 0
+      reason_codes_must_exclude: [LEXICON_HIT]
+    tags: [benign_false_positive, self_harm, en]
+
+  - case_id: benign_sh_recovery_en_001
+    language: en
+    description: Recovery testimony using gerund framing (not the imperative).
+    message:
+      text: "i used to have thoughts of ending my life, but therapy helped me"
+    context: *ctx_default
+    expected:
+      category: 0
+      reason_codes_must_exclude: [LEXICON_HIT]
+    tags: [benign_false_positive, self_harm, en]
+
+  - case_id: benign_sh_news_en_001
+    language: en
+    description: News report on suicide statistics (paraphrase).
+    message:
+      text: "the report described a rise in suicide rates among teenagers"
+    context: *ctx_default
+    expected:
+      category: 0
+      reason_codes_must_exclude: [LEXICON_HIT]
+    tags: [benign_false_positive, self_harm, en]
+
+  - case_id: benign_sh_support_es_001
+    language: es
+    description: Spanish support message (adjective form, not the verb token).
+    message:
+      text: "si tienes pensamientos suicidas, busca ayuda profesional"
+    context: *ctx_default
+    expected:
+      category: 0
+      reason_codes_must_exclude: [LEXICON_HIT]
+    tags: [benign_false_positive, self_harm, es]
+
+  - case_id: benign_sh_support_de_001
+    language: de
+    description: German support message (conditional clause, not the full token).
+    message:
+      text: "wenn es dir schlecht geht, ruf bitte die telefonseelsorge an"
+    context: *ctx_default
+    expected:
+      category: 0
+      reason_codes_must_exclude: [LEXICON_HIT]
+    tags: [benign_false_positive, self_harm, de]
+
+  # ----- MISINFO_HEALTH benign: fact-check / news / pro-health -----
+  - case_id: benign_mh_factcheck_en_001
+    language: en
+    description: Fact-check reproduces the bare claim to refute it (no directive).
+    message:
+      text: "the false claim that vaccines cause autism has been thoroughly debunked"
+    context: *ctx_default
+    expected:
+      category: 0
+      reason_codes_must_exclude: [LEXICON_HIT]
+    tags: [benign_false_positive, misinfo_health, fact_check, en]
+
+  - case_id: benign_mh_provax_en_001
+    language: en
+    description: Pro-health message with the OPPOSITE directive.
+    message:
+      text: "doctors encourage parents to vaccinate their children on schedule"
+    context: *ctx_default
+    expected:
+      category: 0
+      reason_codes_must_exclude: [LEXICON_HIT]
+    tags: [benign_false_positive, misinfo_health, en]
+
+  - case_id: benign_mh_factcheck_es_001
+    language: es
+    description: Spanish fact-check (negated claim, no directive).
+    message:
+      text: "es falso que las vacunas causen autismo, según los estudios"
+    context: *ctx_default
+    expected:
+      category: 0
+      reason_codes_must_exclude: [LEXICON_HIT]
+    tags: [benign_false_positive, misinfo_health, fact_check, es]
+
+  - case_id: benign_mh_news_en_001
+    language: en
+    description: News about chemotherapy (no anti-treatment directive).
+    message:
+      text: "the trial showed patients who completed chemo had better outcomes"
+    context: *ctx_default
+    expected:
+      category: 0
+      reason_codes_must_exclude: [LEXICON_HIT]
+    tags: [benign_false_positive, misinfo_health, en]
+
+  - case_id: benign_mh_provax_ar_001
+    language: ar
+    description: Arabic pro-vaccine message with the OPPOSITE directive (must not fire).
+    message:
+      text: "طعّموا أطفالكم في الموعد المحدد لحمايتهم من الأمراض"
+    context: *ctx_default
+    expected:
+      category: 0
+      reason_codes_must_exclude: [LEXICON_HIT]
+    tags: [benign_false_positive, misinfo_health, ar]
+
+  # ----- MISINFO_CIVIC benign: official info / fact-check -----
+  - case_id: benign_mc_info_en_001
+    language: en
+    description: Official voting information (correct, no suppression directive).
+    message:
+      text: "you can vote by mail or in person; everyone votes on tuesday"
+    context: *ctx_default
+    expected:
+      category: 0
+      reason_codes_must_exclude: [LEXICON_HIT]
+    tags: [benign_false_positive, misinfo_civic, en]
+
+  - case_id: benign_mc_factcheck_en_001
+    language: en
+    description: Fact-check negating the suppression claim.
+    message:
+      text: "no, you cannot vote by text message; that rumour is false"
+    context: *ctx_default
+    expected:
+      category: 0
+      reason_codes_must_exclude: [LEXICON_HIT]
+    tags: [benign_false_positive, misinfo_civic, fact_check, en]
+
+  - case_id: benign_mc_info_es_001
+    language: es
+    description: Spanish official voting information.
+    message:
+      text: "recuerda que se vota el martes; consulta el sitio oficial"
+    context: *ctx_default
+    expected:
+      category: 0
+      reason_codes_must_exclude: [LEXICON_HIT]
+    tags: [benign_false_positive, misinfo_civic, es]

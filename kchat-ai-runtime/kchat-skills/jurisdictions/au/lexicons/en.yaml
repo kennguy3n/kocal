@@ -1,0 +1,21 @@
+# English-language lexicon bundle for the kchat.jurisdiction.au.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: au_en_lexicon_v1
+language: en
+locale: en-AU
+provenance: kchat_trust_and_safety_au_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+terms:
+  - term_id: au_en_term_cca_474_child_au_v1
+    categories: [1]
+    notes: Criminal Code 1995 Div 474 indicators.
+  - term_id: au_en_term_cca_5_3_terrorism_au_v1
+    categories: [4]
+    notes: Criminal Code 1995 Part 5.3 indicators.

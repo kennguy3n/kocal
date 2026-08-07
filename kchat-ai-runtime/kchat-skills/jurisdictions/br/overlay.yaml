@@ -1,0 +1,130 @@
+# kchat.jurisdiction.br.guardrail.v1
+#
+# Brazil jurisdiction overlay — first-wave country pack.
+# Layered on top of kchat.global.guardrail.baseline.
+#
+# Notable floors (above the global baseline):
+#   * CHILD_SAFETY            (1)  -> severity_floor 5 (ECA — Estatuto
+#                                     da Criança e do Adolescente, Lei
+#                                     8.069/90).
+#   * HATE                    (6)  -> severity_floor 4 (Lei 7.716/89
+#                                     racism law + Lei 14.532/23).
+#   * MISINFORMATION_CIVIC    (14) -> severity_floor 3 (TSE election
+#                                     rules — Resoluções 23.610/2019,
+#                                     23.732/2024).
+#
+# Protected classes follow Constituição Federal Art. 3º (IV) and
+# Art. 5º (XLI / XLII / LXXVII), plus Lei Maria da Penha.
+
+skill_id: kchat.jurisdiction.br.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+expires_on: "2027-10-29"
+signers: [trust_and_safety, legal_review, cultural_review]
+
+# --------------------------------------------------------------------------
+# Activation
+# --------------------------------------------------------------------------
+activation:
+  criteria:
+    - user_selected_region: br
+    - group_declared_jurisdiction: br
+    - app_store_install_region: br
+    - enterprise_managed_policy: br
+  forbidden_criteria:
+    - gps_location
+    - ip_geolocation
+    - inferred_nationality
+    - inferred_ethnicity
+    - inferred_religion
+
+# --------------------------------------------------------------------------
+# Local definitions
+# --------------------------------------------------------------------------
+local_definitions:
+  legal_age_general: 18
+  legal_age_sexual_content_consumer: 18
+  legal_age_marketplace_alcohol: 18
+  legal_age_marketplace_tobacco: 18
+  # Constituição Federal Art. 3º IV + Art. 5º XLI/XLII; Lei 7.716/89;
+  # Estatuto da Pessoa com Deficiência (Lei 13.146/15); Estatuto do
+  # Idoso (Lei 10.741/03).
+  protected_classes:
+    - race
+    - color
+    - sex
+    - religion
+    - national_origin
+    - age
+    - disability
+  listed_extremist_orgs:
+    - br_listed_orgs_v1
+  restricted_symbols:
+    - br_restricted_symbols_v1
+  election_rules:
+    # TSE general election cycle window. Concrete dates from the
+    # resource catalogue (Calendário Eleitoral TSE).
+    civic_window_open:  "2026-08-16"
+    civic_window_close: "2026-10-30"
+    authority_resource_id: br_tse_authority_v1
+
+# --------------------------------------------------------------------------
+# Local language assets — pt-BR primary.
+# --------------------------------------------------------------------------
+local_language_assets:
+  primary_languages: [pt-BR]
+  lexicons:
+    - lexicon_id: br_pt_lexicon_v1
+      language: pt
+      categories: [1, 6, 14]
+      provenance: kchat_trust_and_safety_br_v1
+  normalization:
+    nfkc: true
+    case_fold: true
+    homoglyph_map_id: homoglyph_core_v1
+    transliteration_refs: [translit_core_v1]
+
+# --------------------------------------------------------------------------
+# Overrides
+# --------------------------------------------------------------------------
+overrides:
+  - category: 1   # CHILD_SAFETY
+    severity_floor: 5
+    note: >-
+      Estatuto da Criança e do Adolescente (Lei 8.069/90) — child
+      sexual abuse material is treated as a critical-intervention
+      ban regardless of context.
+  - category: 6   # HATE
+    severity_floor: 4
+    note: >-
+      Lei 7.716/89 (crimes de racismo) and Lei 14.532/23 raise
+      racial / religious hate speech against a protected class to
+      the strong-warn floor (severity 4). Protected speech contexts
+      remain permitted.
+  - category: 14  # MISINFORMATION_CIVIC
+    severity_floor: 3
+    note: >-
+      TSE Resoluções 23.610/2019 and 23.732/2024 — civic-process
+      misinformation is raised to severity 3 (warn) during the
+      election cycle window.
+
+# --------------------------------------------------------------------------
+# Allowed contexts
+# --------------------------------------------------------------------------
+allowed_contexts:
+  - QUOTED_SPEECH_CONTEXT
+  - NEWS_CONTEXT
+  - EDUCATION_CONTEXT
+  - COUNTERSPEECH_CONTEXT
+
+# --------------------------------------------------------------------------
+# User notice
+# --------------------------------------------------------------------------
+user_notice:
+  visible_pack_summary: >-
+    Brazil safety pack. ECA child-safety, Lei 7.716/89 racism law,
+    and TSE election-cycle rules raise severity floors on a small
+    set of categories. News, education, counterspeech, and quoted
+    speech remain protected.
+  appeal_resource_id: br_appeal_resource_v1
+  opt_out_allowed: true

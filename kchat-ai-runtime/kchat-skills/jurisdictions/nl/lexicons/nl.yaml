@@ -1,0 +1,21 @@
+# Dutch-language lexicon bundle for the kchat.jurisdiction.nl.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: nl_nl_lexicon_v1
+language: nl
+locale: nl-NL
+provenance: kchat_trust_and_safety_nl_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+terms:
+  - term_id: nl_nl_term_sr_240b_kind_v1
+    categories: [1]
+    notes: Wetboek van Strafrecht Art. 240b indicators.
+  - term_id: nl_nl_term_sr_83_terrorisme_v1
+    categories: [4]
+    notes: Wetboek van Strafrecht Art. 83 terrorism indicators.

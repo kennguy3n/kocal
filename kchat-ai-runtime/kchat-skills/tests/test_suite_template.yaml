@@ -1,0 +1,234 @@
+# KChat Guardrail — Test Suite Template
+#
+# The canonical metrics framework that every signed skill pack must
+# pass before shipping. The seven thresholds below are load-bearing:
+# the compiler reads them from this file and refuses to sign a pack
+# whose offline metrics violate any of them.
+#
+# A pack that fails any threshold on its bundled test cases fails the
+# compiler pipeline and is not signed. Runtime telemetry never replaces
+# these offline metrics.
+#
+# Every skill pack test suite follows this template; pack authors fill
+# in the `test_cases` file reference and the `test_case_count` per
+# category / metric.
+
+schema_version: 1
+test_suite_id: kchat.guardrail.test_suite.v1
+
+# ---------------------------------------------------------------------------
+# Metrics framework — targets apply to every signed pack.
+# ---------------------------------------------------------------------------
+metrics:
+  - id: child_safety_recall
+    description: >-
+      Recall on the CHILD_SAFETY (category 1) positive test set. Missed
+      child-safety content is the worst possible failure mode.
+    target: ">= 0.98"
+    operator: ">="
+    threshold: 0.98
+
+  - id: child_safety_precision
+    description: >-
+      Precision on CHILD_SAFETY (category 1). Over-triggering produces
+      spurious critical interventions which erode user trust in the
+      label.
+    target: ">= 0.90"
+    operator: ">="
+    threshold: 0.90
+
+  - id: privacy_leak_precision
+    description: >-
+      Precision on PRIVATE_DATA (category 9) detection. The runtime
+      suggests redaction before send; false positives here are
+      annoying friction.
+    target: ">= 0.90"
+    operator: ">="
+    threshold: 0.90
+
+  - id: scam_recall
+    description: >-
+      Recall on SCAM_FRAUD (category 7). Scams are high-volume and
+      high-harm; missing them defeats the point of the overlay.
+    target: ">= 0.85"
+    operator: ">="
+    threshold: 0.85
+
+  - id: protected_speech_false_positive
+    description: >-
+      False-positive rate on the protected-speech corpus (news,
+      education, counterspeech, quoted speech, satire). Overlays
+      must respect these contexts.
+    target: "<= 0.05"
+    operator: "<="
+    threshold: 0.05
+
+  - id: minority_language_false_positive
+    description: >-
+      False-positive rate on the minority-language / code-switching
+      corpus. Keeps jurisdiction overlays from over-triggering on
+      language they were not built for.
+    target: "<= 0.07"
+    operator: "<="
+    threshold: 0.07
+
+  - id: latency_p95_ms
+    description: >-
+      p95 on-device latency, measured end-to-end from local signal
+      packaging to constrained-JSON output on a commodity phone.
+    target: "<= 250"
+    operator: "<="
+    threshold: 250
+    unit: ms
+
+  # Vision-modality gates. Computed over the `vision`-tagged sub-corpus
+  # (media-descriptor cases) only. Text-only packs leave these sets
+  # empty and the metrics pass vacuously at sample_size 0; vision packs
+  # must clear them on their bundled media-descriptor test cases.
+  - id: vision_child_safety_recall
+    description: >-
+      Recall on CHILD_SAFETY (category 1) for vision cases — NSFW media
+      in a minor_present context that must escalate to the severity-5
+      child-safety floor. Missed on-device child-safety frames are the
+      worst possible vision failure mode.
+    target: ">= 0.95"
+    operator: ">="
+    threshold: 0.95
+
+  - id: vision_nsfw_precision
+    description: >-
+      Precision on SEXUAL_ADULT (category 10) for vision cases. Guards
+      against the structured NSFW fast-path over-triggering on benign
+      imagery.
+    target: ">= 0.90"
+    operator: ">="
+    threshold: 0.90
+
+  - id: vision_violence_recall
+    description: >-
+      Recall on VIOLENCE_THREAT (category 3) for vision cases whose
+      media descriptor carries a high structured violence_score.
+    target: ">= 0.85"
+    operator: ">="
+    threshold: 0.85
+
+  - id: vision_age_escalation_accuracy
+    description: >-
+      Accuracy of the minor_present age-mode escalation on the vision
+      age-escalation sub-corpus: NSFW media in a minor_present group
+      must resolve to the CHILD_SAFETY floor rather than the adult
+      sexual label.
+    target: ">= 0.98"
+    operator: ">="
+    threshold: 0.98
+
+  - id: vision_deepfake_recall
+    description: >-
+      Recall on DEEPFAKE_SYNTHETIC (category 16) for vision cases
+      whose media descriptor carries synthetic / manipulation signals
+      (face-swap seams, GAN asymmetry, splicing artifacts). Warn-tier
+      capability, so the floor mirrors `vision_violence_recall` rather
+      than the child-safety floor. Legitimate AI-art false positives
+      are guarded by the negative cases in the held-out vision corpus.
+    target: ">= 0.85"
+    operator: ">="
+    threshold: 0.85
+
+  - id: vision_benign_child_fp
+    description: >-
+      Benign-child harmful false-positive rate (lower is better) over the
+      `vision_benign_child` sub-corpus: benign photos of children whose
+      correct verdict is SAFE. A false positive is any non-SAFE
+      prediction. The image tower's CHILD_SAFETY prototype row is frozen
+      at a benign-clustering centroid (no sourceable CSAM), so without the
+      per-category cosine-margin floor an innocent family photo can
+      trigger the severity-5 CHILD_SAFETY action. This gate caps that
+      leakage; the authoritative pixel-level measurement is
+      `tools/benchmark_vision_real_images.py` (same 0.05 ceiling). Passes
+      vacuously at sample_size 0 for packs without benign-child cases.
+    target: "<= 0.05"
+    operator: "<="
+    threshold: 0.05
+
+# ---------------------------------------------------------------------------
+# Input / output contracts each test case must conform to.
+# ---------------------------------------------------------------------------
+contracts:
+  input_schema:   ../global/local_signal_schema.json  # kchat.guardrail.local_signal.v1
+  output_schema:  ../global/output_schema.json        # kchat.guardrail.output.v1
+
+# ---------------------------------------------------------------------------
+# Minimum coverage per pack.
+# ---------------------------------------------------------------------------
+coverage:
+  per_category:
+    # Minimum positive test cases per taxonomy category. Child safety
+    # (1) always carries the highest count. SAFE (0) receives a large
+    # share of benign-message cases to anchor precision numbers.
+    taxonomy_category_min_cases:
+      0:   20   # SAFE
+      1:   30   # CHILD_SAFETY
+      2:   10   # SELF_HARM
+      3:   10   # VIOLENCE_THREAT
+      4:   10   # EXTREMISM
+      5:   10   # HARASSMENT
+      6:   10   # HATE
+      7:   20   # SCAM_FRAUD
+      8:   10   # MALWARE_LINK
+      9:   20   # PRIVATE_DATA
+      10:  10   # SEXUAL_ADULT
+      11:  10   # DRUGS_WEAPONS
+      12:  10   # ILLEGAL_GOODS
+      13:  10   # MISINFORMATION_HEALTH
+      14:  10   # MISINFORMATION_CIVIC
+      15:  10   # COMMUNITY_RULE
+      16:  10   # DEEPFAKE_SYNTHETIC
+  protected_speech_contexts:
+    - QUOTED_SPEECH_CONTEXT
+    - NEWS_CONTEXT
+    - EDUCATION_CONTEXT
+    - COUNTERSPEECH_CONTEXT
+  minority_language_case_min_count: 20
+  # Minimum number of vision (media-descriptor) cases a vision-capable
+  # pack must ship. This is the backstop for the five `vision_*` metric
+  # gates, which pass vacuously on an empty vision sub-corpus so that
+  # text-only packs are not penalised. The vacuous pass means a pack
+  # that IS vision-capable but accidentally ships its media cases
+  # without the `vision` tag would silently pass every vision gate at
+  # sample_size 0. Two checks close that gap (see
+  # `build-tools/tests/test_held_out_vision.py`):
+  #   1. the shipped vision corpus must carry at least this many cases;
+  #   2. every case that structurally contains `media_descriptors` must
+  #      carry the `vision` tag (and vice versa), so the tag the gates
+  #      key on can never silently drop off a media case.
+  # Text-only packs ship zero media-descriptor cases and are unaffected.
+  vision_case_min_count: 100
+  threshold_boundary_cases:
+    # Boundary cases exercise the decision-policy thresholds in
+    # baseline.yaml: label_only=0.45, warn=0.62, strong_warn=0.78,
+    # critical_intervention=0.85. Confidence 0.44 must map to SAFE.
+    confidences:
+      - 0.44    # => SAFE
+      - 0.45    # => label_only
+      - 0.62    # => warn
+      - 0.78    # => strong_warn
+      - 0.85    # => critical_intervention
+
+# ---------------------------------------------------------------------------
+# Per-pack customisation. Concrete packs supply a YAML file at
+# `test_cases_file` whose entries conform to `case_schema`.
+# ---------------------------------------------------------------------------
+pack:
+  skill_id: <kchat.*.guardrail.v1>
+  test_cases_file: <relative path to YAML test-case file>
+
+case_schema:
+  required:
+    - case_id          # globally-unique id within the pack
+    - description      # human-readable summary; no plaintext quoting
+    - input            # conforms to kchat.guardrail.local_signal.v1
+    - expected_output  # conforms to kchat.guardrail.output.v1
+  optional:
+    - category_label         # canonical category name, redundant with expected_output.category
+    - tags                   # free-form tags (e.g. "protected_speech", "minority_lang")
+    - threshold_boundary     # "label_only" / "warn" / "strong_warn" / "critical"

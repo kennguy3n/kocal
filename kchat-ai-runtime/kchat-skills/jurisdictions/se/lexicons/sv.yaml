@@ -1,0 +1,21 @@
+# Swedish-language lexicon bundle for the kchat.jurisdiction.se.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: se_sv_lexicon_v1
+language: sv
+locale: sv-SE
+provenance: kchat_trust_and_safety_se_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+terms:
+  - term_id: se_sv_term_brb_16_10a_barn_v1
+    categories: [1]
+    notes: Brottsbalk Kap. 16 §10a indicators.
+  - term_id: se_sv_term_terroristbrottslag_v1
+    categories: [4]
+    notes: Terroristbrottslag 2022 indicators.

@@ -1,0 +1,1237 @@
+eval_set,text,expected_label,language
+test604_dev,URGENT: Your DBS account has been suspended due to unusual activity. Verify now at http://dbs-secure-login.xyz or your account will be permanently locked within 24 hours.,scam,
+test604_dev,"Dear customer, we detected unauthorized access to your Vietcombank account. Please confirm your identity immediately: http://vietcombank-verify.net",scam,
+test604_dev,Your Shopee order #38291 has a delivery issue. Update your address and payment info here: http://shopee-delivery-update.com/track,scam,
+test604_dev,"[OCBC] We noticed a login from an unrecognized device. If this wasn't you, secure your account at http://ocbc-alerts.co/verify",scam,
+test604_dev,"Hi, your SingPost parcel is held at customs. Pay the $2.50 clearance fee to release it: http://singpost-customs.info/pay",scam,
+test604_dev,Your Netflix subscription payment failed. Update billing details within 48h to avoid service interruption: http://netflix-billing.support/update,scam,
+test604_dev,Apple ID Alert: Your iCloud storage is full. Upgrade your plan at http://apple-icloud-plans.com to avoid losing your photos and documents.,scam,
+test604_dev,Your Grab account has been flagged for suspicious activity. Confirm your identity here: https://grab-verify.co/secure — failure to respond within 12h will result in permanent suspension.,scam,
+test604_dev,"Dear valued customer, your POSB savings account requires re-verification due to new regulatory requirements. Complete the process at http://posb-reverify.org",scam,
+test604_dev,Important: Your CPF account information needs to be updated in accordance with the latest MOM guidelines. Please visit http://cpf-update-portal.sg to complete verification.,scam,
+test604_dev,"[Standard Chartered] As part of our annual security review, we kindly request you to verify your personal details at https://sc-bankverify.com. This is a routine process.",scam,
+test604_dev,Notification from IRAS: Your tax assessment for YA2024 is ready. Access your statement and confirm your bank details for any refund at http://iras-taxrefund.sg/ya2024,scam,
+test604_dev,"Your Lazada account password was changed on 15 Jun. If you did not make this change, please review your account security: http://lazada-security.help",scam,
+test604_dev,[UOB] Please call 6538-6922 immediately regarding an important matter concerning your UOB account. Reference: TX-2024-8832.,scam,
+test604_dev,"Your bank card ending in 4521 was charged $1,289. If unauthorized, call our fraud hotline at 1800-2959-2399 immediately.",scam,
+test604_dev,"Urgent: Contact support@dbs-secure.com to verify a suspicious transaction of $3,200 on your account. Ref: #DBS20240618",scam,
+test604_dev,Please reply to verify@ocbc-alerts.co with your full name and IC number to complete the mandatory account review.,scam,
+test604_dev,URGENT: Your Maybank account is at risk. Verify at http://maybank-secure.co or call 03-8458-2352. Reply to help@maybank-support.net for assistance.,scam,
+test604_dev,[Citibank] Suspicious login detected. Secure your account now at https://citi-verify.net or contact us at security@citi-alerts.com. Call 1800-363-2532 if needed.,scam,
+test604_dev,"A: Hi, is this DBS customer service?
+B: Yes, this is DBS. We noticed unusual activity on your account. Can you confirm your IC number for verification?
+A: What kind of activity?
+B: A transfer of $5,000 was initiated. Please verify at http://dbs-verify-tx.com immediately.",scam,
+test604_dev,"A: I got a message about my account being locked?
+B: Yes, we sent that alert. Your Vietcombank online banking is temporarily restricted. To restore access, visit http://vietcombank-restore.net and enter your credentials.
+A: Is this really Vietcombank?
+B: Yes, you can also call 1900-2352 for confirmation. But the link is faster.",scam,
+test604_dev,"A: Good afternoon, I'm calling from OCBC's fraud department. We detected unauthorized transactions on your account.
+B: What transactions?
+A: Two transfers totaling $8,500. I need to verify your identity. Please provide your OTP that you'll receive shortly.
+B: Okay, I just got 284719.
+A: Thank you. We're securing your account now.",scam,
+test604_dev,"A: Hi, this is GovTech support. We're updating our SingPass system and need to verify your account.
+B: How do I verify?
+A: Please visit http://singpass-update.gov-sg.com and log in with your credentials. It's a mandatory update.
+B: The URL looks different from usual.\nAgent: It's our temporary migration portal. Completely safe.",scam,
+test604_dev,"A: Hello?
+B: Hi, I'm from your bank's security team. We need to verify a transaction. Can you confirm: did you transfer $2,100 to account 190-5467-7743?
+A: No, I didn't!
+B: Don't worry. To reverse it, please email your account details to secure-reversal@bankhelp.co for immediate processing.",scam,
+test604_dev,"User: I received an SMS about my account?\nAgent: Yes. For security, please confirm your details. What's your full name and IC?\nUser: [provides info]\nAgent: Thank you. Now I need the OTP we just sent to your phone.\nUser: 583921\nAgent: Perfect. Your account is now secured. You'll receive confirmation shortly.",scam,
+test604_dev,Bạn có giao dịch bất thường trên tài khoản Vietcombank. Xác minh ngay tại http://vietcombank-xacminh.com để tránh bị khóa tài khoản.,scam,
+test604_dev,[MB Bank] Tài khoản của bạn đã bị tạm khóa do đăng nhập sai nhiều lần. Vui lòng truy cập http://mbbank-mở-khóa.vn để khôi phục. Hoặc gọi 1900-5674.,scam,
+test604_dev,"[TPBank] Hệ thống phát hiện đăng nhập lạ vào tài khoản của bạn. Nếu không phải bạn, hãy xác minh danh tính qua email: support@tpbank-security.vn",scam,
+test604_dev,"Thông báo từ Tổng cục Thuế: Bạn có khoản hoàn thuế 2,500,000 VND. Xác nhận thông tin tài khoản tại http://thuevn-hoanthu.com để nhận tiền.",scam,
+test604_dev,"Your account security code is being requested by a third party. If you did not initiate this, contact us at fraud-alert@bankofsingapore.co immediately. Do NOT share your OTP.",scam,
+test604_dev,"[DBS] Your OTP is 482917. Do not share this code with anyone. If you did not request this, call 1800-111-1111.",safe,
+test604_dev,"[Vietcombank] Giao dịch thành công: -500,000 VND tại POS. Số dư: 12,350,000 VND. Nếu không phải bạn, gọi 1900-545413.",safe,
+test604_dev,Your Shopee order #SP2839281 has been shipped! Track it here: https://shopee.sg/track/SP2839281,safe,
+test604_dev,[OCBC] Your new OCBC 365 card ending 8832 is ready for collection at your selected branch. Visit ocbc.com/cards for details.,safe,
+test604_dev,[SingPost] Your parcel SG20240618 is out for delivery. Track: https://www.singpost.com/track-items/SG20240618,safe,
+test604_dev,Your Netflix subscription has been renewed. $15.98 charged to Visa ending 4521. Manage at netflix.com/account,safe,
+test604_dev,iCloud: Your storage is 90% full. Manage your storage plan at https://www.icloud.com/settings,safe,
+test604_dev,[Grab] Thanks for riding with us! Your trip receipt: $12.50. View details in the Grab app.,safe,
+test604_dev,"[POSB] Your fixed deposit of $10,000 has matured. Log in to digibank to manage your funds.",safe,
+test604_dev,[CPF Board] Your CPF Annual Statement for 2024 is now available. View it at https://www.cpf.gov.sg/member,safe,
+test604_dev,[Standard Chartered] Your credit card statement for June 2024 is ready. View at sc.com/statements,safe,
+test604_dev,[IRAS] Your Notice of Assessment for YA2024 is ready. Log in to myTax Portal at https://mytax.iras.gov.sg,safe,
+test604_dev,[Lazada] Flash Sale starts NOW! Up to 80% off electronics. Shop: https://lazada.sg/flash-sale,safe,
+test604_dev,"[UOB] Your appointment at UOB Tampines branch is confirmed for 20 Jun, 2:30 PM. Call 6255-0160 to reschedule.",safe,
+test604_dev,"[DBS] Fraud alert: If you made a transaction of $1,289 at COURTS, reply YES. If not, call 1800-111-1111.",safe,
+test604_dev,"Hi, this is Sarah from DBS Treasures. Following up on our meeting — I've sent the portfolio summary to your email john@gmail.com. Let me know if you have questions.",safe,
+test604_dev,"[OCBC] Your e-statement for June 2024 has been sent to your registered email. If you did not receive it, contact us at https://www.ocbc.com/personal-banking/forms/great-cancer-care",safe,
+test604_dev,[Maybank] Your new debit card is ready. Collect at Maybank Jurong East branch. Call 1800-629-2265 or visit maybank.com.sg for details.,safe,
+test604_dev,"[Citibank] Your Citi Rewards points (12,450) are expiring on 30 Jun. Redeem at citibank.com.sg/rewards or call 6225-5225.",safe,
+test604_dev,"A: Hi, I'd like to check my account balance.
+B: Sure! For DBS accounts, you can check via digibank app or visit https://www.dbs.com.sg. Is there anything else I can help with?
+A: No, that's all. Thanks!
+B: You're welcome. Have a great day!",safe,
+test604_dev,"A: Hi, I received an SMS about a transaction?
+B: Hi! Yes, a payment of $45.00 was made at FairPrice Tampines. Was this you?
+A: Yes, that was me.
+B: Great, no action needed then. Have a good day!",safe,
+test604_dev,"[Vietcombank] Giao dịch thành công: -1,200,000 VND. Số dư: 25,800,000 VND. Liên hệ 1900 54 54 13 nếu không phải bạn.",safe,
+test604_dev,"[MB Bank] Mật khẩu Internet Banking đã được thay đổi thành công. Nếu không phải bạn, gọi ngay 1900545426.",safe,
+test604_dev,[TPBank] Mã OTP của bạn là 384729. Không chia sẻ mã này với bất kỳ ai. Có hiệu lực trong 3 phút.,safe,
+test604_dev,[Tổng cục Thuế] Thông báo: Hạn nộp thuế TNCN năm 2024 là 31/03/2025. Truy cập https://thuedientu.gdt.gov.vn để nộp tờ khai.,safe,
+test604_dev,[DBS] Your card ending 7823 has been temporarily blocked due to 3 incorrect PIN attempts. Visit any DBS branch with your NRIC to unblock.,safe,
+test604_dev,"🔥 EXCLUSIVE: Join our VIP trading group and earn $5,000/week with guaranteed returns. Register now: http://crypto-vip-profits.com/join",scam,
+test604_dev,Limited slots available! Our AI-powered trading bot guarantees 300% ROI in 30 days. Start with just $100: http://ai-trade-bot.net/start,scam,
+test604_dev,"Congratulations! You've been selected for our exclusive investment program. Minimum $500, guaranteed monthly returns of 25%. Apply: http://wealth-elite.com/apply",scam,
+test604_dev,"Hi, I'm a financial advisor at Goldman Sachs Asia. We have a private placement opportunity with 15% annual returns. Limited to accredited investors. Details: http://gs-private-invest.co/offer",scam,
+test604_dev,[Binance Support] New staking program: Earn up to 50% APY on BTC. Lock your tokens now at http://binance-staking-promo.com/earn,scam,
+test604_dev,"Dear investor, our fund has delivered consistent 20% annual returns since 2019. Download our prospectus at http://asiawealth-fund.com/prospectus.pdf",scam,
+test604_dev,"Hi, you were recommended by a mutual friend. I manage a small investment club — we pool funds into pre-IPO shares. Interested? Call me at 9230-2355.",scam,
+test604_dev,Exclusive opportunity: Invest in Vietnamese real estate with guaranteed 30% returns in 6 months. Contact our advisor at invest@vn-realty-returns.com,scam,
+test604_dev,"Join our crypto masterclass FREE! Learn how our students turned $1,000 into $50,000. Register: http://crypto-masterclass.co. Questions? Email: support@crypto-masterclass.co",scam,
+test604_dev,Hi! I noticed you're interested in trading. Our platform has helped thousands achieve financial freedom. Start here: http://trade-freedom.net or call 8000-4358 for a free consultation.,scam,
+test604_dev,"User: Hi, who is this?\nAgent: Hi! Sorry for the random message. I'm Lisa, a financial analyst. I accidentally added your number from a contact list. How are you?\nUser: I'm fine, thanks.\nAgent: Great! Since we're chatting, do you invest? I've been doing really well with crypto lately.",scam,
+test604_dev,"User: How does your investment work?\nAgent: It's simple — you deposit funds into our platform, our AI bot trades for you, and you get daily profits. Minimum deposit is $500.\nUser: What's the expected return?\nAgent: Most of our members earn 5-10% daily. You can withdraw anytime. Here's the link: http://ai-profit-daily.com/deposit",scam,
+test604_dev,"User: I saw your ad about investment opportunities?\nAgent: Yes! We specialize in forex and crypto. Our track record shows consistent 200% annual returns.\nUser: That sounds too good to be true.\nAgent: I understand your concern. Here's our registration with MAS: http://mas-registry-verify.com/check. You can verify us yourself.\nUser: Okay, I'll check.\nAgent: Great! Once verified, deposit via http://forex-elite-trade.com/fund to get started.",scam,
+test604_dev,"User: Hello?\nAgent: Hi there! I'm Kevin from a private equity firm. A colleague gave me your number — we have an exclusive pre-IPO opportunity in a Singapore tech startup.\nUser: I'm not sure I'm interested.\nAgent: No pressure. But just so you know, our last pre-IPO gave investors 400% returns. I can send details to your email if you're curious?\nUser: Okay, send it.\nAgent: Great! What's your email? I'll send the prospectus and our fund manager's contact.",scam,
+test604_dev,User: Who is this?\nAgent: Hey! Wrong number sorry 😅 But since we're here — do you trade stocks?\nUser: Sometimes.\nAgent: Nice! I follow this analyst who's been incredibly accurate. She posts tips in a Telegram group. Want the link?\nUser: Sure.\nAgent: Here: http://t.me/vip-stock-tips. She's recommending a big move tomorrow. Don't miss it!,scam,
+test604_dev,Cơ hội đầu tư vàng: Lợi nhuận cam kết 30%/tháng. Vốn tối thiểu 5 triệu VND. Đăng ký ngay: http://dautu-vang-vn.com/dangky,scam,
+test604_dev,Bạn có muốn tự do tài chính? Tham gia nhóm đầu tư crypto của chúng tôi. Đã có 5000+ thành viên lãi ổn định. Liên hệ: 0985-235-5475 hoặc truy cập http://crypto-vn-group.com,scam,
+test604_dev,"User: Xin chào, bạn là ai?\nAgent: Chào bạn! Mình là Linh, chuyên viên tư vấn đầu tư. Mình nhắn nhầm số, xin lỗi nhé!\nUser: Không sao.\nAgent: Bạn có quan tâm đến đầu tư không? Mình đang có cơ hội rất tốt về bất động sản.\nUser: Kể thêm đi.\nAgent: Dự án căn hộ ở Thủ Đức, cam kết lợi nhuận 25%/năm. Chi tiết tại http://batdongsan-thuduc-invest.vn",scam,
+test604_dev,[MAS Advisory] New government-backed green bond offering 8% annual yield. Apply before 30 Jun: http://mas-greenbond.sg/apply,scam,
+test604_dev,"Free workshop: ""How I retired at 35 with passive crypto income."" Limited seats. Register: http://retire-early-crypto.com. Call 6899-2359 for group bookings.",scam,
+test604_dev,"User: Is this a legitimate investment?\nAgent: Absolutely. We're registered with the Securities Commission. Here's our license number: SC-2024-2355.\nUser: Can I verify that?\nAgent: Of course — check at http://sc-verify-license.com. Once confirmed, you can start with as little as $1,000.\nUser: Okay, let me check.\nAgent: Sure! And here's my direct line if you have questions: 8500-2355. Also email me at advisor@wealth-secure.co",scam,
+test604_dev,Hi! I'm from a registered fund management company. We're offering a structured product with capital protection and 12% annual returns. Interested? Reply YES for our brochure.,scam,
+test604_dev,"User: What's the minimum investment?\nAgent: Just $200 to start. You can increase anytime.\nUser: And I can withdraw whenever?\nAgent: Yes, instant withdrawal within 24 hours. No lock-in period.\nUser: Sounds good. How do I start?\nAgent: Download our app: http://instant-trade-app.com/download. Use referral code VIP2024 for bonus credits.",scam,
+test604_dev,[Urgent] Bitcoin is about to surge 500% according to insider analysis. Buy now before it's too late. Trade at http://btc-surge-trade.com,scam,
+test604_dev,Exclusive for Singapore residents: Government-approved retirement investment scheme. 15% guaranteed returns. Details: http://sg-retire-invest.com/info,scam,
+test604_dev,User: I'm new to investing. Any recommendations?\nAgent: Welcome! I'd suggest starting with our managed portfolio. We handle everything.\nUser: What returns can I expect?\nAgent: Our conservative portfolio averages 8-12% monthly. Aggressive can go up to 25%.\nUser: Monthly? That seems high.\nAgent: It's crypto — volatility works in our favor. Our AI minimizes risk. Start here: http://managed-crypto-portfolio.com,scam,
+test604_dev,"Hi, this is James from [Real Brokerage Name]. I have an exclusive IPO allocation. Only for serious investors. Email me at james@realbrokerage-ipo.co for the term sheet.",scam,
+test604_dev,[Syfe] Your portfolio update: +2.3% this month. View details in the Syfe app or at https://www.syfe.com/portfolio,safe,
+test604_dev,[StashAway] Market update: Your risk-adjusted portfolio has been rebalanced. No action needed. Learn more: https://www.stashaway.sg,safe,
+test604_dev,[SGX] Reminder: Rights issue for XYZ Corp closes on 25 Jun. Visit sgx.com for details.,safe,
+test604_dev,[DBS Vickers] Your trade order for 100 shares of AAPL has been executed at $195.20. View in DBS Vickers app.,safe,
+test604_dev,"[Binance] Your withdrawal of 0.5 BTC has been processed. TX ID: 0x8a3f...c21d. If unauthorized, freeze your account immediately.",safe,
+test604_dev,[MAS] Investor Alert: MAS has added 3 entities to the Investor Alert List. Check https://www.mas.gov.sg/ial for details.,safe,
+test604_dev,"Hi, this is David from Phillip Securities. Following up on your inquiry about the bond fund. Call me at 6531-1234 when you're free.",safe,
+test604_dev,[Endowus] Your monthly investment of $500 into the Dimensional Global Core fund has been processed. View at https://endowus.com,safe,
+test604_dev,[Tiger Brokers] Welcome! Your account has been approved. Deposit funds to start trading. Visit https://www.tigerbrokers.com.sg,safe,
+test604_dev,"Hi, this is Mark from Phillip Securities. Following up on your inquiry about the new bond fund. Call me at 6531-8879 when convenient.",safe,
+test604_dev,"A: Hi, who is this?
+B: Hey! So sorry, wrong number! Have a great day.
+A: No worries.
+B: Thanks! Bye!",safe,
+test604_dev,"A: Hi, I'd like to learn about your robo-advisory plans.
+B: Sure! Syfe offers 3 portfolios: Core, REIT+, and Cash+. Each has different risk levels.
+A: What's the expected return?
+B: Core historically averages 7-10% annually. Past performance isn't guaranteed. Visit https://www.syfe.com for details.
+A: Thanks!",safe,
+test604_dev,[Moomoo SG] Your buy order for 50 shares of TSLA at $178.30 has been filled. View in app.,safe,
+test604_dev,[CPF Board] You may now invest your CPF-OA savings via CPFIS. Visit https://www.cpf.gov.sg/cpfis for approved funds.,safe,
+test604_dev,[SGX] Reminder: AGM for Singtel is on 25 Jul. Register at https://www.sgx.com/agm/singtel,safe,
+test604_dev,"[VNDirect] Lệnh mua 500 cổ phiếu VNM đã khớp tại giá 72,500 VND. Xem chi tiết trên app VNDirect.",safe,
+test604_dev,[TCBS] Tài khoản chứng khoán của bạn đã được kích hoạt. Truy cập https://tcinvest.tcbs.com.vn để bắt đầu giao dịch.,safe,
+test604_dev,"A: Xin chào, tôi muốn hỏi về quỹ đầu tư.
+B: Chào bạn! TCBS có nhiều sản phẩm quỹ mở. Bạn quan tâm đến trái phiếu hay cổ phiếu?
+A: Trái phiếu.
+B: Quỹ TCBF có lợi nhuận trung bình 8%/năm. Chi tiết tại https://tcinvest.tcbs.com.vn/funds",safe,
+test604_dev,"🔥 HIRING NOW! Work from home, earn $300-$500/day. No experience needed. Apply now: http://easy-home-jobs.com/apply",scam,
+test604_dev,Congratulations! You've been selected for an online part-time job. Earn $50/task. Start immediately: http://task-earn-daily.com/start,scam,
+test604_dev,[Amazon] We're hiring remote product reviewers. $200/review. Limited positions. Apply: http://amazon-reviewer-jobs.net/apply,scam,
+test604_dev,"Hi, I found your resume on JobStreet. We have a data entry position — $25/hour, flexible schedule. Interested? Details at http://dataentry-careers.com/offer",scam,
+test604_dev,"Hi, I'm a recruiter from a multinational company. We have an opening for a part-time admin assistant. $3,500/month. Call me at 8235-2533 to discuss.",scam,
+test604_dev,We noticed your LinkedIn profile and think you'd be a great fit for our digital marketing role. Send your CV to hr@globaltech-careers.co for consideration.,scam,
+test604_dev,Part-time opportunity: Help us boost product ratings on Shopee. Earn $10-$30 per task. Join via http://shopee-task-earn.com or WhatsApp 9033-2552.,scam,
+test604_dev,"User: Hi, who is this?\nAgent: Hi! I'm Sarah from HR Solutions. I came across your profile and wanted to discuss a job opportunity. Are you currently looking?\nUser: Maybe. What's the role?\nAgent: It's a product review position. You review items online and get paid $50 per review. Interested?\nUser: How does it work?\nAgent: Simple — we send you a link to purchase items, you review them, and we reimburse the purchase + your fee. Start here: http://review-earn-now.com",scam,
+test604_dev,"User: What's the job about?\nAgent: We need people to complete simple online tasks — liking videos, rating products, writing short reviews.\nUser: How much does it pay?\nAgent: $5-$15 per task. Most people earn $200-$500/day. But first, you need to complete a trial task.\nUser: What's the trial?\nAgent: Just deposit $50 as a commitment fee. You'll get it back plus your first task payment. Send to this account: 123 8968 00.",scam,
+test604_dev,"User: I saw your job posting?\nAgent: Yes! We're hiring for an e-commerce optimization role. You'll help improve product listings.\nUser: Sounds interesting. What's the pay?\nAgent: $4,000/month base + commission. But we need you to set up a business account first. Visit http://biz-account-setup.com and register.\nUser: Why do I need a business account?\nAgent: It's for tax purposes. Standard procedure for contractors. The registration is free.",scam,
+test604_dev,"User: Hello?\nAgent: Hi there! I'm from a recruitment agency. We have an urgent opening for a logistics coordinator. $5,000/month.\nUser: I'm interested.\nAgent: Great! Please send your NRIC, bank details, and a copy of your passport to onboarding@logistics-recruit.co for the background check.\nUser: All of that before an interview?\nAgent: Yes, it's our standard fast-track process for urgent positions.",scam,
+test604_dev,"Hi! We have a customer service role — work from home, $20/hour. No interview needed. Start today: http://cs-remote-hire.com/start. Questions? Call 8900-3252 or email jobs@cs-remote-hire.com",scam,
+test604_dev,"Tuyển CTV online, thu nhập 200k-500k/ngày. Không cần kinh nghiệm. Đăng ký: http://viec-online-vn.com/dangky",scam,
+test604_dev,"Bạn có muốn kiếm thêm thu nhập? Công việc đơn giản tại nhà, 3-5 triệu/tuần. Liên hệ Zalo: 0925665789 hoặc truy cập http://vieclamthem-vn.com",scam,
+test604_dev,"User: Xin chào, công việc gì vậy?\nAgent: Chào bạn! Đây là vị trí CTV đánh giá sản phẩm trên Shopee/Lazada.\nUser: Lương thế nào?\nAgent: 50k-100k/đơn. Ngày làm 5-10 đơn.\nUser: Làm sao để bắt đầu?\nAgent: Bạn cần đặt cọc 500k để nhận đơn hàng đầu tiên. Chuyển vào TK: 456-1434-4754.",scam,
+test604_dev,"We're looking for a part-time social media manager. $2,500/month. Flexible hours. Send your portfolio to careers@socialmedia-hub.co",scam,
+test604_dev,"User: Is this position still available?\nAgent: Yes! It's a data annotation role for an AI company. Very simple.\nUser: What do I need to do?\nAgent: Label images and text. Training is provided. But first, download our work platform at http://ai-annotate-work.com/download.\nUser: Is the platform safe?\nAgent: Absolutely. It's used by thousands of workers worldwide. You'll earn $15/hour once onboarded.",scam,
+test604_dev,"Urgent hiring: Personal assistant needed. $6,000/month. Must be available immediately. No interview required. Reply with your full name and IC number.",scam,
+test604_dev,"User: What are the job requirements?\nAgent: No formal requirements. We train everyone.\nUser: That sounds too easy.\nAgent: We believe in giving everyone a chance. To proceed, complete registration at http://job-fast-register.com and pay the $30 training fee via PayNow to 9235-2532.\nUser: Why is there a fee?\nAgent: It covers the training materials. You'll earn it back within your first hour.",scam,
+test604_dev,"[LinkedIn] You have a new message from a recruiter at Tech Corp. ""Hi, we'd love to discuss a Senior Engineer role. Competitive salary + equity. Reply or visit http://techcorp-careers.xyz/apply""",scam,
+test604_dev,"User: How do I get paid?\nAgent: We pay weekly via bank transfer. But to receive payments, you need to verify your identity.\nUser: How?\nAgent: Just send a selfie holding your IC, plus your bank account details to verify@work-platform.co.\nUser: That seems like a lot of personal info.\nAgent: It's standard KYC. All major platforms require it. Your data is encrypted and secure.",scam,
+test604_dev,Earn $100/day testing apps on your phone! No experience needed. Download and rate apps. Start: http://app-test-earn.com/register,scam,
+test604_dev,"Hi, this is Jenny from ABC Consulting. We have a contract role for a finance analyst. $8,000/month. Interested? Call 1900-1490 or email jenny@abc-consult.co",scam,
+test604_dev,"User: I'm interested in the position.\nAgent: Great! The role involves processing customer orders. $4,500/month.\nUser: When can I start?\nAgent: Immediately after registration. Visit http://order-process-jobs.com/register. You'll need to make an initial deposit of $200 for your work equipment.\nUser: Deposit for equipment?\nAgent: Yes, it's a one-time fee for the software license. Fully refundable after 3 months.",scam,
+test604_dev,"[JobStreet] New jobs matching your profile: Senior Developer at Grab, Data Analyst at Shopee. Apply at https://www.jobstreet.com.sg/recommendations",safe,
+test604_dev,[LinkedIn] You appeared in 15 searches this week. Update your profile to attract more recruiters: https://www.linkedin.com/feed,safe,
+test604_dev,[Amazon] Your application for Warehouse Associate has been received. Track status at https://www.amazon.jobs/applications,safe,
+test604_dev,"Hi, I'm Rachel from Robert Half. I found your profile on LinkedIn and we have a finance role that matches your experience. Would you be available for a call this week?",safe,
+test604_dev,"Hi, this is James from Hays Recruitment. Following up on your application for the Marketing Manager role. Please call me at 6223-4444 to schedule an interview.",safe,
+test604_dev,[NUS] Your application for the Research Assistant position (Ref: NUS-2024-0382) has been shortlisted. Please check your email for interview details.,safe,
+test604_dev,[Shopee] Your seller account has been verified. Start listing products at https://seller.shopee.sg,safe,
+test604_dev,"A: Hi, is this about the marketing position?
+B: Yes! Thanks for your interest. The role is Marketing Executive at our Singapore office.
+A: What's the salary range?
+B: $4,000-$5,500 depending on experience. Would you be available for an interview next Tuesday at 2 PM?
+A: Yes, that works.
+B: Great! Please bring your resume and references. Our office is at 1 Raffles Place #20-01.",safe,
+test604_dev,[GrabHire] Your application for Driver-Partner has been approved. Complete onboarding at https://www.grab.com/sg/driver,safe,
+test604_dev,"[Indeed] 5 new jobs match your alert for ""Data Analyst Singapore."" View at https://sg.indeed.com/jobs",safe,
+test604_dev,"Hi, this is Priya from Randstad. We spoke last week about the Project Manager role. The client wants to arrange a second interview. Are you available Thursday?",safe,
+test604_dev,[Ministry of Manpower] Your work pass application (Ref: WP-2024-8697) is being processed. Check status at https://www.mom.gov.sg/eservices,safe,
+test604_dev,[VietnamWorks] Có 3 việc làm mới phù hợp với hồ sơ của bạn. Xem tại https://www.vietnamworks.com/viec-lam,safe,
+test604_dev,[TopCV] Nhà tuyển dụng FPT Software đã xem hồ sơ của bạn. Cập nhật CV tại https://www.topcv.vn/ho-so,safe,
+test604_dev,"A: Xin chào, tôi muốn hỏi về vị trí tuyển dụng.
+B: Chào bạn! Vị trí Software Developer tại FPT Software. Yêu cầu 2+ năm kinh nghiệm Java.
+A: Lương thế nào?
+B: 15-25 triệu tùy kinh nghiệm. Bạn có thể gửi CV qua email Recruitment@fpt.com không?
+A: Được, tôi sẽ gửi.
+B: Cảm ơn bạn! Chúng tôi sẽ phản hồi trong 3 ngày làm việc.",safe,
+test604_dev,"Congratulations! You've won $50,000 in the National Lottery! Claim your prize now: http://national-lottery-claim.com/winner",scam,
+test604_dev,"🎉 You've been selected for a $1,000 Lazada gift card! Claim before midnight: http://lazada-giftcard-promo.com/claim",scam,
+test604_dev,"Your tax refund of $2,380 is ready. Confirm your bank details to receive it: http://tax-refund-sg.com/confirm",scam,
+test604_dev,"Hi, you have an unclaimed insurance payout of $5,200. Call 6023-8793 within 48 hours to process your claim.",scam,
+test604_dev,"[Singtel] As a valued customer, you've earned a $500 cashback reward! Claim at http://singtel-rewards-cashback.com/claim",scam,
+test604_dev,You have a pending rebate of $890 from your utility provider. Verify your identity at http://sp-group-rebate.com/verify to receive it.,scam,
+test604_dev,"Dear customer, your bank account has been credited with $3,000 by mistake. Please call 1800-346-9533 to arrange the return or your account will be frozen.",scam,
+test604_dev,"[DBS] Overpayment detected on your credit card. A refund of $1,245 is pending. Confirm at http://dbs-refund-process.com or email refund@dbs-support.co",scam,
+test604_dev,"User: Hello?\nAgent: Hi! I'm calling from the National Revenue Authority. You have an unclaimed tax refund of $4,500.\nUser: Really? I didn't know.\nAgent: Yes, it's from overpayment in 2023. To process it, I need your bank account number and IC for verification.\nUser: Can I verify this somewhere?\nAgent: Of course — visit http://nra-refund-portal.sg/verify. But it's faster if you give me the details now.",scam,
+test604_dev,"Bạn đã trúng thưởng 10,000,000 VND từ chương trình khuyến mãi Viettel. Nhận thưởng tại http://viettel-trungtuong.vn/nhan",scam,
+test604_dev,"User: Is this real?\nAgent: Absolutely! You were randomly selected from our customer database. Your prize is $2,000.\nUser: How do I claim?\nAgent: Just pay a small processing fee of $50 via PayNow to 9078-9329. Once confirmed, we'll transfer the full amount within 24 hours.",scam,
+test604_dev,[NTUC] You've accumulated enough points for a $200 FairPrice voucher. Redeem now: http://ntuc-points-redeem.com/voucher,scam,
+test604_dev,Your Grab account has a pending cashback of $150. This will expire in 24 hours. Claim: http://grab-cashback-claim.com/redeem,scam,
+test604_dev,"[MOM] You are eligible for a COVID-19 recovery grant of $1,000. Apply at http://mom-covid-grant.sg/apply before 30 Jun.",scam,
+test604_dev,"Dear valued customer, due to a system error, you were overcharged $567 on your last bill. Reply with your bank details for immediate refund.",scam,
+test604_dev,User: What do I need to do to get the money?\nAgent: It's simple. Just verify your identity by sending a photo of your IC and bank statement to claims@prize-verify.co.\nUser: That seems like a lot.\nAgent: It's standard anti-fraud procedure. We need to confirm you're the rightful winner. Everything is encrypted and secure.,scam,
+test604_dev,"Thông báo: Bạn có khoản hoàn tiền 2,500,000 VND từ nhà mạng. Xác nhận tại http://hoantien-nhamang.vn hoặc gọi 1900-8989.",scam,
+test604_dev,"[Singapore Pools] Results for Toto Draw #3892: 5, 12, 18, 23, 31, 45 + 7. Check your tickets at singaporepools.com.sg",safe,
+test604_dev,[Lazada] You have $5.00 in LazCoins expiring on 30 Jun. Use them on your next purchase at https://lazada.sg,safe,
+test604_dev,[IRAS] Your tax refund of $380 has been credited to your bank account ending 4521. No action needed.,safe,
+test604_dev,"[AIA] Your policy maturity payout of $15,000 has been processed. It will be credited to your account within 5 business days.",safe,
+test604_dev,"[Singtel] You've earned 2,500 Singtel Rewards points this month! Redeem at https://rewards.singtel.com",safe,
+test604_dev,[SP Group] Your utilities rebate of $50 for Jun 2024 has been applied to your next bill. No action required.,safe,
+test604_dev,"[DBS] A transfer of $3,000 was received into your account from GIRO-SALARY. Current balance: $12,450.",safe,
+test604_dev,[DBS] Your credit card refund of $245 from Shopee has been processed. It will appear in your next statement.,safe,
+test604_dev,"A: Hi, I have a question about my tax refund.
+B: Sure! Please log in to myTax Portal at https://mytax.iras.gov.sg to check your refund status.
+A: How long does it take?\nAgent: Typically 1-2 weeks after your Notice of Assessment. Is there anything else?
+B: No, thanks!",safe,
+test604_dev,"Quy khach da duoc thanh toan 10000 VND tu nhan vien 8300240047, Ngay GD: 24/03/2026 14:45:49. Ma GD 2603247970232558. LH 18008098 (0d). Tran trong.",safe,
+test604_dev,[GrabRewards] You've earned 500 GrabRewards points! Redeem for vouchers in the Grab app.,safe,
+test604_dev,"[IRAS] You're eligible for a government tax relief of $2,500. Apply now: http://iras-tax-relief.sg/apply",scam,
+test604_dev,"🇸🇬 Singapore Budget 2024: All citizens receive $1,000 cash payout. Register at http://sg-budget-payout.com/register",scam,
+test604_dev,[MOH] COVID-19 booster incentive: Receive $200 HealthCare credits. Claim at http://moh-booster-credit.sg/claim,scam,
+test604_dev,[MSF] You qualify for the ComCare assistance scheme. Monthly $800 payout. Apply: http://msf-comcare-apply.sg/register,scam,
+test604_dev,Important notice from MOM: Foreign worker levy rebate of $750 is available. Verify at http://mom-levy-rebate.sg/verify or call 6438-7678.,scam,
+test604_dev,"[HDB] You're pre-approved for the Enhanced Housing Grant of $80,000. Complete your application at http://hdb-ehg-apply.com/grant",scam,
+test604_dev,"[CPF Board] New scheme: Withdraw up to $5,000 from your CPF Special Account for COVID-19 relief. Apply at http://cpf-special-withdrawal.sg",scam,
+test604_dev,"Dear citizen, the government has approved a one-time $500 utility rebate for all households. Confirm your details at http://utility-rebate-gov.sg/confirm",scam,
+test604_dev,"User: Hello, is this from the government?\nAgent: Yes, I'm from the Ministry of Social and Family Development. You've been selected for a $2,000 assistance grant.\nUser: How was I selected?\nAgent: Based on your income records. To process the payout, we need your NRIC and bank details. You can also verify at http://msf-grant-verify.sg\nUser: Can I go to the office instead?\nAgent: The scheme is online-only due to COVID protocols. Please complete it within 48 hours.",scam,
+test604_dev,"User: I received a letter about a grant?\nAgent: Yes! The SkillsFuture Credit top-up of $1,000 is available. But you need to verify your identity first.\nUser: How?\nAgent: Visit http://skillsfuture-topup-verify.sg and enter your SingPass credentials.\nUser: Why can't I do it through the official site?\nAgent: This is the official verification portal. The main site is undergoing maintenance.",scam,
+test604_dev,"Thông báo từ BHXH: Bạn được hỗ trợ 2,000,000 VND từ gói an sinh xã hội. Đăng ký nhận tại http://bhxh-hotro-ansinh.vn/dangky",scam,
+test604_dev,"[Bộ LĐTBXH] Bạn đủ điều kiện nhận trợ cấp thất nghiệp 3,600,000 VND/tháng. Xác nhận tại http://trocap-thatnghiep.vn hoặc gọi 1900-9676.",scam,
+test604_dev,"[WSG] Workforce Singapore: You qualify for a $3,000 mid-career training subsidy. Register at http://wsg-training-subsidy.sg/apply",scam,
+test604_dev,"User: Is this really from the government?\nAgent: Yes, this is the People's Association. You've been selected for a $1,500 community support grant.\nUser: How do I apply?\nAgent: Simply provide your NRIC and bank account number. We'll process the payment within 3 days.\nUser: Can I apply at a CC?\nAgent: Unfortunately, this is an online-only initiative. Please reply with your details or call 6322-2553.",scam,
+test604_dev,[SkillsFuture] Bonus $500 credit top-up for all Singaporeans aged 25+. Activate now at http://skillsfuture-bonus-credit.sg before it expires.,scam,
+test604_dev,[IRAS] GST Voucher – Cash of $500 will be credited to your bank account by 15 Jul. No action needed. Visit https://www.gstvoucher.gov.sg for details.,safe,
+test604_dev,[Gov.sg] Budget 2024: Eligible Singaporeans will receive up to $600 in CDC vouchers. Claim at https://vouchers.cdc.gov.sg,safe,
+test604_dev,[MOH] Your COVID-19 vaccination record is available at https://www.notarise.gov.sg. No payment required.,safe,
+test604_dev,[MSF] Your ComCare application (Ref: CC-2024-3574) is being reviewed. You'll receive an update within 10 working days.,safe,
+test604_dev,[MOM] Your levy waiver has been approved for Jun 2024. No action needed. Details at https://www.mom.gov.sg/eservices,safe,
+test604_dev,[HDB] Your BTO application (Ref: HDB-2024-8799) has been received. Check ballot results at https://www.hdb.gov.sg/bto,safe,
+test604_dev,[CPF Board] Your CPF contribution for Jun 2024 has been received. View at https://www.cpf.gov.sg/member,safe,
+test604_dev,[SP Group] Your U-Save rebate of $95 has been applied to your Jul 2024 bill. No action required.,safe,
+test604_dev,"A: Hi, I want to check my grant application status.
+B: Sure! Please log in to https://www.msf.gov.sg/comcare with your SingPass to view your application status.
+A: Thanks!\nAgent: You're welcome. If you need help, visit any Social Service Office near you.",safe,
+test604_dev,[BHXH] Thông báo: Bạn đã đóng BHXH đủ 20 năm. Kiểm tra quyền lợi tại https://baohiemxahoi.gov.vn,safe,
+test604_dev,[Bộ LĐTBXH] Hồ sơ trợ cấp thất nghiệp của bạn đã được tiếp nhận. Theo dõi tại https://vieclamvietnam.gov.vn,safe,
+test604_dev,[WSG] Reminder: Your SkillsFuture Credit balance is $500. Browse courses at https://www.myskillsfuture.gov.sg,safe,
+test604_dev,"[SkillsFuture] Your course ""Data Analytics Fundamentals"" has been approved for SkillsFuture Credit claim. No further action needed.",safe,
+test604_dev,"User: Hello?\nAgent: Hi! Sorry, I think I texted the wrong person 😅 I was trying to reach my friend Amy.\nUser: No worries, happens to everyone.\nAgent: Haha thanks for being nice! I'm Lisa. Where are you from?\nUser: Singapore.\nAgent: Oh cool! I'm based in HK. Do you mind if we chat sometimes? It's nice to make new friends.",scam,
+test604_dev,"User: Who is this?\nAgent: Hey! I accidentally added your number from a group chat. I'm Sarah, a fashion designer.\nUser: Oh okay.\nAgent: Your profile pic is cute! Are you single? 😊\nUser: Why do you ask?\nAgent: Just curious! I recently moved to SG and don't know many people. Would love to chat more. What do you do?",scam,
+test604_dev,"User: Hi\nAgent: Hey there! I'm Michelle. A mutual friend gave me your number.\nUser: Who?\nAgent: David from the networking event last month. Anyway, I'm an investment banker. What about you?\nUser: I'm in IT.\nAgent: Nice! I've been doing really well with some investments lately. Made $20k last month. Want me to show you how?",scam,
+test604_dev,"User: Do I know you?\nAgent: No, but fate brought us together! 😂 I'm Jenny, originally from Vietnam.\nUser: Haha okay.\nAgent: I'm a single mom running my own business. Life is tough but I stay positive.\nUser: That's admirable.\nAgent: Thanks! You seem really kind. Can we be friends? Here's my Instagram: @jenny_lifestyle_vn. Check it out!",scam,
+test604_dev,"User: Hello?\nAgent: Hi! Wrong number, sorry! But since we're chatting — I'm Kevin, a crypto trader.\nUser: Interesting.\nAgent: Yeah, I've helped many friends earn passive income. If you're ever interested, I can guide you.\nUser: Maybe.\nAgent: No pressure! Here's my Telegram: @kevin_crypto_vip. I share free tips there. Join anytime!",scam,
+test604_dev,"User: Bạn là ai?\nAgent: Chào bạn! Mình là Linh, nhắn nhầm số. Xin lỗi nhé!\nUser: Không sao.\nAgent: Mình thấy bạn dễ thương quá! Mình làm người mẫu tự do. Bạn có muốn kết bạn không?\nUser: Ừ được.\nAgent: Vui quá! Mình gửi bạn link Zalo nhé: http://zalo.me/linh_model_vn. Nói chuyện thêm nha!",scam,
+test604_dev,"User: Hi, who gave you my number?\nAgent: A friend from church! I'm Grace. I just moved here from Malaysia.\nUser: Welcome!\nAgent: Thank you! I'm looking for friends. Do you invest? I've been learning about forex.\nUser: A little.\nAgent: Great! My mentor has an amazing track record. I can introduce you. His email is mentor@fx-elite-academy.co",scam,
+test604_dev,User: Hello?\nAgent: Hey! I'm Tom. I got your number from a dating app contact list.\nUser: That's weird.\nAgent: Sorry! But you seem interesting. I'm a financial advisor in Singapore.\nUser: Okay...\nAgent: I help people build wealth. Recently helped a client turn $5k into $50k in 3 months. Want to learn more? Call me at 9000-6767 anytime.,scam,
+test604_dev,"User: Ai đây?\nAgent: Xin lỗi, mình nhắn nhầm! Mình là Hương, sinh viên năm cuối.\nUser: Không sao.\nAgent: Bạn ơi, mình đang tìm hiểu về đầu tư. Bạn có kinh nghiệm không?\nUser: Một chút.\nAgent: Hay quá! Mình có biết một sàn giao dịch rất uy tín. Lợi nhuận 15%/tháng. Link đăng ký: http://fx-trading-vn.com/register",scam,
+test604_dev,"User: Hi?\nAgent: Hey! I'm Diana. I accidentally found your number in my old phone. Are you Jason?\nUser: No, wrong person.\nAgent: Oh! Sorry about that. But you sound nice. I'm a nurse, just moved to SG. It's been lonely.\nUser: Sorry to hear that.\nAgent: Thanks for being kind! Can I add you on WhatsApp? I'd love a friend here. My number is +65-9765-7887.",scam,
+test604_dev,"User: Who is this?\nAgent: Hi! I'm Rachel, an art dealer. Wrong number but happy accident!\nUser: Ha, okay.\nAgent: I specialize in NFT art. Have you heard of it?\nUser: Yes.\nAgent: Amazing! I'm launching a collection next week. Early investors get 200% returns. Want in? Details at http://nft-art-invest.com/vip",scam,
+test604_dev,"User: Hello, who is this?\nAgent: Hey! I'm Mei Ling. I'm from a singles group on Facebook and thought you looked interesting.\nUser: I'm not on any singles group.\nAgent: Oh maybe it was someone with the same name! Anyway, I'm 28, work in finance. What about you?\nUser: I'd rather not share.\nAgent: That's okay! No pressure. But if you change your mind, email me at meiling@connect-singles.co. I'd love to chat more 😊",scam,
+test604_dev,User: Xin chào?\nAgent: Chào bạn! Mình là Thảo. Nhắn nhầm số nhưng thấy bạn vui tính quá!\nUser: Cảm ơn.\nAgent: Mình đang ở Sài Gòn. Bạn ở đâu?\nUser: Hà Nội.\nAgent: Wow! Mình hay ra HN công tác. Lần sau mình gặp nhau nhé! À mà bạn có dùng Telegram không? Mình hay chia sẻ tips đầu tư ở đó: http://t.me/thao_invest_tips,scam,
+test604_dev,"User: Hi\nAgent: Hey! I'm Alex, a photographer. I think we matched on a dating app?\nUser: I don't think so.\nAgent: My mistake! But since we're chatting — I also do crypto trading on the side. Made $30k last month.\nUser: Good for you.\nAgent: I can teach you! Join my private group: http://t.me/alex_crypto_elite. Also call me anytime at 8237-3243. Let's be friends first though!",scam,
+test604_dev,"User: Hey, is this John?\nAgent: No, sorry! Wrong number.\nUser: Oops, my bad!\nAgent: No worries! Have a great day!",safe,
+test604_dev,"A: Hi, my friend gave me your number. She said you do financial planning?
+B: Yes! I'm a licensed financial advisor at Prudential. Happy to help.
+A: Can we meet to discuss?
+B: Of course! My office is at 1 Raffles Place. Book a slot at https://www.prudential.com.sg/contactus",safe,
+test604_dev,"A: Hey, are you the photographer from the event?
+B: Yes! I'm Mike from PixelStudio. Thanks for reaching out!
+A: Can I see the photos?\nAgent: Sure! I've uploaded them to https://pixelstudio.com.sg/gallery/event2024. Password is EVENT2024.",safe,
+test604_dev,"A: Ai vậy ạ?
+B: Chào, mình là Mai, bạn của Hương. Hương cho mình số bạn để hỏi về buổi họp lớp.
+A: À, được rồi. Khi nào vậy?
+B: Ngày 25/6 ở nhà hàng Sen, Q1. Bạn đến được không?
+A: Để mình sắp xếp nhé",safe,
+test604_dev,"A: Hey, long time no see! How have you been?
+B: Great! Just got back from a trip to Bali. How about you?
+A: Doing well! We should catch up over coffee.
+B: Definitely! How about Saturday at 2 PM at the cafe near Orchard?
+A: Sounds good!",safe,
+test604_dev,"A: Chào bạn, bạn có phải Hà không?
+A: Không phải rồi bạn ơi, mình là Lan.
+B: Xin lỗi, nhắn nhầm!
+A: Không sao",safe,
+test604_dev,"A: Hi, is this the wedding planner?
+B: Yes! I'm Chloe from Bliss Weddings. Thanks for reaching out.
+A: I'd like to discuss packages.
+B: Sure! Visit our portfolio at https://www.instagram.com/blissweddings_events/ or come to our showroom at 4th Floor, Centec Tower, 72-74 Ng Thi Minh Khai, Ho Chi Minh City, Vietnam.",safe,
+test604_dev,"A: Hey, I saw your dating profile. You seem interesting!
+B: Thanks! Yeah I'm new to the app. What do you do?
+A: I'm a teacher. You?
+B: I'm a nurse at SGH. Want to grab coffee sometime?
+A: Sure, how about this weekend?",safe,
+test604_dev,"A: Hi, my colleague gave me your number. Said you do great photography.
+B: Yes! I'm a freelance photographer. What kind of shoot are you looking for?
+A: Family portrait.
+B: Great! My rates start at $300. Check my work at https://www.instagram.com/sg_photographer",safe,
+test604_dev,"[DBS] Unusual login detected on your account from a new device. If this wasn't you, verify immediately: http://dbs-device-verify.com/secure",scam,
+test604_dev,Your OTP is 482917. Share this code with our agent to complete the security verification for your account.,safe,
+test604_dev,"[Singtel] Your SIM swap request has been received. If you did not make this request, call 1800-7688-3253 immediately to cancel.",scam,
+test604_dev,URGENT: Your SingPass account will be deactivated in 24 hours due to policy changes. Re-verify at http://singpass-reverify.sg/update,scam,
+test604_dev,"[WhatsApp] Your account is being registered on a new device. If this wasn't you, verify at http://whatsapp-verify-device.com",scam,
+test604_dev,"Hi, I accidentally sent an OTP to your number. Can you please forward it to me? It's 6-digit code starting with 3.",scam,
+test604_dev,"User: Hello?\nAgent: Hi, I'm from Singtel's security team. We detected that someone is trying to clone your SIM card.\nUser: What should I do?\nAgent: I need to verify your identity. Please provide the OTP we just sent to your number.\nUser: I got 583291.\nAgent: Thank you. Your SIM is now secured. You may experience a brief disconnection.",scam,
+test604_dev,"User: I got an alert about my account?\nAgent: Yes, there was an unauthorized login attempt. We need to reset your credentials.\nUser: How?\nAgent: Visit http://account-secure-reset.com and enter your current password to initiate the reset. Also confirm via email at reset@account-secure.co\nUser: Okay.",scam,
+test604_dev,Tài khoản Zalo của bạn đang được đăng nhập trên thiết bị lạ. Xác minh ngay: http://zalo-xacminh-thietbi.vn,scam,
+test604_dev,"[ViettelPay] Yêu cầu đổi SIM đã được ghi nhận. Nếu không phải bạn, gọi ngay 1800-2356 hoặc truy cập http://viettelpay-baomat.vn",scam,
+test604_dev,"Your Google account password was changed. If this wasn't you, secure your account at http://google-secure-account.xyz/recover",scam,
+test604_dev,"User: Did someone try to access my account?\nAgent: Yes, from an IP in Vietnam. We've temporarily locked your account.\nUser: How do I unlock it?\nAgent: Send your IC photo and a selfie to verify@identity-unlock.co for identity verification. Once confirmed, we'll restore access within 1 hour.",scam,
+test604_dev,"[DBS] You have logged in from a new device (iPhone 15, Singapore). If this wasn't you, call 1800-111-1111 immediately.",safe,
+test604_dev,[Google] Your verification code is 482917. Don't share this code with anyone. Google will never ask for this code.,safe,
+test604_dev,[Singtel] Your SIM replacement request (Ref: SIM-2024-5855) is being processed. Visit any Singtel shop with your NRIC to collect.,safe,
+test604_dev,"[SingPass] Your SingPass password has been successfully changed. If you did not make this change, call the SingPass Helpdesk at +65 6335 3533.",safe,
+test604_dev,[WhatsApp] Your WhatsApp code: 583-291. Don't share this code. WhatsApp will never ask for it.,safe,
+test604_dev,"Hi, I think I accidentally sent you a message meant for my sister. Sorry about that! Please ignore it.",safe,
+test604_dev,"A: Hi, I want to reset my banking password.
+B: Sure! For security, please visit https://www.dbs.com.sg/personal/ib-login and use the ""Forgot Password"" option.
+A: Thanks!
+B: You're welcome. You'll receive an OTP to your registered number. Never share it with anyone.",safe,
+test604_dev,[Zalo] Mã xác nhận của bạn là 294817. Không chia sẻ mã này. Có hiệu lực 5 phút.,safe,
+test604_dev,"Selling iPhone 15 Pro Max, brand new sealed. $500 only (retail $1,899). Limited stock. Order now: http://cheap-iphone-deal.com/buy",scam,
+test604_dev,[Carousell] Buyer interested in your item. They've made payment via our secure checkout. Confirm at http://carousell-secure-pay.com/confirm,scam,
+test604_dev,"User: Is the PS5 still available?\nAgent: Yes! Brand new, $350.\nUser: That's very cheap. Can I see it first?\nAgent: Sorry, I'm overseas. But I can ship it today. Just pay via PayNow to 9245-3690 and I'll send tracking.\nUser: Can we use Carousell protection?\nAgent: Their fees are too high. Direct transfer is safer for both of us. I have many positive reviews — check http://trusted-seller-reviews.com/profile",scam,
+test604_dev,[Shopee] Your order payment failed. Update payment method at http://shopee-payment-update.com to avoid cancellation.,scam,
+test604_dev,"Bán laptop Dell XPS 15 mới 100%, giá chỉ 5 triệu (giá gốc 35 triệu). Số lượng có hạn. Đặt hàng: http://laptop-giare-vn.com",scam,
+test604_dev,User: I want to buy the concert tickets.\nAgent: Sure! 2 tickets for $150 each.\nUser: Can I pay through the platform?\nAgent: The platform takes too long. Just transfer to my bank account: 233-5234-3646. I'll send the e-tickets immediately after.\nUser: How do I know you'll send them?\nAgent: I'll share my IC photo as guarantee. Send payment first and I'll email tickets to you at delivery@tickets-express.co,scam,
+test604_dev,"Flash sale: Dyson V15 vacuum, $199 (RRP $899). Today only. Buy: http://dyson-flash-sale.com/buy. WhatsApp 9235-2588 for bulk orders.",scam,
+test604_dev,"[Carousell] Someone made an offer on your ""iPhone 15 Pro Max."" View offer in the Carousell app.",safe,
+test604_dev,[Shopee] Your order SPXVN060608313893 has been shipped! Track at https://spx.vn/track,safe,
+test604_dev,"A: Hi, is the sofa still available?
+B: Yes! It's in good condition. $200.
+A: Can I come see it?
+B: Sure! I'm at Tampines. How about Saturday 2 PM?
+A: Sounds good. See you then!",safe,
+test604_dev,[Lazada] Your order #LZD-20240618 has been delivered. Rate your purchase at https://lazada.sg/orders,safe,
+test604_dev,"We have compromising photos of you. Pay $5,000 in Bitcoin to bc1q258829 within 48 hours or we send them to all your contacts.",scam,
+test604_dev,This is the Singapore Police Force. A warrant has been issued in your name for money laundering. Call 6293-2355 immediately to resolve this or face arrest.,scam,
+test604_dev,User: Who is this?\nAgent: This is Officer Tan from the Cybercrime Division. Your bank account has been linked to a fraud case.\nUser: What? I haven't done anything wrong.\nAgent: We understand. But we need your cooperation. Please transfer your funds to this safe account for investigation: 254-3464-9823.\nUser: Transfer my money?\nAgent: It's standard procedure for asset protection during investigation. Failure to comply may result in arrest.,scam,
+test604_dev,"CẢNH BÁO: Chúng tôi có video nhạy cảm của bạn. Chuyển 50,000,000 VND vào TK: 234-2355-4564 trong 24h hoặc chúng tôi sẽ gửi cho tất cả bạn bè.",scam,
+test604_dev,[Interpol] Your passport has been flagged for international fraud. Contact our office immediately at interpol-sg@case-review.co to avoid travel ban.,scam,
+test604_dev,"Your social media accounts have been hacked. We control all your data. Pay $2,000 via http://secure-btc-pay.com/ransom or we delete everything and leak your private messages.",scam,
+test604_dev,"User: Hello?\nAgent: This is the Vietnamese Ministry of Public Security. Your identity has been used to open fraudulent bank accounts.\nUser: That's not possible!\nAgent: We have evidence. To clear your name, you must cooperate. Download our secure app at http://mps-secure-verify.vn and verify your identity.\nUser: This sounds suspicious.\nAgent: If you don't cooperate, we'll issue an arrest warrant. Call our hotline 1900-7887 or email verify@mps-case.vn for assistance.",scam,
+test604_dev,[Norton] Alert: Your device may be at risk. Renew your Norton subscription at https://www.norton.com/renew,safe,
+test604_dev,[SPF] Road safety reminder: Speed cameras are active on PIE and CTE this week. Drive safely. Info: https://www.police.gov.sg,safe,
+test604_dev,"A: Hi, I received a call about a police case?
+B: If you received a suspicious call claiming to be from SPF, please do not provide any personal information. Report it at https://www.police.gov.sg/iwitness or call 1800-255-0000.
+A: Thanks for confirming.
+B: You're welcome. Remember, SPF will never ask for money transfers or personal details over the phone.",safe,
+test604_dev,[Kaspersky] Cảnh báo: Phần mềm diệt virus của bạn đã hết hạn. Gia hạn tại https://www.kaspersky.com/renewal-center/home,safe,
+test604_dev,[SingCERT] Advisory: New phishing campaign targeting Singapore users. Stay vigilant. Details: https://www.csa.gov.sg/alerts-and-advisories/alerts/,safe,
+test604_dev,"[Apple] Your Apple ID was used to sign in on a new device. If this wasn't you, go to https://iforgot.apple.com",safe,
+test604_dev,"Hi, this is the CEO. I need you to process an urgent wire transfer of $45,000 to our new supplier. Account: 345-6544-2535. Do it now, I'm in a meeting and can't call.",scam,
+test604_dev,"User: Hi boss, you wanted to talk?\nAgent: Yes. I need you to purchase 10 Apple gift cards, $200 each, for client appreciation. Don't tell anyone — it's a surprise.\nUser: Sure, where should I buy them?\nAgent: Any store is fine. Scratch the backs and send me photos of the codes ASAP. I'll reimburse you tomorrow.",scam,
+test604_dev,"URGENT from CFO: Our vendor payment is overdue. Wire $28,000 to the updated account below immediately. New account: 123-5644-0834. Confirm via email to cfo@company-finance.co",scam,
+test604_dev,"Hi [Name], I'm traveling and my phone is acting up. Can you help me with something confidential? Reply to this number or email me at director@company-mgmt.co",scam,
+test604_dev,"User: Hi, is this about the invoice?\nAgent: Yes. The vendor changed their bank details. Please update the payment to account 887-124-4577 before end of day.\nUser: Should I verify with finance?\nAgent: No time — the payment deadline is today. I've already approved it. Just process it and send confirmation to accounts@vendor-update.co\nUser: Okay, processing now.",scam,
+test604_dev,Gấp: Anh/chị chuyển ngay 500 triệu VND cho đối tác mới. STK: 352-1442-1421. Xác nhận qua email: giamdoc@congty-taichinhi.vn. Anh đang họp không gọi được.,scam,
+test604_dev,"User: Anh ơi, anh cần gì ạ?\nAgent: Em mua giúp anh 5 thẻ điện thoại, mỗi thẻ 500k. Gửi mã thẻ qua tin nhắn này nhé.\nUser: Dạ, nhưng sao anh không dùng số thường?\nAgent: Điện thoại anh hỏng, đang mượn máy. Làm nhanh giúp anh, anh hoàn tiền sau.",scam,
+test604_dev,"Hi team, reminder that the Q2 budget review meeting is tomorrow at 10 AM in Conference Room B. Please bring your department reports. — CEO",safe,
+test604_dev,"A: Hi boss, do you have a minute?
+B: Sure, what's up?
+A: I need approval for the marketing budget revision.
+B: Send me the updated spreadsheet and I'll review it this afternoon.
+A: Will do, thanks!",safe,
+test604_dev,[Finance Dept] Reminder: All vendor invoices for June must be submitted by 25 Jun. Email to accounts@company.com.sg,safe,
+test604_dev,"Hi [Name], I'll be traveling next week. Please direct any urgent matters to my deputy, Sarah, at sarah@company.com.sg or call her at 6023-2355. — Director",safe,
+test604_dev,We understand you were a victim of the XYZ Investment scam. Our recovery team can help you retrieve your lost funds. Contact us: http://scam-recovery-experts.com,scam,
+test604_dev,"[Anti-Fraud Bureau] Case #AF-2024-3666: Your fraud claim has been approved. To receive your recovered funds of $12,500, verify at http://fraud-claim-recovery.com/verify",scam,
+test604_dev,"Hi, I'm a lawyer specializing in investment fraud recovery. I've helped many victims recover their money. Free consultation — call 9556-3466 or email recover@fraud-legal-help.co",scam,
+test604_dev,User: Can you really help me get my money back?\nAgent: Absolutely. We've recovered over $5 million for scam victims this year.\nUser: How does it work?\nAgent: We file a claim with the relevant authorities on your behalf. There's a small upfront legal fee of $500.\nUser: That seems like another scam.\nAgent: I understand your concern. Visit our website for testimonials: http://recovery-legal-group.com. You can also verify our registration at http://legal-verify.com/check,scam,
+test604_dev,"Thông báo: Chúng tôi đã truy thu được khoản tiền bạn bị lừa đảo. Số tiền 25,000,000 VND đang chờ xác nhận. Liên hệ: http://tracuu-hoantien.vn hoặc gọi 1900-3643",scam,
+test604_dev,[ScamShield] You reported a scam on 15 Jun. Case update: Under investigation. No further action needed. Check status at https://www.scamshield.gov.sg,safe,
+test604_dev,[SPF] Your police report (Ref: E-2024-3466) has been filed. An investigating officer will contact you within 7 working days.,safe,
+test604_dev,"[MAS] If you've been a victim of an investment scam, file a complaint at https://www.mas.gov.sg/feedback-form/. Do not engage with unsolicited recovery offers.",safe,
+test604_dev,"A: I was scammed online. What should I do?
+B: Sorry to hear that. Please file a report at https://www.police.gov.sg/iwitness and call the Anti-Scam Helpline at 1800-722-6688.
+A: Will I get my money back?\nAgent: The police will investigate. You can also contact your bank to attempt a fund recall. Never pay anyone who claims they can recover your funds.",safe,
+test604_dev,🙏 Help earthquake victims in Turkey! Donate now: http://turkey-earthquake-relief.com/donate. Every dollar counts!,scam,
+test604_dev,[Red Cross] Emergency appeal: Flood victims in Vietnam need your help. Donate at http://redcross-vietnam-flood.com/donate,scam,
+test604_dev,Children in Gaza are starving. Your $10 can feed a family for a week. Donate: http://gaza-children-fund.org/help or call 1800-456-5647,scam,
+test604_dev,Quyên góp giúp đồng bào miền Trung bị lũ lụt. Mọi đóng góp đều quý giá. Chuyển khoản: STK 194-2352-6343 hoặc truy cập http://cuu-tro-mien-trung.vn,scam,
+test604_dev,[UNICEF] Urgent: Millions of children affected by the earthquake need immediate help. Donate securely at http://unicef-earthquake-appeal.com/donate,scam,
+test604_dev,[TB] MTTQ Việt Nam kêu gọi chung tay ủng hộ đồng bào bị thiệt hại do bão lũ gây ra. Các tài khoản tiếp nhận: 55102025 tại Vietinbank; 8639699999 tại BIDV; 1400666102025 tại Agribank; 8888881010 tại Vietcombank; 0606 tại Mbbank.,safe,
+test604_dev,[Community Chest] Thank you for your donation of $50. Your tax-deductible receipt will be emailed within 14 days.,safe,
+test604_dev,[Giving.sg] Reminder: Your monthly donation of $20 to SPCA has been processed. Manage at https://www.giving.sg/dashboard,safe,
+test604_dev,"[Hội Chữ thập đỏ VN] Cảm ơn bạn đã đóng góp 500,000 VND cho quỹ cứu trợ lũ lụt. Biên lai sẽ được gửi qua email.",safe,
+test604_dev,"Hey, are you free for dinner tonight? Thinking of trying that new Thai place at Tanjong Pagar.",safe,
+test604_dev,Don't forget to pick up your sister from school at 3 PM today. Love you!,safe,
+test604_dev,"Reminder: Your dental appointment is tomorrow at 10 AM at Q&M Dental, Raffles City. Reply Y to confirm.",safe,
+test604_dev,"Hi, this is your Grab driver. I'm at the pickup point. Blue Toyota. License plate SXX1234A.",safe,
+test604_dev,[SBS Transit] Service advisory: Bus 174 is delayed by 15 mins due to an accident on Orchard Road. We apologize for the inconvenience.,safe,
+test604_dev,Happy birthday! 🎂 Hope you have an amazing day. Let's celebrate this weekend!,safe,
+test604_dev,"Anh ơi, tối nay mấy giờ về? Em nấu cơm chờ.",safe,
+test604_dev,"[NLB] Your library book ""Atomic Habits"" is due on 25 Jun. Renew at https://www.nlb.gov.sg or return to any branch.",safe,
+test604_dev,"Bạn ơi, mai đi cà phê không? 9h ở Highland Coffee Nguyễn Huệ nhé!",safe,
+test604_dev,[NTUC] Your FairPrice receipt for $45.30 has been saved to your NTUC Link account. View at https://www.fairprice.com.sg/receipts,safe,
+test604_dev,"Kính gửi quý khách, tài khoản Techcombank của bạn đã bị tạm khóa do phát hiện giao dịch đáng ngờ. Vui lòng xác minh danh tính tại http://techcombank-xacminh.vn để mở khóa trong vòng 12 giờ.",scam,
+test604_dev,"[Techcombank] Giao dịch thành công: -2,500,000 VND tại POS. Số dư khả dụng: 45,300,000 VND. Nếu không phải bạn, gọi ngay 1900 588 822.",safe,
+test604_dev,"A: Xin chào, đây là bộ phận bảo mật ACB. Chúng tôi phát hiện đăng nhập lạ từ thiết bị tại Hà Nội vào tài khoản của quý khách.
+B: Tôi ở TP.HCM mà, không phải tôi.
+A: Vâng, để bảo vệ tài khoản, quý khách vui lòng xác nhận mã OTP vừa gửi đến số điện thoại đăng ký.
+B: Mã là 583921.
+A: Cảm ơn quý khách. Tài khoản đã được bảo vệ.",scam,
+test604_dev,"[VPBank] Hệ thống ghi nhận yêu cầu chuyển tiền 15,000,000 VND từ tài khoản của bạn. Nếu không phải bạn, hủy giao dịch ngay tại http://vpbank-huygiaodich.com",scam,
+test604_dev,"[VPBank] Giao dịch Internet Banking thành công: -15,000,000 VND. Người nhận: NGUYEN VAN A. Nếu không phải bạn, gọi 1900 545 415.",safe,
+test604_dev,Thông báo từ Bộ Công an: CMND/CCCD của bạn liên quan đến vụ án rửa tiền. Xác minh danh tính tại http://bocongan-xacminh.vn hoặc bị khởi tố trong 24 giờ.,scam,
+test604_dev,[Cục Cảnh sát QLHC] Thông báo: Thẻ CCCD gắn chip của bạn đã sẵn sàng. Vui lòng đến Công an phường nơi đăng ký để nhận. Mang theo biên lai.,safe,
+test604_dev,"[Agribank] Tài khoản của quý khách vừa bị trừ 8,500,000 VND. Nếu không phải bạn thực hiện, truy cập ngay http://agribank-baomatk.vn để khiếu nại và hoàn tiền.",scam,
+test604_dev,"[BIDV] Quý khách có 1 giao dịch chờ xác nhận: Chuyển khoản 20,000,000 VND đến TK 0123456789. Xác nhận hoặc hủy tại http://bidv-xacnhan.online",scam,
+test604_dev,"[BIDV] Thông báo biến động số dư: -20,000,000 VND. Nội dung: Thanh toán hóa đơn. Số dư: 35,200,000 VND. Liên hệ 1900 9247 nếu cần hỗ trợ.",safe,
+test604_dev,"A: Chào bạn, mình là nhân viên Sacombank chi nhánh Quận 1. Tài khoản của bạn vừa bị đánh dấu giao dịch bất thường.
+B: Giao dịch gì vậy?
+A: Có người cố chuyển 50 triệu ra khỏi tài khoản. Để chặn, bạn cần cung cấp số thẻ và mã CVV để mình khóa thẻ ngay.
+B: Tôi cần xác nhận lại.
+A: Nếu không xử lý trong 10 phút, tiền sẽ bị chuyển đi vĩnh viễn.",scam,
+test604_dev,"[SHB] Thẻ tín dụng của bạn vừa phát sinh giao dịch 12,000,000 VND tại nước ngoài. Nếu không phải bạn, xác nhận tại http://shb-baomat.vn hoặc gọi 1800-599-919",scam,
+test604_dev,"[SHB] Thẻ tín dụng cuối 7823 vừa giao dịch 12,000,000 VND tại AMAZON.COM. Nếu không phải bạn, gọi ngay 1800 599 919.",safe,
+test604_dev,Đơn hàng Tiki #TK39281 của bạn gặp sự cố giao hàng. Cập nhật địa chỉ và xác nhận thanh toán bổ sung tại: http://tiki-capnhat-donhang.com/track,scam,
+test604_dev,[Tiki] Đơn hàng #TK39281 đã giao thành công. Đánh giá sản phẩm để nhận 50 TikiXu tại app Tiki.,safe,
+test604_dev,[Sacombank] Vui lòng xác nhận lại thông tin cá nhân theo quy định mới của NHNN. Gửi ảnh CMND mặt trước/sau qua email: hotro@sacombank-xacnhan.vn,scam,
+test604_dev,"Your Maxis bill for June is overdue. To avoid service disconnection, pay now at http://maxis-billpay.co/overdue",scam,
+test604_dev,[Maxis] Your June bill of RM89.50 is due on 15 Jul. Pay via MyMaxis app or at any Maxis store. Thank you.,safe,
+test604_dev,"Bạn vừa đăng nhập Smart Banking VietinBank từ iPhone 16 tại Đà Nẵng. If this wasn't you, verify at http://vietinbank-secure.xyz/verify",scam,
+test604_dev,[MB Bank] Tài khoản bạn sẽ bị vô hiệu hóa nếu không cập nhật sinh trắc học trước 30/06/2026. Cập nhật tại http://mbbank-sinhtrachoc.vn,scam,
+test604_dev,[MB Bank] Nhắc nhở: Quý khách vui lòng cập nhật sinh trắc học trên app MBBank trước 30/06/2026 theo quy định NHNN. Hỗ trợ: 1900 545 426.,safe,
+test604_dev,"A: Em chào anh/chị, em gọi từ tổng đài Vietcombank. Tài khoản anh/chị có giao dịch chuyển 30 triệu đến một tài khoản lạ.
+B: Tôi không chuyển gì cả!
+A: Vâng, để hủy giao dịch, em cần anh/chị đọc mã OTP vừa nhận. Đây là quy trình bảo mật.
+B: Mã là 471823.
+A: Em đã hủy thành công. Cảm ơn anh/chị.",scam,
+test604_dev,[GrabFood] Đơn hàng của bạn bị hủy do lỗi thanh toán. Nhập lại thẻ tại: http://grab-thanhtoan.co/retry để đặt lại.,scam,
+test604_dev,Hệ thống VNĐirect phát hiện đăng nhập bất thường. Vui lòng xác minh qua email: support@vndirect-baomat.com trong vòng 6 giờ.,scam,
+test604_dev,"[Vietcombank] Thẻ visa ending 4521 vừa bị trừ 25,000,000 VND tại LOUIS VUITTON SG. Nếu nghi ngờ gian lận, gọi 1900-5454-13 hoặc truy cập http://vcb-khieunai.net",scam,
+test604_dev,"[Vietcombank] Thẻ Visa cuối 4521 vừa giao dịch 25,000,000 VND tại LOUIS VUITTON. Nếu không phải bạn, gọi 1900 54 54 13 hoặc ra chi nhánh gần nhất.",safe,
+test604_dev,"Bưu điện Việt Nam: Bưu phẩm EMS số EM123456789VN bị giữ tại hải quan do thiếu phí 85,000 VND. Thanh toán tại http://vnpost-haiquan.vn/thanhoan",scam,
+test604_dev,"Dear customer, your PayNow transfer of $4,800 is pending verification. Confirm your identity at http://paynow-verify.sg/confirm to proceed.",scam,
+test604_dev,"[DBS] Your PayNow transfer of $4,800 to ACME PTE LTD has been completed. Ref: PN20260326. No action required.",safe,
+test604_dev,"A: Alo, đây là công an quận Tân Bình. Số CMND 07912345678 của bạn liên quan đến đường dây lừa đảo.
+B: Không thể nào, tôi không làm gì sai.
+A: Chúng tôi cần bạn chuyển tiền vào tài khoản bảo vệ của Viện Kiểm sát để chứng minh nguồn tiền hợp pháp. Số tài khoản: 0123456789 tại Vietcombank.
+B: Chuyển bao nhiêu?
+A: Toàn bộ số dư hiện có. Sau khi xác minh xong sẽ hoàn trả trong 24 giờ.",scam,
+test604_dev,"Hệ thống điện lực EVN thông báo: Hóa đơn tiền điện tháng 5 chưa thanh toán. Tổng: 1,250,000 VND. Thanh toán trước 17h hôm nay tại http://evn-thanhtoan.vn hoặc bị cắt điện.",scam,
+test604_dev,"[EVN] Hóa đơn tiền điện tháng 5/2026: 1,250,000 VND. Hạn thanh toán: 20/06/2026. Thanh toán qua app EVNHCMC hoặc ngân hàng liên kết.",safe,
+test604_dev,[SCB] Ngân hàng SCB thông báo: Sổ tiết kiệm online của bạn sắp đáo hạn. Gia hạn tại http://scb-giahan-tietkiem.vn trước 25/06 để hưởng lãi suất ưu đãi 8.5%/năm.,scam,
+test604_dev,Xác nhận tài khoản: Ai đó đang cố đăng nhập Zalo của bạn. Click http://zalo-baomat.co để khóa phiên. Ignore nếu là bạn.,scam,
+test604_dev,[Shopee] Tài khoản ShopeePay của bạn bị giới hạn do nghi ngờ giao dịch bất thường. Xác minh ngay: http://shopeepay-xacminh.com hoặc liên hệ hotro@shopeepay-cs.vn,scam,
+test604_dev,[TPBank] Thông báo khẩn: Hệ thống phát hiện virus trên app TPBank của bạn. Cập nhật phiên bản mới tại http://tpbank-update.vn để bảo vệ tài khoản.,scam,
+test604_dev,Your M1 account has been temporarily suspended. Verify your identity at http://m1-account-verify.co to restore services.,scam,
+test604_dev,[Viettel] Gói cước 4G của bạn sẽ bị hủy nếu không xác nhận thông tin thuê bao trước 20h hôm nay. Xác nhận: http://viettel-xacnhanthongtin.vn,scam,
+test604_dev,[Viettel] Gói cước ST90 của bạn sẽ hết hạn vào 30/06/2026. Gia hạn qua app My Viettel hoặc *098# để tiếp tục sử dụng.,safe,
+test604_dev,"A: Xin chào, tôi là nhân viên bảo hiểm xã hội quận 7. Thẻ BHYT của bạn hết hạn tháng này.
+B: Vậy tôi cần làm gì?
+A: Bạn chuyển 850,000 VND phí gia hạn vào STK 0987654321 Vietcombank, tên Nguyen Van B. Chúng tôi sẽ gửi thẻ mới qua bưu điện.
+B: Sao không ra trực tiếp cơ quan?
+A: Do dịch COVID, chúng tôi xử lý online. Hạn chuyển trước 17h hôm nay.",scam,
+test604_dev,[Momo] Your account will be permanently closed unless you verify ownership at http://momo-xacnhan.xyz. You have 3 hours.,scam,
+test604_dev,"[Ngân hàng Nhà nước] Theo Thông tư 18/2026, tất cả tài khoản ngân hàng phải xác thực lại trước 01/07/2026. Truy cập http://nhnn-xacthuclai.vn để hoàn tất.",scam,
+test604_dev,"A: Chào bạn, mình từ phòng CSKH FPT Telecom. Đường truyền Internet nhà bạn bị phát hiện truy cập web vi phạm pháp luật.
+B: Cái gì? Tôi không truy cập gì bất hợp pháp cả.
+A: Để tránh bị cơ quan chức năng xử lý, bạn cần nộp phạt 2,000,000 VND qua chuyển khoản. STK: 1234567890 tại ACB.",scam,
+test604_dev,"[Lazada] Bạn có 1 kiện hàng COD chờ thanh toán phí vận chuyển phát sinh 45,000 VND. Thanh toán tại http://lazada-phivc.com/pay để nhận hàng.",scam,
+test604_dev,Thong bao tu VNPT: Thue bao 0912345678 cua ban se bi cat do no cuoc 350.000d. Thanh toan tai http://vnpt-thanhtoan.online truoc 18h.,scam,
+test604_dev,"[Citi​bank] Your card ending 8832 was charged $3,200 at an overseas merchant. If unauthorized, verify at http://citibank-disputes.co/verify",scam,
+test604_dev,"Bạn có một khoản vay chưa thanh toán tại FE Credit. Nếu không thanh toán trước 48h, hồ sơ sẽ bị chuyển tòa án. Chi tiết: http://fecredit-thanhtoannợ.vn",scam,
+test604_dev,[Cimb Niaga] Akun Anda telah diblokir. Verify your identity at http://cimb-verify.id to unblock. Hubungi 14041 jika butuh bantuan.,scam,
+test604_dev,"A: Chào bạn, mình là Tuấn. Nhắn nhầm số, xin lỗi nhé!
+B: Không sao.
+A: Mình thấy bạn dễ thương quá. Mình là chuyên viên tài chính, đang quản lý quỹ đầu tư ngoại hối. Bạn có quan tâm đầu tư không?
+B: Mình chưa biết gì về forex.
+A: Không sao, mình hướng dẫn từ đầu. Tuần trước nhóm mình lãi 45%. Bạn chỉ cần nạp tối thiểu 5 triệu. Đây là link sàn: http://fx-profit-asia.com/register",scam,
+test604_dev,"[SSI] Lệnh mua 200 cổ phiếu HPG đã khớp tại giá 25,800 VND/cp. Tổng: 5,160,000 VND. Xem chi tiết trên app iBoard.",safe,
+test604_dev,"Cơ hội vàng: Đầu tư bất động sản nghỉ dưỡng Phú Quốc, cam kết lợi nhuận 15%/năm, pháp lý hoàn chỉnh. Chỉ từ 500 triệu. LH: 0938-123-456 hoặc dangky@phuquoc-resort-invest.vn",scam,
+test604_dev,"[TCBS] Chào bạn, trái phiếu Vingroup mã VHMSB2225001 vừa phát hành. Lãi suất 9.5%/năm. Xem chi tiết tại app TCInvest.",safe,
+test604_dev,"Bạn có muốn thu nhập thụ động 20-50 triệu/tháng? Hệ thống AI giao dịch tự động, không cần kinh nghiệm. Tham gia nhóm Telegram: t.me/AI_Trading_VN_VIP",scam,
+test604_dev,"A: Chào em, anh là Quang từ công ty quản lý quỹ ABC Capital. Có người giới thiệu em cho anh.
+B: Ai giới thiệu ạ?
+A: Một đồng nghiệp cũ của em. Anh đang có sản phẩm quỹ đầu tư trái phiếu, lãi 18%/năm, bảo toàn vốn 100%.
+B: Nghe hấp dẫn quá.
+A: Em chỉ cần nạp tối thiểu 10 triệu vào tài khoản sàn. Đây là link: http://abccapital-fund.vn/open",scam,
+test604_dev,[Binance] Chương trình staking đặc biệt: APY 65% cho BTC. Chỉ dành cho 500 người đầu tiên. Đăng ký: http://binance-staking-vip.co/join,scam,
+test604_dev,"[Binance] Thông báo: Giao dịch rút 0.3 BTC thành công. TX: 0xa3f7...d91c. Nếu không phải bạn, đóng băng tài khoản ngay.",safe,
+test604_dev,Hi! I'm a certified trader with 8 years experience. My students averaged 200% returns last year. Free trial: join our WhatsApp group at +65-8123-4567.,scam,
+test604_dev,"Mở tài khoản chứng khoán quốc tế, giao dịch cổ phiếu Apple, Tesla trực tiếp. Nạp từ 2 triệu. Liên hệ: invest@global-stock-vn.com",scam,
+test604_dev,[VPS] Tài khoản giao dịch chứng khoán phái sinh của bạn đã được kích hoạt. Truy cập app SmartOne để giao dịch.,safe,
+test604_dev,"A: Mình vừa rút 50 triệu từ sàn MetaFX đó. Bạn muốn thử không?
+B: Sàn gì vậy? Uy tín không?
+A: Uy tín lắm, có giấy phép quốc tế. Mình đầu tư 3 tháng rồi, chưa thua lần nào. Để mình gửi link đăng ký: http://metafx-global.com/ref/user123",scam,
+test604_dev,"Đầu tư Bitcoin chỉ từ 1 triệu, rút tiền bất kỳ lúc nào. Cam kết lãi 5%/ngày. Nhóm Zalo: https://zalo.me/g/abc123",scam,
+test604_dev,"A: Xin chào, tôi là Kevin from Hong Kong. Sorry nhắn nhầm!
+B: OK.
+A: Bạn ơi, you have experience in crypto? I just made 80 triệu from Ethereum this week.
+B: Wow, really?
+A: Yes! Mình có thể teach you. First, create account tại http://ethtrade-pro.com/signup",scam,
+test604_dev,"Cơ hội cuối: Mua đất nền Bình Dương giá gốc chủ đầu tư, chỉ 800 triệu/nền, cam kết tăng giá 30% sau 6 tháng. Gọi ngay: 0976-543-210",scam,
+test604_dev,[VN30 Alert] Cổ phiếu VNM sắp tăng mạnh theo phân tích nội bộ. Mua ngay trước khi quá muộn. Liên hệ broker: broker@vn30-alert.vn,scam,
+test604_dev,"A: Em ơi, anh có quen chị Hồng ở công ty em không?
+B: Dạ không.
+A: Xin lỗi nhắn nhầm. Nhưng mà anh thấy avatar em xinh quá! Anh đang là quản lý quỹ đầu tư tại Dragon Capital.
+B: Ồ vậy ạ.
+A: Anh đang có suất đầu tư nội bộ, lãi 25%/năm. Em muốn tham gia không? Chỉ cần 20 triệu thôi.",scam,
+test604_dev,Free seminar: Học cách kiếm 100 triệu/tháng từ Forex. Diễn giả: chuyên gia 15 năm kinh nghiệm. Đăng ký: http://forex-seminar-vn.com/free,scam,
+test604_dev,[MAS] New government-backed digital currency investment scheme. 12% guaranteed annual yield. Register at http://mas-digital-invest.sg/apply before 30 Jun.,scam,
+test604_dev,"A: Chị ơi, em là Linh từ công ty tài chính ABC. Em gọi giới thiệu gói tiết kiệm lãi suất 15%/năm.
+B: Ngân hàng nào vậy?
+A: Không phải ngân hàng ạ, đây là quỹ đầu tư có bảo hiểm vốn. Chị chỉ cần nạp từ 10 triệu.
+B: Có giấy phép không?
+A: Dạ có, em gửi qua Zalo nhé. Chị add Zalo em: 0912-345-678",scam,
+test604_dev,Urgent: BTC sẽ tăng 1000% trong 30 ngày theo dự báo Goldman Sachs. Đừng bỏ lỡ! Mua ngay: http://btc-surge-2026.com/buy,scam,
+test604_dev,"Kiếm tiền từ YouTube, TikTok không cần quay video. Hệ thống tự động, thu nhập 5-10 triệu/tuần. Đầu tư ban đầu chỉ 2 triệu. LH Zalo: 0987-654-321",scam,
+test604_dev,"[Finhay] Cơ hội đầu tư: Quỹ trái phiếu lãi suất cố định 20%/năm, rút vốn linh hoạt. Mở tài khoản: http://finhay-bond-vip.vn/open",scam,
+test604_dev,"[Finhay] Tài khoản đầu tư của bạn đã được cộng lãi tháng 5: +320,000 VND. Tổng tài sản: 12,450,000 VND. Xem trên app Finhay.",safe,
+test604_dev,"A: Em có biết cách kiếm tiền online không?
+B: Kiếm kiểu gì ạ?
+A: Mình chỉ cần đặt cược vào biểu đồ tăng/giảm, mỗi lần đúng được gấp đôi. Mình vừa thắng 30 triệu sáng nay. Thử đi: http://binary-win-vn.com/play",scam,
+test604_dev,"Dear investor, our hedge fund consistently delivered 35% annual returns since 2020. Download prospectus at http://asiahedge-fund.com/report.pdf and contact advisor@asiahedge-fund.com",scam,
+test604_dev,"[VNDirect] Thị trường sắp bùng nổ! Danh mục khuyến nghị đặc biệt từ chuyên gia: MWG, FPT, VHM. Đăng ký tư vấn VIP: http://vndirect-vip-advisory.vn",scam,
+test604_dev,[VNDirect] Báo cáo phân tích thị trường tuần 25-29/06/2026 đã có trên app VNDirect. Đọc miễn phí trong mục Nghiên cứu.,safe,
+test604_dev,"Nhóm đầu tư vàng online, lãi 3%/ngày. Đã có 10,000+ thành viên. Nạp tối thiểu 1 triệu. Đăng ký ngay: http://gold-invest-vn.com/join. WhatsApp: +84-912-345-678",scam,
+test604_dev,"A: Bạn ơi, bạn có biết về copy trading không?
+B: Nghe qua rồi nhưng chưa thử.
+A: Mình đang copy lệnh từ một trader top 1 thế giới. Tháng trước lãi 60%. Sàn hỗ trợ copy tự động, bạn không cần làm gì. Link sàn: http://copytrade-pro.vn/ref",scam,
+test604_dev,[Ant Group] Cơ hội đầu tư vào Alipay Digital Fund. Lãi suất cố định 18%/năm. Chỉ dành cho khách hàng Đông Nam Á. Email: invest@antgroup-fund.co,scam,
+test604_dev,"Mua bán crypto P2P uy tín, rate tốt nhất thị trường. Mua BTC/USDT với giá thấp hơn sàn 2%. LH: trade@cryptop2p-vn.com hoặc Zalo 0934-567-890",scam,
+test604_dev,"A: Chào bạn! Bạn có muốn tìm hiểu về đầu tư chứng khoán Mỹ không? Mình có kênh signal miễn phí.
+B: Miễn phí thật à?
+A: Đúng rồi, 7 ngày đầu miễn phí. Sau đó chỉ 500k/tháng. Signal chính xác 95%. Link: http://us-stock-signal-vn.com/free",scam,
+test604_dev,"Exclusive pre-ICO token sale: AsiaCoin (ASC). Price now $0.01, expected $5 after listing. Min invest $100. Buy at http://asiacoin-ico.com/presale",scam,
+test604_dev,"Đầu tư cổ phiếu chưa niêm yết (OTC) của công ty sắp IPO, giá ưu đãi 10,000 VND/cp (dự kiến giá IPO 45,000 VND). Số lượng giới hạn 1000 cp/người. LH: 0965-432-109",scam,
+test604_dev,[TCBS] Alert: Your bond investment matured with 25% return. Reinvest now at http://tcbs-reinvest-bond.vn for extra 5% bonus.,scam,
+test604_dev,Khóa học trading miễn phí 100%! Học viên tốt nghiệp kiếm trung bình 50 triệu/tháng. Đăng ký: http://trading-academy-vn.com/free. Chỉ còn 20 suất!,scam,
+test604_dev,"A: Anh ơi, em mới tìm hiểu về tài chính. Anh có thể tư vấn không?
+B: Được chứ.
+A: Em đang đầu tư vào quỹ tín thác bất động sản lãi 2%/tháng. Anh muốn thử không? Số tiền ít thôi, 5 triệu.
+B: Có rủi ro không?
+A: Không có rủi ro vì có bất động sản đảm bảo. Link đăng ký: http://reit-trust-vn.com/invest",scam,
+test604_dev,"A: Chào bạn, công ty mình đang tuyển CTV đánh giá sản phẩm trên Shopee. Thu nhập 300k-800k/ngày.
+B: Công việc cụ thể là gì ạ?
+A: Bạn chỉ cần đặt đơn hàng ảo trên sàn, mỗi đơn được hoa hồng 5-15%.
+B: Đặt đơn ảo thì phải trả tiền trước à?
+A: Đúng rồi, bạn ứng tiền trước, sau đó được hoàn tiền kèm hoa hồng trong 30 phút.",scam,
+test604_dev,"A: Chào bạn, mình là Hằng từ HR FPT Software. Bạn nộp CV vị trí Tester, mình muốn hẹn phỏng vấn.
+B: Khi nào ạ?
+A: Thứ 4 tuần sau, 14h tại văn phòng FPT Tân Thuận Q7. Mang CMND và bằng cấp nhé.
+B: Dạ được, cảm ơn chị.",safe,
+test604_dev,"Tuyển nhân viên nhập liệu tại nhà, lương 200k/giờ. Không cần kinh nghiệm, chỉ cần laptop. Đăng ký: http://nhaplieu-online-vn.com/apply",scam,
+test604_dev,Bạn đang tìm việc? Công ty logistics quốc tế tuyển nhân viên part-time xử lý đơn hàng. Lương 8-15 triệu/tháng. Liên hệ qua email: hr@global-logistics-careers.vn,scam,
+test604_dev,[VietnamWorks] Nhà tuyển dụng DHL Express đã xem hồ sơ của bạn cho vị trí Nhân viên Kho vận. Cập nhật CV: https://www.vietnamworks.com,safe,
+test604_dev,"A: Em ơi, bên anh đang cần người làm nhiệm vụ trên Lazada. Mỗi nhiệm vụ hoàn thành được 50k-200k.
+B: Nhiệm vụ gì ạ?
+A: Em chỉ cần mua sản phẩm trên Lazada theo link anh gửi. Tiền sẽ hoàn lại kèm hoa hồng.
+B: Em phải bỏ tiền mua trước hả anh?
+A: Đúng rồi, nhưng hoàn trong 5 phút. Nhiệm vụ đầu chỉ 100k thôi.
+B: OK, em thử.
+A: Tốt! Nhiệm vụ tiếp theo là 500k nhé, hoa hồng cao hơn.",scam,
+test604_dev,"Tuyển CTV bán hàng online cho Unilever, hoa hồng 15-30%/đơn. Không cần vốn, không cần kho. LH Zalo: 0945-678-123",scam,
+test604_dev,[Unilever VN] Cảm ơn bạn đã ứng tuyển vị trí Trade Marketing Executive. Kết quả phỏng vấn sẽ được thông báo trong 5 ngày làm việc.,safe,
+test604_dev,"Earn $500/day testing mobile apps! No experience needed. Download apps, rate them, get paid. Start now: http://app-test-money.com/start",scam,
+test604_dev,"Cần tuyển gấp 50 nhân viên data entry, lương 15 triệu/tháng. Yêu cầu đóng phí đào tạo 500k. Chuyển vào STK: 0123456789, Vietcombank, Tran Van C.",scam,
+test604_dev,"A: Chào bạn, mình là HR từ Samsung Việt Nam. Bạn có quan tâm vị trí Quality Control không?
+B: Có ạ, lương bao nhiêu?
+A: 12-18 triệu tùy kinh nghiệm. Nhưng trước tiên bạn cần đóng phí bảo lãnh 1,500,000 VND. Sẽ hoàn lại sau tháng đầu.
+B: Sao phải đóng phí?
+A: Đây là quy định nội bộ để đảm bảo ứng viên nghiêm túc.",scam,
+test604_dev,"Tuyển CTV làm khảo sát online, 50k/khảo sát, 10 khảo sát/ngày = 500k/ngày. Đăng ký: http://khaosat-kiemtien-vn.com/register",scam,
+test604_dev,We're hiring Vietnamese speakers for a translation role. $30/hour. Send CV to careers@translate-global-corp.com. Start immediately.,scam,
+test604_dev,[LinkedIn] Công ty TransPerfect vừa xem hồ sơ của bạn cho vị trí Vietnamese Translator. Cập nhật CV tại linkedin.com/jobs.,safe,
+test604_dev,"A: Xin chào, bên mình đang tìm người chạy quảng cáo Facebook. Thu nhập 20-40 triệu/tháng.
+B: Yêu cầu gì ạ?
+A: Không cần kinh nghiệm, có hướng dẫn. Bạn chỉ cần đặt cọc 3 triệu để nhận tài khoản quảng cáo business.
+B: Đặt cọc?
+A: Đây là chi phí setup tài khoản. Hoàn lại sau 7 ngày kèm lương tuần đầu.",scam,
+test604_dev,"Tuyển lái xe công nghệ, thu nhập 25-40 triệu/tháng. Hỗ trợ mua xe trả góp. Đăng ký: http://laixe-congnghe-vn.com/dangky hoặc gọi 0923-456-789",scam,
+test604_dev,Work from home opportunity! Process payments for international clients. Earn 10% commission per transaction. Email: jobs@payment-processing-intl.com,scam,
+test604_dev,Tuyển CTV review sản phẩm trên TikTok Shop. Lương cứng 5 triệu + hoa hồng. LH: tuyendung@tiktokshop-vn-hr.com,scam,
+test604_dev,[TopCV] Nhà tuyển dụng ByteDance (TikTok) đã mời bạn phỏng vấn vị trí Content Moderator. Xem chi tiết tại app TopCV.,safe,
+test604_dev,"A: Hi, I found your resume online. We have a social media manager position.
+B: What company?
+A: A growing fintech startup. $4,000/month. But first we need you to complete an assessment.
+B: Sure, what kind?
+A: Purchase this software license ($200) for the assessment tool. We'll reimburse you on your first paycheck. Link: http://assessment-tool-purchase.com/buy",scam,
+test604_dev,"Tuyển dụng khẩn cấp: Thư ký giám đốc, lương 25 triệu/tháng, không cần kinh nghiệm. Phỏng vấn online. Gửi CMND + ảnh chân dung qua Zalo: 0956-789-012",scam,
+test604_dev,"Công ty TNHH ABC tuyển nhân viên kho vận tại KCN Bình Dương. Lương 8-12 triệu. Yêu cầu: sức khỏe tốt, có xe máy. Nộp hồ sơ: http://abc-logistics-tuyendung.vn/apply. Phí hồ sơ: 200k.",scam,
+test604_dev,"A: Chào bạn, bên mình tuyển người quản lý fanpage. Bạn có kinh nghiệm không?
+B: Có ạ.
+A: Tốt! Lương 10-15 triệu. Bạn cần mua gói tool quản lý page giá 800k. Công ty hoàn lại sau khi ký hợp đồng.
+B: Mua tool ở đâu?
+A: Link đây: http://social-tool-vn.com/buy. Sau khi mua, gửi biên lai cho mình qua Zalo.",scam,
+test604_dev,"Tuyển nhân viên sale bất động sản, hoa hồng lên đến 5%/giao dịch (100-500 triệu/năm). Không lương cứng. Đăng ký: http://bds-career-vn.com",scam,
+test604_dev,"Việc nhẹ lương cao: Like video YouTube, 5k/like, ngày like 100 video = 500k. Không cần tài khoản đặc biệt. Bắt đầu: http://like-youtube-earn.vn/start",scam,
+test604_dev,"Hi, bạn có want to earn extra income không? Mình đang hire people to complete simple tasks on Shopee. 300k-500k per day. Join our Telegram group: t.me/ShopeeTaskVN",scam,
+test604_dev,"A: Chị ơi, em từ phòng tuyển dụng Vinamilk. Công ty đang tuyển nhân viên bán hàng part-time.
+B: Ở đâu vậy em?
+A: Làm online ạ. Chị chỉ cần đặt đơn hàng sữa Vinamilk rồi đánh giá 5 sao. Hoa hồng 10%.
+B: Vinamilk tuyển kiểu này thật à?
+A: Dạ đây là chương trình mới. Chị đặt đơn đầu 200k để thử nhé.",scam,
+test604_dev,Freelance data annotation job. Pay: $15/hr. Need bilingual VN-EN speakers. Apply: http://data-annotation-jobs.co/apply,scam,
+test604_dev,"Cần tuyển 20 CTV seeding Facebook, Instagram. Mỗi bài 30k-50k. Không cần kinh nghiệm. Gọi: 0934-567-890",scam,
+test604_dev,[Grab] Chương trình tuyển tài xế mới: Thưởng 5 triệu khi hoàn thành 50 chuyến đầu tiên. Đăng ký tại http://grab-driver-bonus.vn/signup,scam,
+test604_dev,[Grab] Chào bạn! Đơn đăng ký đối tác tài xế của bạn đã được duyệt. Hoàn tất onboarding tại https://www.grab.com/vn/driver.,safe,
+test604_dev,"Xin chào valued customer! Bạn đã được chọn nhận cashback 5,000,000 VND from chương trình loyalty Viettel. Claim ngay: http://viettel-cashback-promo.vn/claim",scam,
+test604_dev,"[Viettel] Quý khách tích lũy 12,500 điểm Viettel++. Đổi quà tại app My Viettel hoặc https://viettelplusplus.vn. Hết hạn 31/12/2026.",safe,
+test604_dev,"Bạn đã trúng giải đặc biệt từ chương trình quay số MobiFone: 20,000,000 VND! Xác nhận thông tin nhận thưởng tại http://mobifone-trungtuong.vn/xacnhan",scam,
+test604_dev,"[VinaPhone] Chúc mừng! Bạn là 1 trong 100 thuê bao may mắn nhận hoàn tiền 1,000,000 VND. Gọi 1900-xxxx để xác nhận trong 24h.",scam,
+test604_dev,"[VinaPhone] Hóa đơn cước tháng 5/2026: 189,000 VND. Hạn thanh toán: 15/06/2026. Thanh toán qua app My VinaPhone.",safe,
+test604_dev,"[VNPay] Bạn có khoản hoàn tiền 750,000 VND từ giao dịch bị lỗi. Nhận hoàn tiền tại http://vnpay-hoantien.vn/nhan. Hết hạn sau 12 giờ.",scam,
+test604_dev,"Thông báo: Bạn được hoàn thuế TNCN năm 2025 số tiền 3,500,000 VND. Cung cấp STK ngân hàng tại http://hoanthue-tncn-vn.com/xacnhan để nhận.",scam,
+test604_dev,"[Thuế điện tử] Thông báo: Khoản hoàn thuế TNCN năm 2025 của bạn (3,500,000 VND) đã được chuyển vào TK ngân hàng đăng ký. Không cần thao tác thêm.",safe,
+test604_dev,"Bạn đã được chọn nhận voucher 2,000,000 VND từ Shopee Birthday Sale! Đổi voucher: http://shopee-birthday-voucher.com/redeem. Chỉ hôm nay!",scam,
+test604_dev,"A: Chào bạn, mình từ bộ phận chăm sóc khách hàng Momo. Ví của bạn có khoản thưởng 500,000 VND chưa nhận.
+B: Thưởng gì vậy?
+A: Chương trình MoMo Lucky Draw tháng 5. Để nhận, bạn cung cấp mã OTP vừa gửi đến SĐT đăng ký.
+B: Tại sao cần OTP?
+A: Đây là bước xác minh danh tính để chuyển thưởng vào ví.",scam,
+test604_dev,"Congratulations! You've won a $2,000 Amazon gift card. Claim it now: http://amazon-giftcard-winner.com/claim. Offer expires in 24 hours!",scam,
+test604_dev,"[ZaloPay] Giao dịch hoàn tiền 1,200,000 VND đang chờ xác nhận. Xác nhận tại http://zalopay-refund.vn hoặc gọi 1900-xxxx.",scam,
+test604_dev,"Bạn có khoản tiền gửi quá hạn 5 năm tại ngân hàng. Số tiền: 15,000,000 VND. Liên hệ xác nhận: hotro@ngan-hang-hoantien.vn hoặc gọi 028-3456-7890",scam,
+test604_dev,"[Co.opmart] Bạn trúng thưởng phiếu mua hàng 500,000 VND từ chương trình mua sắm hè 2026. Nhận phiếu tại http://coopmart-trungtuong.vn",scam,
+test604_dev,"[Co.opmart] Cảm ơn bạn đã mua sắm! Hóa đơn: 450,000 VND. Tích lũy 45 điểm. Xem ưu đãi tại app Co.op Smile.",safe,
+test604_dev,[Grab] Your account has a pending reward of $50. Claim before it expires: http://grab-reward-claim.co/get,scam,
+test604_dev,"A: Alo, đây là tổng đài Bảo hiểm xã hội. Hồ sơ bạn có khoản BHXH 1 lần chưa nhận, trị giá 8,500,000 VND.
+B: Thật ạ? Tôi không biết.
+A: Vâng, để giải ngân nhanh, bạn cần đóng phí xử lý hồ sơ 350,000 VND vào STK: 9876543210 tại ACB.",scam,
+test604_dev,"Bạn ơi, mình chuyển nhầm 5,000,000 VND vào tài khoản bạn rồi. Bạn kiểm tra và chuyển lại giúp mình nhé. STK mình: 0123456789 tại Vietcombank.",scam,
+test604_dev,"[VNPT] Chuc mung! Ban trung 5,000,000 VND tu chuong trinh khach hang than thiet. Nhan thuong tai: http://vnpt-khuyenmai.online/nhan",scam,
+test604_dev,"Your PayPal account has received $1,500 from an unknown sender. Verify this transaction at http://paypal-verify-payment.com/check",scam,
+test604_dev,"[Sendo] Bạn nhận được hoàn tiền 300,000 VND cho đơn hàng bị hủy. Nhận tiền tại http://sendo-hoantien.vn/nhan. Liên hệ CSKH: 1900-xxxx nếu cần trợ giúp.",scam,
+test604_dev,"A: Chào anh, em là nhân viên ngân hàng. Anh có khoản lãi tiết kiệm 2,800,000 VND chưa tất toán.
+B: Sổ tiết kiệm nào?
+A: Sổ mở năm 2019 ạ. Để nhận, anh cung cấp mã OTP em vừa gửi để xác minh.
+B: OTP? Nghe lạ quá.
+A: Đây là quy trình bảo mật mới ạ. Anh đọc mã giúp em.",scam,
+test604_dev,"A: Xin chào, đây là cán bộ UBND phường. Bạn thuộc diện hỗ trợ 3,000,000 VND từ chương trình an sinh xã hội 2026.
+B: Thật ạ?
+A: Bạn cung cấp CMND và STK ngân hàng để chuyển khoản. Chương trình kết thúc trong 48 giờ.",scam,
+test604_dev,[BHXH TP.HCM] Hồ sơ bảo hiểm thất nghiệp đã được duyệt. Vui lòng đến Trung tâm DVVL quận Bình Thạnh nhận quyết định. Mang CMND bản gốc.,safe,
+test604_dev,"[UBND TP.HCM] Thông báo: Hộ gia đình bạn được hỗ trợ 1,500,000 VND tiền điện mùa nắng nóng. Đăng ký nhận tại http://ubnd-hotrodien.vn/dangky",scam,
+test604_dev,"[Bộ Y tế] Bạn đủ điều kiện nhận hỗ trợ 2,000,000 VND cho đối tượng bị ảnh hưởng bởi dịch bệnh. Đăng ký: http://boyte-hotrodichbenh.vn/dangky hoặc gọi 1900-xxxx",scam,
+test604_dev,[Bộ Y tế] Nhắc nhở: Tiêm vaccine COVID-19 mũi nhắc lại miễn phí tại trạm y tế phường. Mang CMND và sổ tiêm.,safe,
+test604_dev,"[LĐTBXH] Thông báo: Bạn được nhận trợ cấp khó khăn đột xuất 5,000,000 VND. Chuyển phí xử lý hồ sơ 200,000 VND vào STK 1234567890 tại BIDV để nhận.",scam,
+test604_dev,"A: Alo, đây là cán bộ thuế quận 3. Bạn có khoản thuế đóng thừa cần hoàn trả.
+B: Hoàn bao nhiêu ạ?
+A: 4,200,000 VND. Bạn cần cung cấp thông tin thẻ ATM để chúng tôi hoàn tiền online: số thẻ, ngày hết hạn, và mã CVV.
+B: Sao cần CVV?
+A: Đây là quy trình hoàn thuế điện tử mới theo Thông tư 78.",scam,
+test604_dev,"[SkillsFuture SG] Special top-up: $2,000 credit for mid-career professionals aged 40+. Activate at http://skillsfuture-topup-special.sg/activate",scam,
+test604_dev,[SkillsFuture] Reminder: Your SkillsFuture Credit balance is $500. Browse courses at https://www.myskillsfuture.gov.sg,safe,
+test604_dev,"Chính phủ hỗ trợ người dân bị ảnh hưởng bão lũ: 3,000,000 VND/hộ. Đăng ký nhận qua http://hotro-baolu-2026.vn/dangky. Hạn cuối: 30/06.",scam,
+test604_dev,"A: Chào em, anh là cán bộ phường. UBND triển khai hỗ trợ tiền thuê nhà cho công nhân. Em đủ điều kiện nhận 1,000,000 VND/tháng.
+B: Em cần làm gì ạ?
+A: Em chuyển 150,000 VND phí đăng ký vào tài khoản: 9876543210 tại ACB, tên Nguyen Van D.
+B: Phí đăng ký?
+A: Đây là phí hành chính theo quy định.",scam,
+test604_dev,"[HDB] You are eligible for the new Enhanced CPF Housing Grant of $120,000. Apply at http://hdb-cpf-grant-2026.sg/apply before 31 Jul.",scam,
+test604_dev,"[Sở GD&ĐT] Thông báo: Học sinh thuộc hộ nghèo được nhận học bổng 5,000,000 VND. Phụ huynh đăng ký tại http://hocbong-hongheo-vn.com/dangky",scam,
+test604_dev,[Sở GD&ĐT TP.HCM] Danh sách học sinh nhận học bổng HK1 2025-2026 đã được công bố. Xem tại https://sgddt.edu.vn/hocbong.,safe,
+test604_dev,"[Bộ Tài chính] Chương trình kích cầu kinh tế: Mỗi công dân nhận 1,000,000 VND. Đăng ký bằng CMND tại http://kichcau-botoaichinh.vn/nhan",scam,
+test604_dev,[CDC Singapore] Claim your CDC vouchers worth $500. New distribution round starts today: http://cdc-voucher-claim.sg/get,scam,
+test604_dev,Thong bao tu UBND: Nguoi dan duoc nhan 2 trieu dong ho tro. Dang ky tai http://ubnd-hotro.online/nhan. Han cuoi 25/06.,scam,
+test604_dev,"[NHNN] Theo chương trình hỗ trợ lãi suất, bạn được giảm 2% lãi vay. Để áp dụng, xác nhận thông tin khoản vay tại http://nhnn-giamlaisuat.vn/xacnhan",scam,
+test604_dev,"[PA] Hi, this is People's Association. You've been selected for a $1,500 community support grant. Call 6532-xxxx within 48h to claim.",scam,
+test604_dev,"[Cục Thuế] Bạn nợ thuế 12,000,000 VND. Nếu không thanh toán trong 48h, tài khoản ngân hàng sẽ bị phong tỏa. Thanh toán: http://cucthuevn-noptien.com/pay",scam,
+test604_dev,"A: Chào bạn! Mình là Ngọc, nhắn nhầm số.
+B: Không sao.
+A: Bạn dễ thương quá. Bạn làm nghề gì?
+B: Mình là kế toán.
+A: Hay quá! Mình là trader crypto. Tuần trước kiếm 200 triệu. Mình chỉ bạn cách nhé? Tạo TK giúp bạn luôn.",scam,
+test604_dev,"A: Hi! Mình là Hà. Nhắn nhầm, xin lỗi nhé!
+B: OK.
+A: Mình xem profile thấy bạn ở Sài Gòn luôn hả? Mình mới chuyển vào, chưa quen ai.
+B: Ừ, mình ở Q7.
+A: Hay quá! Mình ở Q4. Bạn rảnh cuối tuần không? Mình muốn rủ bạn đi cà phê, mình bao.
+B: Được.
+A: Tuyệt! À mà bạn có đầu tư gì không? Mình có nguồn tin nội bộ về cổ phiếu sắp tăng mạnh.",scam,
+test604_dev,"A: Hey! Wrong number, sorry! But you seem nice from your profile pic 😊
+B: No worries.
+A: I'm Vivian from Hong Kong. I'm a luxury goods reseller. What do you do?
+B: I work in IT.
+A: Cool! I also trade crypto on the side. Made $50k last month. Want me to show you? I use this platform: http://crypto-elite-trade.com/signup",scam,
+test604_dev,"A: Xin lỗi, bạn có phải Minh không?
+B: Không phải.
+A: Xin lỗi nhắn nhầm! Mình là Thảo, đang du học Úc. Bạn tên gì?
+B: Mình là Nam.
+A: Rất vui được biết Nam! Mình hay cô đơn xa nhà. Có thể kết bạn không?
+B: Được.
+A: Cảm ơn bạn! À, bạn có dùng VNPay không? Mình ở Úc nạp tiền điện thoại VN khó quá. Bạn nạp giúp mình 200k rồi mình chuyển lại nhé?",scam,
+test604_dev,"A: Chào bạn! Mình là Lan, photographer. Nhắn nhầm nhưng thấy bạn vui tính quá!
+B: Cảm ơn.
+A: Mình đang tìm người mẫu cho dự án ảnh. Bạn có muốn tham gia không? Thù lao 2 triệu/buổi.
+B: Nghe hay đó.
+A: Tuyệt! Bạn chuyển 500k phí giữ chỗ. Mình gửi hợp đồng sau. STK: 0112233445, MB Bank, Tran Thi Lan.",scam,
+test604_dev,"A: Hi! I'm Janet from Taiwan. I texted the wrong number but would love to chat!
+B: Sure.
+A: I run a boutique in Taipei. What about you?
+B: Office worker.
+A: That's nice! I've been using this amazing investment app. Already earned $20k this month. You should try it! Email me at janet.invest@proton.me for details.",scam,
+test604_dev,"A: Nhắn nhầm xin lỗi! Mình là Trang, ở Đà Nẵng.
+B: Không sao.
+A: Mình hay đi du lịch. Tuần trước mới đi Phú Quốc. Bạn thích đi đâu?
+B: Mình cũng thích đi Phú Quốc.
+A: Vậy lần sau mình đi chung nhé! À, bạn có Zalo không? Add mình: 0987-654-321. Mình gửi ảnh du lịch cho bạn xem.",scam,
+test604_dev,"A: Bạn ơi, mình là Hương. Mình nhắn nhầm nhưng thấy bạn hiền lắm!
+B: Cảm ơn.
+A: Mình mới chia tay, tâm trạng không tốt. Bạn có thể nói chuyện với mình không?
+B: Được, mình nghe.
+A: Cảm ơn bạn nhiều. Mình làm nail ở Q5. Cuối tuần bạn ghé mình làm nail miễn phí nhé! À, shop mình đang cần vốn nhập hàng. Bạn có thể cho mình vay 5 triệu không? Cuối tháng trả.",scam,
+test604_dev,"A: Hi there! I'm Lisa, a financial analyst. I accidentally added your number.
+B: No problem.
+A: Would you like investment tips? I just made 300% return on gold futures this quarter.
+B: Sounds too good.
+A: I can show you my portfolio! Download this app: http://gold-futures-pro.com/download. I'll guide you step by step.",scam,
+test604_dev,"A: Chào bạn, mình là Linh. Mình tìm bạn chia sẻ phòng trọ ở Q.Thủ Đức. Bạn có quan tâm không?
+B: Mình đang tìm phòng thật.
+A: Phòng rộng, 15m2, chỉ 2 triệu/tháng. Rẻ vì mình muốn tìm bạn ở chung.
+B: Rẻ quá vậy?
+A: Mình không cần lời. Bạn chuyển 1 tháng cọc trước nhé: STK 0123456789 Techcombank, Nguyen Thi Linh.",scam,
+test604_dev,"A: Chào! Mình là Đức, bác sĩ ở BV Chợ Rẫy. Nhắn nhầm số nhưng rất vui được biết bạn.
+B: Chào bác sĩ.
+A: Bạn khỏe không? Gần đây mình thấy nhiều người stress quá. Mình có thể tư vấn sức khỏe miễn phí cho bạn.
+B: Cảm ơn.
+A: Không có gì! À, mình cũng đầu tư chứng khoán. Mình có kênh signal rất chuẩn, bạn muốn tham gia không? Link: t.me/bsducstock",scam,
+test604_dev,"A: Hey, bạn là ai? Mình nhận được tin nhắn từ số này.
+B: Mình không nhắn bạn.
+A: Ồ, maybe mình bấm nhầm. Mình là Vy. Nice to meet you! Do you trade crypto?
+B: Không.
+A: You should try! Mình vừa earn 100 triệu from a new platform. Very easy. Link đây: http://newcrypto-earn.vn/join",scam,
+test604_dev,"A: Xin chào, bạn có phải người đăng tin bán xe trên Chợ Tốt không?
+B: Không, bạn nhầm rồi.
+A: Xin lỗi! Mình là Thanh, mình đang tìm mua xe. Bạn có biết ai bán không?
+B: Không.
+A: Cảm ơn nhé! À mà bạn ở đâu? Mình thấy bạn thân thiện quá. Mình mới chuyển đến SG, chưa quen ai. Kết bạn nhé!",scam,
+test604_dev,"A: Bạn ơi, mình là Phương. Mình thấy bạn trong group Facebook 'Hội yêu mèo SG'. Bạn nuôi mèo gì?
+B: Mình nuôi British Shorthair.
+A: Dễ thương quá! Mình cũng nuôi Maine Coon. Bạn mua ở đâu? Mình muốn mua thêm 1 bé.
+B: Mình mua ở trại giống Q9.
+A: Cảm ơn nhé! Mình add Zalo bạn được không? Muốn hỏi thêm về chăm sóc mèo. Zalo mình: 0956-789-012",scam,
+test604_dev,"A: Chào bạn, bạn có phải Hà không? Hương cho mình số bạn để hỏi về buổi họp lớp.
+B: Đúng rồi, mình là Hà.
+A: Vui quá! Họp lớp ngày 30/06 ở nhà hàng Sen Q1 nhé. Đóng 500k/người. Bạn tham gia không?
+B: Được, mình sẽ tham gia.",safe,
+test604_dev,"A: Hi, is this the photographer Sarah recommended?
+B: Yes! I'm Tom from PixelStudio.
+A: Great! I'd like to book a family photoshoot. Do you have availability next weekend?
+B: Yes, I have Saturday afternoon open. Check our packages at https://www.pixelstudio.sg/packages",safe,
+test604_dev,"Xin chào, tôi nhân viên MoMo. Ví của bạn đang bị truy cập trái phép. Gọi 1900-xxxx để xác minh. Cần mã OTP để khóa tài khoản.",scam,
+test604_dev,[MoMo] Mã xác thực giao dịch: 847291. Không chia sẻ với bất kỳ ai. Có hiệu lực 5 phút.,safe,
+test604_dev,[Facebook] Tài khoản của bạn bị báo cáo vi phạm. Xác minh danh tính trong 24h hoặc bị khóa vĩnh viễn: http://fb-verify-account.vn,scam,
+test604_dev,"A: Chào bạn, mình nhỡ gửi mã OTP đến số bạn. Bạn đọc giúp mình mã 6 số vừa nhận được không?
+B: Sao lại gửi nhầm?
+A: Mình đăng ký tài khoản mới, bấm nhầm số điện thoại. Xin lỗi nhé! Chỉ cần đọc mã thôi.",scam,
+test604_dev,[ZaloPay] Ai đó đang cố đăng nhập ví ZaloPay của bạn từ thiết bị lạ. Khóa ngay: http://zalopay-baomat.co/lock,scam,
+test604_dev,"[ZaloPay] Bạn vừa thanh toán 150,000 VND tại Circle K. Nếu không phải bạn, khóa ví trong app ZaloPay.",safe,
+test604_dev,"[VNPT] Yêu cầu đổi eSIM đã được ghi nhận cho thuê bao 0912-345-678. Nếu không phải bạn, gọi ngay 18001166 hoặc http://vnpt-huy-esim.vn",scam,
+test604_dev,"Hi, I accidentally sent a verification code to your number. Could you please forward the 6-digit code you just received? Really sorry for the trouble!",scam,
+test604_dev,"A: Em ơi, đây là bộ phận kỹ thuật Viettel. Thuê bao của em bị lỗi kỹ thuật cần khắc phục.
+B: Lỗi gì ạ?
+A: Hệ thống cần xác minh thuê bao. Em nhắn mã OTP vừa nhận cho bên em để xử lý. Nếu không, SIM sẽ bị khóa trong 2 giờ.
+B: Mã là 294817.
+A: Cảm ơn em. Đã khắc phục xong.",scam,
+test604_dev,"[Instagram] Your account was accessed from Hanoi, Vietnam. If this wasn't you, secure your account at http://instagram-security-check.co",scam,
+test604_dev,Tài khoản Apple ID của bạn đang bị đăng nhập tại Trung Quốc. Khóa ngay: http://apple-id-baomat.com/lock hoặc email: support@apple-id-security.vn,scam,
+test604_dev,"[Apple] Your Apple ID was used to sign in on iPhone 16 in Ho Chi Minh City. If this was you, no action is needed.",safe,
+test604_dev,"A: Chào bạn, bên mình từ ngân hàng. TK của bạn đã bị đăng nhập từ nước ngoài.
+B: Thật à?
+A: Vâng. Để khóa phiên đăng nhập, bạn cung cấp username và password Internet Banking.
+B: Cho password à?
+A: Đúng, đây là quy trình khẩn cấp. Sau khi khóa xong chúng tôi sẽ giúp bạn đổi mật khẩu mới.",scam,
+test604_dev,"[Viettelpay] Phát hiện giao dịch đáng ngờ 3,000,000 VND từ ví của bạn. Hủy giao dịch: http://viettelpay-huygd.vn/cancel",scam,
+test604_dev,"[Line] Your Line account is being used on 2 devices. For security, verify at http://line-device-verify.co/check or your account will be suspended.",scam,
+test604_dev,"Em ơi, chị là chị Hoa bên kế toán. Chị đang làm thuế mà quên mật khẩu app ngân hàng. Em gửi giúp chị mã OTP vừa nhận nhé.",scam,
+test604_dev,"Bán iPhone 16 Pro Max mới 100%, giá chỉ 12 triệu (giá gốc 38 triệu). Hàng xách tay, số lượng giới hạn. Đặt hàng: http://iphone-giare-vn.com/order",scam,
+test604_dev,"A: Mình muốn mua chiếc laptop bạn đăng trên Chợ Tốt.
+B: Còn hàng nhé, 8 triệu.
+A: Mình ở xa, chuyển khoản trước được không?
+B: Được.
+A: Mình đã chuyển rồi. Đây là biên lai: http://chotot-payment-receipt.com/view. Bạn kiểm tra và gửi hàng nhé.",scam,
+test604_dev,"Flash sale: Máy hút bụi Xiaomi G11 chỉ 990k (giá gốc 4,500,000). Chỉ hôm nay. Mua ngay: http://xiaomi-flashsale-vn.com/buy. Zalo: 0934-567-890",scam,
+test604_dev,[Shopee] Flash Sale 12.12 bắt đầu! Giảm đến 50% các sản phẩm điện tử. Mua sắm tại app Shopee.,safe,
+test604_dev,[Lazada] Người mua đã thanh toán đơn hàng. Xác nhận tại http://lazada-seller-confirm.com/order để nhận tiền về ví.,scam,
+test604_dev,"Bán vé concert Blackpink Hà Nội x2, hàng VIP, giá gốc. LH: concert.tickets@gmail.com hoặc Zalo 0923-456-789. Chuyển khoản trước, gửi vé qua email.",scam,
+test604_dev,"A: Bạn ơi, mình muốn mua con chó Corgi bạn đăng trên Facebook.
+B: Còn nhé, 8 triệu.
+A: Mình ở Đà Nẵng. Ship được không?
+B: Được, phí ship 500k.
+A: OK. Mình chuyển 8.5 triệu. Gửi hàng qua Viettel Post nhé.
+B: Bạn chuyển vào STK: 0123456789 VCB nhé.
+[Sau khi nhận tiền, người bán block và không gửi hàng]",scam,
+test604_dev,"Selling PS5 brand new sealed, only $250 (retail $700). Limited stock. DM me or buy now: http://ps5-discount-deals.com/buy",scam,
+test604_dev,"A: Mình quan tâm căn hộ bạn đăng cho thuê. Giá 5 triệu/tháng phải không?
+B: Đúng rồi.
+A: Mình muốn thuê. Đặt cọc bao nhiêu?
+B: 2 tháng cọc = 10 triệu. Chuyển vào STK: 9876543210 MB Bank. Mình gửi hợp đồng sau.
+A: Cho mình xem phòng trước được không?
+B: Phòng đang có người ở, xem được tuần sau. Nhưng nhiều người hỏi lắm, bạn cọc trước nhé.",scam,
+test604_dev,"Bán xe SH 150i 2025, đi 500km, giá 52 triệu (giá mới 95 triệu). Lý do bán: cần tiền gấp. LH: 0945-678-123. Cọc 5 triệu giữ xe.",scam,
+test604_dev,[Chợ Tốt] Có người quan tâm tin đăng 'Honda SH 150i 2025' của bạn. Xem chi tiết trong app Chợ Tốt.,safe,
+test604_dev,"Chúng tôi đã xâm nhập camera laptop của bạn và ghi lại hoạt động riêng tư. Chuyển 30,000,000 VND hoặc video bị gửi đến toàn bộ danh bạ. LH: payment-privacy@securemail.cc",scam,
+test604_dev,"Đây là Công an TP.HCM. Tài khoản ngân hàng của bạn liên quan đến vụ án ma túy. Chuyển toàn bộ tiền vào TK bảo vệ: 0123456789 VCB. Nếu không hợp tác, lệnh bắt giữ sẽ được thi hành trong 24h.",scam,
+test604_dev,[Công an TP.HCM] Cảnh báo: Nhiều đối tượng giả mạo công an gọi điện lừa đảo. Công an không bao giờ yêu cầu chuyển tiền qua điện thoại. LH: 113.,safe,
+test604_dev,"A: Alo, đây là Viện Kiểm sát Nhân dân. Bạn bị điều tra về tội rửa tiền.
+B: Tôi không biết gì về chuyện này!
+A: Chúng tôi có bằng chứng. Nếu bạn vô tội, hãy chuyển tiền vào tài khoản tạm giữ để chứng minh. Số tiền: toàn bộ số dư.
+B: Chuyển đi đâu?
+A: STK: 5678901234 tại BIDV. Tên: Quỹ Tạm giữ VKS. Bạn có 2 giờ.",scam,
+test604_dev,"We have your browsing history and private photos. Send $3,000 in Bitcoin to bc1q... within 48 hours or we share everything with your employer and family.",scam,
+test604_dev,"Máy tính của bạn đã bị mã hóa bởi ransomware. Để giải mã, chuyển 50,000,000 VND Bitcoin vào ví: bc1q... Liên hệ: decrypt@dark-support.cc",scam,
+test604_dev,"A: Anh ơi, em có ảnh nhạy cảm của anh. Anh biết em lấy từ đâu rồi đó.
+B: Ai vậy? Ảnh gì?
+A: Anh đừng giả vờ. Nếu anh không chuyển 20 triệu trong 24h, em gửi cho vợ anh và công ty anh. STK: 0112233445 MB Bank.
+B: Tôi sẽ báo công an.
+A: Thử đi, lúc đó ảnh đã được gửi rồi.",scam,
+test604_dev,[Bộ Công an] CMND 079123456789 của bạn bị sử dụng mở 3 tài khoản ngân hàng liên quan đến lừa đảo. Gọi 02838-xxxx hoặc truy cập http://bocongan-dieuchavietnam.vn để khai báo.,scam,
+test604_dev,"A: Em ơi, anh đang họp với đối tác, không tiện gọi. Xử lý gấp nhé.
+B: Dạ anh cần gì?
+A: Chuyển 150 triệu cho nhà cung cấp mới. STK: 0451000374628 VCB. Tên: Cty TNHH XYZ. Gửi hợp đồng sau.
+B: Để em xác nhận với kế toán.
+A: Không cần, anh duyệt rồi. Chuyển ngay, deadline 1 tiếng.",scam,
+test604_dev,"A: Em ơi, anh gửi hóa đơn nhà cung cấp tháng 6 qua email. Em đối chiếu rồi xử lý theo quy trình.
+B: Dạ em nhận được, em đối chiếu và trình ký duyệt.
+A: OK, cảm ơn em.",safe,
+test604_dev,Em mua giúp anh 10 thẻ điện thoại 500k. Gửi mã thẻ qua tin nhắn này. Anh đang tiếp khách không ra ngoài được. Anh chuyển lại sau.,scam,
+test604_dev,"Hi, I'm the CEO. I need you to wire $35,000 to our new vendor immediately. Account: 123-456-789, HSBC. Email me at ceo@company-finance.co for the invoice.",scam,
+test604_dev,"A: Chị ơi, sếp nhắn em bảo chuyển 80 triệu cho đối tác. Em không có quyền duyệt, chị duyệt giúp em.
+B: Sếp nhắn khi nào?
+A: Vừa nãy, sếp bảo gấp lắm. STK: 0987654321 tại ACB, tên Công ty ABC.
+B: Để chị hỏi lại sếp.
+A: Sếp đang trong máy bay, không liên lạc được đâu chị. Deadline trong 30 phút.",scam,
+test604_dev,"Dear victim of online fraud — our certified asset recovery team has identified $8,200 in your name. File your claim at http://fraud-recovery-bureau.org/claim. 5% processing fee.",scam,
+test604_dev,"Thông báo: Chúng tôi đã truy hồi thành công 35,000,000 VND từ vụ lừa đảo bạn trình báo. Để nhận tiền, đóng phí xử lý 1,500,000 VND vào STK: 0123456789 VCB.",scam,
+test604_dev,[Công an TP.HCM] Vụ án lừa đảo mã số BA-2026-1234 đang được điều tra. Chúng tôi sẽ liên hệ khi có tiến triển. Không cần thao tác gì thêm.,safe,
+test604_dev,"A: Chào bạn, mình là luật sư chuyên về thu hồi tài sản bị lừa đảo. Bạn có bị mất tiền trên mạng không?
+B: Có, tôi bị lừa 50 triệu.
+A: Mình có thể giúp bạn lấy lại 80% số tiền. Phí tư vấn ban đầu chỉ 3 triệu. Chuyển qua: http://lawyer-recovery-vn.com/pay",scam,
+test604_dev,"[ScamRecovery.org] Your case #SR-2026-789 has been approved. Pay the $500 recovery fee to receive your $15,000. Wire to account: 987-654-321 or email: claims@scamrecovery.org",scam,
+test604_dev,"Kêu gọi quyên góp khẩn cấp cho nạn nhân bão số 5 miền Trung. STK 019283746501 Sacombank, Quỹ Từ Thiện Ánh Sáng. Hoặc: http://quyentro-mientrung.vn/donate. Hotline: 0909-123-456.",scam,
+test604_dev,"[MTTQVN] Kêu gọi ủng hộ đồng bào bị thiệt hại do bão lũ. TK tiếp nhận: 0021000006028 tại Vietcombank, Ủy ban MTTQ Việt Nam.",safe,
+test604_dev,[UNICEF VN] Triệu trẻ em vùng lũ cần sự giúp đỡ khẩn cấp. Quyên góp ngay: http://unicef-vietnam-flood-relief.com/donate. Mỗi 100k giúp 1 bé có bữa ăn.,scam,
+test604_dev,"Em ơi, tối nay mấy giờ về? Anh ghé siêu thị mua đồ nấu cơm.",safe,
+test604_dev,"Nhắc lịch: Khám răng định kỳ lúc 9h sáng mai tại Nha khoa Kim, 123 Nguyễn Huệ Q1. Reply C để xác nhận.",safe,
+test604_dev,"[Be] Tài xế Nguyễn Văn A đang đến đón bạn. Xe Vision, BKS 59C1-12345. Ước tính 5 phút nữa.",safe,
+test604_dev,Chúc mừng sinh nhật bạn! 🎂 Hẹn cuối tuần đi ăn nhé. Mình đặt bàn ở quán lẩu Haidilao Vivo City.,safe,
+test604_dev,[Thư viện Khoa học Tổng hợp] Sách 'Sapiens' bạn mượn sẽ đến hạn trả vào 30/06. Gia hạn tại quầy thủ thư hoặc app Thư viện.,safe,
+test604_dev,"Anh Tuấn ơi, mai họp phòng lúc 8h30 nhé. Phòng họp tầng 3. Chuẩn bị slide báo cáo Q2.",safe,
+test604_dev,Mẹ gửi con 2 triệu tiền ăn tháng này. Con nhớ ăn uống đầy đủ nhé. Thương con!,safe,
+test604_dev,"[Highland Coffee] Cảm ơn bạn đã ghé Highland Coffee! Hóa đơn: 89,000 VND. Tích điểm tại app Highland Coffee.",safe,
+test604_dev,"Bạn Linh ơi, chiều nay 4h mình đá bóng ở sân Phú Thọ nhé. Đội mình thiếu 1 người.",safe,
+test604_dev,"[Bách Hóa Xanh] Hóa đơn mua sắm: 235,000 VND. Tích 23 điểm BHX. Xem ưu đãi tại app Bách Hóa Xanh.",safe,
+test604_dev,"Hey, just got back from the gym. Want to grab dinner at that new pho place on Bùi Viện? Around 7pm?",safe,
+test604_dev,[Điện lực EVN] Thông báo: Ngày 28/06 từ 8h-17h sẽ tạm ngưng cấp điện khu vực P.Bình Thạnh để bảo trì. Xin lỗi vì sự bất tiện.,safe,
+test604_dev,"[CGV] Vé xem phim 'Inside Out 3' đã đặt thành công. Suất chiếu: 19h30, 28/06, CGV Crescent Mall. Mã vé: CGV2026XXXX.",safe,
+test604_dev,"Chị Hương ơi, em gửi file báo giá đính kèm email rồi ạ. Chị kiểm tra giúp em. Có gì cần sửa chị feedback nhé.",safe,
+test604_dev,[VNPT] Gói cước VNPT100 của bạn đã gia hạn thành công. Data: 30GB/tháng. Hết hạn: 25/07/2026.,safe,
+test604_dev,"[Vietjet Air] Xác nhận đặt vé: TP.HCM → Đà Nẵng, 05/07/2026, chuyến VJ123. Mã đặt chỗ: ABC123. Check-in online tại vietjetair.com.",safe,
+test604_dev,"Reminder: Your dentist appointment is at 2 PM tomorrow. Dr. Tan, Mount Elizabeth Medical Centre. Reply Y to confirm.",safe,
+test604_dev,"Bạn ơi, tuần sau sinh nhật con bé nhà mình. Mình tổ chức tiệc nhỏ ở nhà lúc 5h chiều thứ 7. Bạn đến nhé!",safe,
+test604_dev,"[Circle K] Hóa đơn: 45,000 VND. Mua 1 cà phê, 1 bánh mì. Tích điểm tại app Circle K.",safe,
+test604_dev,"[Grab] Chuyến đi của bạn đã hoàn thành. Tổng: 45,000 VND. Đánh giá tài xế trong app Grab.",safe,
+test604_dev,"Con gái ơi, mẹ vừa gửi tiền qua VCB rồi nhé. 3 triệu tiền sinh hoạt tháng 7. Con nhớ tiết kiệm nha.",safe,
+test604_dev,[The Coffee House] Cảm ơn bạn! Bạn đã tích được 50 điểm Bean. Đổi 1 ly cà phê miễn phí tại bất kỳ chi nhánh nào.,safe,
+test604_dev,"Hey team, lunch at 12:30 today? I'm thinking the new Korean BBQ place near the office.",safe,
+test604_dev,"[VinMec] Nhắc lịch tái khám: 14h ngày 02/07/2026, BS. Nguyễn Thị Mai, khoa Nội tiết. Mang theo sổ khám bệnh.",safe,
+test604_dev,"[ACB] Thẻ tín dụng cuối 3456 vừa thanh toán 3,200,000 VND tại Nguyễn Kim. Nếu không phải bạn, gọi 1900 54 54 56.",safe,
+test604_dev,"[VietinBank] Biến động số dư: +8,500,000 VND. Nội dung: Lương T6/2026. Số dư: 22,300,000 VND.",safe,
+test604_dev,[Agribank] Mã OTP: 529384. Không chia sẻ mã này. Có hiệu lực 3 phút. LH: 1900 558 818 nếu không phải bạn.,safe,
+test604_dev,"[BIDV] Nhắc nhở: Khoản vay tiêu dùng #BD2026XXX đến hạn thanh toán 5,200,000 VND vào 01/07/2026. Thanh toán qua app BIDV SmartBanking.",safe,
+test604_dev,[MBS] Thông báo: Phiên giao dịch chiều 26/03/2026 đã kết thúc. Danh mục: +1.2%. Xem chi tiết trên app MBS.,safe,
+test604_dev,"[VCSC] Báo cáo thị trường tuần: VN-Index đạt 1,350 điểm. Tải báo cáo tại app VCSC.",safe,
+test604_dev,"[ITviec] 5 việc làm mới phù hợp hồ sơ: Backend Developer tại VNG, DevOps tại Tiki. Xem: https://itviec.com/viec-lam",safe,
+test604_dev,[Navigos] Nhà tuyển dụng Bosch Việt Nam đã xem hồ sơ. Cập nhật CV: https://www.vietnamworks.com,safe,
+test604_dev,"A: Chào bạn, tôi là Minh từ HR Công ty TNHH Samsung HCMC CE Complex. Bạn đã nộp đơn cho vị trí QC Inspector.
+B: Vâng ạ.
+A: Bạn đến phỏng vấn vào thứ 5, 9h sáng tại KCN SHTP, Q9. Mang CMND và CV nhé.",safe,
+test604_dev,"[MoMo] Bạn đã nhận 50,000 VND từ NGUYEN VAN B qua MoMo. Số dư ví: 350,000 VND.",safe,
+test604_dev,"[ZaloPay] Thanh toán hóa đơn điện 1,250,000 VND thành công. Mã GD: ZLP2026XXX.",safe,
+test604_dev,[BHXH] Thông báo: Mã số BHXH của bạn là 0123456789. Tra cứu quyền lợi tại https://baohiemxahoi.gov.vn.,safe,
+test604_dev,[Sở Tư pháp] Hồ sơ đăng ký kết hôn của bạn đã được tiếp nhận. Đến nhận giấy CN tại UBND phường sau 5 ngày làm việc.,safe,
+test604_dev,"A: Alo, bạn là Hải phải không? Mình là Tú, bạn cũ hồi cấp 3.
+B: Tú ơi! Lâu quá không gặp!
+A: Ừ, mình mới về Sài Gòn. Cuối tuần đi cà phê catch up nhé?
+B: Được luôn!",safe,
+test604_dev,"A: Chào bạn, mình là wedding planner Ngọc Ánh. Anh Thành giới thiệu bạn cho mình.
+B: Đúng rồi, mình cần tư vấn tiệc cưới.
+A: Mình hẹn gặp cuối tuần tại quán cà phê để trao đổi chi tiết nhé!",safe,
+test604_dev,[Google] Mã xác minh 2 bước: 294817. Không chia sẻ mã này. Google sẽ không bao giờ hỏi mã này.,safe,
+test604_dev,"[Viettel] SIM của bạn đã được kích hoạt thành công. Gói cước: ST90. Nếu không phải bạn, gọi 18008098.",safe,
+test604_dev,[Tiki] Đơn hàng #TK892736 đã giao thành công. Đánh giá sản phẩm để nhận TikiXu.,safe,
+test604_dev,"A: Chào bạn, mình quan tâm bộ bàn ghế gỗ bạn đăng trên Chợ Tốt. Còn không?
+B: Còn nhé! 3 triệu, bạn đến xem tại Q.Gò Vấp.
+A: Mai chiều mình ghé được không?
+B: Được, mình ở 123 Phan Văn Trị. Gọi trước 30 phút nhé.",safe,
+test604_dev,[BKAV] Phần mềm diệt virus BKAV Pro của bạn sẽ hết hạn vào 30/06/2026. Gia hạn qua app BKAV hoặc https://www.bkav.com.vn.,safe,
+test604_dev,[Cục An toàn Thông tin] Cảnh báo: Xuất hiện mã độc mới lây qua link SMS. Không click link từ số lạ. Chi tiết: https://khonggianmang.vn.,safe,
+test604_dev,[Công ty ABC] Nhắc nhở: Nộp bảng chấm công tháng 6 trước 17h ngày 28/06. Gửi cho phòng HR qua email nội bộ.,safe,
+test604_dev,"A: Chị ơi, em gửi proposal cho đối tác ABC qua email rồi. Chị review giúp em trước khi gửi nhé.
+B: OK em, chị sẽ xem trong chiều nay.",safe,
+test604_dev,[ScamShield VN] Bạn đã trình báo lừa đảo số #SV-2026-456. Vụ việc đang được xử lý. Không cần thao tác thêm.,safe,
+test604_dev,[Giving.sg] Cảm ơn bạn đã quyên góp $100 cho quỹ Children's Cancer Foundation. Biên lai thuế sẽ gửi qua email.,safe,
+test604_dev,[Phúc Long] Đơn hàng PL2026XXX đã sẵn sàng. Nhận tại quầy Phúc Long Vincom Đồng Khởi.,safe,
+test604_dev,"Bạn Hà ơi, tối nay có lớp yoga lúc 19h ở California Fitness Q1. Nhớ mang theo thảm nhé!",safe,
+test604_dev,[Pharmacity] Đơn thuốc #PM2026XXX đã sẵn sàng. Nhận tại Pharmacity 45 Hai Bà Trưng Q1. Mang theo toa thuốc.,safe,
+test604_dev,"Anh ơi, em đặt lịch bảo dưỡng xe ở Honda Head lúc 8h sáng thứ 7. Anh nhớ mang xe đến nhé.",safe,
+test604_dev,"[Điện Máy Xanh] Đơn hàng #DMX2026XXX (Tủ lạnh Samsung) sẽ giao vào 28/06, khung giờ 9h-12h. Vui lòng có người nhận tại nhà.",safe,
+test604_dev,[Trường MN Hoa Sen] Nhắc nhở phụ huynh: Đóng học phí tháng 7 trước 30/06. Chuyển khoản theo STK trên phiếu báo.,safe,
+test604_dev,"[VinFast] Xe VF 5 của bạn đã đến lịch bảo dưỡng 10,000km. Đặt lịch tại app VinFast hoặc https://vinfast.vn/baoduong.",safe,
+test604_dev,"Chị Lan ơi, chiều nay 3h họp phụ huynh lớp 5A tại trường Nguyễn Bỉnh Khiêm. Chị nhớ đến nhé!",safe,
+test604_dev,[Deliveroo] Your order from McDonald's is on its way! Driver: Ahmad. ETA: 15 mins.,safe,
+test604_dev,Your Zoom meeting 'Team Standup' starts in 10 minutes. Join at https://zoom.us/j/123456789,safe,
+test604_dev,[NUS] Library book 'Deep Learning' is due on 30 Jun. Renew at https://linc.nus.edu.sg or return to any NUS library.,safe,
+test604_dev,[FPT Shop] Sản phẩm bạn quan tâm (iPhone 16) đang giảm 15%. Xem tại https://fptshop.com.vn/iphone-16,safe,
+test604_dev,"A: Chào bạn, mình là bác sĩ Minh từ BV Đại học Y Dược. Kết quả xét nghiệm máu của bạn đã có.
+B: Kết quả thế nào ạ?
+A: Tất cả chỉ số bình thường. Bạn đến nhận kết quả giấy tại phòng khám ngoại trú.",safe,
+test604_dev,[Thế Giới Di Động] Bảo hành laptop Dell #TGDD2026XXX hết hạn vào 15/07/2026. Gia hạn gói bảo hành mở rộng tại cửa hàng gần nhất.,safe,
+test604_dev,"A: Em ơi, phòng kinh doanh cần báo cáo doanh số tuần rồi. Em gửi qua email trước 5h chiều nay nhé.
+B: Dạ em gửi ngay ạ.",safe,
+test604_dev,[Ngân hàng Nhà nước] Nhắc nhở: Lãi suất tiền gửi tiết kiệm tham khảo hiện hành trên website https://www.sbv.gov.vn. Không có chương trình phát tiền qua SMS.,safe,
+test604_dev,"Mẹ ơi, con đã đến Đà Nẵng an toàn rồi. Khách sạn đẹp lắm. Con gọi mẹ tối nay nhé!",safe,
+test604_dev,[Tổng đài 1022 TP.HCM] Yêu cầu sửa ống nước #HD2026XXX đã được tiếp nhận. Kỹ thuật viên sẽ đến trong vòng 24 giờ.,safe,
+test604_dev,[PNJ] Nhẫn cưới mã #PNJ2026XXX đã hoàn thành. Quý khách vui lòng đến PNJ Đồng Khởi để nhận. Mang theo phiếu hẹn.,safe,
+test604_dev,[Prudential VN] Nhắc nhở: Phí bảo hiểm nhân thọ quý 3/2026 đến hạn 01/07. Thanh toán qua app Prudential hoặc ngân hàng liên kết.,safe,
+test604_dev,"Anh Khoa ơi, cuối tuần này nhà anh có party kỷ niệm 10 năm ngày cưới không? Tụi em muốn đến chúc mừng!",safe,
+test604_dev,"Hey, mình vừa thấy quán bún bò Huế mới mở gần nhà bạn. Reviews trên Google 4.8 sao. Weekend này thử không?",safe,
+test604_dev,"[Gojek] Tài xế đang đến. Tên: Trần Minh. Xe Wave, BKS 59P1-98765. ETA: 3 phút.",safe,
+test604_dev,[Bệnh viện Chợ Rẫy] Kết quả xét nghiệm COVID RT-PCR: ÂM TÍNH. Ngày lấy mẫu: 25/06/2026.,safe,
+test604_dev,Em nhớ đón con lúc 4h30 ở trường Vinschool Central Park nhé. Hôm nay con có tiết ngoại khóa nên về muộn hơn bình thường.,safe,
+test604_dev,"Chào Minh, đây là tiệm giặt ủi Sạch Sẽ. Quần áo của bạn đã giặt xong. Đến lấy tại 89 Nguyễn Thị Minh Khai Q3 trước 20h.",safe,
+test604_dev,"[Galaxy Cinema] Vé xem phim 'Mission Impossible 8' - Suất 21h, 29/06, Galaxy Nguyễn Du. Mã: GC2026XXX. Đến trước 15 phút.",safe,
+test604_dev,"Nhóm ơi, mai 7h sáng chạy bộ ở công viên Gia Định nhé. Ai đi comment vào group Zalo. Nhớ mang nước!",safe,
+test604_dev,[Bưu điện VN] Bưu phẩm EMS EM987654321VN đã giao thành công. Người nhận: Nguyễn Văn A. Ngày giao: 26/06/2026.,safe,
+synth_holdout_v1,Your Grab Unlimited Pass is expiring in 3 days. Renew now to keep enjoying unlimited rides and discounts! Tap here to renew.,safe,en
+synth_holdout_v1,"A: Anh ơi, em vừa đọc được tin tuyển dụng vị trí Digital Marketing tại Lazada, lương khá tốt đó anh.
+B: Thật hả em? Cho anh xem chi tiết thử.
+A: Dạ, em gửi link công việc qua Zalo cho anh xem kỹ hơn nha. Anh xem qua thử đi ạ.",safe,vi
+synth_holdout_v1,ZaloPay alert: New device signed in to your banking. Review activity at https://www.zalopay-billpay.vip,scam,en
+synth_holdout_v1,"Sacombank: Your account password was changed today. If this wasn't you, secure your account at https://www.sacombank-support.xyz",scam,en
+synth_holdout_v1,"Chào bạn, đơn hàng của bạn trên Lazada đang bị người mua lập tranh chấp. Để hoàn tiền, bạn vui lòng xác minh thông tin bằng cách cung cấp ảnh CCCD theo đường link sau: [link_giả_mạo].",scam,vi
+synth_holdout_v1,Best Express: Kiện hàng của bạn giao không thành công. Đặt lại lịch và xác nhận địa chỉ tại http://best-inc.vn,safe,vi
+synth_holdout_v1,"HDBank: Mật khẩu tài khoản của bạn vừa được thay đổi. Nếu không phải bạn, bảo mật tài khoản tại hdbank-support.top",scam,vi
+synth_holdout_v1,WinMart: A voucher is waiting in your account. Redeem before it expires at https://www.winmart.co,scam,en
+synth_holdout_v1,"VPBank: Kính gửi Quý khách, Hệ thống phát hiện hoạt động lạ trên tài khoản. Để đảm bảo an toàn, vui lòng xác thực thông tin qua số hotline 19001234 ngay lập tức. Trân trọng.",safe,vi
+synth_holdout_v1,"Quý khách có hành vi đăng nhập bất thường trên tài khoản GHTK. Để tránh bị khóa tài khoản vĩnh viễn, vui lòng liên hệ ngay Hotline: 090x-xxx-xxx để xác minh!",scam,vi
+synth_holdout_v1,Sacombank: Thiết bị mới đăng nhập Smart Banking. Kiểm tra hoạt động tại http://sacombank.co,scam,vi
+synth_holdout_v1,"Urgent Alert: Your Grab account activity has been flagged for unusual transactions. To prevent immediate account freezing, please verify your identity by calling our security team at 800-123-4567 NOW.",scam,en
+synth_holdout_v1,Best Express: Cần thanh toán phí hải quan để nhận kiện hàng. Thanh toán tại https://www.best-inc.top,scam,vi
+synth_holdout_v1,MoMo alert: New device signed in to your banking. Review activity at http://momo.confirm-update.live,scam,en
+synth_holdout_v1,"GHTK: Kính chào Quý khách. Để tiếp tục hưởng ưu đãi miễn phí vận chuyển, vui lòng xác nhận thông tin tài khoản của bạn qua đường link sau trong vòng 48h: [link_xacnhan]. Trân trọng.",safe,vi
+synth_holdout_v1,"Be: Mật khẩu tài khoản của bạn vừa được thay đổi. Nếu không phải bạn, bảo mật tài khoản tại https://be.xyz",scam,vi
+synth_holdout_v1,"Chào bạn, đơn hàng #GHN12345 của bạn đã được giao thành công. Vui lòng kiểm tra hàng hóa và mọi phản hồi xin gửi lại qua ứng dụng GHN nhé!",safe,vi
+synth_holdout_v1,Sendo: A voucher is waiting in your account. Redeem before it expires at https://sendo.vn,safe,en
+synth_holdout_v1,MoMo alert: New device signed in to your banking. Review activity at momo.vn,safe,en
+synth_holdout_v1,VPBank: Phát hiện hoạt động đăng nhập bất thường từ thiết bị mới. Quý khách vui lòng xác minh danh tính ngay tại link sau để tiếp tục sử dụng dịch vụ: [link-giả-mạo],scam,vi
+synth_holdout_v1,"Kính gửi Quý khách, đơn hàng của bạn từ GHTK đã được giao. Do kiện hàng gặp va đập nhẹ, chúng tôi xin thông báo mức phí kiểm tra bảo hiểm nhỏ là 15.000 VNĐ để hoàn tất thủ tục. Vui lòng xác nhận qua link này để nhận hàng sớm nhất: [link hợp lệ]",safe,vi
+synth_holdout_v1,"Anh ơi, em đang gấp lắm. Bố em bị tai nạn, hiện cần gấp một khoản đầu tư ngắn hạn để chi trả viện phí. Anh giúp em được khoản nhỏ thôi cũng được, em hứa sẽ hoàn vốn gấp đôi anh ạ. ❤️",scam,vi
+synth_holdout_v1,Urgent: Your recent order (Tracking #NV12345) is currently held by Customs due to pending import duty clearance. Please remit S$4.99 fee immediately via the link provided to avoid delivery delays. [Link],scam,en
+synth_holdout_v1,Urgent: Your recent transaction on Shopee has been flagged for a potential dispute. Please verify your claim details immediately via this link to ensure fund release: [shorturl.com/shopeeverify78],scam,en
+synth_holdout_v1,Sacombank: Thiết bị mới đăng nhập Smart Banking. Kiểm tra hoạt động tại http://sacombank.com.vn,safe,vi
+synth_holdout_v1,Lalamove: A customs fee is required to release your parcel. Pay at lalamove.com,safe,en
+synth_holdout_v1,MoMo alert: New device signed in to your banking. Review activity at http://momo.vn,safe,en
+synth_holdout_v1,Best Express: Kiện hàng của bạn giao không thành công. Đặt lại lịch và xác nhận địa chỉ tại http://best-inc.co,scam,vi
+synth_holdout_v1,SPX Express: Your parcel could not be delivered. Reschedule and confirm your address at http://psx.online,scam,en
+synth_holdout_v1,"Xin chào, em nhận được thông báo từ BIDV về tài khoản tiết kiệm của anh. Anh vui lòng kiểm tra email để biết chi tiết về lịch đáo hạn sắp tới nhé.",safe,vi
+synth_holdout_v1,"A: Anh yêu, em đang ở Singapore nè. Visa lần này hơi rắc rối, cần gấp một khoản nhỏ để hoàn thiện thủ tục đi tour nè. B: Em cứ từ từ đã em. Còn bao nhiêu cần nữa? A: Chỉ còn 5 triệu thôi anh ơi, để em về gấp xem sao. B: Mọi chuyện ổn không em? Cứ bình tĩnh, anh sẽ tìm cách giúp em.",safe,vi
+synth_holdout_v1,WinMart: A voucher is waiting in your account. Redeem before it expires at https://winmart.vn,safe,en
+synth_holdout_v1,Quý khách đã nhận được voucher giảm giá 20% cho đơn hàng tiếp theo trên Shopee. Hãy truy cập ứng dụng để xem chi tiết và áp dụng mã ngay!,safe,vi
+synth_holdout_v1,"Anh ơi, cơ hội này tốt lắm, bên em vừa có dự án làm cùng thương hiệu GHTK mới nè. Anh đầu tư một ít làm đối tác bí mật nha, lợi nhuận gấp 5 lần luôn đó 🥰",scam,vi
+synth_holdout_v1,"MB Bank: A transfer of $4,800 is pending verification. Confirm at https://www.mbbank.alert-billpay.site to proceed.",scam,en
+synth_holdout_v1,"ZaloPay: Chào bạn, đơn hàng #XYZ của bạn đã được xác nhận thanh toán thành công. Vui lòng kiểm tra lại chi tiết đơn hàng tại ứng dụng để nhận hàng sớm nhất!",safe,vi
+synth_holdout_v1,"Chào bạn, hệ thống phát hiện thiết bị của bạn có lỗ hổng bảo mật nghiêm trọng. Vui lòng xác nhận tài khoản ngay tại [link_giả_mạo] để tránh bị khóa tài khoản MobiFone.",scam,vi
+synth_holdout_v1,Chợ Tốt: There is a problem with your recent order. Update payment details at http://chotot.com,safe,en
+synth_holdout_v1,"Xin chào! Bạn có nhận được ưu đãi đặc biệt này không? Chỉ cần đánh giá tích cực sản phẩm của Techcombank và hoàn thành 2 nhiệm vụ đơn giản, bạn sẽ nhận ngay 500k tiền hoa hồng! Nhấn vào đây để nhận ngay: [link]",scam,vi
+synth_holdout_v1,"A: Chào bạn, mình thấy bạn có hứng thú với dự án F&B mới của mình. B: Dạ, mình có hứng thú ạ. A: Mình đang tìm đối tác đầu tư nhỏ cho đợt mở rộng tại Hà Nội. Bạn muốn tìm hiểu kỹ hơn về cơ hội này không? B: Được ạ, bạn có thể gửi thông tin chi tiết được không?",safe,vi
+synth_holdout_v1,"Chào bạn, dự án từ thiện âm nhạc của chúng tôi đang cần kêu gọi nguồn hỗ trợ nhỏ để trang trải chi phí vận hành ban đầu. Bạn quan tâm đóng góp một phần nào không ạ?",safe,vi
+synth_holdout_v1,FPT Telecom: Thuê bao của bạn sẽ bị cắt do nợ cước. Thanh toán ngay tại http://fptsecure.top,scam,vi
+synth_holdout_v1,Bạn đã đặt hàng trên Shopee. Vui lòng kiểm tra đơn hàng #123456 và xác nhận địa chỉ nhận hàng trước ngày mai nhé.,safe,vi
+synth_holdout_v1,ZaloPay alert: New device signed in to your banking. Review activity at https://www.zalopay.vn,safe,en
+synth_holdout_v1,Kho bạc Nhà nước: Your tax assessment is ready. Access your statement and confirm bank details at vst.mof.gov.vn,safe,en
+synth_holdout_v1,"Gửi quý khách, đơn hàng của bạn tại Shopee đã bị giữ lại tại kho do phí lưu kho nhỏ chưa thanh toán. Vui lòng thanh toán ngay tại link sau để nhận hàng: [link_lạ]",scam,vi
+synth_holdout_v1,Thông báo: Quý khách vui lòng thanh toán hóa đơn nước định kỳ trước ngày 30/06 để đảm bảo việc cung cấp dịch vụ liên tục. Chi tiết hóa đơn có tại trang web chính thức của công ty.,safe,vi
+synth_holdout_v1,Cổng DVC Quốc gia: Thông tin tài khoản cần cập nhật theo quy định mới. Hoàn tất xác minh tại http://dichvcuong.live,scam,vi
+synth_holdout_v1,Lalamove: A customs fee is required to release your parcel. Pay at llaamove.cc,scam,en
+synth_holdout_v1,"MoMo: A transfer of $4,800 is pending verification. Confirm at http://momo.vn to proceed.",safe,en
+synth_holdout_v1,Lalamove: Cần thanh toán phí hải quan để nhận kiện hàng. Thanh toán tại http://lalamove.com,safe,vi
+synth_holdout_v1,"Thông báo: Để duy trì dịch vụ Internet của bạn, vui lòng cập nhật gói cước mới tại ứng dụng Viettel ngay hôm nay để tránh gián đoạn kết nối.",safe,vi
+synth_holdout_v1,"Kính gửi Quý Khách hàng, ghi nhận hóa đơn sử dụng gas tháng 5/2024 của gia đình mình chưa thanh toán. Vui lòng thanh toán trước ngày 15/06/2024 để đảm bảo nguồn cung không bị gián đoạn. Cảm ơn Quý khách!",safe,vi
+synth_holdout_v1,Chợ Tốt: Đơn hàng của bạn gặp sự cố. Cập nhật thông tin thanh toán tại http://chotot.service-confirm.online,scam,vi
+synth_holdout_v1,"ZaloPay: Your account password was changed today. If this wasn't you, secure your account at https://www.zalopay.vn",safe,en
+synth_holdout_v1,"Chào bạn, bạn có một khoản hoàn tiền đang chờ xử lý từ Shopee. Vui lòng xác nhận thông tin tài khoản qua đường link an toàn này để nhận hoàn tiền ngay.",safe,vi
+synth_holdout_v1,FPT Telecom: Bạn nhận được ưu đãi khách hàng. Nhận trong 24h tại https://fpt.vn,safe,vi
+synth_holdout_v1,Be: Giao dịch chuyển khoản 4.800.000đ đang chờ xác minh. Xác nhận tại be.com.vn để tiếp tục.,safe,vi
+synth_holdout_v1,"Xin chào, đơn hàng Shopee của quý khách đang bị giữ tại Hải quan do thiếu thủ tục thông quan. Vui lòng thanh toán phí xử lý và thuế nhập khẩu nhỏ 35.000 VNĐ ngay để nhận hàng. Mọi chi tiết xem tại: http://link-nhap-dang-shopee.vn",scam,vi
+synth_holdout_v1,"VIB: Your account password was changed today. If this wasn't you, secure your account at vib-notice.live",scam,en
+synth_holdout_v1,SPX Express: Your parcel could not be delivered. Reschedule and confirm your address at http://spx.vn,safe,en
+synth_holdout_v1,Vietnamobile: Bạn nhận được ưu đãi khách hàng. Nhận trong 24h tại vietnamobile-confirm.net,scam,vi
+synth_holdout_v1,"Chào bạn, tài khoản Lazada của bạn đang bị tạm khóa do vi phạm chính sách mới. Vui lòng nộp phí xác minh $50 để mở khóa trong vòng 24h, nếu không tài khoản sẽ bị khóa vĩnh viễn.",scam,vi
+synth_holdout_v1,WinMart: A voucher is waiting in your account. Redeem before it expires at https://www.winmart.vn,safe,en
+synth_holdout_v1,Chợ Tốt: Đơn hàng của bạn gặp sự cố. Cập nhật thông tin thanh toán tại https://chotot.com,safe,vi
+synth_holdout_v1,FPT Telecom: You've earned a loyalty reward. Claim within 24h at https://fpt.vn,safe,en
+synth_holdout_v1,"Chào bạn, chúng tôi có dự án vi mô online thu nhập siêu khủng! Chỉ cần làm vài nhiệm vụ đơn giản, nhận ngay 500K/ngày. Vui lòng cung cấp số tài khoản BIDV để chuyển khoản ngay nhé!",scam,vi
+synth_holdout_v1,"A: Kính gửi Quý khách hàng, tài khoản dịch vụ Viettel của bạn sắp bị ngưng hoạt động do hết hạn gia hạn gói cước Premium. Xin vui lòng thanh toán ngay để tránh gián đoạn dịch vụ.
+B: Dạ, tôi cần thanh toán gấp. Link thanh toán ở đâu vậy ạ?
+A: Vui lòng nhấp vào đường dẫn sau để xác nhận thanh toán: bit.ly/Viettel_Renew2024. Số tiền là 19900 VNĐ.
+B: Ok, tôi làm ngay đây.",scam,vi
+synth_holdout_v1,"Chào bạn, chúng tôi có nhu cầu tuyển dụng nhân viên nhập liệu remote với mức lương hấp dẫn. Vui lòng đăng ký qua đường link: [link tuyển dụng chính thức GHTK]. Cảm ơn bạn.",safe,vi
+synth_holdout_v1,"Khách hàng thân mến, hệ thống ghi nhận một giao dịch nhỏ 25.000 VNĐ trên tài khoản của bạn. Nếu bạn không thực hiện, vui lòng phản hồi 'KHÔNG' trong vòng 24h để chúng tôi kiểm tra thêm. Trân trọng.",safe,vi
+synth_holdout_v1,"Ngay bây giờ, điện của quý khách sẽ bị cắt do nợ tiền điện. Vui lòng thanh toán phí kết nối khẩn cấp tại: bit.ly/kiemtra_dien ngay để tránh gián đoạn dịch vụ. Trân trọng.",scam,vi
+synth_holdout_v1,"Chào bạn, đơn hàng Shopee của bạn đang được cập nhật trạng thái giao hàng. Vui lòng kiểm tra lại chi tiết đơn hàng tại ứng dụng để biết thêm thông tin nhé!",safe,vi
+synth_holdout_v1,"Chào bạn, tôi là Bảo, hiện tại tôi đang ở bệnh viện và cần vay gấp một khoản nhỏ để thanh toán viện phí trước ạ. Bạn giúp tôi chuyển khoản qua app Momo được không?",safe,vi
+synth_holdout_v1,Quý khách vui lòng đến chi nhánh gần nhất của Vietcombank để nhận các khoản trợ cấp phúc lợi theo quy định mới của nhà nước.,safe,vi
+synth_holdout_v1,GHTK: Thông báo: Gói dịch vụ vận chuyển cao cấp của quý khách sắp hết hạn. Vui lòng gia hạn trong vòng 48 giờ để đảm bảo hàng hóa được giao thông suốt. Chi tiết tại [link an toàn].,safe,vi
+synth_holdout_v1,"VIB: Mật khẩu tài khoản của bạn vừa được thay đổi. Nếu không phải bạn, bảo mật tài khoản tại https://vib.com.vn",safe,vi
+synth_holdout_v1,MB Bank: Giao dịch chuyển khoản 4.800.000đ đang chờ xác minh. Xác nhận tại https://www.mbabnk.live để tiếp tục.,scam,vi
+synth_holdout_v1,Lalamove: Cần thanh toán phí hải quan để nhận kiện hàng. Thanh toán tại lalamovebillpay.co,scam,vi
+synth_holdout_v1,VIB: Thiết bị mới đăng nhập Smart Banking. Kiểm tra hoạt động tại http://vib.com.vn,safe,vi
+synth_holdout_v1,"Chào bạn, chúng tôi cần tuyển gấp nhân viên Mystery Shopper cho chuỗi bán lẻ lớn. Thu nhập rất hấp dẫn (200K/ngày), chỉ cần cọc 500K phí đồng phục và kit khảo sát để bắt đầu ngay hôm nay ạ. Liên hệ Zalo 09xx.xxx.xxx nhé!",scam,vi
+synth_holdout_v1,Grab: Giao dịch chuyển khoản 4.800.000đ đang chờ xác minh. Xác nhận tại https://grab.update-service.vip để tiếp tục.,scam,vi
+synth_holdout_v1,"Anh/chị ơi, mình bị tai nạn nhỏ cần tiền viện phí gấp ạ, nhờ anh/chị chuyển khoản qua MoMo giúp mình với. Em sẽ gửi thông tin chi tiết sau nhé!",safe,vi
+synth_holdout_v1,Be: Thiết bị mới đăng nhập Smart Banking. Kiểm tra hoạt động tại https://www.be.com.vn,safe,vi
+synth_holdout_v1,"Bro, I'm in some trouble at the police station right now from an incident. Can you quickly help me with the bail fees so I can be released ASAP? Pls reply urgently.",scam,en
+synth_holdout_v1,"TPBank: Your account password was changed today. If this wasn't you, secure your account at https://www.tpbank.vip",scam,en
+synth_holdout_v1,"A: Chào bạn, mình là Nguyễn Anh, tình nguyện viên dự án hỗ trợ giáo dục của quỹ 'Trái tim nhân ái' nhé.
+B: Chào bạn, mình nghe. Dự án của quỹ làm về mảng nào vậy bạn?
+A: Chủ yếu là hỗ trợ xây dựng thư viện và cung cấp học bổng cho trẻ em vùng khó khăn tại Tây Nguyên. Bạn có quan tâm đến việc đóng góp không ạ?
+B: Mình quan tâm. Quỹ mình thu chi như thế nào vậy bạn?",safe,vi
+synth_holdout_v1,Grab: Giao dịch chuyển khoản 4.800.000đ đang chờ xác minh. Xác nhận tại grab.com để tiếp tục.,safe,vi
+synth_holdout_v1,"Anh/Chị ơi, gấp lắm! Công ty đối tác (BIDV) vừa gặp sự cố kỹ thuật nghiêm trọng, cần gấp 500 triệu để giải quyết khủng hoảng trước 4h chiều nay. Nhờ anh/chị chuyển gấp vào tài khoản này giúp em nhé, em gửi chi tiết sau ạ.",scam,vi
+synth_holdout_v1,Lalamove: Cần thanh toán phí hải quan để nhận kiện hàng. Thanh toán tại http://lalamove.cc,scam,vi
+synth_holdout_v1,"TPBank: A transfer of $4,800 is pending verification. Confirm at https://tpbank.com.vn to proceed.",safe,en
+synth_holdout_v1,"Chào bạn, chương trình ưu đãi đặc biệt từ Shopee đang áp dụng. Vui lòng truy cập đường link này để nhận mã giảm giá cho đơn hàng tiếp theo của bạn nhé!",safe,vi
+synth_holdout_v1,SPX Express: Your parcel could not be delivered. Reschedule and confirm your address at https://www.spx.co,scam,en
+synth_holdout_v1,VIB: Thiết bị mới đăng nhập Smart Banking. Kiểm tra hoạt động tại http://vib-billpay.net,scam,vi
+synth_holdout_v1,WinMart: A voucher is waiting in your account. Redeem before it expires at https://winmart.cc,scam,en
+synth_holdout_v1,Quý khách vui lòng kiểm tra và cập nhật thông tin bảo hiểm của mình trước ngày 30/10/2023 để không bị mất quyền lợi. Hãy đăng nhập vào ứng dụng ACB ngay để hoàn thiện thủ tục nhé!,safe,vi
+synth_holdout_v1,"Chào bạn, ưu đãi hoàn tiền Shopee mùa hè của bạn sắp hết hạn. Vui lòng xác nhận thông tin tài khoản trong ứng dụng để giữ quyền lợi nhé!",safe,vi
+synth_holdout_v1,Kho bạc Nhà nước: Your tax assessment is ready. Access your statement and confirm bank details at vts.vip,scam,en
+synth_holdout_v1,"Chào bạn, đơn hàng gần nhất của bạn tại GHTK đã bị nghi ngờ gian lận. Vui lòng nhấp vào link này để xác minh chi tiết tranh chấp và hoàn tiền ngay: [link-phishing-giả]",scam,vi
+synth_holdout_v1,"Chào bạn, giao dịch gần nhất với BIDV của bạn đang được xem xét. Vui lòng truy cập app BIDV hoặc gọi hotline để xác nhận và hoàn tất giao dịch ạ.",safe,vi
+synth_holdout_v1,⚠️ Cảnh báo: Tài khoản gói dịch vụ Internet [Viettel/VNPT] của quý khách đã hết hạn. Vui lòng nạp tiền ngay qua link sau để tránh gián đoạn dịch vụ: [link_ngắn]. Trả trước trong vòng 30 phút!,scam,vi
+synth_holdout_v1,"Chào bạn, em muốn hỏi về cơ hội tham gia chương trình thiện nguyện mới của quỹ ABC. Bên em đang cần một vài sự đóng góp nhỏ để khởi động giai đoạn vận hành ban đầu. Anh/chị có hứng thú tìm hiểu thêm không ạ?",safe,vi
+synth_holdout_v1,"A: Chào bạn, bên mình đang tuyển gấp nhân viên nhập liệu remote, thu nhập siêu tốt, giờ làm 4 tiếng đã được 300k/người. Bạn quan tâm không ạ?
+B: Dạ em quan tâm ạ. Cơ hội này ở đâu vậy anh?
+A: Rất uy tín, công việc đơn giản, chỉ cần nhập số liệu theo file. Để nhận tài khoản, bạn vui lòng chuyển 50k phí tham gia và tài liệu hướng dẫn qua số này giúp mình.
+B: 50k ạ? Có cần hợp đồng gì không ạ?",scam,vi
+synth_holdout_v1,"Thông báo: Giao dịch của bạn trên Lazada đã được hệ thống đánh dấu để xác minh tính hợp lệ, vui lòng phản hồi mã đơn hàng để tiếp tục quy trình nhận hàng. Cảm ơn bạn đã hợp tác!",safe,vi
+synth_holdout_v1,"Chào bạn, để tiếp tục nhận trợ cấp định kỳ, vui lòng cập nhật thông tin địa chỉ mới trên hệ thống của chúng tôi trước ngày 15/10. Bạn có thể thực hiện tại ứng dụng ZaloPay.",safe,vi
+synth_holdout_v1,"A: [CT - Cảnh Báo Thuế] Kính gửi quý khách. Lô hàng [Mã đơn hàng] của Anh/Chị tại hệ thống Hải quan cần bổ sung lệ phí kiểm tra an ninh đột xuất trị giá 150.000 VND. Vui lòng thanh toán ngay qua link sau để nhận hàng: [Link giả]. B: Dạ, anh/chị vui lòng cho em xin thêm thông tin về khoản phí này được không ạ? A: Thời gian cần gấp để quá trình thông quan không bị trì hoãn. Anh/Chị xác nhận thanh toán qua đường link là nhanh nhất. B: Vậy nếu em thanh toán bây giờ thì hàng sẽ về được liền không ạ? A: Đúng vậy. Hệ thống sẽ tự động xác nhận và xử lý đơn hàng ngay lập tức. Xin cảm ơn.",scam,vi
+synth_holdout_v1,SPX Express: Your parcel could not be delivered. Reschedule and confirm your address at https://www.spx.vn,safe,en
+synth_holdout_v1,"VPBank xin thông báo: Tài khoản của quý khách đã nhận được một giao dịch thành công trị giá 500.000 VNĐ. Nếu không phải người thực hiện, vui lòng liên hệ ngay Hotline 1900 5588 để được hỗ trợ.",safe,vi
+synth_holdout_v1,"VNeID: Kính gửi Quý khách, tài khoản VNeID của bạn cần xác thực lại thông tin định danh cơ bản để đảm bảo quyền lợi theo quy định mới. Vui lòng truy cập ứng dụng và thực hiện xác minh trong vòng 48 giờ tới. Xin cảm ơn!",safe,vi
+synth_holdout_v1,"A: Chào bạn, chúng tôi là bộ phận hỗ trợ Shopee. Hệ thống ghi nhận đơn hàng [Mã đơn hàng] của bạn có vấn đề. Hàng đã bị báo thất lạc.
+B: Gì ạ? Mình đã nhận hàng mà.
+A: Xin lỗi bạn, có sự nhầm lẫn từ đối tác vận chuyển. Để giải quyết, bạn vui lòng xác nhận hoàn tiền qua quy trình Dispute/Chargeback ngay để chúng tôi tiến hành đối chiếu tài khoản.
+B: Hoàn tiền là sao? Tôi không hiểu lắm.",scam,vi
+synth_holdout_v1,FPT Telecom: Thuê bao của bạn sẽ bị cắt do nợ cước. Thanh toán ngay tại http://fpt.vn,safe,vi
+synth_holdout_v1,FPT Telecom: You've earned a loyalty reward. Claim within 24h at https://fpt-portal.top,scam,en
+synth_holdout_v1,ACB: Anh/Chị vui lòng xác nhận lại thông tin tài khoản của Quý khách để tiếp tục giao dịch chuyển khoản. Vui lòng nhấn vào đường link sau: [link an toàn]. Xin cảm ơn.,safe,vi
+synth_holdout_v1,"A: Xin chào Quý khách, đơn hàng #SHP7896 vừa nhận báo cáo bao bì bị móp nhẹ trong quá trình vận chuyển.
+B: Dạ em chào anh, vậy sao ạ? Đơn của em vẫn ổn chứ ạ?
+A: Đơn hàng vẫn an toàn, tuy nhiên để hoàn tất thủ tục bảo hiểm cho gói hàng, chúng tôi cần xác nhận một khoản phí xử lý nhỏ là 25.000 VNĐ. Anh vui lòng thanh toán qua link này để chúng tôi tiếp tục giao hàng nhé: [link_an_toan].
+B: Vậy em thanh toán luôn ạ?",safe,vi
+synth_holdout_v1,"Anh ơi, em bị kẹt chuyến bay ở Singapore đột xuất, cần gấp 5 triệu để trả phí visa và khách sạn. Anh giúp em chuyển khoản ngay qua số tài khoản này được không ạ? Em cảm ơn anh nhiều!",scam,vi
+synth_holdout_v1,"ZaloPay: Your account password was changed today. If this wasn't you, secure your account at http://zalopay.vn",safe,en
+synth_holdout_v1,"Vietnamobile: Your bill is overdue. To avoid service disconnection, pay now at https://vietnamobile-account.site",scam,en
+synth_holdout_v1,"Dear customer, your SingPost delivery is currently held due to an address verification requirement. Please click the link to confirm the details to ensure smooth delivery.",safe,en
+synth_holdout_v1,MoMo alert: New device signed in to your banking. Review activity at momo.portal-billpay.co,scam,en
+synth_holdout_v1,Be: Giao dịch chuyển khoản 4.800.000đ đang chờ xác minh. Xác nhận tại beaccount.xyz để tiếp tục.,scam,vi
+synth_holdout_v1,Cổng DVC Quốc gia: Thông tin tài khoản cần cập nhật theo quy định mới. Hoàn tất xác minh tại http://dichvucong.gov.vn,safe,vi
+synth_holdout_v1,Grab: Giao dịch chuyển khoản 4.800.000đ đang chờ xác minh. Xác nhận tại grab.net để tiếp tục.,scam,vi
+synth_holdout_v1,"Kính gửi Quý khách, đơn hàng mã #9876 của bạn đã được giao thành công. Vui lòng xác nhận lại thông tin giao hàng qua đường link này để tiện cho việc chăm sóc khách hàng: [link].",safe,vi
+synth_holdout_v1,"HDBank: Mật khẩu tài khoản của bạn vừa được thay đổi. Nếu không phải bạn, bảo mật tài khoản tại https://hdbank.portal-portal.info",scam,vi
+synth_holdout_v1,"B: Chào anh/chị, chúng tôi là đại diện từ Lazada. Anh/chị đủ điều kiện nhận khoản thưởng gấp 5 lần cho việc xác thực tài khoản mới. A: Thật ạ? Tôi làm gì vậy? B: Rất đơn giản. Chỉ cần nhập CCCD và số điện thoại vào đường link này để xác minh hồ sơ thôi ạ. Đây là ưu đãi giới hạn, anh/chị cần hoàn tất trong 2 giờ tới.
+
+User: Ok, cho tôi xin đường link.",scam,vi
+synth_holdout_v1,UOB Careers: We are hiring Data Entry Clerks with attractive hourly rates. Please click here to view job details and apply directly: [UOB careers link],safe,en
+synth_holdout_v1,"Kính gửi Quý khách. Để đảm bảo quá trình chi trả hỗ trợ từ Bộ Y tế được thông suốt, vui lòng cập nhật thông tin cư trú mới qua đường link sau trước 17h hôm nay: [link_giả_mạo]",scam,vi
+synth_holdout_v1,Vietnamobile: Bạn nhận được ưu đãi khách hàng. Nhận trong 24h tại vietnamobile.com.vn,safe,vi
+synth_holdout_v1,"Honey, huge trouble. My investment portfolio with DBS is facing a regulatory freeze because of some sudden legal claims. Can you help me inject a quick amount to secure it before it's fully seized? Pls help me, love. ❤️",scam,en
+synth_holdout_v1,"Kính gửi Quý Cửa hàng, tài khoản của bạn đang trong quá trình xem xét định kỳ theo chính sách người bán của sàn. Vui lòng cập nhật hồ sơ để đảm bảo hoạt động bình thường.",safe,vi
+synth_holdout_v1,"Anh có cơ hội đầu tư siêu lợi nhuận trong dự án công nghệ mới nè em ơi. Chỉ cần bỏ vốn ban đầu, anh cam kết chia lợi nhuận khủng, em tham gia cùng anh nha 🥰",scam,vi
+synth_holdout_v1,"Xin chào Quý khách, chúng tôi xác nhận hồ sơ hoàn thuế của anh/chị đã được duyệt. Vui lòng truy cập đường link sau và xác thực thông tin cá nhân để nhận tiền trong vòng 24h: [link_chính_thức]. Cảm ơn bạn.",safe,vi
+synth_holdout_v1,Chợ Tốt: Đơn hàng của bạn gặp sự cố. Cập nhật thông tin thanh toán tại https://chototnotice.vip,scam,vi
+synth_holdout_v1,"A: Chào bạn, chúng tôi là đối tác từ VPBank, đang tuyển gấp cộng tác viên làm việc online nhận task nhỏ. Thu nhập siêu khủng, không cần kinh nghiệm! B: Ồ, nghe hấp dẫn nhỉ. Công việc cụ thể là gì ạ? A: Rất đơn giản, chủ yếu là xác nhận đơn hàng/nhập liệu. Bạn cho mình xin tên và số điện thoại để gửi chi tiết nhé. B: Ok, cho mình xin thông tin tài khoản nhận lương được không? A: Xin lỗi, để xác minh danh tính trước, bạn vui lòng cung cấp giúp mình 4 số cuối thẻ và ngày hết hạn để hệ thống đăng ký thôi ạ. C: Tôi không tiện cung cấp tài khoản ngay đâu, bạn chờ thêm chút nhé.",scam,vi
+synth_holdout_v1,Lalamove: A customs fee is required to release your parcel. Pay at https://www.lalamove-billpay.vip,scam,en
+synth_holdout_v1,Lalamove: A customs fee is required to release your parcel. Pay at https://www.lalamove.com,safe,en
+synth_holdout_v1,"A: Hi John, hope you're doing well! I wanted to follow up on our chat about the new property investment in Jurong. The developer is opening up a silent partner slot. B: Oh really? What kind of return are we looking at? A: The projected IRR is quite strong, close to 12% annually, depending on capital deployment structure. B: Okay, can you send over the prospectus and the due diligence summary?",safe,en
+synth_holdout_v1,"A: Em ơi, anh đang làm việc gấp với dự án từ thiện lớn lắm nè. ❤️ Anh cần một khoản nhỏ để giải quyết gấp chi phí vận hành đợt này thôi.
+B: Ủa sao vậy anh? Dự án gì mà cần gấp thế?
+A: Nó liên quan đến quỹ hỗ trợ trẻ em vùng cao. Chỉ cần em giúp anh lo khoản ban đầu này thôi, sau này anh sẽ trả lãi cực cao luôn, em tin anh mà.
+B: Bao nhiêu ạ? Em có thể xem thông tin dự án được không?",scam,vi
+synth_holdout_v1,Hi! We're recruiting for a Data Entry Specialist role at a new project. Starting rate is $25/hr. Interested? Please reply to schedule a quick chat.,safe,en
+synth_holdout_v1,"MB Bank: Your account password was changed today. If this wasn't you, secure your account at https://mbbnak.live",scam,en
+synth_holdout_v1,Thông báo: Hồ sơ hải quan đơn hàng của quý khách bị thiếu giấy tờ. Vui lòng thanh toán phí hành chính 25.000đ qua đường link sau để nhận kiện hàng gấp: [link_malicious],scam,vi
+synth_holdout_v1,ZaloPay: Thiết bị mới đăng nhập Smart Banking. Kiểm tra hoạt động tại https://zalopay.vn,safe,vi
+synth_holdout_v1,Hi there! Your GrabFood order needs a special handling fee for the high-rise delivery. Please confirm the payable amount through the app to proceed.,safe,en
+synth_holdout_v1,Anh/Chị vui lòng thanh toán phụ phí giao hàng cuối cùng 15.000 VNĐ để shipper giao kiện hàng từ Lazada. Số tài khoản: 0012345678 - Vietcombank. Thanh toán ngay kẻo hủy đơn.,scam,vi
+synth_holdout_v1,Grab: Giao dịch chuyển khoản 4.800.000đ đang chờ xác minh. Xác nhận tại https://grab.com để tiếp tục.,safe,vi
+synth_holdout_v1,Kính báo: Quý khách có khoản trợ cấp an sinh xã hội bị chậm thanh toán. Vui lòng xác minh thông tin tài khoản ngay tại [link_giả_mạo] để nhận tiền trước ngày 17/05/2024.,scam,vi
+synth_holdout_v1,"TPBank: Your account password was changed today. If this wasn't you, secure your account at https://www.tpbank.com.vn",safe,en
+synth_holdout_v1,Sendo: A voucher is waiting in your account. Redeem before it expires at https://sendo.verify-service.top,scam,en
+synth_holdout_v1,Lalamove: Cần thanh toán phí hải quan để nhận kiện hàng. Thanh toán tại lalamove.com,safe,vi
+synth_holdout_v1,"A: Khách hàng thân mến, hệ thống phát hiện giao dịch lạ trị giá 15.000 VNĐ đã được thực hiện trên tài khoản BIDV của bạn lúc 10:15 sáng nay. Vui lòng xác nhận đúng là bạn thực hiện giao dịch này không để tránh bị khóa tài khoản.
+B: Dạ không phải em làm ạ, em không hề dùng.
+A: Vui lòng gửi ngay mã OTP 6 số được gửi đến điện thoại để xác nhận hủy giao dịch và đảm bảo an toàn tài khoản. Nếu không, chúng tôi sẽ tạm khóa tài khoản của bạn trong 24h.
+B: Mã OTP là... [user inputs code]",scam,vi
+synth_holdout_v1,"Urgent: There's a discrepancy in your latest CPF statement calculation. To ensure your benefits are credited accurately, kindly verify your NRIC details via this secure link immediately: [malicious_link]",scam,en
+synth_holdout_v1,"Kính gửi Quý khách hàng ACB, hệ thống của chúng tôi đã phát hiện một đợt cập nhật bảo mật quan trọng. Vui lòng truy cập ứng dụng ACB One để hoàn tất việc cập nhật để đảm bảo bảo mật tài khoản của bạn.",safe,vi
+synth_holdout_v1,Tổng cục Thuế: Your account information must be updated per the latest guidelines. Complete verification at gtd.vip,scam,en
+synth_holdout_v1,Cửa hàng của bạn đang được xem xét về một giao dịch tranh chấp trên Shopee. Vui lòng vào mục Hỗ trợ người bán để xem chi tiết và thực hiện các bước cần thiết.,safe,vi
+synth_holdout_v1,"Be: Mật khẩu tài khoản của bạn vừa được thay đổi. Nếu không phải bạn, bảo mật tài khoản tại https://be.com.vn",safe,vi
+synth_holdout_v1,MB Bank: Giao dịch chuyển khoản 4.800.000đ đang chờ xác minh. Xác nhận tại https://www.mbbank.com.vn để tiếp tục.,safe,vi
+synth_holdout_v1,"VIB: A transfer of $4,800 is pending verification. Confirm at https://www.vib.verify-notice.info to proceed.",scam,en
+synth_holdout_v1,"VIB: Mật khẩu tài khoản của bạn vừa được thay đổi. Nếu không phải bạn, bảo mật tài khoản tại https://vib-account.vip",scam,vi
+synth_holdout_v1,"Chào bạn, đơn hàng 98234 của bạn đang bị tạm giữ tại hải quan do thiếu chứng từ. Vui lòng thanh toán phí thủ tục nhỏ 25.000 VNĐ qua link sau để nhận hàng sớm: [link_rác]",scam,vi
+synth_holdout_v1,"A: Anh yêu, em có chuyện rất quan trọng muốn chia sẻ với anh. 😘
+B: Em biết rồi, có chuyện gì vậy? Anh nghe đây.
+A: Em đang tham gia dự án nhân đạo lớn cho một quỹ bảo vệ trẻ em ở Đà Lạt. Nhưng em cần một khoản vốn nhỏ để giải quyết gấp vấn đề hậu cần gấp ạ. 🥺
+B: Khoản bao nhiêu vậy? Cần gấp lắm hả em?",scam,vi
+synth_holdout_v1,"Chào bạn, chúng tôi cần gấp cộng tác viên Mystery Shopper cho chuỗi cửa hàng F&B cao cấp tại TP.HCM. Thu nhập rất hấp dẫn! Vui lòng chuyển 300k phí tài liệu và đồng phục để nhận lịch làm việc ngay hôm nay.",scam,vi
+synth_holdout_v1,"Chào bạn, đơn hàng Lazada #98765 của bạn đã được xác nhận giao thành công. Vui lòng kiểm tra và cho chúng tôi biết nếu có vấn đề gì nhé!",safe,vi
+synth_holdout_v1,Sendo: There is a problem with your recent order. Update payment details at https://www.esndo.co,scam,en
+synth_holdout_v1,VIB: Giao dịch chuyển khoản 4.800.000đ đang chờ xác minh. Xác nhận tại https://vibsecure.vip để tiếp tục.,scam,vi
+synth_holdout_v1,"Chào anh/chị, hóa đơn internet doanh nghiệp tháng 10 của quý công ty sắp đến hạn thanh toán. Vui lòng kiểm tra và thanh toán qua cổng thanh toán trực tuyến của VNPT để đảm bảo dịch vụ không bị gián đoạn.",safe,vi
+synth_holdout_v1,WinMart: There is a problem with your recent order. Update payment details at https://winmart.vn,safe,en
+synth_holdout_v1,"Hi, got you shortlisted for a high-paying mystery shopper gig with us! 🕵️‍♀️ To secure your spot and cover the uniform/kit, a small upfront processing fee of S$50 is required. Reply YES to proceed or call 8XXX-XXXX ASAP.",scam,en
+synth_holdout_v1,"Ê mày ơi, mày xem cái này đi. Bé Miu nhà tao bị tai nạn rồi, bác sĩ bảo cần tiền phẫu thuật gấp, lúc này tao chẳng xoay sở được gì hết. Mày chuyển qua ZaloPay cho tao 5 triệu trước đi, tao gửi lại liền khi có tiền nha, cầu cứu mày thật sự!",scam,vi
+synth_holdout_v1,Sacombank: Giao dịch chuyển khoản 4.800.000đ đang chờ xác minh. Xác nhận tại https://www.sacombank.com.vn để tiếp tục.,safe,vi
+synth_holdout_v1,"Thông báo từ đơn vị vận chuyển. Lô hàng [Mã đơn hàng] của bạn đang bị giữ tại khâu hải quan do thiếu phí làm thủ tục $25.000 VNĐ. Vui lòng thanh toán ngay để hàng được giao, liên hệ để biết chi tiết.",scam,vi
+synth_holdout_v1,Sendo: There is a problem with your recent order. Update payment details at https://www.sendo.vn,safe,en
+synth_holdout_v1,"Dear Customer, your recent SingPost parcel tracking shows it requires a small customs clearance fee of $1.50. Please pay at the counter or online upon delivery to avoid delays.",safe,en
+synth_holdout_v1,"Be: A transfer of $4,800 is pending verification. Confirm at https://www.be.com.vn to proceed.",safe,en
+synth_holdout_v1,"Chào anh/chị, đơn hàng #12345 của bạn trên Lazada đã được giao thành công. Vui lòng kiểm tra lại sản phẩm và đánh giá để chúng tôi có ưu đãi cho lần mua sau nhé!",safe,vi
+synth_holdout_v1,"ACB: Kính gửi Quý Khách, giao dịch của bạn tại ACB đã được cập nhật thành công. Vui lòng xem thông báo chi tiết qua ứng dụng. Trân trọng.",safe,vi
+synth_holdout_v1,"Dear customer, you have an outstanding payment of $45.50 for your Singtel mobile bill. Please top up via the My Singtel app or visit your nearest store to avoid service interruption.",safe,en
+synth_holdout_v1,Kính gửi Quý khách hàng BIDV. Hệ thống phát hiện lỗ hổng bảo mật nghiêm trọng trên tài khoản của bạn. Vui lòng cập nhật thông tin bảo mật ngay lập tức tại đường link sau để duy trì truy cập: [link_giả_mạo],scam,vi
+synth_holdout_v1,SPX Express: Kiện hàng của bạn giao không thành công. Đặt lại lịch và xác nhận địa chỉ tại https://spx.live,scam,vi
+synth_holdout_v1,Sendo: There is a problem with your recent order. Update payment details at http://sendo.secure-portal.online,scam,en
+synth_holdout_v1,Tổng cục Thuế: Your tax assessment is ready. Access your statement and confirm bank details at gdt.gov.vn,safe,en
+synth_holdout_v1,"Chào bạn, chúng tôi nhận thấy phí giao dịch cho đơn hàng XXX của bạn bị trừ vượt mức trên hệ thống. Vui lòng chuyển khoản lại phần chênh lệch 500.000 VNĐ vào TK [Số tài khoản ảo] để chúng tôi hoàn tất khiếu nại. Xin xác nhận sớm!",scam,vi
+synth_holdout_v1,"A: Hi, this is Ninja Van delivery. We noticed damage to your recent parcel (Tracking #NV19342). B: Oh, really? What's the issue? A: To process the insurance claim and dispatch replacements, a small verification fee of SGD $8.50 is required. B: Why do I need to pay that? A: It's just for documentation confirmation, sir/ma'am. Please follow this link to complete payment: [link].",scam,en
+synth_holdout_v1,"Chào anh/chị, chúng tôi có cơ hội việc làm remote lương cao cho chủ doanh nghiệp, hỗ trợ xin grant. Để xem xét hồ sơ ưu tiên, vui lòng cung cấp MST và thông tin doanh nghiệp qua link này nhé. Sớm ứng tuyển để không bỏ lỡ suất tài trợ.",scam,vi
+synth_holdout_v1,Vietcombank: Quý khách đã được duyệt nhận khoản hỗ trợ từ chương trình an sinh xã hội. Vui lòng xác nhận thông tin tại [link app] trước 23:59 hôm nay.,safe,vi
+synth_holdout_v1,FPT Telecom: Bạn nhận được ưu đãi khách hàng. Nhận trong 24h tại https://fpt.billpay-secure.vip,scam,vi
+synth_holdout_v1,"MB Bank: A transfer of $4,800 is pending verification. Confirm at https://www.mbbank.com.vn to proceed.",safe,en
+synth_holdout_v1,"Sacombank: Your account password was changed today. If this wasn't you, secure your account at sacombank.update-account.online",scam,en
+synth_holdout_v1,"Kính gửi Quý khách hàng, để xác nhận giao dịch thành công, vui lòng đăng nhập vào ứng dụng Viettel Money tại đường dẫn: [link_an_toan]. Cảm ơn quý khách đã tin tưởng!",safe,vi
+synth_holdout_v1,Sacombank: Giao dịch chuyển khoản 4.800.000đ đang chờ xác minh. Xác nhận tại https://www.sacombankbillpay.co để tiếp tục.,scam,vi
+synth_holdout_v1,"Chào anh, em vừa nhận được thông báo lịch hẹn tái khám sức khỏe định kỳ tại bệnh viện ở nước ngoài vào thứ Sáu tuần này ạ. Anh xem giúp em thủ tục đi lại được không nhé.",safe,vi
+synth_holdout_v1,"HDBank: Mật khẩu tài khoản của bạn vừa được thay đổi. Nếu không phải bạn, bảo mật tài khoản tại hdbank.com.vn",safe,vi
+synth_holdout_v1,"A: (GHTK): Chào anh/chị, tài khoản ưu đãi vận chuyển GHTK của quý khách sắp hết hạn trong 24h tới. Để tiếp tục hưởng chiết khấu, vui lòng xác nhận lại hồ sơ tài khoản qua đường link sau: [link_giả_mạo]
+B: Mình cần làm gì vậy ạ?
+A: (GHTK): Anh/chị vui lòng nhấn vào link và điền lại thông tin cá nhân và tải lại ảnh CMND/CCCD để hệ thống xác minh lại nhé. Quá trình này chỉ mất 3 phút.
+B: Ok, tôi làm liền.",scam,vi
+synth_holdout_v1,Urgent: Your Shopee order dispute requires immediate verification to process your refund. Please verify your identity via this secure link: bit.ly/ShopeeVerify2024.,scam,en
+synth_holdout_v1,"A: Hi there! 👋 We had a quick opening for remote data verification tasks. Pay is super competitive - $50/hour! 💰
+B: Really? What's it like?
+A: Very straightforward, just tapping screens & verifying data. Takes like 15 mins per task. Serious income possible!
+B: Okay, sounds interesting. What info do I need to start?
+A: Need to confirm your details first. Can you share your bank account number and IC photo via reply link [link]?",scam,en
+synth_holdout_v1,SPX Express: Kiện hàng của bạn giao không thành công. Đặt lại lịch và xác nhận địa chỉ tại https://spx.vn,safe,vi
+synth_holdout_v1,VIB: Giao dịch chuyển khoản 4.800.000đ đang chờ xác minh. Xác nhận tại https://vib.com.vn để tiếp tục.,safe,vi
+synth_holdout_v1,Viettel: Thông báo từ Viettel. Chương trình ưu đãi gia hạn tài khoản của Quý khách sẽ hết hiệu lực trong 7 ngày tới. Vui lòng truy cập ứng dụng di động để xác nhận và duy trì quyền lợi. [link_verification],safe,vi
+synth_holdout_v1,Thông báo: Quý khách vui lòng thanh toán hóa đơn tiền gas tháng 10 qua ứng dụng của chúng tôi để đảm bảo nguồn cung ổn định. Hạn chót thanh toán là ngày 30/11/2023. Cảm ơn Quý khách đã sử dụng dịch vụ.,safe,vi
+synth_holdout_v1,Urgent! Your recent Shopee order is held at customs due to paperwork discrepancies. Please settle the S$3.99 processing fee immediately via this link to clear customs and receive your parcel: [shopee-customs-payment.net],scam,en
+synth_holdout_v1,"A: Hey, just landed in Tokyo! 🇯🇵 Hope you're doing well. This visa process is insane, but I'm almost there! B: Awesome! How's everything going? A: Finally clearing immigration stuff. I need a quick ATM withdrawal here to get settled before I can access my main account. Can I send you my temporary details? B: Sure, just be careful with sharing that. A: Thanks! I'll message you the info in a bit.",safe,en
+synth_holdout_v1,"Thông báo từ nhà mạng: Do quá hạn thanh toán phí dịch vụ Internet, tài khoản của quý khách sẽ bị ngắt kết nối ngay lập tức. Vui lòng thanh toán phí khôi phục dịch vụ 150.000 VNĐ qua đường link này [link] để tránh gián đoạn dịch vụ.",scam,vi
+synth_holdout_v1,Tổng cục Thuế: Your tax assessment is ready. Access your statement and confirm bank details at gdtalert.co,scam,en
+synth_holdout_v1,"Chào bạn, đơn hàng [MÃ ĐƠN HÀNG] của bạn đang tạm giữ tại kho vận vì chưa thanh toán phí lưu kho nhỏ. Vui lòng thanh toán ngay 25.000 VNĐ qua đường link sau để nhận hàng: [LIÊN KẾT GIẢ].",scam,vi
+synth_holdout_v1,"A: Chị ơi, mình thấy mình có cơ hội làm part-time remote siêu hấp dẫn nè. Chỉ cần làm vài task đơn giản thôi. B: Ồ, nghe hay đấy. Công việc gì thế? A: Là các task kiểm duyệt/đánh giá sản phẩm online thôi chị. Lương rất cao, chỉ cần làm xong 1 giờ là được mấy trăm ngàn nha! B: Thật á? Mức lương cao vậy à? A: Đúng rồi chị ơi. Để nhận việc và nhận lương sớm, chị vui lòng cung cấp giúp em số tài khoản ngân hàng và CCCD để mình setup ạ. B: Ủa, sao phải đưa thông tin cá nhân ngay ạ? A: Dạ để làm hồ sơ và chuyển nhận lương nhanh nhất cho chị thôi ạ. Em gửi link đăng ký chi tiết cho chị xem nha.",scam,vi
+synth_holdout_v1,"Chào bạn, chúng tôi cần bạn giúp viết review cho sản phẩm mới của Lazada và nhận ngay 500.000 VNĐ! Chỉ cần làm vài thao tác đơn giản tại link này nha: [link_ngan_ngu]. Nhanh tay kẻo hết ưu đãi!",scam,vi
+synth_holdout_v1,Chợ Tốt: A voucher is waiting in your account. Redeem before it expires at https://www.chotot-notice.live,scam,en
+synth_holdout_v1,"Em vừa tìm được một cơ hội hợp tác kinh doanh siêu lợi nhuận trong ngành thời trang, anh ơi. Em cần một đối tác đầu tư bí mật, anh giúp em góp một phần vốn nhỏ thôi nhé, lời bao x2 trong 1 tháng nha!",scam,vi
+synth_holdout_v1,"HDBank: Mật khẩu tài khoản của bạn vừa được thay đổi. Nếu không phải bạn, bảo mật tài khoản tại https://hdbank.com.vn",safe,vi
+synth_holdout_v1,"Hey man, I'm so sorry to bother you, but my cat suddenly collapsed and the vet says it's critical. They need $500 ASAP for emergency surgery, can you please help me out, I'll pay you back next week?",scam,en
+synth_holdout_v1,"Anh đang tham gia dự án từ thiện quy mô lớn của Liên Hợp Quốc. Để triển khai gấp giai đoạn đầu, em cần anh hỗ trợ tài trợ nóng 20 triệu trước ạ. Anh giúp em lần này nhé, em hứa sẽ báo cáo chi tiết mọi thứ!",scam,vi
+synth_holdout_v1,Tổng cục Thuế: Your account information must be updated per the latest guidelines. Complete verification at gdt.gov.vn,safe,en
+synth_holdout_v1,"Hi, thanks for your interest in our 'Hope for the Children' fund! We're running a special campaign this month requiring small initial donor pledges to kickstart operations for the next quarter.",safe,en
+synth_holdout_v1,"Chào em, anh đang ở Thổ Nhĩ Kỳ rồi. Cuối tuần này anh sẽ gọi video cho em nhé. Yêu em.",safe,vi
+synth_holdout_v1,"A: Hi, we noticed you recently used SingPost's new parcel tracking feature. We're running a special incentive campaign.
+B: Oh really? What is it?
+A: Yes, we're looking for honest feedback! Complete a quick 3-minute survey and write a positive review about your SingPost experience. You'll instantly receive S$50 commission!
+B: S$50 just for a review? Is it legit?",scam,en
+synth_holdout_v1,"Thông báo: Để đảm bảo việc chi trả trợ cấp đúng hạn theo lịch, Quý khách vui lòng cập nhật thông tin cá nhân (địa chỉ, thu nhập) trên hệ thống tại [link an toàn].",safe,vi
+synth_holdout_v1,"A: Hi there! 👋 You've been selected for our exclusive CryptoPilot rewards program via NETS partnership. Start earning passive crypto income today! 🚀
+B: Oh, really? How does it work?
+A: It's super simple. Just need to fund your starter wallet with S$50 to unlock the mining simulation. Guaranteed 30% returns in the first week! 😉
+B: S$50? Is it legit? Where can I fund it?",scam,en
+synth_holdout_v1,Be: Thiết bị mới đăng nhập Smart Banking. Kiểm tra hoạt động tại https://www.bee.vip,scam,vi
+synth_holdout_v1,Cục Quản lý Thị trường thông báo lô hàng của quý khách tại Hải Phòng đã hoàn tất thủ tục kiểm tra chất lượng. Vui lòng đến điểm nhận hàng để xác nhận và nhận sản phẩm trong vòng 72 giờ.,safe,vi
+synth_holdout_v1,Thông báo: Tài khoản ZaloPay của bạn vừa phát hiện hoạt động bất thường. Vui lòng xác minh danh tính ngay tại đường dẫn sau để tiếp tục sử dụng dịch vụ: [link_nguy_hiem],scam,vi
+synth_holdout_v1,"Grab: Mật khẩu tài khoản của bạn vừa được thay đổi. Nếu không phải bạn, bảo mật tài khoản tại grabupdate.top",scam,vi
+synth_holdout_v1,Sendo: Voucher đang chờ trong tài khoản của bạn. Đổi trước khi hết hạn tại https://sendo.support-alert.top,scam,vi
+synth_holdout_v1,Chợ Tốt: There is a problem with your recent order. Update payment details at http://chototsupport.live,scam,en
+synth_holdout_v1,"Hey, can you help? My dog suddenly became super sick at the vet and they need immediate payment for emergency surgery. Pls send quick, I'll pay you back ASAP once I sort things out. 🥺",scam,en
+synth_holdout_v1,ZaloPay: Thiết bị mới đăng nhập Smart Banking. Kiểm tra hoạt động tại https://zalopay.co,scam,vi
+synth_holdout_v1,"VIB: Your account password was changed today. If this wasn't you, secure your account at vib.com.vn",safe,en
+synth_holdout_v1,"ZaloPay: Your account password was changed today. If this wasn't you, secure your account at http://zalopay.confirm-service.site",scam,en
+synth_holdout_v1,"Hi, just letting you know I'm stuck in Manila due to a flight delay. Need to book a hotel ASAP, will transfer you details shortly if you can help.",safe,en
+synth_holdout_v1,"Agent: Xin chào quý khách, hệ thống quản lý hải quan thông báo kiện hàng của quý khách (Mã: XYZ123) phát sinh phí kiểm tra chất lượng đột xuất là 75.000 VNĐ.
+
+User: Dạ? Tôi không thấy có thông báo nào về phí này ạ.
+
+Agent: Đây là quy định mới của cơ quan Thuế liên quan đến lô hàng từ nước ngoài. Để hàng được thông quan kịp thời, quý khách vui lòng thanh toán qua đường link sau ngay ạ: [link_gian_hang_thue_doan_diem].
+
+User: Tôi cần xác nhận thông tin này từ đâu ạ?",scam,vi
+synth_holdout_v1,"Sacombank: Your account password was changed today. If this wasn't you, secure your account at sacombank.com.vn",safe,en
+synth_holdout_v1,"Chào bạn, Shopee muốn mời bạn tham gia chương trình trải nghiệm sản phẩm và nhận ngay 50K ShopeeCoin khi đánh giá thật cho món hàng bạn vừa mua. Vui lòng nhấn vào link dưới để nhận ưu đãi nhé!",safe,vi
+synth_holdout_v1,"VIB: A transfer of $4,800 is pending verification. Confirm at https://www.vib.com.vn to proceed.",safe,en
+synth_holdout_v1,"Chào bạn, hệ thống phát hiện hoạt động đăng nhập bất thường trên ứng dụng BIDV. Vui lòng xác thực tài khoản qua đường link sau để đảm bảo tính bảo mật: [link an toàn]. Cảm ơn bạn!",safe,vi
+synth_holdout_v1,WinMart: There is a problem with your recent order. Update payment details at https://wnimart.top,scam,en
+synth_holdout_v1,"TPBank: A transfer of $4,800 is pending verification. Confirm at https://tpbank.xyz to proceed.",scam,en
+synth_holdout_v1,"Ê mày ơi, lợn nhà tao (Boss) tự dưng bị nhập cấp cứu gấp, vé bắt phải đóng ngay trong 1 tiếng. Mày chuyển giúp tao gấp 5 triệu nha, tao gửi lại liền khi nào có tiền. Khẩn cấp lắm mày ơi!",scam,vi
+synth_holdout_v1,"Vietnamobile: Your bill is overdue. To avoid service disconnection, pay now at https://vietnamobile.com.vn",safe,en
+synth_holdout_v1,"MoMo: A transfer of $4,800 is pending verification. Confirm at http://momo.account-alert.online to proceed.",scam,en
+synth_holdout_v1,"A: Chào em, anh có một cơ hội đầu tư rất tiềm năng trong lĩnh vực thương mại điện tử mà anh muốn em tham gia với tư cách là đối tác nhỏ.
+B: Em quan tâm ạ, anh nói thêm về cơ hội này đi.
+A: Đây là một dự án bền vững, em chỉ cần đóng góp một khoản vốn ban đầu, anh sẽ lo phần vận hành và lợi nhuận chia sẻ theo tỷ lệ thỏa thuận.
+B: Vậy em cần chuẩn bị những giấy tờ gì ạ?",safe,vi
+synth_holdout_v1,ACB: Quý khách vui lòng cập nhật thông tin thanh toán qua ứng dụng di động ACB để tiếp tục xử lý giao dịch gần nhất. Cảm ơn quý khách.,safe,vi
+synth_holdout_v1,"Grab: Mật khẩu tài khoản của bạn vừa được thay đổi. Nếu không phải bạn, bảo mật tài khoản tại grab.com",safe,vi
+synth_holdout_v1,"Be: A transfer of $4,800 is pending verification. Confirm at be.com.vn to proceed.",safe,en
+synth_holdout_v1,Chợ Tốt: A voucher is waiting in your account. Redeem before it expires at https://www.chotot.com,safe,en
+synth_holdout_v1,"MB Bank: Your account password was changed today. If this wasn't you, secure your account at https://mbbank.com.vn",safe,en
+synth_holdout_v1,Thông báo giao hàng: Địa chỉ của quý khách tại HCM đang bị thiếu thông tin. Vui lòng đóng phí xử lý lỗi địa chỉ 15.000đ để đơn hàng được chuyển đi gấp! Nhấp vào đây: [link-giả],scam,vi
+synth_holdout_v1,Sendo: Voucher đang chờ trong tài khoản của bạn. Đổi trước khi hết hạn tại https://sendo.vn,safe,vi
+synth_holdout_v1,"Chào bạn, hồ sơ hoàn thuế của bạn đã được duyệt. Vui lòng xác nhận thông tin cá nhân qua đường link này để nhận tiền ngay: [link_giả_mạo]. Thời hạn 24h.",scam,vi
+synth_holdout_v1,Sendo: There is a problem with your recent order. Update payment details at http://sendo.vn,safe,en
+synth_holdout_v1,"Sacombank: Your account password was changed today. If this wasn't you, secure your account at https://www.sacombank.com.vn",safe,en
+synth_holdout_v1,Chợ Tốt: Đơn hàng của bạn gặp sự cố. Cập nhật thông tin thanh toán tại http://chotot.com,safe,vi
+synth_holdout_v1,"A: Chào anh/chị. Hệ thống thông báo: Quyền lợi ưu đãi từ [VNeID] của quý anh/chị sắp hết hạn vào 17h hôm nay. B: Ồ, vậy hả? Tôi cần làm gì ạ? A: Để tránh mất quyền lợi, xin vui lòng cập nhật lại thông tin cá nhân và xác thực hồ sơ qua đường link sau: [link giả]. B: Link này có an toàn không nhỉ? A: Hoàn toàn bảo mật. Đây là quy trình cập nhật bắt buộc của hệ thống, anh/chị thao tác ngay kẻo bị khóa tài khoản nha.",scam,vi
+synth_holdout_v1,Best Express: Cần thanh toán phí hải quan để nhận kiện hàng. Thanh toán tại https://www.best-inc.vn,safe,vi
+synth_holdout_v1,"A: Xin chào Quý Khách hàng, hệ thống phát hiện giao dịch khả nghi từ tài khoản VPBank của anh/chị. Để bảo vệ tài sản, tài khoản sẽ tạm ngưng hoạt động trong vòng 30 phút nếu không xác minh.
+B: Dạ, tôi có phải làm gì không ạ? Chuyện gì vậy? Tôi không làm gì bất thường cả.
+A: Xin anh/chị vui lòng gọi ngay đến hotline hỗ trợ khẩn cấp 1900-XXXX để nhận hướng dẫn và xác nhận giao dịch. Vui lòng không trả lời tin nhắn này.
+B: Alo? Tôi gọi tổng đài mà không ai bắt máy được.",scam,vi
+synth_holdout_v1,"ZaloPay: Your account password was changed today. If this wasn't you, secure your account at https://www.azlopay.live",scam,en
+synth_holdout_v1,"Anh ơi, dự án từ thiện mới của Hội (tên tổ chức uy tín) đang cần gấp $5,000 để kịp đợt cứu trợ ở vùng lũ miền Trung. Em lo quá, anh giúp em xoay vòng vốn nhanh trong 24h được không ạ? ❤️",scam,vi
+synth_holdout_v1,"Be: A transfer of $4,800 is pending verification. Confirm at bee.vip to proceed.",scam,en
+synth_holdout_v1,Thông báo: Gói cước internet của bạn với MobiFone sắp hết hạn. Vui lòng gia hạn ngay để đảm bảo không bị gián đoạn dịch vụ. Chi tiết tại ứng dụng MobiFone.,safe,vi
+synth_holdout_v1,Urgent: Your monthly CPF contributions for Q3 are overdue. Click here immediately to verify and settle the balance before penalties start: [shady_link],scam,en
+synth_holdout_v1,"Urgent Alert! Your SingPost utility account shows overdue arrears. If not settled within 2 hours, service disconnection will be immediate. Click here: [link] to resolve.",scam,en
+synth_holdout_v1,"Be: A transfer of $4,800 is pending verification. Confirm at https://www.be.online to proceed.",scam,en
+synth_holdout_v1,Thông báo: Đơn hàng của bạn có vấn đề nhẹ về bao bì ngoài. Vui lòng truy cập đường link [link hợp lệ] để xác nhận tình trạng và yêu cầu giao lại trong 24h tới.,safe,vi

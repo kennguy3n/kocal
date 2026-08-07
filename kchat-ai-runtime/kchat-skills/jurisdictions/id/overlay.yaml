@@ -1,0 +1,116 @@
+# kchat.jurisdiction.id.guardrail.v1
+#
+# Indonesia jurisdiction overlay — country pack.
+# Layered on top of kchat.global.guardrail.baseline.
+# Concrete values below reflect the primary legal framework summarised as:
+#   UU ITE; UU 35/2014 child protection; Anti-Terrorism Law; UU 44/2008 pornography law.
+# Legal and cultural reviewers are named in ``signers``; overlays
+# inherit the privacy-contract rule against embedded harm strings,
+# so everything below is catalogue-only.
+
+skill_id: kchat.jurisdiction.id.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+# ~18 months from 2026-04-29 — the maximum permitted by the compiler.
+expires_on: "2027-10-29"
+signers: [trust_and_safety, legal_review, cultural_review]
+
+# --------------------------------------------------------------------------
+# Activation
+# --------------------------------------------------------------------------
+activation:
+  criteria:
+    - user_selected_region: id
+    - group_declared_jurisdiction: id
+    - app_store_install_region: id
+    - enterprise_managed_policy: id
+  forbidden_criteria:
+    - gps_location
+    - ip_geolocation
+    - inferred_nationality
+    - inferred_ethnicity
+    - inferred_religion
+
+# --------------------------------------------------------------------------
+# Local definitions
+# --------------------------------------------------------------------------
+local_definitions:
+  legal_age_general: 18
+  legal_age_sexual_content_consumer: 18
+  legal_age_marketplace_alcohol: 21
+  legal_age_marketplace_tobacco: 18
+  # Protected-class enumeration from UU 39/1999 tentang Hak Asasi Manusia + UUD 1945 Art. 28I.
+  protected_classes:
+    - religion
+    - race
+    - ethnic_origin
+    - tribe
+    - regional_origin
+    - sex
+    - gender_identity
+    - sexual_orientation
+    - language
+    - age
+    - disability
+    - social_status
+    - economic_status
+    - political_opinion
+  listed_extremist_orgs:
+    - id_listed_extremist_orgs_v1
+  restricted_symbols:
+    - id_restricted_symbols_catalogue_v1
+  election_rules:
+    civic_window_open:  "2028-10-15"
+    civic_window_close: "2029-02-15"
+    authority_resource_id: id_kpu_authority_v1
+
+# --------------------------------------------------------------------------
+# Local language assets
+# --------------------------------------------------------------------------
+local_language_assets:
+  primary_languages: [id]
+  lexicons:
+    - lexicon_id: id_id_lexicon_v1
+      language: id
+      categories: [1, 4, 10]
+      provenance: kchat_trust_and_safety_id_v1
+  normalization:
+    nfkc: true
+    case_fold: true
+    homoglyph_map_id: homoglyph_core_v1
+    transliteration_refs: [translit_core_v1]
+
+# --------------------------------------------------------------------------
+# Overrides
+# --------------------------------------------------------------------------
+overrides:
+  - category: 1   # CHILD_SAFETY
+    severity_floor: 5
+    note: >-
+      UU 35/2014 perubahan UU 23/2002 — perlindungan anak. Protected-speech contexts (quoted speech, news, education, counterspeech) remain permitted.
+  - category: 4   # EXTREMISM
+    severity_floor: 4
+    note: >-
+      UU 5/2018 — pemberantasan tindak pidana terorisme. Protected-speech contexts (quoted speech, news, education, counterspeech) remain permitted.
+  - category: 10   # SEXUAL_ADULT
+    severity_floor: 5
+    note: >-
+      UU 44/2008 — pornografi; UU ITE Art. 27(1). Protected-speech contexts (quoted speech, news, education, counterspeech) remain permitted.
+
+# --------------------------------------------------------------------------
+# Allowed contexts — preserve all four protected-speech carve-outs.
+# --------------------------------------------------------------------------
+allowed_contexts:
+  - QUOTED_SPEECH_CONTEXT
+  - NEWS_CONTEXT
+  - EDUCATION_CONTEXT
+  - COUNTERSPEECH_CONTEXT
+
+# --------------------------------------------------------------------------
+# User notice
+# --------------------------------------------------------------------------
+user_notice:
+  visible_pack_summary: >-
+    Indonesia safety pack. Raises floors on child protection (UU 35/2014), anti-terrorism (UU 5/2018), and the pornography law (UU 44/2008). Protected speech remains permitted.
+  appeal_resource_id: id_appeal_resource_v1
+  opt_out_allowed: true

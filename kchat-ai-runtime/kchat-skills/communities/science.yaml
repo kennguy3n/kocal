@@ -1,0 +1,27 @@
+# Community Overlay — kchat.community.science.guardrail.v1
+#
+# Science / research-community overlay. Health and civic misinformation
+# guards for accuracy in public communication.
+
+skill_id: kchat.community.science.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: science
+  age_mode: mixed_age
+  visibility: public_summary
+  set_by: group_admin
+
+rules:
+  - category: 13  # MISINFORMATION_HEALTH
+    action: warn
+    note: >-
+      Health-claim misinformation (unsourced studies, predatory
+      journals) warns before display.
+  - category: 14  # MISINFORMATION_CIVIC
+    action: warn
+    note: >-
+      Civic-policy misinformation citing scientific consensus warns
+      before display.

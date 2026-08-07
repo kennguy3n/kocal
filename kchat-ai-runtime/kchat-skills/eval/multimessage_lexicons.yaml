@@ -1,0 +1,44 @@
+# Multi-message (conversational window) eval lexicon — Stream G.
+#
+# These tokens demonstrate the conversational multi-message context
+# layer (`compiler.pipeline.conversation.classify_with_history` /
+# `crates/kchat-safety-core/src/pipeline/conversation.rs`). They are
+# multi-WORD violence-threat phrases: no single fragment of a phrase
+# matches a token on its own, so a thread that splits the phrase across
+# consecutive messages is INVISIBLE to the single-message pipeline but
+# CAUGHT once the bounded window assembles the messages back together.
+#
+# Tokens are authored in the pipeline's folded-Latin / normalized
+# matching space (matched with `\b<token>\b`, case-folded), mirroring
+# `codeswitch_lexicons.yaml`:
+#   * Latin-script languages (es/en/fr) and romanized chat forms
+#     (Romaji Russian, Hinglish, romaja Korean, Arabizi) match directly;
+#   * native Devanagari folds to romanized Hindi via `translit_core_v1`
+#     (so "main tumhen mar dunga" also catches a Devanagari thread and a
+#     mid-thread Devanagari→Latin script switch);
+#   * native Cyrillic folds to "ya ytbyu tetya" (distinct from the
+#     romanized "ya ubyu tebya"), so both Russian forms are covered;
+#   * native Arabic is not transliterated, so the Arabic phrase is a
+#     multi-word native-script token; the Arabizi form "sawfa atolak"
+#     (digits dropped by the fold) is a separate token.
+#
+# Provenance: authored by hand for this stream (no third-party data).
+# Harm text is paraphrased violence-threat intent, never slurs. No real
+# PII, no live URLs.
+#
+# Category ids match `compiler.training_data.CAT_*` (3 = VIOLENCE_THREAT).
+schema_version: 1
+default_lexicons:
+  - lexicon_id: multimessage_violence_threat_v1
+    category: 3
+    weight: 0.9
+    tokens:
+      - "te voy a matar"          # es  — "I'm going to kill you"
+      - "i will kill you"         # en
+      - "je vais te tuer"         # fr
+      - "ya ubyu tebya"           # ru  (romanized / Romaji)
+      - "ya ytbyu tetya"          # ru  (native Cyrillic, folded form)
+      - "main tumhen mar dunga"   # hi  (Devanagari folds here; Hinglish too)
+      - "neoreul jugil geoya"     # ko  (romaja)
+      - "سوف أقتلك"               # ar  (native, "sawfa aqtuluk")
+      - "sawfa atolak"            # ar  (Arabizi, folded from "sawfa a2tolak")

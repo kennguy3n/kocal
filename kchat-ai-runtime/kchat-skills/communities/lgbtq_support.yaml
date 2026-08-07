@@ -1,0 +1,44 @@
+# Community Overlay — kchat.community.lgbtq_support.guardrail.v1
+#
+# LGBTQ+ support overlay (adult-only). Tightens hate and harassment
+# handling above baseline given protected-class exposure.
+
+skill_id: kchat.community.lgbtq_support.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: lgbtq_support
+  age_mode: adult_only
+  visibility: members_only_summary
+  set_by: group_admin
+
+rules:
+  - category: 6   # HATE
+    action: strong_warn
+    note: >-
+      Hate / slurs targeting protected classes tightened to a hard
+      modal warning.
+  - category: 5   # HARASSMENT
+    action: strong_warn
+    suggest_mute: true
+    note: >-
+      Targeted harassment / outing tightened above the baseline warn
+      before display.
+  - category: 2   # SELF_HARM
+    action: label_only
+    note: >-
+      Self-harm references surface a label only — LGBTQ+ support
+      contexts may include identity-related distress discussions
+      that are recovery-oriented.
+  - category: 13  # MISINFORMATION_HEALTH
+    action: warn
+    note: >-
+      Health misinformation relevant to LGBTQ+ communities (conversion
+      therapy claims, hormone misinformation) is warned.
+  - category: 3   # VIOLENCE_THREAT
+    action: strong_warn
+    note: >-
+      Violence threats targeting LGBTQ+ individuals are tightened
+      given the elevated risk of hate-motivated violence.

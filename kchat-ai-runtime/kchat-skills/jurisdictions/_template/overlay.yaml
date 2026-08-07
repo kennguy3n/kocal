@@ -1,0 +1,148 @@
+# Jurisdiction Overlay Template
+#
+# Copy this file to kchat-skills/jurisdictions/<region-code>/overlay.yaml
+# (for concrete country packs) or kchat-skills/jurisdictions/archetype-<name>/overlay.yaml
+# (for archetype overlays) and fill in the placeholders. The template
+# mirrors ARCHITECTURE.md "Jurisdiction Overlay Template" (lines 421-488).
+#
+# Required keys:  skill_id, parent, schema_version, expires_on, signers,
+#                 activation, local_definitions, local_language_assets,
+#                 overrides, allowed_contexts, user_notice
+#
+# A jurisdiction overlay may NOT invent new taxonomy categories, relax
+# the global privacy rules, or override the child-safety severity floor.
+# Activation must be driven by explicit region declarations only —
+# GPS, IP geolocation, and inferred nationality / ethnicity / religion
+# are *forbidden* (see ARCHITECTURE.md "Jurisdiction Overlay Skill").
+
+# Skill identifier. Format: kchat.jurisdiction.<region-code>.guardrail.v1
+skill_id: kchat.jurisdiction.<region-code>.guardrail.v1
+
+# Parent skill pack. Every jurisdiction overlay inherits from the global
+# baseline; the compiler rejects any other parent.
+parent: kchat.global.guardrail.baseline
+
+schema_version: 1
+
+# ISO-8601 expiry date. Packs must carry a future expires_on, and the
+# compiler sets a hard cap of 18 months from signing to ensure periodic
+# legal + cultural re-review.
+expires_on: <ISO-8601 date, max 18 months from sign>
+
+# Signers required for a jurisdiction pack. legal_review and
+# cultural_review are mandatory; trust_and_safety always signs.
+signers: [trust_and_safety, legal_review, cultural_review]
+
+# --------------------------------------------------------------------------
+# Activation — the ONLY ways an overlay may turn on. Forbidden criteria
+# are enumerated explicitly so reviewers and the compiler can both check.
+# --------------------------------------------------------------------------
+activation:
+  criteria:
+    # User's explicit in-app region selection.
+    - user_selected_region: <region-code>
+    # Jurisdiction declared by the group admin for a specific group.
+    - group_declared_jurisdiction: <region-code>
+    # The app store / billing region under which the app was installed.
+    - app_store_install_region: <region-code>
+    # Enterprise / MDM-managed device policy.
+    - enterprise_managed_policy: <region-code>
+  forbidden_criteria:
+    # Never use device GPS.
+    - gps_location
+    # Never use IP geolocation.
+    - ip_geolocation
+    # Never infer nationality from surname, handle, or language.
+    - inferred_nationality
+    # Never infer ethnicity.
+    - inferred_ethnicity
+    # Never infer religion.
+    - inferred_religion
+
+# --------------------------------------------------------------------------
+# Local definitions — legal ages, protected classes, listed extremist
+# orgs, restricted symbols, election rules.
+# --------------------------------------------------------------------------
+local_definitions:
+  # Legal adult age for this jurisdiction (general). Consumer sexual
+  # content and marketplace age gates follow separately.
+  legal_age_general: <int>
+  legal_age_sexual_content_consumer: <int>
+  legal_age_marketplace_alcohol: <int>
+  legal_age_marketplace_tobacco: <int>
+  # Protected-class ids from the jurisdiction's anti-discrimination law.
+  protected_classes: [<list of protected-class ids>]
+  # Listed extremist orgs. Each id must reference a provenance entry in
+  # the resource catalogue.
+  listed_extremist_orgs: [<list of org ids with provenance>]
+  # Restricted symbols with the contexts in which they are allowed.
+  restricted_symbols: [<list of symbol ids with context rules>]
+  # Election / civic windows during which civic-misinformation labels
+  # are active. Dates are ISO-8601.
+  election_rules:
+    civic_window_open:  <ISO date>
+    civic_window_close: <ISO date>
+    authority_resource_id: <id from resource catalogue>
+
+# --------------------------------------------------------------------------
+# Local language assets — lexicons and normalization used by the
+# deterministic detectors before the encoder classifier runs.
+# --------------------------------------------------------------------------
+local_language_assets:
+  # Primary language codes (IETF BCP 47). Multi-language jurisdictions
+  # list every officially supported language.
+  primary_languages: [<BCP 47 codes>]
+  lexicons:
+    - lexicon_id: <id>
+      language: <BCP 47>
+      categories: [<taxonomy ids>]
+      provenance: <reviewer / source>
+  normalization:
+    # Unicode NFKC normalization. Required for every pack.
+    nfkc: true
+    # Lowercase folding. Required for every pack.
+    case_fold: true
+    # Homoglyph map id. Required for every pack. Maps lookalike
+    # characters (e.g. Cyrillic а to Latin a) before lexicon matching.
+    homoglyph_map_id: <id>
+    # Transliteration rule-set ids for scripts that need romanisation.
+    transliteration_refs: [<id>]
+
+# --------------------------------------------------------------------------
+# Overrides — per-category severity floors. Overlays may RAISE the
+# floor for a category but never LOWER it below the global baseline,
+# and never touch the child-safety floor of 5.
+# --------------------------------------------------------------------------
+overrides:
+  - category: 4   # EXTREMISM
+    severity_floor: 4
+    note: <human-readable summary>
+  - category: 10  # SEXUAL_ADULT
+    severity_floor: 5
+    note: <jurisdictional ban summary>
+  - category: 11  # DRUGS_WEAPONS
+    severity_floor: 4
+    note: <regulated-goods summary>
+
+# --------------------------------------------------------------------------
+# Allowed contexts — protected-speech carve-outs. Overlays MUST preserve
+# these so news, education, counterspeech, and quoted speech are not
+# swept up by stricter severity floors.
+# --------------------------------------------------------------------------
+allowed_contexts:
+  - QUOTED_SPEECH_CONTEXT
+  - NEWS_CONTEXT
+  - EDUCATION_CONTEXT
+  - COUNTERSPEECH_CONTEXT
+
+# --------------------------------------------------------------------------
+# User notice — what the user sees in the transparency surface.
+# --------------------------------------------------------------------------
+user_notice:
+  # One-sentence, plain-language description shown in the pack list.
+  visible_pack_summary: <short, plain-language description>
+  # Resource id for the appeal flow shown on any warn / strong_warn /
+  # critical label produced under this overlay.
+  appeal_resource_id: <id from resource catalogue>
+  # Opt-out is permitted only where lawful under the jurisdiction.
+  opt_out_allowed: <bool>

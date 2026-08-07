@@ -1,0 +1,25 @@
+# Spanish-language lexicon bundle for the kchat.jurisdiction.mx.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: mx_es_lexicon_v1
+language: es
+locale: es-MX
+provenance: kchat_trust_and_safety_mx_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+  - 11   # DRUGS_WEAPONS
+terms:
+  - term_id: mx_es_term_lgpnna_child_protection_v1
+    categories: [1]
+    notes: LGPNNA child-protection indicator phrases (catalogue-only).
+  - term_id: mx_es_term_delincuencia_organizada_v1
+    categories: [4]
+    notes: Ley Federal contra la Delincuencia Organizada recruitment indicators.
+  - term_id: mx_es_term_cofepris_drug_marketplace_v1
+    categories: [11]
+    notes: COFEPRIS controlled-substance marketplace patterns.

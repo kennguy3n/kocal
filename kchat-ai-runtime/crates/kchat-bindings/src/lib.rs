@@ -203,6 +203,9 @@ impl KChatAiRuntime {
             slm_available: self.tier != kchat_core::tier::DeviceTier::Low,
             quoted_from_user: false,
             community_overlay_id: None,
+            jurisdiction: None,
+            locale: None,
+            media_descriptors: Vec::new(),
         };
         self.safety.classify(&request).into()
     }

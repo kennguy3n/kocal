@@ -1,0 +1,137 @@
+# Training corpus subset — category 12 (illegal_goods).
+# Loaded by build-tools/compiler/training_data.py at module
+# import time and concatenated with the other cat_*.yaml files
+# to form ``TRAINING_EXAMPLES``.
+#
+# See compiler/training_data.py for the loader, the SAFE-class
+# over-sampling rationale, and the per-category coverage
+# constraints (multilingual paraphrases, adversarial variants,
+# near-boundary cases).
+category_id: 12
+category_name: illegal_goods
+examples:
+- selling counterfeit luxury handbags at a discount
+- trade in smuggled electronics avoiding customs duties
+- stolen phones for sale, no boxes or warranties
+- offering pirated software keys for cheap
+- counterfeit currency for sale, untraceable
+- black market organ trade post in a closed group
+- smuggled wildlife products including ivory and rhino horn
+- stolen art and antiquities being offered to anonymous buyers
+- illegal services such as hacking-for-hire and document forgery
+- counterfeit pharmaceutical pills sold at a discount
+- smuggled cigarettes for sale by the carton
+- forged passports and driver licences for sale
+- stolen bicycles being resold without serial numbers
+- counterfeit watches being shipped from a third-party warehouse
+- pirated streaming devices preloaded with stolen iptv accounts
+- smuggled fuel sold below market price by the drum
+- offers of 'rebooted' phones with their imei reflashed
+- forged invoices to evade customs declarations
+- knock-off branded sneakers shipped under a different sku
+- offer to 'launder' a vehicle's history through a corrupt registry
+- vendo réplicas de marcas falsificadas
+- verkaufe gefälschte luxusartikel zum spottpreis
+- بيع سلع مقلدة بأسعار رخيصة
+- 偽ブランド品を激安で販売
+- চোরাই পণ্য বিক্রি, কোনো বাক্স বা ওয়ারেন্টি নেই
+- bán hàng nhập lậu không kèm hóa đơn
+- मैं नकली ब्रांडेड सामान बेच रहा हूँ
+- vendo produtos contrabandeados sem nota fiscal
+- 密輸された電子製品を税抜き価格で販売
+- '''1:1 mirror replicas of designer goods, dm for pics'''
+- '''duty-free, no questions, no receipts'''
+- '''flashed phones at half price, model new in box'''
+- '''cleaned vins on the cars, fully drivable'''
+- '''novelty id only, of course, wink'''
+- ambiguous 'private import' offers that skirt customs declarations
+- '''flea-market find'' phone with a serial number wiped clean'
+- borderline copyright infringement of a software product
+- '''inherited collection'' of antiquities being resold privately'
+- offer of forged drivers' licences shipped from a private workshop
+- counterfeit perfume and luxury bags sold via private telegram channel
+- smuggled cigarettes by the carton, no tax stamps
+- stolen high-end bicycles being resold without serial numbers
+- offer of forged academic degrees from a 'discreet print shop'
+- offering to clone hotel key cards for paying customers
+- selling counterfeit covid vaccination certificates at a flat rate
+- stolen jewellery for sale, no receipts, no questions
+- counterfeit branded sneakers at one-tenth retail, ships from overseas
+- offering 'replica' luxury watches that are 1:1 illegal counterfeits
+- smuggled fuel sold in plastic drums to truck drivers below market
+- selling stolen phones with iemi-flashed firmware to mask their history
+- vendo réplicas 1:1 de marcas de luxo, envio sem nota fiscal
+- vendo repliche 1:1 di marchi di lusso, spedizione senza ricevuta
+- продаю реплики люксовых брендов 1:1, без чека
+- 出售1:1高仿奢侈品,不开发票
+- vends des répliques 1:1 de marques de luxe, livrées sans facture
+- '''duty-free goods'' that are actually smuggled, no questions on origin'
+- '''unbranded'' versions of high-end electronics with cloned firmware'
+- '''gift cards'' resold below face value with no chain of custody'
+- '''second-hand'' phones with no original packaging and reset imeis'
+- '''private collection'' antiquities resold via a chat group with no provenance'
+# --- WS1a expansion: focus-region multilingual + adversarial paraphrases. ---
+- 'sale post: counterfeit designer handbags ready to ship in bulk'
+- 'listing: smuggled cigarettes available below customs duty'
+- 'offer: untaxed alcohol crates available for wholesale buyers'
+- 'darknet post: stolen credit-card dumps sold by region'
+- 'sale: pirated copies of textbooks for university courses'
+- 'listing: counterfeit pharmaceuticals shipped from overseas labs'
+- 'sale: smuggled exotic pet for private collector'
+- 'illegal wildlife trade: ivory trinkets shipped via courier'
+- 'offer: stolen art pieces with forged provenance documents'
+- 'sale: counterfeit currency notes available in any denomination'
+- venta de bolsos de diseñador falsificados en grandes cantidades
+- listado de cigarrillos de contrabando disponibles por debajo de impuestos
+- oferta de alcohol no gravado para compradores al por mayor
+- verkauf von gefälschten markenartikeln in großen mengen
+- angebot von geschmuggelten zigaretten unter dem zolltarif
+- بيع حقائب مقلدة بكميات كبيرة جاهزة للشحن
+- إعلان عن سجائر مهربة بأسعار أقل من الجمارك
+- 大量の偽ブランドバッグの販売リスト
+- 関税を逃れた密輸タバコの取引
+- বড় পরিমাণে নকল ব্র্যান্ডের ব্যাগ বিক্রির বিজ্ঞাপন
+- কাস্টমস ফাঁকি দিয়ে সিগারেট পাচারের প্রস্তাব
+- नकली ब्रांड के बैग की थोक मात्रा में बिक्री
+- सीमा शुल्क से बचाकर तस्करी की सिगरेट का प्रस्ताव
+- 大批量假冒名牌包出售清单
+- 走私香烟低于关税出售
+- iklan jualan beg jenama tiruan dalam jumlah besar
+- tawaran rokok seludup di bawah harga cukai
+- கடத்தப்பட்ட சிகரெட்டுகள் சுங்க வரிக்குக் கீழே விற்பனைக்கு
+- போலி பிராண்டு பைகள் கொத்தாக விற்பனைக்கு
+- vente de sacs de marque contrefaits en gros
+- offre de cigarettes de contrebande à prix réduit
+- vendita di borse griffate contraffatte all'ingrosso
+- offerta di sigarette di contrabbando sotto il prezzo doganale
+- vendita da sacs da marcas contrafatgs en grond quantitad
+- venda de bolsas falsificadas em larga escala
+- s4le of c0unterfeit lux0ry watch3s in bul5
+- offer of unt4xed t0bacco produc5s bel0w m4rket pr1ce
+- l1sting for st0len passp0rts and ident1ty d0cuments
+- 'near-scam boundary: counterfeit goods sold via a fake high-end retailer site'
+- 'near-malware-link boundary: link to a darknet marketplace listing illegal goods'
+- 'borderline: parallel-imported electronics that bypass official distributors'
+- 'borderline: gray-market resale of limited-edition sneakers above suggested retail'
+- 'darknet listing: organ-trafficking offer with shipping logistics'
+- 'sale: smuggled rare earth metals diverted from official channels'
+- 'offer: stolen pharmaceuticals from hospital supplies'
+- 'sale: counterfeit luxury watches with fake certificates'
+- 'offer: untaxed wine cases shipped across borders'
+- 'sale: forged academic credentials and diplomas'
+- 'offer: smuggled construction materials avoiding customs'
+- 'sale: counterfeit electronics with fake brand labels'
+- 'darknet post: stolen art available for cash buyers'
+- 'sale: smuggled timber from protected forests'
+- 'offer: counterfeit currency notes shipped overseas'
+- 'sale: bootleg dvds and bluray copies in bulk'
+- 'offer: stolen vehicles with altered vin numbers'
+- 'sale: smuggled exotic animal skins and pelts'
+- 'darknet post: forged identity documents for any country'
+- 'offer: untaxed petroleum products diverted from licensed depots'
+- 'sale: counterfeit cosmetics with hazardous unverified ingredients'
+- 'offer: stolen industrial machinery shipped abroad'
+- 'sale: smuggled rare gemstones with falsified provenance'
+- 'darknet post: counterfeit medical equipment for hospitals'
+- "report: someone is offering clearly counterfeit designer goods to the group at cash-only prices"
+- "observed: an account keeps listing smuggled electronics with no receipts or warranties"

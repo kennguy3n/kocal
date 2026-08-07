@@ -1,0 +1,21 @@
+# Basque-language lexicon bundle for the kchat.jurisdiction.es.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: es_eu_lexicon_v1
+language: eu
+locale: eu-ES
+provenance: kchat_trust_and_safety_es_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+terms:
+  - term_id: es_eu_term_lopjm_menor_eu_v1
+    categories: [1]
+    notes: LOPJM adingabearen babesa (Basque catalogue).
+  - term_id: es_eu_term_cp_terrorismoa_eu_v1
+    categories: [4]
+    notes: Zigor kodea — terrorismoa (Basque catalogue).

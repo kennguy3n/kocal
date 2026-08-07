@@ -1,0 +1,179 @@
+# kchat.global.guardrail.baseline
+#
+# The global baseline is ALWAYS active. No overlay may remove a category,
+# change its ID, weaken severity for child safety, or alter the privacy
+# rules. See ARCHITECTURE.md "Global Baseline Skill".
+#
+# This is the complete (non-stub) baseline. It composes the structural
+# primitives (taxonomy.yaml, severity.yaml, output_schema.json,
+# local_signal_schema.json, privacy_contract.yaml) with the runtime
+# instruction prompt and the compiled-prompt examples.
+
+skill_id: kchat.global.guardrail.baseline
+schema_version: 1
+phase: 1
+status: complete
+parent: null
+signers: [trust_and_safety]
+
+# Structural references resolved at compile time. Paths are relative to
+# this file's directory (kchat-skills/global/).
+references:
+  taxonomy:                ./taxonomy.yaml
+  severity:                ./severity.yaml
+  output_schema:           ./output_schema.json
+  local_signal_schema:     ./local_signal_schema.json   # encoder classifier input contract
+  privacy_contract:        ./privacy_contract.yaml      # 8 non-negotiable privacy rules
+  runtime_instruction:     ../prompts/runtime_instruction.txt
+  compiled_prompt_format:  ../prompts/compiled_prompt_format.md
+
+# Privacy rules — the eight non-negotiable rules from README.md, embedded
+# inline so this baseline is self-contained even if the contract file is
+# missing at compile time. The canonical, machine-enforceable form lives in
+# `privacy_contract.yaml` (referenced above as `privacy_contract`). Every
+# overlay inherits these rules verbatim; the compiler rejects any pack that
+# attempts to weaken them.
+privacy_rules:
+  contract_ref: ./privacy_contract.yaml
+  immutable: true
+  rules:
+    - id: 1
+      rule: >-
+        The model only analyzes content already decrypted and visible on
+        this device to this user.
+    - id: 2
+      rule: >-
+        The model must never request more context than is provided in the
+        structured input.
+    - id: 3
+      rule: >-
+        The model must never attempt to identify the sender, recipient,
+        group membership, or social graph beyond what is in the structured
+        input.
+    - id: 4
+      rule: >-
+        The model output must never contain the original message text,
+        message fragments longer than 8 tokens, message IDs, or any direct
+        quote that could re-identify the message off-device.
+    - id: 5
+      rule: >-
+        The model output must not contain hashes, fingerprints, embeddings,
+        or cryptographic commitments to message content.
+    - id: 6
+      rule: >-
+        The model must not request, assume, or infer plaintext from other
+        conversations, other devices, or other users.
+    - id: 7
+      rule: >-
+        The model must not produce content that would only be useful to a
+        server-side moderator (for example, "report this message ID to
+        backend X" or "send this label to a central queue").
+    - id: 8
+      rule: >-
+        The model must operate identically when offline; it must not
+        depend on server-side completion of any safety decision.
+
+# Input contract — structured object the runtime hands to the encoder
+# classifier. The canonical Draft-07 schema lives at
+# `local_signal_schema.json`; this
+# block records the contract id and budget so overlays and the prompt
+# compiler can reference it without parsing JSON.
+input_contract:
+  schema_ref: ./local_signal_schema.json
+  schema_id: kchat.guardrail.local_signal.v1
+  required_blocks:
+    - message
+    - context
+    - local_signals
+    - constraints
+
+# Decision policy thresholds — hard-coded in the runtime; the encoder
+# classifier cannot override them. Source: ARCHITECTURE.md "Decision Policy".
+decision_policy:
+  thresholds:
+    label_only:            0.45
+    warn:                  0.62
+    strong_warn:           0.78
+    critical_intervention: 0.85
+  uncertainty_handling:
+    below_label_only:
+      action: emit_safe
+      note: >-
+        If the classifier's confidence falls below the lowest threshold
+        (0.45) for any non-zero category, the runtime treats the message as
+        SAFE (category 0, severity 0) and emits no label.
+    tie_break:
+      rule: lower_numbered_category_wins
+      note: >-
+        Tied categories at the same severity break in favour of the
+        lower-numbered category (canonical taxonomy order).
+
+# Skill selection logic — how the active skill bundle is composed and how
+# overlays are reconciled. Source: ARCHITECTURE.md "Skill Selection Logic".
+skill_selection:
+  preferred_inputs:
+    - user_selected_region              # explicit, in-app setting
+    - group_declared_jurisdiction       # set by group admin
+    - app_store_install_region          # billing / store region
+    - enterprise_managed_policy         # MDM / managed device
+    - explicit_community_overlay_id     # set by group admin
+  avoid_inputs:
+    - gps_location
+    - ip_geolocation
+    - inferred_nationality
+    - inferred_ethnicity
+    - inferred_religion
+    - network_operator_metadata
+  conflict_resolution:
+    severity:
+      rule: take_max
+      note: >-
+        When global, jurisdiction, and community overlays disagree on
+        severity for the same category, the highest severity wins.
+    category:
+      rule: most_specific_overlay
+      note: >-
+        Community overlay > jurisdiction overlay > global baseline.
+    action:
+      rule: most_protective
+      note: >-
+        Across overlays, the most protective action for the user wins
+        (e.g. strong_warn > warn > label_only).
+    privacy_rules:
+      rule: immutable
+      note: >-
+        Privacy rules from the global baseline are immutable. No overlay
+        may relax them; the compiler rejects packs that try.
+    child_safety:
+      rule: floor_5
+      note: >-
+        Any positive CHILD_SAFETY signal pins severity to 5 regardless
+        of overlay configuration.
+
+# Child safety policy — highest priority. Source: ARCHITECTURE.md
+# "Child Safety Policy". The severity floor and forbidden-upload rule are
+# load-bearing and must remain stable across phases.
+child_safety_policy:
+  priority: highest
+  severity_floor: 5
+  applies_when:
+    - group_age_mode == "minor_present"
+    - any participant is flagged as minor by managed-device policy
+    - jurisdiction overlay declares a minor-protection rule that matches
+  detectors:
+    - csam_indicators              # opaque local descriptor only
+    - grooming_patterns            # lexicon + encoder contextual
+    - sextortion_patterns          # lexicon + encoder contextual
+    - request_for_private_meeting_with_minor
+  actions:
+    critical_intervention: true
+    block_preview: true
+    surface_report_flow: true
+    surface_local_resources: true
+  forbidden:
+    - upload of detected content, descriptors, hashes, or evidence to any
+      server by default
+    - any flow that depends on remote service availability
+  user_notice:
+    rationale_id: child_safety_floor_v1
+    resource_link_id: child_safety_resources_v1

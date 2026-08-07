@@ -1,0 +1,17 @@
+# Spanish-language lexicon bundle for the kchat.jurisdiction.pe.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: pe_es_lexicon_v1
+language: es
+locale: es-PE
+provenance: kchat_trust_and_safety_pe_v1
+categories:
+  - 1   # CHILD_SAFETY
+terms:
+  - term_id: pe_es_term_ley_27337_ninez_v1
+    categories: [1]
+    notes: Ley 27.337 child-protection indicators (catalogue-only).

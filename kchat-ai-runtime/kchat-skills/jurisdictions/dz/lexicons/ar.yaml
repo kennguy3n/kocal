@@ -1,0 +1,21 @@
+# AR (Algeria) lexicon bundle for the kchat.jurisdiction.dz.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: dz_ar_lexicon_v1
+language: ar
+locale: ar-DZ
+provenance: kchat_trust_and_safety_dz_v1
+categories:
+  - 1
+  - 4
+terms:
+  - term_id: dz_ar_term_child_protection_v1
+    categories: [1]
+    notes: Loi 15-12 (protection de l'enfant) indicators (catalogue-only).
+  - term_id: dz_ar_term_anti_terror_v1
+    categories: [4]
+    notes: Code Pénal Art. 87 bis anti-terror indicators (catalogue-only).

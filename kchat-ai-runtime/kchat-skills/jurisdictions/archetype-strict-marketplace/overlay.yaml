@@ -1,0 +1,121 @@
+# kchat.jurisdiction.archetype-strict-marketplace.guardrail.v1
+#
+# Strict marketplace / restricted-goods jurisdiction archetype:
+# severity floor 4 on categories 11 and 12. See ARCHITECTURE.md
+# "Skill Layering Model".
+#
+# This archetype raises DRUGS_WEAPONS (category 11) and ILLEGAL_GOODS
+# (category 12) to severity floor 4 (strong warn) — the pattern a real
+# jurisdiction pack would use for a country that bans or tightly
+# restricts sales of regulated goods across KChat. ARCHITECTURE.md
+# lines 639-643 show the compiled-prompt section this archetype
+# produces.
+
+skill_id: kchat.jurisdiction.archetype-strict-marketplace.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+# ~18 months from 2026-04-29 — the maximum permitted by the compiler
+# under the anti-misuse controls in ARCHITECTURE.md.
+expires_on: "2027-10-29"
+signers: [trust_and_safety, legal_review, cultural_review]
+
+# --------------------------------------------------------------------------
+# Activation
+# --------------------------------------------------------------------------
+activation:
+  criteria:
+    - user_selected_region: archetype-strict-marketplace
+    - group_declared_jurisdiction: archetype-strict-marketplace
+    - app_store_install_region: archetype-strict-marketplace
+    - enterprise_managed_policy: archetype-strict-marketplace
+  forbidden_criteria:
+    - gps_location
+    - ip_geolocation
+    - inferred_nationality
+    - inferred_ethnicity
+    - inferred_religion
+
+# --------------------------------------------------------------------------
+# Local definitions — archetype placeholders. Concrete country packs
+# replace these with jurisdiction-specific statute references.
+# --------------------------------------------------------------------------
+local_definitions:
+  legal_age_general: 18
+  legal_age_sexual_content_consumer: 18
+  # Stricter marketplace defaults — alcohol / tobacco raised above the
+  # global 18 floor to model a regulated-goods jurisdiction.
+  legal_age_marketplace_alcohol: 21
+  legal_age_marketplace_tobacco: 21
+  protected_classes: []
+  listed_extremist_orgs: []
+  restricted_symbols: []
+  election_rules:
+    civic_window_open:  "1970-01-01"
+    civic_window_close: "1970-01-01"
+    authority_resource_id: archetype_strict_marketplace_authority_v1
+
+# --------------------------------------------------------------------------
+# Local language assets — archetype uses English only. Concrete country
+# packs layer additional language asset bundles under lexicons/ and
+# normalization.yaml.
+# --------------------------------------------------------------------------
+local_language_assets:
+  primary_languages: [en]
+  lexicons:
+    - lexicon_id: archetype_strict_marketplace_drugs_weapons_v1
+      language: en
+      categories: [11]  # DRUGS_WEAPONS
+      provenance: kchat_trust_and_safety_archetype_v1
+    - lexicon_id: archetype_strict_marketplace_illegal_goods_v1
+      language: en
+      categories: [12]  # ILLEGAL_GOODS
+      provenance: kchat_trust_and_safety_archetype_v1
+  normalization:
+    nfkc: true
+    case_fold: true
+    homoglyph_map_id: homoglyph_core_v1
+    transliteration_refs: [translit_core_v1]
+
+# --------------------------------------------------------------------------
+# Overrides
+#   category 11 DRUGS_WEAPONS -> severity floor 4 (strong warn).
+#   category 12 ILLEGAL_GOODS -> severity floor 4 (strong warn).
+# Protected-speech carve-outs in allowed_contexts below preserve news,
+# education, counterspeech, and quoted speech.
+# --------------------------------------------------------------------------
+overrides:
+  - category: 11   # DRUGS_WEAPONS
+    severity_floor: 4
+    note: >-
+      Sale or facilitation of drugs, firearms, or regulated goods is
+      treated as a strong-warn jurisdictional escalation (severity 4).
+      Protected contexts (news, education, counterspeech, quoted
+      speech) remain permitted.
+  - category: 12   # ILLEGAL_GOODS
+    severity_floor: 4
+    note: >-
+      Stolen goods, counterfeit currency, and trafficked items are
+      treated as a strong-warn jurisdictional escalation (severity 4).
+      Protected contexts remain permitted.
+
+# --------------------------------------------------------------------------
+# Allowed contexts — preserve the global protected-speech carve-outs.
+# --------------------------------------------------------------------------
+allowed_contexts:
+  - QUOTED_SPEECH_CONTEXT
+  - NEWS_CONTEXT
+  - EDUCATION_CONTEXT
+  - COUNTERSPEECH_CONTEXT
+
+# --------------------------------------------------------------------------
+# User notice
+# --------------------------------------------------------------------------
+user_notice:
+  visible_pack_summary: >-
+    Strict marketplace / restricted-goods archetype. Sales or
+    facilitation of drugs, weapons, regulated goods, stolen goods,
+    counterfeit currency, and trafficked items are treated as strong
+    warns (severity 4). News, education, counterspeech, and quoted
+    speech are preserved.
+  appeal_resource_id: archetype_strict_marketplace_appeal_v1
+  opt_out_allowed: false

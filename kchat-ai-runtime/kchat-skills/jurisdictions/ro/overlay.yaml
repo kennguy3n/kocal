@@ -1,0 +1,105 @@
+# kchat.jurisdiction.ro.guardrail.v1
+#
+# Romania jurisdiction overlay — expansion country packs.
+# Layered on top of kchat.global.guardrail.baseline.
+# Concrete values below reflect the primary legal framework summarised as:
+#   Legea 272/2004 child protection; Legea 535/2004 anti-terrorism.
+# Legal and cultural reviewers are named in ``signers``; overlays
+# inherit the privacy-contract rule against embedded harm strings,
+# so everything below is catalogue-only.
+
+skill_id: kchat.jurisdiction.ro.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+# ~18 months from 2026-04-29 — the maximum permitted by the compiler.
+expires_on: "2027-10-29"
+signers: [trust_and_safety, legal_review, cultural_review]
+
+# --------------------------------------------------------------------------
+# Activation
+# --------------------------------------------------------------------------
+activation:
+  criteria:
+    - user_selected_region: ro
+    - group_declared_jurisdiction: ro
+    - app_store_install_region: ro
+    - enterprise_managed_policy: ro
+  forbidden_criteria:
+    - gps_location
+    - ip_geolocation
+    - inferred_nationality
+    - inferred_ethnicity
+    - inferred_religion
+
+# --------------------------------------------------------------------------
+# Local definitions
+# --------------------------------------------------------------------------
+local_definitions:
+  legal_age_general: 18
+  legal_age_sexual_content_consumer: 18
+  legal_age_marketplace_alcohol: 18
+  legal_age_marketplace_tobacco: 18
+  protected_classes:
+    - sex
+    - race
+    - ethnic_origin
+    - religion
+    - disability
+    - sexual_orientation
+  listed_extremist_orgs:
+    - ro_listed_extremist_orgs_v1
+  restricted_symbols:
+    - ro_restricted_symbols_catalogue_v1
+  election_rules:
+    civic_window_open:  "2026-09-01"
+    civic_window_close: "2026-10-15"
+    authority_resource_id: ro_aep_authority_v1
+
+# --------------------------------------------------------------------------
+# Local language assets
+# --------------------------------------------------------------------------
+local_language_assets:
+  primary_languages: [ro]
+  lexicons:
+    - lexicon_id: ro_ro_lexicon_v1
+      language: ro
+      categories: [1, 4]
+      provenance: kchat_trust_and_safety_ro_v1
+  normalization:
+    nfkc: true
+    case_fold: true
+    homoglyph_map_id: homoglyph_core_v1
+    transliteration_refs: [translit_core_v1]
+
+# --------------------------------------------------------------------------
+# Overrides
+# --------------------------------------------------------------------------
+overrides:
+  - category: 1   # CHILD_SAFETY
+    severity_floor: 5
+    note: >-
+      Legea 272/2004 privind protecția și promovarea drepturilor copilului. Protected-speech contexts (quoted speech,
+      news, education, counterspeech) remain permitted.
+  - category: 4   # EXTREMISM
+    severity_floor: 4
+    note: >-
+      Legea 535/2004 privind prevenirea și combaterea terorismului. Protected-speech contexts (quoted speech,
+      news, education, counterspeech) remain permitted.
+
+# --------------------------------------------------------------------------
+# Allowed contexts — preserve all four protected-speech carve-outs.
+# --------------------------------------------------------------------------
+allowed_contexts:
+  - QUOTED_SPEECH_CONTEXT
+  - NEWS_CONTEXT
+  - EDUCATION_CONTEXT
+  - COUNTERSPEECH_CONTEXT
+
+# --------------------------------------------------------------------------
+# User notice
+# --------------------------------------------------------------------------
+user_notice:
+  visible_pack_summary: >-
+    Romania safety pack. Raises floors on child protection (Legea 272/2004) and terrorism (Legea 535/2004). Protected speech remains permitted.
+  appeal_resource_id: ro_appeal_resource_v1
+  opt_out_allowed: true

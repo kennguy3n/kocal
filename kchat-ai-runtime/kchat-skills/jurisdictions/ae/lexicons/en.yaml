@@ -1,0 +1,21 @@
+# English-language lexicon bundle for the kchat.jurisdiction.ae.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: ae_en_lexicon_v1
+language: en
+locale: en-AE
+provenance: kchat_trust_and_safety_ae_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+terms:
+  - term_id: ae_en_term_wadima_3_2016_en_v1
+    categories: [1]
+    notes: Wadeema's Law 3/2016 indicators (English).
+  - term_id: ae_en_term_marsoum_7_2014_en_v1
+    categories: [4]
+    notes: Federal Decree-Law 7/2014 indicators.

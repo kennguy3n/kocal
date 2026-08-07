@@ -1,0 +1,21 @@
+# Polish-language lexicon bundle for the kchat.jurisdiction.pl.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: pl_pl_lexicon_v1
+language: pl
+locale: pl-PL
+provenance: kchat_trust_and_safety_pl_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+terms:
+  - term_id: pl_pl_term_kk_200_dziecko_v1
+    categories: [1]
+    notes: Kodeks Karny Art. 200-202 indicators.
+  - term_id: pl_pl_term_kk_258_terroryzm_v1
+    categories: [4]
+    notes: Kodeks Karny Art. 165a/258 terrorism indicators.

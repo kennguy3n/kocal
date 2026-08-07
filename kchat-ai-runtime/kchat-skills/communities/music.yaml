@@ -1,0 +1,26 @@
+# Community Overlay — kchat.community.music.guardrail.v1
+#
+# Music / fan-community overlay. Adult-content and harassment tightened
+# given mixed-age fan bases.
+
+skill_id: kchat.community.music.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: music
+  age_mode: mixed_age
+  visibility: public_summary
+  set_by: group_admin
+
+rules:
+  - category: 10  # SEXUAL_ADULT
+    action: warn
+    note: >-
+      Explicit-lyric or adult-themed media warns before display.
+  - category: 5   # HARASSMENT
+    action: warn
+    suggest_mute: true
+    note: >-
+      Fan harassment / pile-on warns and offers a peer-mute.

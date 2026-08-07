@@ -1,0 +1,27 @@
+# Community Overlay — kchat.community.environmental.guardrail.v1
+#
+# Environmental / climate community overlay. Surfaces health and civic
+# misinformation guards.
+
+skill_id: kchat.community.environmental.guardrail.v1
+parent: kchat.global.guardrail.baseline
+schema_version: 1
+signers: [trust_and_safety]
+
+community_profile:
+  kind: environmental
+  age_mode: mixed_age
+  visibility: public_summary
+  set_by: group_admin
+
+rules:
+  - category: 13  # MISINFORMATION_HEALTH
+    action: warn
+    note: >-
+      Environmental health misinformation (air quality, water safety)
+      warns before display.
+  - category: 14  # MISINFORMATION_CIVIC
+    action: warn
+    note: >-
+      Civic misinformation about environmental policy / elections
+      warns before display.

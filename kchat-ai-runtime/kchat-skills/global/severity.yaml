@@ -1,0 +1,121 @@
+# Severity Rubric — kchat.global.guardrail.baseline
+#
+# 0–5 severity rubric. Severity is produced by the on-device encoder
+# classifier under a hard-coded thresholds policy (see ARCHITECTURE.md
+# "Decision Policy"). Overlays may
+# RAISE the severity floor for a given category but may not lower it below
+# the global baseline.
+#
+# Child-safety categories carry a severity floor of 5 regardless of model
+# confidence. See ARCHITECTURE.md "Child Safety Policy".
+#
+# Source of truth: ARCHITECTURE.md "Severity Rubric" table.
+schema_version: 1
+severity_id: kchat.guardrail.severity.v1
+
+levels:
+  - level: 0
+    name: None
+    meaning: No risk detected.
+    action: None.
+
+  - level: 1
+    name: Informational
+    meaning: Minor signal, useful as label only.
+    action: Soft label; no interruption.
+
+  - level: 2
+    name: Caution
+    meaning: Possible issue; user benefit from awareness.
+    action: Inline label; expandable explanation.
+
+  - level: 3
+    name: Warn
+    meaning: Likely policy / safety risk.
+    action: Modal warning before display or send.
+
+  - level: 4
+    name: Strong warn
+    meaning: High-confidence harm to user or third party.
+    action: Hard modal; require explicit acknowledge to view.
+
+  - level: 5
+    name: Critical
+    meaning: Imminent harm, child safety, or jurisdictional illegality.
+    action: Block preview; surface report / crisis resources.
+
+# Child-safety severity floor: any positive CHILD_SAFETY (taxonomy id 1)
+# signal at confidence >= 0.45 produces severity 5 and
+# `critical_intervention`. This floor is enforced by the runtime decision
+# policy and cannot be relaxed by any jurisdiction or community overlay.
+child_safety_floor:
+  category_id: 1
+  category_name: CHILD_SAFETY
+  severity_floor: 5
+  note: >-
+    Any positive CHILD_SAFETY signal pins severity to 5 regardless of
+    overlay configuration or model confidence (when at or above the
+    label_only threshold of 0.45).
+  vision_modality_note: >-
+    Detection precedes classification. On the IMAGE modality the
+    CHILD_SAFETY prototype row is frozen at a benign-clustering centroid
+    (no sourceable CSAM to train against), so the vision classifier first
+    applies a per-category cosine-margin floor
+    (vision_baseline.yaml::vision_classifier_calibration.child_safety_cosine_margin_floor,
+    enforced by ClassifierConfig::vision_default()): a weak pixel-only
+    CHILD_SAFETY guess whose prototype cosine margin is below the floor is
+    demoted to SAFE and therefore is NOT a positive signal — the
+    severity-5 floor below never fires for it. This is a precision gate on
+    what counts as a positive CHILD_SAFETY detection, NOT a relaxation of
+    the floor: any signal that clears the margin still pins to severity 5,
+    and overlays still may not lower this floor. It exists so an innocent
+    family photo cannot trigger critical_intervention on a sliver of
+    cosine, mirroring how production CSAM systems pair hash-matching for
+    known content with high-precision classifiers rather than flagging all
+    child imagery.
+
+# Deepfake / synthetic-media confidence policy (taxonomy id 16).
+#
+# DEEPFAKE_SYNTHETIC is a warn-tier capability: unlike child safety it
+# carries no global severity floor, but it uses a category-specific
+# confidence -> severity ladder that is *stricter at the low end* than the
+# global decision_policy thresholds (baseline.yaml: warn 0.62 /
+# strong_warn 0.78). A manipulated-media signal becomes a Warn (severity
+# 3) as soon as it crosses the global label_only threshold (0.45), and a
+# Strong-warn (severity 4) at >= 0.70 — earlier than the generic ladder —
+# because a believable forgery is harmful well before the model is highly
+# confident. In an open civic/election window (jurisdiction overlay
+# `election_rules.civic_window_open..civic_window_close`) a positive
+# signal escalates to Critical (severity 5, `critical_intervention`) to
+# blunt last-mile election manipulation.
+#
+# This is an UPWARD escalation only: a jurisdiction or community overlay
+# may raise the floor further (take_max per baseline.yaml conflict
+# resolution) but may never lower these levels. Legitimate, disclosed
+# AI-generated art is out of scope — it is not deceptive media and must
+# not be flagged (see the benign_false_positive eval cases in
+# held_out_vision.yaml).
+deepfake_synthetic_policy:
+  category_id: 16
+  category_name: DEEPFAKE_SYNTHETIC
+  confidence_severity_ladder:
+    - min_confidence: 0.45
+      severity: 3
+      action: warn
+    - min_confidence: 0.70
+      severity: 4
+      action: strong_warn
+  election_window_escalation:
+    severity: 5
+    action: critical_intervention
+    applies_when: >-
+      The active jurisdiction overlay declares an open civic/election
+      window (election_rules.civic_window_open <= now <=
+      election_rules.civic_window_close) and the DEEPFAKE_SYNTHETIC signal
+      is at or above the label_only threshold (0.45).
+  note: >-
+    Confidence -> severity ladder for DEEPFAKE_SYNTHETIC. Escalation only:
+    overlays may raise but never lower these levels (take_max). No global
+    floor; below 0.45 the runtime emits SAFE per decision_policy
+    uncertainty_handling. Disclosed AI-art is not in scope and must not be
+    flagged.

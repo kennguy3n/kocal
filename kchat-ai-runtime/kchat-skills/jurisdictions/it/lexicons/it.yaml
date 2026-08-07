@@ -1,0 +1,21 @@
+# Italian-language lexicon bundle for the kchat.jurisdiction.it.guardrail.v1
+# overlay.
+#
+# Catalogue-only references; literal phrases are never embedded
+# inline per the privacy contract.
+
+schema_version: 1
+lexicon_id: it_it_lexicon_v1
+language: it
+locale: it-IT
+provenance: kchat_trust_and_safety_it_v1
+categories:
+  - 1   # CHILD_SAFETY
+  - 4   # EXTREMISM
+terms:
+  - term_id: it_it_term_cp_600ter_pedo_v1
+    categories: [1]
+    notes: Codice Penale Art. 600-ter/quater indicators.
+  - term_id: it_it_term_cp_270bis_terrorismo_v1
+    categories: [4]
+    notes: Codice Penale Art. 270-bis terrorism indicators.
