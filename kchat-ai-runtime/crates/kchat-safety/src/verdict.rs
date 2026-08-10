@@ -45,6 +45,7 @@ impl Severity {
     pub const BENIGN: Severity = Severity(1);
     pub const BORDERLINE: Severity = Severity(2);
     pub const SEVERE: Severity = Severity(3);
+    pub const HIGH: Severity = Severity(4);
     pub const CRITICAL: Severity = Severity(5);
 
     pub fn is_safe(self) -> bool {

@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! kchat-safety: Deterministic safety plane for KChat.
 //!
 //! The safety plane implements a layered guardrail:

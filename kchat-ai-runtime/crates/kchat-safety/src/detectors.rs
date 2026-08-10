@@ -167,37 +167,32 @@ impl PiiDetector {
         // IBAN (mod-97 validated) — match IBAN format and validate with mod-97.
         // The regex may over-capture (include trailing words), so we try
         // progressively shorter substrings until one passes mod-97 validation.
-        let iban_re = IBAN_RE.get_or_init(|| {
-            FRegex::new(r"(?<![A-Za-z0-9])([A-Z]{2}\d{2}(?:[ ]?[A-Z0-9]){10,30})(?![A-Za-z0-9])").unwrap()
-        });
-        let iban_re_ci = IBAN_RE_CI.get_or_init(|| {
+        // A single case-insensitive regex covers both upper and lowercase IBANs;
+        // `iban_check` internally uppercases the match before mod-97 validation.
+        let iban_re = IBAN_RE_CI.get_or_init(|| {
             FRegex::new(r"(?<![A-Za-z0-9])([A-Za-z]{2}\d{2}(?:[ ]?[A-Za-z0-9]){10,30})(?![A-Za-z0-9])").unwrap()
         });
-        // Try uppercase first, then case-insensitive
         let mut found_iban = false;
-        for re in [iban_re, iban_re_ci] {
-            for m in re.captures_iter(&cleaned).flatten() {
-                if let Some(group) = m.get(1) {
-                    let raw = group.as_str();
-                    // Try the full match first, then progressively trim trailing
-                    // space-separated tokens until mod-97 passes or min length reached.
-                    if iban_check(raw) {
+        for m in iban_re.captures_iter(&cleaned).flatten() {
+            if let Some(group) = m.get(1) {
+                let raw = group.as_str();
+                // Try the full match first, then progressively trim trailing
+                // space-separated tokens until mod-97 passes or min length reached.
+                if iban_check(raw) {
+                    found_iban = true;
+                    break;
+                }
+                // Try trimming trailing tokens (e.g. "GB82...432 for the" → "GB82...432")
+                let parts: Vec<&str> = raw.split(' ').collect();
+                for end in (1..parts.len()).rev() {
+                    let trimmed = parts[..end].join(" ");
+                    if iban_check(&trimmed) {
                         found_iban = true;
                         break;
                     }
-                    // Try trimming trailing tokens (e.g. "GB82...432 for the" → "GB82...432")
-                    let parts: Vec<&str> = raw.split(' ').collect();
-                    for end in (1..parts.len()).rev() {
-                        let trimmed = parts[..end].join(" ");
-                        if iban_check(&trimmed) {
-                            found_iban = true;
-                            break;
-                        }
-                    }
-                    if found_iban { break; }
                 }
+                if found_iban { break; }
             }
-            if found_iban { break; }
         }
         if found_iban {
             signals.push(DetectorSignal {
@@ -238,7 +233,6 @@ static EMAIL_RE: OnceLock<Regex> = OnceLock::new();
 static CC_RE: OnceLock<FRegex> = OnceLock::new();
 static PHONE_RE: OnceLock<FRegex> = OnceLock::new();
 static SSN_RE: OnceLock<FRegex> = OnceLock::new();
-static IBAN_RE: OnceLock<FRegex> = OnceLock::new();
 static IBAN_RE_CI: OnceLock<FRegex> = OnceLock::new();
 static CRED_LEAK_RE: OnceLock<FRegex> = OnceLock::new();
 

@@ -23,7 +23,8 @@
 
 use std::collections::BTreeMap;
 use std::fmt;
-use std::sync::Mutex;
+
+use parking_lot::Mutex;
 
 use serde_json::Value;
 
@@ -104,33 +105,20 @@ impl MockSlmRunner {
     /// Returns an owned clone so the caller can iterate without
     /// holding the lock.
     pub fn calls(&self) -> Vec<Value> {
-        // Lock poisoning here means a previous test panicked while
-        // holding the mutex — recover the inner data because the
-        // poisoned state is just a `Vec<Value>` and there is no
-        // half-mutated invariant to worry about.
-        match self.calls.lock() {
-            Ok(guard) => guard.clone(),
-            Err(poisoned) => poisoned.into_inner().clone(),
-        }
+        self.calls.lock().clone()
     }
 
     /// Number of times [`SlmRunner::decide`] has been invoked.
     /// Cheaper than `calls().len()` because it doesn't clone the
     /// underlying `Vec`.
     pub fn call_count(&self) -> usize {
-        match self.calls.lock() {
-            Ok(guard) => guard.len(),
-            Err(poisoned) => poisoned.into_inner().len(),
-        }
+        self.calls.lock().len()
     }
 
     /// Reset the call log. Useful between phases of a test that
     /// reuse the same runner.
     pub fn clear_calls(&self) {
-        match self.calls.lock() {
-            Ok(mut guard) => guard.clear(),
-            Err(poisoned) => poisoned.into_inner().clear(),
-        }
+        self.calls.lock().clear();
     }
 }
 
@@ -158,10 +146,7 @@ impl SlmRunner for MockSlmRunner {
     fn decide(&self, _prompt: &str, signal_json: &Value) -> PolicyDecision {
         // Record the call before any branching so even the fall-
         // through cases are observable.
-        match self.calls.lock() {
-            Ok(mut guard) => guard.push(signal_json.clone()),
-            Err(poisoned) => poisoned.into_inner().push(signal_json.clone()),
-        }
+        self.calls.lock().push(signal_json.clone());
 
         let scenario = signal_json
             .get("context_hints")

@@ -54,7 +54,9 @@
 use std::collections::VecDeque;
 use std::fmt;
 use std::panic::AssertUnwindSafe;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+
+use parking_lot::Mutex;
 
 use super::decision::PolicyDecision;
 use super::sanitizer::SanitizationEvent;
@@ -343,14 +345,8 @@ impl InMemoryDecisionObserver {
         state.violations.clear();
     }
 
-    fn lock_state(&self) -> std::sync::MutexGuard<'_, InMemoryState> {
-        match self.state.lock() {
-            Ok(g) => g,
-            // Lock poisoning here just means an earlier panicking
-            // observer call entered the critical section; the
-            // payloads themselves are pure data so we can resume.
-            Err(p) => p.into_inner(),
-        }
+    fn lock_state(&self) -> parking_lot::MutexGuard<'_, InMemoryState> {
+        self.state.lock()
     }
 
     fn push_with_eviction<T>(deque: &mut VecDeque<T>, item: T, capacity: usize) {

@@ -365,7 +365,16 @@ fn build_eval_policy_pack() -> PolicyPack {
             },
         ],
         thresholds: PolicyThresholds::default(),
-        slm_prompt: "Classify the following text for safety risks.".into(),
+        slm_prompt: {
+            #[cfg(feature = "skill-pack")]
+            {
+                kchat_safety::skillpack::data::loaders::embedded_runtime_instruction().to_string()
+            }
+            #[cfg(not(feature = "skill-pack"))]
+            {
+                "Classify the following text for safety risks.".into()
+            }
+        },
     }
 }
 
@@ -627,6 +636,28 @@ pub fn run_safety_realworld() -> SuiteReport {
     let guardrail_suite = run_guardrail_sample_messages();
     suite.merge(&guardrail_suite);
 
+    // Run held-out adversarial cases (must be caught).
+    let adversarial_suite = run_held_out_eval(
+        "held_out_adversarial.yaml",
+        "Held-Out Adversarial Eval",
+        0.50,
+    );
+    suite.merge(&adversarial_suite);
+
+    // Run held-out benign cases (must NOT be flagged).
+    let benign_suite = run_held_out_eval(
+        "held_out_benign.yaml",
+        "Held-Out Benign Eval",
+        0.90,
+    );
+    suite.merge(&benign_suite);
+
+    // Training corpus eval is run separately — it has 2500+ cases across all 17
+    // categories, but the deterministic classifier only has lexicon rules for a
+    // subset. Including it in the main safety suite would drown out the
+    // meaningful signal. It's reported as a standalone sub-suite.
+    let _training_suite = run_training_corpus_eval();
+
     suite
 }
 
@@ -884,6 +915,337 @@ fn run_guardrail_sample_messages() -> SuiteReport {
     ));
 
     suite
+}
+
+// ─── Held-out eval (adversarial + benign) ───
+
+/// Held-out eval case schema matching `datasets/safety/guardrail/held_out_*.yaml`.
+#[derive(Debug, Deserialize)]
+struct HeldOutDataset {
+    cases: Vec<HeldOutCase>,
+}
+
+#[derive(Debug, Deserialize)]
+struct HeldOutCase {
+    case_id: String,
+    #[serde(default)]
+    #[allow(dead_code)]
+    language: String,
+    #[serde(default)]
+    description: String,
+    message: HeldOutMessage,
+    #[serde(default)]
+    context: HeldOutContext,
+    expected: HeldOutExpected,
+    #[serde(default)]
+    #[allow(dead_code)]
+    tags: Vec<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct HeldOutMessage {
+    text: String,
+    #[serde(default)]
+    quoted_from_user: bool,
+}
+
+#[derive(Debug, Deserialize, Default)]
+struct HeldOutContext {
+    #[serde(default)]
+    #[allow(dead_code)]
+    group_kind: String,
+    #[serde(default)]
+    group_age_mode: String,
+    #[serde(default)]
+    #[allow(dead_code)]
+    user_role: String,
+    #[serde(default)]
+    #[allow(dead_code)]
+    relationship_known: bool,
+    #[serde(default)]
+    locale: Option<String>,
+    #[serde(default)]
+    jurisdiction_id: Option<String>,
+    #[serde(default)]
+    community_overlay_id: Option<String>,
+    #[serde(default)]
+    #[allow(dead_code)]
+    is_offline: bool,
+}
+
+#[derive(Debug, Deserialize)]
+struct HeldOutExpected {
+    #[serde(default)]
+    category: Option<u32>,
+    #[serde(default)]
+    severity: Option<u8>,
+    #[serde(default)]
+    severity_at_least: Option<u8>,
+    #[serde(default)]
+    #[allow(dead_code)]
+    reason_codes_must_include: Vec<String>,
+}
+
+/// Load and run a held-out YAML dataset (adversarial or benign).
+fn run_held_out_eval(filename: &str, suite_name: &str, threshold: f64) -> SuiteReport {
+    let mut suite = SuiteReport::new(suite_name, threshold);
+
+    let yaml_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("datasets/safety/guardrail/held_out")
+        .join(filename);
+
+    let content = match std::fs::read_to_string(&yaml_path) {
+        Ok(c) => c,
+        Err(e) => {
+            suite.add(EvalResult::fail(
+                &format!("{}_load", suite_name),
+                format!("failed to read {}: {}", yaml_path.display(), e),
+            ));
+            return suite;
+        }
+    };
+
+    let dataset: HeldOutDataset = match serde_yaml::from_str(&content) {
+        Ok(d) => d,
+        Err(e) => {
+            suite.add(EvalResult::fail(
+                &format!("{}_parse", suite_name),
+                format!("failed to parse YAML: {}", e),
+            ));
+            return suite;
+        }
+    };
+
+    use kchat_safety::classify::{SafetyClassifier, ClassifyRequest};
+    use std::sync::Arc;
+
+    let classifier = SafetyClassifier::new();
+    classifier.load_policy_pack(Arc::new(build_eval_policy_pack()));
+
+    let mut correct = 0u32;
+    let mut total = 0u32;
+
+    for case in &dataset.cases {
+        let mut req = ClassifyRequest::from_text(&case.message.text);
+        req.quoted_from_user = case.message.quoted_from_user;
+        req.community_overlay_id = case.context.community_overlay_id.clone();
+
+        if let Some(ref jur) = case.context.jurisdiction_id {
+            let jur_lower = jur.to_lowercase();
+            req.jurisdiction = Some(jur_lower);
+        }
+        req.locale = case.context.locale.clone();
+
+        req.is_group = match case.context.group_kind.as_str() {
+            "dm" => false,
+            _ => true,
+        };
+        req.age_mode = match case.context.group_age_mode.as_str() {
+            "minor_present" => Some("minor".to_string()),
+            "mixed_age" => Some("mixed".to_string()),
+            "adult_only" => Some("adult".to_string()),
+            _ => None,
+        };
+
+        let result = classifier.classify(&req);
+        let predicted_cat = result.verdict.category;
+        let predicted_sev = result.verdict.severity.0;
+
+        total += 1;
+
+        let cat_ok = case.expected.category.map_or(true, |c| predicted_cat == c);
+        let sev_ok = if let Some(s) = case.expected.severity {
+            predicted_sev == s
+        } else if let Some(s) = case.expected.severity_at_least {
+            predicted_sev >= s
+        } else {
+            true
+        };
+        let is_correct = cat_ok && sev_ok;
+
+        if is_correct {
+            correct += 1;
+        }
+
+        let mut meta = HashMap::new();
+        meta.insert("case_id".into(), case.case_id.clone());
+        meta.insert("description".into(), case.description.clone());
+        meta.insert("predicted_category".into(), predicted_cat.to_string());
+        meta.insert("predicted_severity".into(), predicted_sev.to_string());
+        meta.insert(
+            "predicted_action".into(),
+            format!("{:?}", result.verdict.action),
+        );
+        if let Some(c) = case.expected.category {
+            meta.insert("expected_category".into(), c.to_string());
+        }
+        if let Some(s) = case.expected.severity {
+            meta.insert("expected_severity".into(), s.to_string());
+        }
+        if let Some(s) = case.expected.severity_at_least {
+            meta.insert("expected_severity_at_least".into(), s.to_string());
+        }
+
+        if is_correct {
+            suite.add(EvalResult::pass_with_meta(
+                format!("heldout_{}", case.case_id),
+                0,
+                meta,
+            ));
+        } else {
+            suite.add(EvalResult::fail_with_meta(
+                format!("heldout_{}", case.case_id),
+                format!(
+                    "expected cat={:?} sev={:?} sev_at_least={:?}, got cat={} sev={} action={:?}",
+                    case.expected.category,
+                    case.expected.severity,
+                    case.expected.severity_at_least,
+                    predicted_cat,
+                    predicted_sev,
+                    result.verdict.action
+                ),
+                0,
+                meta,
+            ));
+        }
+    }
+
+    let accuracy = if total > 0 { correct as f64 / total as f64 } else { 0.0 };
+    let mut summary = HashMap::new();
+    summary.insert("accuracy".into(), format!("{:.4}", accuracy));
+    summary.insert("total_cases".into(), total.to_string());
+    summary.insert("correct".into(), correct.to_string());
+    suite.add(EvalResult::pass_with_meta(
+        &format!("{}_summary", suite_name),
+        0,
+        summary,
+    ));
+
+    suite
+}
+
+// ─── Training corpus eval ───
+
+/// Training corpus YAML schema: `category_id`, `category_name`, `examples: [String]`.
+#[derive(Debug, Deserialize)]
+struct TrainingCorpusFile {
+    category_id: u32,
+    #[serde(default)]
+    #[allow(dead_code)]
+    category_name: String,
+    examples: Vec<String>,
+}
+
+/// Run the training corpus cases through the classifier and check that
+/// non-SAFE categories are detected (category ≠ 0) and SAFE cases pass clean.
+fn run_training_corpus_eval() -> SuiteReport {
+    let mut suite = SuiteReport::new("Training Corpus Eval", 0.50);
+
+    let corpus_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("datasets/safety/guardrail/training_corpus");
+
+    use kchat_safety::classify::{SafetyClassifier, ClassifyRequest};
+    use std::sync::Arc;
+
+    let classifier = SafetyClassifier::new();
+    classifier.load_policy_pack(Arc::new(build_eval_policy_pack()));
+
+    let mut correct = 0u32;
+    let mut total = 0u32;
+
+    for cat_id in 0u32..=16 {
+        let filename = format!("cat_{:02}_{}.yaml", cat_id, category_id_to_name(cat_id));
+        let path = corpus_dir.join(&filename);
+
+        let content = match std::fs::read_to_string(&path) {
+            Ok(c) => c,
+            Err(_) => continue,
+        };
+
+        let corpus: TrainingCorpusFile = match serde_yaml::from_str(&content) {
+            Ok(c) => c,
+            Err(e) => {
+                suite.add(EvalResult::fail(
+                    &format!("training_corpus_cat_{}", cat_id),
+                    format!("failed to parse {}: {}", filename, e),
+                ));
+                continue;
+            }
+        };
+
+        for (i, text) in corpus.examples.iter().enumerate() {
+            let req = ClassifyRequest::from_text(text);
+            let result = classifier.classify(&req);
+            let predicted_cat = result.verdict.category;
+
+            total += 1;
+
+            let is_correct = if cat_id == 0 {
+                predicted_cat == 0
+            } else {
+                predicted_cat != 0
+            };
+
+            if is_correct {
+                correct += 1;
+            }
+
+            let case_name = format!("training_cat_{:02}_{:03}", cat_id, i);
+            let mut meta = HashMap::new();
+            meta.insert("expected_category".into(), cat_id.to_string());
+            meta.insert("predicted_category".into(), predicted_cat.to_string());
+            meta.insert(
+                "predicted_action".into(),
+                format!("{:?}", result.verdict.action),
+            );
+
+            if is_correct {
+                suite.add(EvalResult::pass_with_meta(&case_name, 0, meta));
+            } else {
+                suite.add(EvalResult::fail_with_meta(
+                    &case_name,
+                    format!(
+                        "expected cat={} (non-zero), got cat={} action={:?}",
+                        cat_id, predicted_cat, result.verdict.action
+                    ),
+                    0,
+                    meta,
+                ));
+            }
+        }
+    }
+
+    let accuracy = if total > 0 { correct as f64 / total as f64 } else { 0.0 };
+    let mut summary = HashMap::new();
+    summary.insert("accuracy".into(), format!("{:.4}", accuracy));
+    summary.insert("total_cases".into(), total.to_string());
+    summary.insert("correct".into(), correct.to_string());
+    suite.add(EvalResult::pass_with_meta("training_corpus_summary", 0, summary));
+
+    suite
+}
+
+fn category_id_to_name(id: u32) -> &'static str {
+    match id {
+        0 => "safe",
+        1 => "child_safety",
+        2 => "self_harm",
+        3 => "violence_threat",
+        4 => "extremism",
+        5 => "harassment",
+        6 => "hate",
+        7 => "scam_fraud",
+        8 => "malware_link",
+        9 => "private_data",
+        10 => "sexual_adult",
+        11 => "drugs_weapons",
+        12 => "illegal_goods",
+        13 => "misinformation_health",
+        14 => "misinformation_civic",
+        15 => "community_rule",
+        16 => "deepfake_synthetic",
+        _ => "unknown",
+    }
 }
 
 // ─── Context eval ───

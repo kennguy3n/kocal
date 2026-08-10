@@ -9,7 +9,7 @@
 //! ## What lives here
 //!
 //! * [`Verdict`] — the JSON-conformant output shape emitted by the
-//!   guardrail pipeline. Matches `kchat-skills/global/output_schema.json`
+//!   guardrail pipeline. Matches `files/global/output_schema.json`
 //!   exactly (severity / category / confidence / actions / reason
 //!   codes / rationale id + optional `resource_link_id` /
 //!   `counter_updates` / `model_health`).

@@ -21,6 +21,14 @@ use unicode_normalization::UnicodeNormalization;
 use std::sync::Arc;
 use std::time::Instant;
 
+/// Maximum input text length accepted by [`SafetyClassifier::classify`].
+///
+/// Inputs exceeding this length are truncated before normalization to
+/// prevent latency spikes on the deterministic hot path (<5ms P95 target).
+/// 32 KiB is well above any legitimate chat message while bounding the
+/// cost of NFKC normalization + regex passes + lexicon scans.
+pub const MAX_INPUT_LEN: usize = 32 * 1024;
+
 /// Request for safety classification.
 #[derive(Debug, Clone)]
 pub struct ClassifyRequest {
@@ -44,7 +52,7 @@ pub struct ClassifyRequest {
     pub community_overlay_id: Option<String>,
     /// Jurisdiction code (e.g. "us", "vn", "eu") for jurisdiction overlay
     /// resolution. When set, the classifier loads the matching jurisdiction
-    /// overlay from `kchat-skills/jurisdictions/{code}/overlay.yaml`.
+    /// overlay from embedded data (`skillpack/data/files/jurisdictions/{code}/overlay.yaml`).
     pub jurisdiction: Option<String>,
     /// Locale tag (e.g. "en-US", "vi-VN") for language-asset selection.
     pub locale: Option<String>,
@@ -206,6 +214,10 @@ pub struct ClassifyResult {
     pub duration_us: u64,
 }
 
+/// Maximum number of policy packs that can be loaded. Prevents unbounded
+/// linear scan in `build_lexicon_with_overlays` and `get_thresholds`.
+pub const MAX_POLICY_PACKS: usize = 16;
+
 /// The safety classifier — owns loaded policy packs and optional encoder/SLM.
 pub struct SafetyClassifier {
     policy_packs: RwLock<Vec<Arc<PolicyPack>>>,
@@ -213,6 +225,9 @@ pub struct SafetyClassifier {
     encoder: RwLock<Option<Box<dyn EncoderAdapter>>>,
     /// Optional SLM adjudicator — set on medium+ devices
     slm: RwLock<Option<Box<dyn SlmAdjudicator>>>,
+    /// Cached lexicon keyed by `(pack_count, jurisdiction, community_overlay_id)`.
+    /// Invalidated when a new policy pack is loaded.
+    lexicon_cache: RwLock<Option<(usize, Option<String>, Option<String>, Vec<(String, u32, Severity)>)>>,
 }
 
 /// Trait for encoder-based classification (ONNX INT8/INT4).
@@ -271,12 +286,21 @@ impl SafetyClassifier {
             policy_packs: RwLock::new(Vec::new()),
             encoder: RwLock::new(None),
             slm: RwLock::new(None),
+            lexicon_cache: RwLock::new(None),
         }
     }
 
     /// Load a signed policy pack.
-    pub fn load_policy_pack(&self, pack: Arc<PolicyPack>) {
-        self.policy_packs.write().push(pack);
+    ///
+    /// Returns `false` if the maximum pack count ([`MAX_POLICY_PACKS`]) has been reached.
+    pub fn load_policy_pack(&self, pack: Arc<PolicyPack>) -> bool {
+        let mut packs = self.policy_packs.write();
+        if packs.len() >= MAX_POLICY_PACKS {
+            return false;
+        }
+        packs.push(pack);
+        *self.lexicon_cache.write() = None;
+        true
     }
 
     /// Attach an encoder (ONNX classifier) — medium+ tier only.
@@ -301,9 +325,16 @@ impl SafetyClassifier {
     pub fn classify(&self, request: &ClassifyRequest) -> ClassifyResult {
         let start = Instant::now();
 
+        // Truncate oversized inputs to bound normalization + regex cost.
+        let text = if request.text.len() > MAX_INPUT_LEN {
+            &request.text[..MAX_INPUT_LEN]
+        } else {
+            &request.text
+        };
+
         // Step 1: Normalize — multiple views for different detector types
-        let pattern_text = normalize::normalize_for_patterns(&request.text);
-        let lexicon_base = normalize::normalize_for_lexicon(&request.text);
+        let pattern_text = normalize::normalize_for_patterns(text);
+        let lexicon_base = normalize::normalize_for_lexicon(text);
 
         // Build search views: the non-leetspeak base + defanged variants.
         // Scam patterns use `!` and `.` which leetspeak corrupts, so the
@@ -319,7 +350,10 @@ impl SafetyClassifier {
         }
 
         // Step 2: Run deterministic detectors across all views
-        let lexicon = self.build_lexicon();
+        let lexicon = self.build_lexicon_with_overlays(
+            request.jurisdiction.as_deref(),
+            request.community_overlay_id.as_deref(),
+        );
         let mut signals = detectors::run_all_detectors(&pattern_text, &lexicon_views, &lexicon);
 
         // Attach media descriptors from the request (on-device vision scores)
@@ -471,9 +505,45 @@ impl SafetyClassifier {
         }
     }
 
-    /// Build a lexicon from all loaded policy packs.
-    /// Deduplicates terms across packs (first occurrence wins).
-    fn build_lexicon(&self) -> Vec<(String, u32, Severity)> {
+    /// Build a lexicon from all loaded policy packs, plus scam phrases from
+    /// embedded jurisdiction and community overlays (when the `skill-pack`
+    /// feature is enabled and the request specifies overlay IDs).
+    fn build_lexicon_with_overlays(
+        &self,
+        jurisdiction: Option<&str>,
+        community_overlay_id: Option<&str>,
+    ) -> Vec<(String, u32, Severity)> {
+        let pack_count = {
+            let packs = self.policy_packs.read();
+            packs.len()
+        };
+
+        let jur_owned = jurisdiction.map(|s| s.to_string());
+        let com_owned = community_overlay_id.map(|s| s.to_string());
+
+        if let Some(ref cache) = *self.lexicon_cache.read() {
+            if cache.0 == pack_count && cache.1 == jur_owned && cache.2 == com_owned {
+                return cache.3.clone();
+            }
+        }
+
+        let lexicon = self.build_lexicon_with_overlays_uncached(jurisdiction, community_overlay_id);
+
+        *self.lexicon_cache.write() = Some((
+            pack_count,
+            jur_owned,
+            com_owned,
+            lexicon.clone(),
+        ));
+
+        lexicon
+    }
+
+    fn build_lexicon_with_overlays_uncached(
+        &self,
+        #[allow(unused_variables)] jurisdiction: Option<&str>,
+        #[allow(unused_variables)] community_overlay_id: Option<&str>,
+    ) -> Vec<(String, u32, Severity)> {
         let packs = self.policy_packs.read();
         let mut seen = std::collections::HashSet::new();
         let mut lexicon = Vec::new();
@@ -490,6 +560,45 @@ impl SafetyClassifier {
                     let folded = caseless::default_case_fold_str(&nfkc);
                     if seen.insert(folded.clone()) {
                         lexicon.push((folded, cat, sev));
+                    }
+                }
+            }
+        }
+
+        // Merge scam phrases from embedded overlays (skill-pack feature only).
+        #[cfg(feature = "skill-pack")]
+        {
+            use crate::skillpack::data::loaders;
+            use crate::detectors::categories;
+
+            // Jurisdiction scam phrases (applied first — legal floor).
+            if let Some(code) = jurisdiction {
+                for phrase in loaders::extract_jurisdiction_scam_phrases(code) {
+                    let nfkc: String = phrase.phrase.nfkc().collect();
+                    let folded = caseless::default_case_fold_str(&nfkc);
+                    if seen.insert(folded.clone()) {
+                        let sev = if phrase.weight >= 0.85 {
+                            Severity::BORDERLINE
+                        } else {
+                            Severity::BENIGN
+                        };
+                        lexicon.push((folded, categories::SCAM_FRAUD, sev));
+                    }
+                }
+            }
+
+            // Community scam phrases (applied second — community preference).
+            if let Some(name) = community_overlay_id {
+                for phrase in loaders::extract_community_scam_phrases(name) {
+                    let nfkc: String = phrase.phrase.nfkc().collect();
+                    let folded = caseless::default_case_fold_str(&nfkc);
+                    if seen.insert(folded.clone()) {
+                        let sev = if phrase.weight >= 0.85 {
+                            Severity::BORDERLINE
+                        } else {
+                            Severity::BENIGN
+                        };
+                        lexicon.push((folded, categories::SCAM_FRAUD, sev));
                     }
                 }
             }

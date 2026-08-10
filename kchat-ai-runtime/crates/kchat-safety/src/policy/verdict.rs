@@ -1,6 +1,6 @@
 //! JSON-conformant output shape for the decision policy.
 //!
-//! Mirrors `kchat-skills/global/output_schema.json` (draft-07,
+//! Mirrors `files/global/output_schema.json` (draft-07,
 //! `$id: kchat.guardrail.output.v1`). Round-trips through serde
 //! against the same JSON the Python pipeline emits, so the parity
 //! tests can compare byte-equivalent payloads.

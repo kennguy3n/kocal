@@ -72,6 +72,7 @@ fn ensure_path_within_cache(path: &Path, cache_dir: &Path) -> Result<()> {
 #[derive(Debug)]
 struct CacheEntry {
     /// Pack ID
+    #[allow(dead_code)]
     pack_id: String,
     /// Local path to the downloaded model file
     local_path: PathBuf,

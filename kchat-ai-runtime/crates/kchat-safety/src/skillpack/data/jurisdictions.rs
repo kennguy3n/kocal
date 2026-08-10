@@ -1,0 +1,170 @@
+//! Embedded jurisdiction overlay YAML files (62 jurisdictions + 3 archetypes).
+//!
+//! Each jurisdiction directory is at `files/jurisdictions/<code>/`
+//! and contains `overlay.yaml`, `normalization.yaml`, and optionally `lexicons/*.yaml`.
+//!
+//! Use [`jurisdiction_overlay_yaml`] to look up the overlay by jurisdiction code,
+//! and [`jurisdiction_normalization_yaml`] for the normalization rules.
+
+/// Get the raw YAML for a jurisdiction overlay by code (directory name).
+///
+/// Returns `None` if the code doesn't match any embedded jurisdiction.
+pub fn jurisdiction_overlay_yaml(code: &str) -> Option<&'static str> {
+    match code {
+        "_template" => Some(include_str!("files/jurisdictions/_template/overlay.yaml")),
+        "ae" => Some(include_str!("files/jurisdictions/ae/overlay.yaml")),
+        "ar" => Some(include_str!("files/jurisdictions/ar/overlay.yaml")),
+        "at" => Some(include_str!("files/jurisdictions/at/overlay.yaml")),
+        "au" => Some(include_str!("files/jurisdictions/au/overlay.yaml")),
+        "bd" => Some(include_str!("files/jurisdictions/bd/overlay.yaml")),
+        "br" => Some(include_str!("files/jurisdictions/br/overlay.yaml")),
+        "ca" => Some(include_str!("files/jurisdictions/ca/overlay.yaml")),
+        "ch" => Some(include_str!("files/jurisdictions/ch/overlay.yaml")),
+        "cl" => Some(include_str!("files/jurisdictions/cl/overlay.yaml")),
+        "co" => Some(include_str!("files/jurisdictions/co/overlay.yaml")),
+        "cz" => Some(include_str!("files/jurisdictions/cz/overlay.yaml")),
+        "de" => Some(include_str!("files/jurisdictions/de/overlay.yaml")),
+        "dk" => Some(include_str!("files/jurisdictions/dk/overlay.yaml")),
+        "dz" => Some(include_str!("files/jurisdictions/dz/overlay.yaml")),
+        "ec" => Some(include_str!("files/jurisdictions/ec/overlay.yaml")),
+        "eg" => Some(include_str!("files/jurisdictions/eg/overlay.yaml")),
+        "es" => Some(include_str!("files/jurisdictions/es/overlay.yaml")),
+        "et" => Some(include_str!("files/jurisdictions/et/overlay.yaml")),
+        "fi" => Some(include_str!("files/jurisdictions/fi/overlay.yaml")),
+        "fr" => Some(include_str!("files/jurisdictions/fr/overlay.yaml")),
+        "gb" => Some(include_str!("files/jurisdictions/gb/overlay.yaml")),
+        "gh" => Some(include_str!("files/jurisdictions/gh/overlay.yaml")),
+        "gr" => Some(include_str!("files/jurisdictions/gr/overlay.yaml")),
+        "hu" => Some(include_str!("files/jurisdictions/hu/overlay.yaml")),
+        "id" => Some(include_str!("files/jurisdictions/id/overlay.yaml")),
+        "ie" => Some(include_str!("files/jurisdictions/ie/overlay.yaml")),
+        "il" => Some(include_str!("files/jurisdictions/il/overlay.yaml")),
+        "in" => Some(include_str!("files/jurisdictions/in/overlay.yaml")),
+        "iq" => Some(include_str!("files/jurisdictions/iq/overlay.yaml")),
+        "it" => Some(include_str!("files/jurisdictions/it/overlay.yaml")),
+        "jp" => Some(include_str!("files/jurisdictions/jp/overlay.yaml")),
+        "ke" => Some(include_str!("files/jurisdictions/ke/overlay.yaml")),
+        "kr" => Some(include_str!("files/jurisdictions/kr/overlay.yaml")),
+        "ma" => Some(include_str!("files/jurisdictions/ma/overlay.yaml")),
+        "mx" => Some(include_str!("files/jurisdictions/mx/overlay.yaml")),
+        "my" => Some(include_str!("files/jurisdictions/my/overlay.yaml")),
+        "ng" => Some(include_str!("files/jurisdictions/ng/overlay.yaml")),
+        "nl" => Some(include_str!("files/jurisdictions/nl/overlay.yaml")),
+        "no" => Some(include_str!("files/jurisdictions/no/overlay.yaml")),
+        "nz" => Some(include_str!("files/jurisdictions/nz/overlay.yaml")),
+        "pe" => Some(include_str!("files/jurisdictions/pe/overlay.yaml")),
+        "ph" => Some(include_str!("files/jurisdictions/ph/overlay.yaml")),
+        "pk" => Some(include_str!("files/jurisdictions/pk/overlay.yaml")),
+        "pl" => Some(include_str!("files/jurisdictions/pl/overlay.yaml")),
+        "pt" => Some(include_str!("files/jurisdictions/pt/overlay.yaml")),
+        "ro" => Some(include_str!("files/jurisdictions/ro/overlay.yaml")),
+        "ru" => Some(include_str!("files/jurisdictions/ru/overlay.yaml")),
+        "sa" => Some(include_str!("files/jurisdictions/sa/overlay.yaml")),
+        "se" => Some(include_str!("files/jurisdictions/se/overlay.yaml")),
+        "sg" => Some(include_str!("files/jurisdictions/sg/overlay.yaml")),
+        "th" => Some(include_str!("files/jurisdictions/th/overlay.yaml")),
+        "tr" => Some(include_str!("files/jurisdictions/tr/overlay.yaml")),
+        "tw" => Some(include_str!("files/jurisdictions/tw/overlay.yaml")),
+        "tz" => Some(include_str!("files/jurisdictions/tz/overlay.yaml")),
+        "ua" => Some(include_str!("files/jurisdictions/ua/overlay.yaml")),
+        "us" => Some(include_str!("files/jurisdictions/us/overlay.yaml")),
+        "uy" => Some(include_str!("files/jurisdictions/uy/overlay.yaml")),
+        "vn" => Some(include_str!("files/jurisdictions/vn/overlay.yaml")),
+        "za" => Some(include_str!("files/jurisdictions/za/overlay.yaml")),
+        "archetype-strict-adult" => Some(include_str!("files/jurisdictions/archetype-strict-adult/overlay.yaml")),
+        "archetype-strict-hate" => Some(include_str!("files/jurisdictions/archetype-strict-hate/overlay.yaml")),
+        "archetype-strict-marketplace" => Some(include_str!("files/jurisdictions/archetype-strict-marketplace/overlay.yaml")),
+        _ => None,
+    }
+}
+
+/// Get the raw YAML for a jurisdiction's normalization rules by code.
+///
+/// Returns `None` if the code doesn't match any embedded jurisdiction or
+/// the jurisdiction has no `normalization.yaml`.
+pub fn jurisdiction_normalization_yaml(code: &str) -> Option<&'static str> {
+    match code {
+        "ae" => Some(include_str!("files/jurisdictions/ae/normalization.yaml")),
+        "ar" => Some(include_str!("files/jurisdictions/ar/normalization.yaml")),
+        "at" => Some(include_str!("files/jurisdictions/at/normalization.yaml")),
+        "au" => Some(include_str!("files/jurisdictions/au/normalization.yaml")),
+        "bd" => Some(include_str!("files/jurisdictions/bd/normalization.yaml")),
+        "br" => Some(include_str!("files/jurisdictions/br/normalization.yaml")),
+        "ca" => Some(include_str!("files/jurisdictions/ca/normalization.yaml")),
+        "ch" => Some(include_str!("files/jurisdictions/ch/normalization.yaml")),
+        "cl" => Some(include_str!("files/jurisdictions/cl/normalization.yaml")),
+        "co" => Some(include_str!("files/jurisdictions/co/normalization.yaml")),
+        "cz" => Some(include_str!("files/jurisdictions/cz/normalization.yaml")),
+        "de" => Some(include_str!("files/jurisdictions/de/normalization.yaml")),
+        "dk" => Some(include_str!("files/jurisdictions/dk/normalization.yaml")),
+        "dz" => Some(include_str!("files/jurisdictions/dz/normalization.yaml")),
+        "ec" => Some(include_str!("files/jurisdictions/ec/normalization.yaml")),
+        "eg" => Some(include_str!("files/jurisdictions/eg/normalization.yaml")),
+        "es" => Some(include_str!("files/jurisdictions/es/normalization.yaml")),
+        "et" => Some(include_str!("files/jurisdictions/et/normalization.yaml")),
+        "fi" => Some(include_str!("files/jurisdictions/fi/normalization.yaml")),
+        "fr" => Some(include_str!("files/jurisdictions/fr/normalization.yaml")),
+        "gb" => Some(include_str!("files/jurisdictions/gb/normalization.yaml")),
+        "gh" => Some(include_str!("files/jurisdictions/gh/normalization.yaml")),
+        "gr" => Some(include_str!("files/jurisdictions/gr/normalization.yaml")),
+        "hu" => Some(include_str!("files/jurisdictions/hu/normalization.yaml")),
+        "id" => Some(include_str!("files/jurisdictions/id/normalization.yaml")),
+        "ie" => Some(include_str!("files/jurisdictions/ie/normalization.yaml")),
+        "il" => Some(include_str!("files/jurisdictions/il/normalization.yaml")),
+        "in" => Some(include_str!("files/jurisdictions/in/normalization.yaml")),
+        "iq" => Some(include_str!("files/jurisdictions/iq/normalization.yaml")),
+        "it" => Some(include_str!("files/jurisdictions/it/normalization.yaml")),
+        "jp" => Some(include_str!("files/jurisdictions/jp/normalization.yaml")),
+        "ke" => Some(include_str!("files/jurisdictions/ke/normalization.yaml")),
+        "kr" => Some(include_str!("files/jurisdictions/kr/normalization.yaml")),
+        "ma" => Some(include_str!("files/jurisdictions/ma/normalization.yaml")),
+        "mx" => Some(include_str!("files/jurisdictions/mx/normalization.yaml")),
+        "my" => Some(include_str!("files/jurisdictions/my/normalization.yaml")),
+        "ng" => Some(include_str!("files/jurisdictions/ng/normalization.yaml")),
+        "nl" => Some(include_str!("files/jurisdictions/nl/normalization.yaml")),
+        "no" => Some(include_str!("files/jurisdictions/no/normalization.yaml")),
+        "nz" => Some(include_str!("files/jurisdictions/nz/normalization.yaml")),
+        "pe" => Some(include_str!("files/jurisdictions/pe/normalization.yaml")),
+        "ph" => Some(include_str!("files/jurisdictions/ph/normalization.yaml")),
+        "pk" => Some(include_str!("files/jurisdictions/pk/normalization.yaml")),
+        "pl" => Some(include_str!("files/jurisdictions/pl/normalization.yaml")),
+        "pt" => Some(include_str!("files/jurisdictions/pt/normalization.yaml")),
+        "ro" => Some(include_str!("files/jurisdictions/ro/normalization.yaml")),
+        "ru" => Some(include_str!("files/jurisdictions/ru/normalization.yaml")),
+        "sa" => Some(include_str!("files/jurisdictions/sa/normalization.yaml")),
+        "se" => Some(include_str!("files/jurisdictions/se/normalization.yaml")),
+        "sg" => Some(include_str!("files/jurisdictions/sg/normalization.yaml")),
+        "th" => Some(include_str!("files/jurisdictions/th/normalization.yaml")),
+        "tr" => Some(include_str!("files/jurisdictions/tr/normalization.yaml")),
+        "tw" => Some(include_str!("files/jurisdictions/tw/normalization.yaml")),
+        "tz" => Some(include_str!("files/jurisdictions/tz/normalization.yaml")),
+        "ua" => Some(include_str!("files/jurisdictions/ua/normalization.yaml")),
+        "us" => Some(include_str!("files/jurisdictions/us/normalization.yaml")),
+        "uy" => Some(include_str!("files/jurisdictions/uy/normalization.yaml")),
+        "vn" => Some(include_str!("files/jurisdictions/vn/normalization.yaml")),
+        "za" => Some(include_str!("files/jurisdictions/za/normalization.yaml")),
+        "archetype-strict-adult" => Some(include_str!("files/jurisdictions/archetype-strict-adult/normalization.yaml")),
+        "archetype-strict-hate" => Some(include_str!("files/jurisdictions/archetype-strict-hate/normalization.yaml")),
+        "archetype-strict-marketplace" => Some(include_str!("files/jurisdictions/archetype-strict-marketplace/normalization.yaml")),
+        _ => None,
+    }
+}
+
+/// List all jurisdiction codes (excluding `_template`).
+pub fn jurisdiction_codes() -> &'static [&'static str] {
+    &[
+        "ae", "ar", "at", "au", "bd", "br", "ca", "ch", "cl", "co",
+        "cz", "de", "dk", "dz", "ec", "eg", "es", "et", "fi", "fr",
+        "gb", "gh", "gr", "hu", "id", "ie", "il", "in", "iq", "it",
+        "jp", "ke", "kr", "ma", "mx", "my", "ng", "nl", "no", "nz",
+        "pe", "ph", "pk", "pl", "pt", "ro", "ru", "sa", "se", "sg",
+        "th", "tr", "tw", "tz", "ua", "us", "uy", "vn", "za",
+        "archetype-strict-adult",
+        "archetype-strict-hate",
+        "archetype-strict-marketplace",
+    ]
+}
+
+#[cfg(test)]
+#[path = "jurisdiction_tests.rs"]
+mod jurisdiction_tests;

@@ -47,7 +47,7 @@ use serde::{Deserialize, Serialize};
 use super::verdict::{Actions, RawClassifierOutput, Verdict};
 
 /// Canonical taxonomy id for `CHILD_SAFETY`. Kept in sync with
-/// `kchat-skills/global/taxonomy.yaml`.
+/// `files/global/taxonomy.yaml`.
 pub const CHILD_SAFETY_CATEGORY: u32 = 1;
 
 /// Canonical taxonomy id for the SAFE category.

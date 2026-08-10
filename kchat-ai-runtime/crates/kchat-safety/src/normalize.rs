@@ -264,6 +264,9 @@ fn collapse_whitespace(text: &str) -> String {
 /// letters are separated by spaces to bypass keyword matching. Joins
 /// sequences of 3+ single-character tokens into continuous strings.
 fn despace_obfuscation(text: &str) -> String {
+    if !text.contains(' ') {
+        return text.to_string();
+    }
     let tokens: Vec<&str> = text.split(' ').collect();
     if tokens.len() < 3 {
         return text.to_string();

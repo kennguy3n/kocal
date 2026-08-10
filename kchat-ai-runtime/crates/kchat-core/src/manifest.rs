@@ -14,7 +14,7 @@
 //! - Ed25519 signature rooted in KChat release keys
 
 use crate::error::{CoreError, Result};
-use ed25519_dalek::{Signature, Verifier, VerifyingKey};
+use ed25519_dalek::{Signature, VerifyingKey};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 

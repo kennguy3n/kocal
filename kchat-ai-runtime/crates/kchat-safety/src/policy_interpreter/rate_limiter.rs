@@ -42,8 +42,9 @@
 //! generates).
 
 use std::fmt;
-use std::sync::Mutex;
 use std::time::Instant;
+
+use parking_lot::Mutex;
 
 /// Outcome of a single [`SlmRateLimiter::try_acquire`] call.
 ///
@@ -182,10 +183,7 @@ impl MockMonotonicClock {
     /// Python parity oracle's `_MockMonotonicClock.set` which raises
     /// `ValueError` on the same condition.
     pub fn set(&self, value: f64) {
-        let mut guard = match self.now.lock() {
-            Ok(g) => g,
-            Err(poisoned) => poisoned.into_inner(),
-        };
+        let mut guard = self.now.lock();
         assert!(
             value >= *guard,
             "MockMonotonicClock must be monotonically non-decreasing \
@@ -204,10 +202,7 @@ impl MockMonotonicClock {
             delta_seconds >= 0.0,
             "MockMonotonicClock::advance requires non-negative dt, got {delta_seconds}",
         );
-        let mut guard = match self.now.lock() {
-            Ok(g) => g,
-            Err(poisoned) => poisoned.into_inner(),
-        };
+        let mut guard = self.now.lock();
         *guard += delta_seconds;
     }
 }
@@ -220,10 +215,7 @@ impl Default for MockMonotonicClock {
 
 impl fmt::Debug for MockMonotonicClock {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let snapshot = match self.now.lock() {
-            Ok(guard) => *guard,
-            Err(poisoned) => *poisoned.into_inner(),
-        };
+        let snapshot = *self.now.lock();
         f.debug_struct("MockMonotonicClock")
             .field("now", &snapshot)
             .finish()
@@ -232,10 +224,7 @@ impl fmt::Debug for MockMonotonicClock {
 
 impl MonotonicClock for MockMonotonicClock {
     fn now_seconds(&self) -> f64 {
-        match self.now.lock() {
-            Ok(guard) => *guard,
-            Err(poisoned) => *poisoned.into_inner(),
-        }
+        *self.now.lock()
     }
 }
 
@@ -356,16 +345,8 @@ impl SlmRateLimiter {
         }
     }
 
-    fn lock_state(&self) -> std::sync::MutexGuard<'_, BucketState> {
-        match self.state.lock() {
-            Ok(g) => g,
-            // Lock poisoning here means a previous call panicked
-            // while holding the mutex — recover the state and
-            // continue. The only mutation is finite-arithmetic on
-            // `tokens` / `last_refill`, both of which are safe to
-            // resume from.
-            Err(p) => p.into_inner(),
-        }
+    fn lock_state(&self) -> parking_lot::MutexGuard<'_, BucketState> {
+        self.state.lock()
     }
 
     fn refill_locked(&self, state: &mut BucketState) {
@@ -389,16 +370,8 @@ impl SlmRateLimiter {
 
 impl fmt::Debug for SlmRateLimiter {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let snapshot = match self.state.lock() {
-            Ok(g) => format!("tokens={:.4}, last_refill={:.4}", g.tokens, g.last_refill),
-            Err(p) => {
-                let inner = p.into_inner();
-                format!(
-                    "tokens={:.4}, last_refill={:.4} (poisoned)",
-                    inner.tokens, inner.last_refill
-                )
-            }
-        };
+        let g = self.state.lock();
+        let snapshot = format!("tokens={:.4}, last_refill={:.4}", g.tokens, g.last_refill);
         f.debug_struct("SlmRateLimiter")
             .field("capacity", &self.capacity)
             .field("refill_per_second", &self.refill_per_second)

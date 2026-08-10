@@ -77,6 +77,7 @@
 //! `shared/skillpack/overlay_resolver.py` one-for-one.
 
 pub mod anti_misuse;
+pub mod data;
 pub mod error;
 pub mod loader;
 pub mod overlay;
@@ -115,5 +116,6 @@ pub use schema::{
     Lexicon, LexiconEntry, RegexPattern, RegexSet, SkillPack, SkillPackManifest, TaxonomyConfig,
 };
 pub use verifier::{
-    verify_skill_pack, verify_skill_pack_with_limit, SkillPackSource, VerificationResult,
+    verify_skill_pack, verify_skill_pack_with_limit, DEFAULT_MAX_UNCOMPRESSED_SIZE, SkillPackSource,
+    VerificationResult,
 };

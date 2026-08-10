@@ -114,8 +114,8 @@ The workspace is organized into 8 crates + 1 Go sidecar following the 4-plane ar
   with 17-category taxonomy, 0-5 severity rubric, community/jurisdiction
   overlays, threshold policy (0.45/0.62/0.78/0.85), policy interpreter with
   SLM rate limiting, canonical JSON, revocation lists, anti-misuse validation.
-  kchat-skills/ data tree: global baselines, 38 communities, 62 jurisdictions,
-  prompts, transliteration maps, vision prototypes, eval datasets, regulatory docs.
+  Embedded skill-pack data (include_str!): global baselines, 38 communities,
+  62 jurisdictions, prompts, transliteration maps, vision prototypes, adversarial corpus.
   Works on ALL devices including low-tier (no generative model) and WASM (deterministic only).
 - **kchat-context**: Private context plane — SQLCipher encrypted store, FTS5
   BM25 retrieval, per-scope XChaCha20-Poly1305 encryption, provenance bundles,
@@ -156,8 +156,9 @@ The workspace is organized into 8 crates + 1 Go sidecar following the 4-plane ar
 
 - kchat-core: 97 tests (capability probe, model manager, governor, registry)
 - kchat-safety: 389 tests (deterministic pipeline, encoder, policy packs, vision module)
-  - 575 tests with `--features skill-pack` (adds skillpack loader, overlay merge, verifier,
-    policy interpreter, threshold policy, revocation, anti-misuse, canonical JSON)
+  - 927 tests with `--features skill-pack` (adds skillpack loader, overlay merge, verifier,
+    policy interpreter, threshold policy, revocation, anti-misuse, canonical JSON,
+    jurisdiction tests, community overlay tests, adversarial corpus tests)
 - kchat-action: 31 tests
 - kchat-context: 41 tests (FTS, embeddings, reranker, provenance)
 - kchat-generation: 80 tests (llama.cpp backend, LoRA, swarm, Lark grammar, MLX)

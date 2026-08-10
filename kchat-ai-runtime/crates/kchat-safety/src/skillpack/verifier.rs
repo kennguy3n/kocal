@@ -125,8 +125,16 @@ pub fn verify_skill_pack<'a>(
     source: impl Into<SkillPackSource<'a>>,
     pinned_public_key_hex: &str,
 ) -> Result<VerificationResult, SkillPackError> {
-    verify_skill_pack_with_limit(source, pinned_public_key_hex, u64::MAX)
+    verify_skill_pack_with_limit(source, pinned_public_key_hex, DEFAULT_MAX_UNCOMPRESSED_SIZE)
 }
+
+/// Default per-entry decompression ceiling: 8 MiB.
+///
+/// Well above the largest observed jurisdiction overlay (~280 KB
+/// uncompressed) but small enough to bound memory usage on a 1 GB-RAM
+/// device. Callers that need a higher limit should use
+/// [`verify_skill_pack_with_limit`] explicitly.
+pub const DEFAULT_MAX_UNCOMPRESSED_SIZE: u64 = 8 * 1024 * 1024;
 
 /// Verify a compiled skill pack with a per-entry decompression
 /// ceiling. Behaves identically to [`verify_skill_pack`] except

@@ -1595,6 +1595,7 @@ name = "kchat-safety"
 version = "0.1.0"
 dependencies = [
  "caseless",
+ "chrono",
  "ed25519-dalek",
  "fancy-regex 0.13.0",
  "hex",
