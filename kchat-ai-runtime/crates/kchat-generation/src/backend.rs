@@ -22,7 +22,7 @@ pub enum BackendType {
     LlamaCppVulkan,
     /// llama.cpp with CPU
     LlamaCppCpu,
-    /// Apple MLX framework (macOS/iOS High-tier, for MLX-format models like Macaw)
+    /// Apple MLX framework (macOS/iOS for MLX-format Bonsai models)
     Mlx,
     /// ONNX Runtime (for encoder-only models)
     OnnxRuntime,
@@ -31,18 +31,19 @@ pub enum BackendType {
 }
 
 impl BackendType {
-    /// Select the best backend for the given platform and tier.
+    /// Select the best backend for the given platform, tier, and CPU architecture.
     ///
-    /// - Low/High tier on Apple (iOS/macOS): MLX (for Bonsai-1.7B-MLX and Macaw-4bit-MLX)
-    /// - Medium tier on Apple: llama.cpp Metal (for Qwen 0.8B Q4 GGUF)
+    /// - Apple Silicon (aarch64) on iOS/macOS: MLX (for Bonsai MLX models)
+    /// - Intel Macs (x86_64) on macOS: llama.cpp CPU (no MLX support)
     /// - Android/Windows: llama.cpp Vulkan
     /// - Other: llama.cpp CPU
-    pub fn select(platform: &str, tier: DeviceTier) -> Option<Self> {
+    pub fn select(platform: &str, tier: DeviceTier, cpu_arch: &str) -> Option<Self> {
         match platform {
-            "ios" | "macos" => {
-                match tier {
-                    DeviceTier::Low | DeviceTier::High => Some(BackendType::Mlx),
-                    _ => Some(BackendType::LlamaCppMetal),
+            "ios" => Some(BackendType::Mlx),
+            "macos" => {
+                match cpu_arch {
+                    "aarch64" => Some(BackendType::Mlx),
+                    _ => Some(BackendType::LlamaCppCpu),
                 }
             }
             "android" | "windows" => Some(BackendType::LlamaCppVulkan),
@@ -252,37 +253,42 @@ mod tests {
     fn test_backend_selection_ios() {
         // Low tier on iOS: MLX (for Bonsai-1.7B-MLX)
         assert_eq!(
-            BackendType::select("ios", DeviceTier::Low),
+            BackendType::select("ios", DeviceTier::Low, "aarch64"),
             Some(BackendType::Mlx)
         );
-        // Medium tier on iOS: llama.cpp Metal (for Qwen 0.8B Q4 GGUF)
+        // Medium tier on iOS: MLX (for Bonsai-4B-MLX)
         assert_eq!(
-            BackendType::select("ios", DeviceTier::Medium),
-            Some(BackendType::LlamaCppMetal)
+            BackendType::select("ios", DeviceTier::Medium, "aarch64"),
+            Some(BackendType::Mlx)
         );
-        // High tier on iOS: MLX (for Macaw-4bit-MLX)
+        // High tier on iOS: MLX (for Bonsai-8B-MLX)
         assert_eq!(
-            BackendType::select("ios", DeviceTier::High),
+            BackendType::select("ios", DeviceTier::High, "aarch64"),
             Some(BackendType::Mlx)
         );
     }
 
     #[test]
     fn test_backend_selection_macos() {
-        // Low tier on macOS: MLX (for Bonsai-1.7B-MLX)
+        // Low tier on macOS Apple Silicon: MLX (for Bonsai-1.7B-MLX)
         assert_eq!(
-            BackendType::select("macos", DeviceTier::Low),
+            BackendType::select("macos", DeviceTier::Low, "aarch64"),
             Some(BackendType::Mlx)
         );
-        // Medium tier on macOS: llama.cpp Metal (for Qwen 0.8B Q4 GGUF)
+        // Medium tier on macOS Apple Silicon: MLX (for Bonsai-4B-MLX)
         assert_eq!(
-            BackendType::select("macos", DeviceTier::Medium),
-            Some(BackendType::LlamaCppMetal)
-        );
-        // High tier on macOS: MLX (for Macaw-4bit-MLX)
-        assert_eq!(
-            BackendType::select("macos", DeviceTier::High),
+            BackendType::select("macos", DeviceTier::Medium, "aarch64"),
             Some(BackendType::Mlx)
+        );
+        // High tier on macOS Apple Silicon: MLX (for Bonsai-8B-MLX)
+        assert_eq!(
+            BackendType::select("macos", DeviceTier::High, "aarch64"),
+            Some(BackendType::Mlx)
+        );
+        // Intel Mac (x86_64): llama.cpp CPU (no MLX)
+        assert_eq!(
+            BackendType::select("macos", DeviceTier::Low, "x86_64"),
+            Some(BackendType::LlamaCppCpu)
         );
     }
 
@@ -290,37 +296,37 @@ mod tests {
     fn test_backend_selection_android() {
         // Android always uses Vulkan (no MLX)
         assert_eq!(
-            BackendType::select("android", DeviceTier::Low),
+            BackendType::select("android", DeviceTier::Low, "aarch64"),
             Some(BackendType::LlamaCppVulkan)
         );
         assert_eq!(
-            BackendType::select("android", DeviceTier::Medium),
+            BackendType::select("android", DeviceTier::Medium, "aarch64"),
             Some(BackendType::LlamaCppVulkan)
         );
         assert_eq!(
-            BackendType::select("android", DeviceTier::High),
+            BackendType::select("android", DeviceTier::High, "aarch64"),
             Some(BackendType::LlamaCppVulkan)
         );
     }
 
     #[test]
     fn test_backend_selection_high_tier_apple_uses_mlx() {
-        // High tier on Apple platforms should use MLX for Macaw
+        // High tier on Apple platforms should use MLX for Bonsai-8B-MLX
         assert_eq!(
-            BackendType::select("ios", DeviceTier::High),
+            BackendType::select("ios", DeviceTier::High, "aarch64"),
             Some(BackendType::Mlx)
         );
         assert_eq!(
-            BackendType::select("macos", DeviceTier::High),
+            BackendType::select("macos", DeviceTier::High, "aarch64"),
             Some(BackendType::Mlx)
         );
         // High tier on non-Apple should NOT use MLX
         assert_ne!(
-            BackendType::select("android", DeviceTier::High),
+            BackendType::select("android", DeviceTier::High, "aarch64"),
             Some(BackendType::Mlx)
         );
         assert_ne!(
-            BackendType::select("windows", DeviceTier::High),
+            BackendType::select("windows", DeviceTier::High, "x86_64"),
             Some(BackendType::Mlx)
         );
     }

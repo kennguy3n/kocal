@@ -163,7 +163,7 @@ fn simulate_profile(
     // --- Model Selection ---
     println!("├──────────────────────────────────────────────────────────────────────────────┤");
     println!("│  MODEL SELECTION                                                             │");
-    let model = select_model_for_tier_platform(tier, profile.platform);
+    let model = select_model_for_tier_platform(tier, profile.platform, &profile.cpu_arch);
     let model_ok = model == profile.expected_model_pack;
     checks += 1;
     if model_ok { pass += 1; }
@@ -218,7 +218,7 @@ fn simulate_profile(
     // --- Backend Selection ---
     println!("├──────────────────────────────────────────────────────────────────────────────┤");
     println!("│  BACKEND SELECTION                                                           │");
-    let backend = BackendType::select(&caps.platform, tier);
+    let backend = BackendType::select(&caps.platform, tier, &caps.cpu_arch);
     let backend_ok = backend.map(|b| b.as_str()) == profile.expected_backend;
     checks += 1;
     if backend_ok { pass += 1; }
@@ -331,14 +331,15 @@ fn simulate_profile(
 
     // Model fit check — use tier-appropriate and platform-appropriate model size
     if model.is_some() {
-        let model_size = match (tier, profile.platform) {
-            (DeviceTier::Low, "ios" | "macos") => 472_000_000,              // Bonsai 1.7B MLX ~472MB
-            (DeviceTier::Low, _) => 463_290_464,                            // Bonsai 1.7B Q2_0 GGUF ~442MB
-            (DeviceTier::Medium, _) => 500 * 1024 * 1024,                   // 0.8B Q4 ~500MB
-            (DeviceTier::High, "ios" | "macos") => 1_500 * 1024 * 1024,     // Macaw MLX ~1.5GB
-            (DeviceTier::High, "android") => 1_074_969_344,                 // Bonsai 4B Q2_0 ~1.0GB
-            (DeviceTier::High, "windows") => 2_182_184_672,                 // Bonsai 8B Q2_0 ~2.1GB
-            (DeviceTier::High, _) => 850 * 1024 * 1024,                     // 0.8B Q8 fallback ~850MB
+        let model_size = match (tier, &profile.platform[..], &profile.cpu_arch[..]) {
+            (DeviceTier::Low, "ios" | "macos", "aarch64") => 472_000_000,              // Bonsai 1.7B MLX ~472MB
+            (DeviceTier::Low, _, _) => 463_290_464,                                     // Bonsai 1.7B Q2_0 GGUF ~442MB
+            (DeviceTier::Medium, "ios" | "macos", "aarch64") => 1_000_000_000,         // Bonsai 4B MLX ~1.0GB
+            (DeviceTier::Medium, _, _) => 1_074_969_344,                               // Bonsai 4B Q2_0 GGUF ~1.0GB
+            (DeviceTier::High, "ios" | "macos", "aarch64") => 2_100_000_000,           // Bonsai 8B MLX ~2.1GB
+            (DeviceTier::High, "android", _) => 2_182_184_672,                         // Bonsai 8B Q2_0 GGUF ~2.1GB
+            (DeviceTier::High, "windows", _) => 2_182_184_672,                         // Bonsai 8B Q2_0 GGUF ~2.1GB
+            (DeviceTier::High, _, _) => 850 * 1024 * 1024,                             // 0.8B Q8 fallback ~850MB
         };
         let fits = model_size <= peak;
         checks += 1;
@@ -492,10 +493,10 @@ fn print_summary_table(profiles: &[DeviceProfile]) {
     for p in profiles {
         let caps = p.to_caps();
         let tier = TierSelection::select(&caps).unwrap_or(DeviceTier::Low);
-        let backend = BackendType::select(&caps.platform, tier)
+        let backend = BackendType::select(&caps.platform, tier, &caps.cpu_arch)
             .map(|b| b.as_str().to_string())
             .unwrap_or("none".into());
-        let model = select_model_for_tier_platform(tier, &caps.platform).unwrap_or("—");
+        let model = select_model_for_tier_platform(tier, &caps.platform, &caps.cpu_arch).unwrap_or("—");
         let budget = TierBudget::for_tier(tier, p.platform);
 
         let tier_str = format!("{:?}", tier);

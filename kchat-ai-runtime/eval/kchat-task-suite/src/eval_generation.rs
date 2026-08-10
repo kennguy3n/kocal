@@ -132,7 +132,7 @@ fn test_prompt_template_hash() -> EvalResult {
 
 fn test_backend_selection_low_tier() -> EvalResult {
     // Low tier on Apple: MLX (for Bonsai-1.7B-MLX)
-    let backend = BackendType::select("ios", DeviceTier::Low);
+    let backend = BackendType::select("ios", DeviceTier::Low, "aarch64");
     if backend == Some(BackendType::Mlx) {
         EvalResult::pass("backend_selection_low_tier")
     } else {
@@ -141,18 +141,18 @@ fn test_backend_selection_low_tier() -> EvalResult {
 }
 
 fn test_backend_selection_medium_tier() -> EvalResult {
-    // Medium tier on Apple: llama.cpp Metal (for Qwen 0.8B Q4 GGUF)
-    let backend = BackendType::select("ios", DeviceTier::Medium);
-    if backend == Some(BackendType::LlamaCppMetal) {
+    // Medium tier on Apple: MLX (for Bonsai-4B-MLX)
+    let backend = BackendType::select("ios", DeviceTier::Medium, "aarch64");
+    if backend == Some(BackendType::Mlx) {
         EvalResult::pass("backend_selection_medium_tier")
     } else {
-        EvalResult::fail("backend_selection_medium_tier", format!("expected LlamaCppMetal, got {:?}", backend))
+        EvalResult::fail("backend_selection_medium_tier", format!("expected Mlx, got {:?}", backend))
     }
 }
 
 fn test_backend_selection_high_tier_mlx() -> EvalResult {
-    // High tier on Apple platforms should use MLX for Macaw-4bit-MLX
-    let backend = BackendType::select("ios", DeviceTier::High);
+    // High tier on Apple platforms should use MLX for Bonsai-8B-MLX
+    let backend = BackendType::select("ios", DeviceTier::High, "aarch64");
     if backend == Some(BackendType::Mlx) {
         EvalResult::pass("backend_selection_high_tier_mlx")
     } else {

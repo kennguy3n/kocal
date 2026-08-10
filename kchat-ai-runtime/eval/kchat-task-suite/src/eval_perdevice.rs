@@ -122,6 +122,14 @@ struct DeviceProfileInfo {
     tier: String,
     platform: String,
     model_pack_id: String,
+    /// Vision model pack ID (None = no vision model on this tier)
+    vision_pack_id: Option<String>,
+    /// Safety encoder pack ID (always present — INT8 for Medium+, INT4 for Low)
+    safety_pack_id: String,
+    /// ASR model pack ID (None = no ASR model on this tier)
+    asr_pack_id: Option<String>,
+    /// Video model pack ID (None = no video model on Low tier)
+    video_pack_id: Option<String>,
 }
 
 // ---------------------------------------------------------------------------
@@ -889,6 +897,22 @@ fn find_model_path(pack_id: &str) -> Option<PathBuf> {
                 None
             }
         }
+        "ternary-bonsai-4b-mlx-2bit" => {
+            let dir = pack_dir.join("ternary-bonsai-4b-mlx-2bit");
+            if dir.exists() {
+                Some(dir)
+            } else {
+                None
+            }
+        }
+        "ternary-bonsai-8b-mlx-2bit" => {
+            let dir = pack_dir.join("ternary-bonsai-8b-mlx-2bit");
+            if dir.exists() {
+                Some(dir)
+            } else {
+                None
+            }
+        }
         "macaw-4bit-mlx" => {
             let dir = pack_dir.join("macaw-4bit-mlx");
             if dir.exists() {
@@ -945,6 +969,12 @@ fn get_model_config(pack_id: &str, port: u16) -> Option<ModelConfig> {
         "ternary-bonsai-1.7b-mlx-2bit" => {
             (ServerType::MlxServer, "Ternary-Bonsai-1.7B-MLX-2bit".into(), 2048)
         }
+        "ternary-bonsai-4b-mlx-2bit" => {
+            (ServerType::MlxServer, "Ternary-Bonsai-4B-MLX-2bit".into(), 4096)
+        }
+        "ternary-bonsai-8b-mlx-2bit" => {
+            (ServerType::MlxServer, "Ternary-Bonsai-8B-MLX-2bit".into(), 8192)
+        }
         "macaw-4bit-mlx" => {
             (ServerType::MlxServer, "Macaw-4bit-MLX".into(), 8192)
         }
@@ -983,73 +1013,121 @@ fn get_device_profiles() -> Vec<DeviceProfileInfo> {
             name: "iPhone 15 Pro (8GB, A17 Pro)".into(),
             tier: "High".into(),
             platform: "ios".into(),
-            model_pack_id: "ternary-bonsai-8b-q2_0".into(),
+            model_pack_id: "ternary-bonsai-8b-mlx-2bit".into(),
+            vision_pack_id: Some("mobileclip-s2-image-fp32".into()),
+            safety_pack_id: "safety-classifier-int8".into(),
+            asr_pack_id: Some("whisper-base-int8".into()),
+            video_pack_id: Some("mobileclip-s2-video-int8".into()),
         },
         DeviceProfileInfo {
             name: "iPhone 14 (6GB, A15)".into(),
             tier: "Medium".into(),
             platform: "ios".into(),
-            model_pack_id: "ternary-bonsai-4b-q2_0".into(),
+            model_pack_id: "ternary-bonsai-4b-mlx-2bit".into(),
+            vision_pack_id: Some("mobileclip-s2-image-fp32".into()),
+            safety_pack_id: "safety-classifier-int8".into(),
+            asr_pack_id: Some("whisper-base-int8".into()),
+            video_pack_id: Some("mobileclip-s2-video-int8".into()),
         },
         DeviceProfileInfo {
             name: "iPhone SE 2022 (4GB, A15)".into(),
             tier: "Low".into(),
             platform: "ios".into(),
             model_pack_id: "ternary-bonsai-1.7b-mlx-2bit".into(),
+            vision_pack_id: Some("mobileclip-s2-image-int8".into()),
+            safety_pack_id: "safety-classifier-int4".into(),
+            asr_pack_id: Some("whisper-tiny-int8".into()),
+            video_pack_id: None,
         },
         DeviceProfileInfo {
             name: "Pixel 8 Pro (12GB, Tensor G3)".into(),
             tier: "High".into(),
             platform: "android".into(),
-            model_pack_id: "ternary-bonsai-4b-q2_0".into(),
+            model_pack_id: "ternary-bonsai-8b-q2_0".into(),
+            vision_pack_id: Some("mobileclip-s2-image-fp32".into()),
+            safety_pack_id: "safety-classifier-int8".into(),
+            asr_pack_id: Some("whisper-base-int8".into()),
+            video_pack_id: Some("mobileclip-s2-video-int8".into()),
         },
         DeviceProfileInfo {
             name: "Pixel 7a (8GB, Tensor G2)".into(),
             tier: "Medium".into(),
             platform: "android".into(),
             model_pack_id: "ternary-bonsai-4b-q2_0".into(),
+            vision_pack_id: Some("mobileclip-s2-image-fp32".into()),
+            safety_pack_id: "safety-classifier-int8".into(),
+            asr_pack_id: Some("whisper-base-int8".into()),
+            video_pack_id: Some("mobileclip-s2-video-int8".into()),
         },
         DeviceProfileInfo {
             name: "Galaxy A14 (4GB, Helio G80)".into(),
             tier: "Low".into(),
             platform: "android".into(),
             model_pack_id: "ternary-bonsai-1.7b-q2_0".into(),
+            vision_pack_id: Some("mobileclip-s2-image-int8".into()),
+            safety_pack_id: "safety-classifier-int4".into(),
+            asr_pack_id: Some("whisper-tiny-int8".into()),
+            video_pack_id: None,
         },
         DeviceProfileInfo {
             name: "MacBook Pro M3 Max (36GB)".into(),
             tier: "High".into(),
             platform: "macos".into(),
-            model_pack_id: "ternary-bonsai-8b-q2_0".into(),
+            model_pack_id: "ternary-bonsai-8b-mlx-2bit".into(),
+            vision_pack_id: Some("mobileclip-s2-image-fp32".into()),
+            safety_pack_id: "safety-classifier-int8".into(),
+            asr_pack_id: Some("whisper-base-int8".into()),
+            video_pack_id: Some("mobileclip-s2-video-int8".into()),
         },
         DeviceProfileInfo {
             name: "MacBook Air M2 (8GB)".into(),
             tier: "Low".into(),
             platform: "macos".into(),
             model_pack_id: "ternary-bonsai-1.7b-mlx-2bit".into(),
+            vision_pack_id: Some("mobileclip-s2-image-int8".into()),
+            safety_pack_id: "safety-classifier-int4".into(),
+            asr_pack_id: Some("whisper-tiny-int8".into()),
+            video_pack_id: None,
         },
         DeviceProfileInfo {
             name: "Intel NUC (8GB, i3)".into(),
             tier: "Low".into(),
             platform: "macos".into(),
             model_pack_id: "ternary-bonsai-1.7b-q2_0".into(),
+            vision_pack_id: Some("mobileclip-s2-image-int8".into()),
+            safety_pack_id: "safety-classifier-int4".into(),
+            asr_pack_id: Some("whisper-tiny-int8".into()),
+            video_pack_id: None,
         },
         DeviceProfileInfo {
             name: "Windows RTX 4090 (32GB)".into(),
             tier: "High".into(),
             platform: "windows".into(),
             model_pack_id: "ternary-bonsai-8b-q2_0".into(),
+            vision_pack_id: Some("mobileclip-s2-image-fp32".into()),
+            safety_pack_id: "safety-classifier-int8".into(),
+            asr_pack_id: Some("whisper-base-int8".into()),
+            video_pack_id: Some("mobileclip-s2-video-int8".into()),
         },
         DeviceProfileInfo {
             name: "Windows Surface 8 (16GB)".into(),
             tier: "Low".into(),
             platform: "windows".into(),
             model_pack_id: "ternary-bonsai-1.7b-q2_0".into(),
+            vision_pack_id: Some("mobileclip-s2-image-int8".into()),
+            safety_pack_id: "safety-classifier-int4".into(),
+            asr_pack_id: Some("whisper-tiny-int8".into()),
+            video_pack_id: None,
         },
         DeviceProfileInfo {
             name: "Windows Legacy (8GB, i5)".into(),
             tier: "Low".into(),
             platform: "windows".into(),
             model_pack_id: "ternary-bonsai-1.7b-q2_0".into(),
+            vision_pack_id: Some("mobileclip-s2-image-int8".into()),
+            safety_pack_id: "safety-classifier-int4".into(),
+            asr_pack_id: Some("whisper-tiny-int8".into()),
+            video_pack_id: None,
         },
     ]
 }

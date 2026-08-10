@@ -160,8 +160,8 @@ impl ModelRegistry {
             quantization: "Q4_K_M".into(),
         });
 
-        // High tier: Ternary-Bonsai-4B for Android (Qwen3-4B, 1.58-bit Q2_0, ~1.0GB)
-        // Fits in 3000MB Android High budget with 2GB headroom for KV cache
+        // Medium tier: Ternary-Bonsai-4B for Android (Qwen3-4B, 1.58-bit Q2_0, ~1.0GB)
+        // Fits in 1500MB Android Medium budget with 500MB headroom for KV cache
         models.push(RegistryEntry {
             pack_id: "ternary-bonsai-4b-q2_0".into(),
             version: "1.0.0".into(),
@@ -169,10 +169,40 @@ impl ModelRegistry {
             download_url: "https://huggingface.co/prism-ml/Ternary-Bonsai-4B-gguf/resolve/main/Ternary-Bonsai-4B-Q2_0.gguf".into(),
             sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
             size_bytes: 1_074_969_344, // ~1.0 GB (exact from HF API)
-            min_tier: MinTier::High,
+            min_tier: MinTier::Medium,
             task_capabilities: vec!["summarize".into(), "translate".into(), "generate".into(), "tool_use".into()],
             languages: vec!["en".into()],
             quantization: "Q2_0".into(),
+        });
+
+        // Medium tier: Ternary-Bonsai-4B MLX 2-bit for Apple platforms (iOS/macOS)
+        // ~1.0GB, Qwen3-4B base, 1.58-bit ternary, MLX format
+        models.push(RegistryEntry {
+            pack_id: "ternary-bonsai-4b-mlx-2bit".into(),
+            version: "1.0.0".into(),
+            pack_type: "generative".into(),
+            download_url: "https://huggingface.co/prism-ml/Ternary-Bonsai-4B-mlx-2bit/resolve/main/model.safetensors".into(),
+            sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
+            size_bytes: 1_000_000_000, // ~1.0 GB
+            min_tier: MinTier::Medium,
+            task_capabilities: vec!["summarize".into(), "translate".into(), "generate".into(), "tool_use".into()],
+            languages: vec!["en".into()],
+            quantization: "2bit-MLX".into(),
+        });
+
+        // High tier: Ternary-Bonsai-8B MLX 2-bit for Apple platforms (iOS/macOS)
+        // ~2.1GB, Qwen3-8B base, 1.58-bit ternary, MLX format
+        models.push(RegistryEntry {
+            pack_id: "ternary-bonsai-8b-mlx-2bit".into(),
+            version: "1.0.0".into(),
+            pack_type: "generative".into(),
+            download_url: "https://huggingface.co/prism-ml/Ternary-Bonsai-8B-mlx-2bit/resolve/main/model.safetensors".into(),
+            sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
+            size_bytes: 2_100_000_000, // ~2.1 GB
+            min_tier: MinTier::High,
+            task_capabilities: vec!["summarize".into(), "translate".into(), "generate".into(), "tool_use".into()],
+            languages: vec!["en".into()],
+            quantization: "2bit-MLX".into(),
         });
 
         // High tier: Macaw-4bit-MLX for Apple platforms (iOS/macOS)
@@ -497,9 +527,9 @@ quantization = "INT8"
     }
 
     #[test]
-    fn test_default_registry_has_sixteen_entries() {
+    fn test_default_registry_has_eighteen_entries() {
         let registry = ModelRegistry::default_registry();
-        assert_eq!(registry.list().len(), 16);
+        assert_eq!(registry.list().len(), 18);
     }
 
     #[test]
@@ -510,6 +540,8 @@ quantization = "INT8"
         assert!(ids.contains(&"ternary-bonsai-1.7b-q2_0"));
         assert!(ids.contains(&"qwen3.5-0.8b-q4"));
         assert!(ids.contains(&"ternary-bonsai-4b-q2_0"));
+        assert!(ids.contains(&"ternary-bonsai-4b-mlx-2bit"));
+        assert!(ids.contains(&"ternary-bonsai-8b-mlx-2bit"));
         assert!(ids.contains(&"macaw-4bit-mlx"));
         assert!(ids.contains(&"ternary-bonsai-8b-q2_0"));
         assert!(ids.contains(&"qwen3.5-0.8b-q8"));
@@ -531,13 +563,17 @@ quantization = "INT8"
         let low_gguf = registry.find("ternary-bonsai-1.7b-q2_0").expect("bonsai-1.7b-gguf");
         let medium = registry.find("qwen3.5-0.8b-q4").expect("0.8b");
         let bonsai4 = registry.find("ternary-bonsai-4b-q2_0").expect("bonsai-4b");
+        let bonsai4_mlx = registry.find("ternary-bonsai-4b-mlx-2bit").expect("bonsai-4b-mlx");
+        let bonsai8_mlx = registry.find("ternary-bonsai-8b-mlx-2bit").expect("bonsai-8b-mlx");
         let macaw = registry.find("macaw-4bit-mlx").expect("macaw");
         let bonsai8 = registry.find("ternary-bonsai-8b-q2_0").expect("bonsai-8b");
         let high_q8 = registry.find("qwen3.5-0.8b-q8").expect("0.8b-q8");
         assert_eq!(low_mlx.min_tier, MinTier::Low);
         assert_eq!(low_gguf.min_tier, MinTier::Low);
         assert_eq!(medium.min_tier, MinTier::Medium);
-        assert_eq!(bonsai4.min_tier, MinTier::High);
+        assert_eq!(bonsai4.min_tier, MinTier::Medium);
+        assert_eq!(bonsai4_mlx.min_tier, MinTier::Medium);
+        assert_eq!(bonsai8_mlx.min_tier, MinTier::High);
         assert_eq!(macaw.min_tier, MinTier::High);
         assert_eq!(bonsai8.min_tier, MinTier::High);
         assert_eq!(high_q8.min_tier, MinTier::High);
@@ -545,6 +581,8 @@ quantization = "INT8"
         assert_eq!(low_gguf.quantization, "Q2_0");
         assert_eq!(medium.quantization, "Q4_K_M");
         assert_eq!(bonsai4.quantization, "Q2_0");
+        assert_eq!(bonsai4_mlx.quantization, "2bit-MLX");
+        assert_eq!(bonsai8_mlx.quantization, "2bit-MLX");
         assert_eq!(macaw.quantization, "4bit-MLX");
         assert_eq!(bonsai8.quantization, "Q2_0");
         assert_eq!(high_q8.quantization, "Q8_0");
@@ -575,11 +613,11 @@ quantization = "INT8"
     }
 
     #[test]
-    fn test_default_registry_bonsai_4b_fits_android_high_budget() {
+    fn test_default_registry_bonsai_4b_fits_android_medium_budget() {
         let registry = ModelRegistry::default_registry();
         let bonsai4 = registry.find("ternary-bonsai-4b-q2_0").expect("bonsai-4b");
-        // Android High tier budget is 3000MB
-        assert!(bonsai4.size_bytes <= 3000 * 1024 * 1024);
+        // Android Medium tier budget is 1500MB
+        assert!(bonsai4.size_bytes <= 1500 * 1024 * 1024);
         // Exact size from HF API: 1,074,969,344 bytes (~1.0GB)
         assert_eq!(bonsai4.size_bytes, 1_074_969_344);
         // Should support tool_use
@@ -684,18 +722,21 @@ quantization = "INT8"
         assert!(low_ids.contains(&"ternary-bonsai-1.7b-mlx-2bit"));
         assert!(low_ids.contains(&"ternary-bonsai-1.7b-q2_0"));
 
-        // Medium tier: should find 3 models (2 Bonsai-1.7B + 0.8B-Q4)
+        // Medium tier: should find 5 models (2 Bonsai-1.7B + 0.8B-Q4 + Bonsai-4B-MLX + Bonsai-4B-GGUF)
         let medium = registry.find_for_task("summarize", MinTier::Medium);
-        assert_eq!(medium.len(), 3);
+        assert_eq!(medium.len(), 5);
         let medium_ids: Vec<&str> = medium.iter().map(|e| e.pack_id.as_str()).collect();
         assert!(medium_ids.contains(&"ternary-bonsai-1.7b-mlx-2bit"));
         assert!(medium_ids.contains(&"ternary-bonsai-1.7b-q2_0"));
         assert!(medium_ids.contains(&"qwen3.5-0.8b-q4"));
+        assert!(medium_ids.contains(&"ternary-bonsai-4b-mlx-2bit"));
+        assert!(medium_ids.contains(&"ternary-bonsai-4b-q2_0"));
 
-        // High tier: should find all 7 generative models
-        // (Bonsai-1.7B-MLX, Bonsai-1.7B-GGUF, 0.8B-Q4, Bonsai-4B, Macaw, Bonsai-8B, Q8)
+        // High tier: should find all 9 generative models
+        // (Bonsai-1.7B-MLX, Bonsai-1.7B-GGUF, 0.8B-Q4, Bonsai-4B-GGUF, Bonsai-4B-MLX,
+        //  Bonsai-8B-MLX, Macaw, Bonsai-8B-GGUF, Q8)
         let high = registry.find_for_task("summarize", MinTier::High);
-        assert_eq!(high.len(), 7);
+        assert_eq!(high.len(), 9);
     }
 
     #[test]

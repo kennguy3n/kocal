@@ -68,13 +68,17 @@ To run generation tests, either:
 ### Per-Device Eval Setup
 
 The `--perdevice` mode tests each of the 12 device profiles against its assigned
-real model (4 unique models), running 150 tasks across 15 categories:
+real model (7 unique generative models), running 150 tasks across 15 categories:
 
 - **15 task categories**: summarization, translation, structured output, tool use,
   multi-turn conversation, code generation, reasoning, instruction following,
   safety, context retrieval, action, core, generation, WASM, bindings
-- **4 unique models**: ternary-bonsai-1.7b-mlx-2bit, ternary-bonsai-1.7b-q2_0,
-  ternary-bonsai-4b-q2_0, ternary-bonsai-8b-q2_0
+- **7 unique generative models**: ternary-bonsai-1.7b-mlx-2bit, ternary-bonsai-1.7b-q2_0,
+  ternary-bonsai-4b-mlx-2bit, ternary-bonsai-4b-q2_0, ternary-bonsai-8b-mlx-2bit,
+  ternary-bonsai-8b-q2_0, macaw-4bit-mlx
+- **Non-generative models per profile**: vision (mobileclip-s2-image-int8/fp32),
+  safety encoder (safety-classifier-int4/int8), ASR (whisper-tiny/base-int8),
+  video (mobileclip-s2-video-int8 on Medium+ only)
 - **Multilingual coverage**: English, Vietnamese, Japanese, Korean, Chinese, Spanish,
   Arabic, Hindi, Thai + mixed-language code-switching scenarios
 - **Judgment criteria**: task success rate (50%), quality (35% blended: 15% pass rate + 20% avg quality score),
@@ -177,22 +181,28 @@ The workspace is organized into 8 crates + 1 Go sidecar following the 4-plane ar
   - Guardrail corpus: 221 YAML cases from `sample_messages.yaml` with 17-category taxonomy (0-16), severity rubric (0-5), jurisdiction codes, community overlays, locale tags
   - Real model: Qwen3.5-0.8B Q4_K_M via llama-server (Metal), ~130 tok/s, 30ms TTFT
 - **Go server offload: 7 tests, all passing**
-- **Per-device eval: 12 profiles × 150 tasks = 1800 task runs (4 unique models)**
+- **Per-device eval: 12 profiles × 150 tasks = 1800 task runs (7 unique generative models)**
   - 15 task categories: summarization, translation, structured output, tool use,
     multi-turn, code generation, reasoning, instruction following, safety,
     context retrieval, action, core, generation, WASM, bindings
   - Multilingual: EN, VI, JA, KO, ZH, ES, AR, HI, TH + mixed-language
   - Judgment: Pass (≥75%), Marginal (50-74%), Fail (<50%)
-  - GGUF via llama-server, MLX via kchat-mlx-server (Swift or Python fallback)
+  - 7 unique generative models: ternary-bonsai-1.7b-mlx-2bit, ternary-bonsai-1.7b-q2_0,
+    ternary-bonsai-4b-mlx-2bit, ternary-bonsai-4b-q2_0, ternary-bonsai-8b-mlx-2bit,
+    ternary-bonsai-8b-q2_0, macaw-4bit-mlx
+  - Also tracks per-profile: vision (mobileclip-s2), safety encoder (INT8/INT4),
+    ASR (whisper-tiny/base), and video (mobileclip-s2-video) model assignments
 
-## Model Registry (16 packs)
+## Model Registry (18 packs)
 
 | Pack ID | Type | Min Tier | Size | Quant | Backend | Platform |
 |---------|------|----------|------|-------|---------|----------|
 | ternary-bonsai-1.7b-mlx-2bit | generative | Low | 472 MB | 2bit-MLX | MLX | ios/macos |
 | ternary-bonsai-1.7b-q2_0 | generative | Low | 442 MB | Q2_0 | llama.cpp Vulkan | android/windows |
 | qwen3.5-0.8b-q4 | generative | Medium | 500 MB | Q4_K_M | llama.cpp | all |
-| ternary-bonsai-4b-q2_0 | generative | High | 1.0 GB | Q2_0 | llama.cpp Vulkan | android |
+| ternary-bonsai-4b-q2_0 | generative | Medium | 1.0 GB | Q2_0 | llama.cpp Vulkan | android |
+| ternary-bonsai-4b-mlx-2bit | generative | Medium | 1.0 GB | 2bit-MLX | MLX | ios/macos |
+| ternary-bonsai-8b-mlx-2bit | generative | High | 2.1 GB | 2bit-MLX | MLX | ios/macos |
 | macaw-4bit-mlx | generative | High | 1.5 GB | 4bit-MLX | MLX | ios/macos |
 | ternary-bonsai-8b-q2_0 | generative | High | 2.1 GB | Q2_0 | llama.cpp Vulkan | windows |
 | qwen3.5-0.8b-q8 | generative | High | 850 MB | Q8_0 | llama.cpp | fallback |
@@ -215,13 +225,13 @@ The workspace is organized into 8 crates + 1 Go sidecar following the 4-plane ar
   - ASR: `whisper-tiny-int8` (40MB, INT8)
   - Video: none (deterministic media descriptors only)
 - **Medium tier**:
-  - Generative: `qwen3.5-0.8b-q4` via **llama.cpp** (500MB)
+  - Generative: iOS/macOS: `ternary-bonsai-4b-mlx-2bit` via **MLX** (1.0GB) / Android: `ternary-bonsai-4b-q2_0` via **llama.cpp Vulkan** (1.0GB) / Fallback: `qwen3.5-0.8b-q4` (500MB)
   - Vision: `mobileclip-s2-image-fp32` (137MB, FP32)
   - Safety: `safety-classifier-int8` (25MB, INT8)
   - ASR: `whisper-base-int8` (90MB, INT8)
   - Video: `mobileclip-s2-video-int8` (70MB, INT8)
 - **High tier**:
-  - Generative: iOS/macOS: `macaw-4bit-mlx` / Android: `ternary-bonsai-4b-q2_0` / Windows: `ternary-bonsai-8b-q2_0` / Fallback: `qwen3.5-0.8b-q8`
+  - Generative: iOS/macOS: `ternary-bonsai-8b-mlx-2bit` via **MLX** (2.1GB) / Android: `ternary-bonsai-8b-q2_0` via **llama.cpp Vulkan** (2.1GB) / Windows: `ternary-bonsai-8b-q2_0` via **llama.cpp Vulkan** (2.1GB) / Fallback: `qwen3.5-0.8b-q8` (850MB)
   - Vision: `mobileclip-s2-image-fp32` (137MB, FP32)
   - Safety: `safety-classifier-int8` (25MB, INT8)
   - ASR: `whisper-base-int8` (90MB, INT8)

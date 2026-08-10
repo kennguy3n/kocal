@@ -7,8 +7,8 @@
 //! Profiles covered (12 total):
 //!   Mobile: iPhone 15 Pro (High), iPhone 14 (Medium), iPhone SE (Low),
 //!           Pixel 8 Pro (High), Pixel 7a (Medium), Galaxy A14 (Low)
-//!   Desktop: MacBook Pro M3 Max (High), MacBook Air M2 (Medium), Intel NUC (Low),
-//!            Windows RTX 4090 (High), Windows Surface 8 (Medium), Windows Legacy (Low)
+//!   Desktop: MacBook Pro M3 Max (High), MacBook Air M2 (Low), Intel NUC (Low),
+//!            Windows RTX 4090 (High), Windows Surface 8 (Low), Windows Legacy (Low)
 
 use crate::report::{EvalResult, SuiteReport};
 use kchat_core::capability::{AppState, DeviceCapabilities, GpuBackend, NpuProvider, ThermalState};
@@ -120,7 +120,7 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             app_state: AppState::Foreground,
             unmetered_network: true,
             expected_tier: DeviceTier::High,
-            expected_model_pack: Some("macaw-4bit-mlx"),
+            expected_model_pack: Some("ternary-bonsai-8b-mlx-2bit"),
             expected_backend: Some("mlx"),
             expected_vision_pack: Some("mobileclip-s2-image-fp32"),
             expected_asr_pack: Some("whisper-base-int8"),
@@ -145,8 +145,8 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             app_state: AppState::Foreground,
             unmetered_network: true,
             expected_tier: DeviceTier::Medium,
-            expected_model_pack: Some("qwen3.5-0.8b-q4"),
-            expected_backend: Some("llama.cpp_metal"),
+            expected_model_pack: Some("ternary-bonsai-4b-mlx-2bit"),
+            expected_backend: Some("mlx"),
             expected_vision_pack: Some("mobileclip-s2-image-fp32"),
             expected_asr_pack: Some("whisper-base-int8"),
             expected_safety_pack: "safety-classifier-int8",
@@ -196,7 +196,7 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             app_state: AppState::Foreground,
             unmetered_network: true,
             expected_tier: DeviceTier::High,
-            expected_model_pack: Some("ternary-bonsai-4b-q2_0"),
+            expected_model_pack: Some("ternary-bonsai-8b-q2_0"),
             expected_backend: Some("llama.cpp_vulkan"),
             expected_vision_pack: Some("mobileclip-s2-image-fp32"),
             expected_asr_pack: Some("whisper-base-int8"),
@@ -221,7 +221,7 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             app_state: AppState::Foreground,
             unmetered_network: true,
             expected_tier: DeviceTier::Medium,
-            expected_model_pack: Some("qwen3.5-0.8b-q4"),
+            expected_model_pack: Some("ternary-bonsai-4b-q2_0"),
             expected_backend: Some("llama.cpp_vulkan"),
             expected_vision_pack: Some("mobileclip-s2-image-fp32"),
             expected_asr_pack: Some("whisper-base-int8"),
@@ -272,7 +272,7 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             app_state: AppState::Foreground,
             unmetered_network: true,
             expected_tier: DeviceTier::High,
-            expected_model_pack: Some("macaw-4bit-mlx"),
+            expected_model_pack: Some("ternary-bonsai-8b-mlx-2bit"),
             expected_backend: Some("mlx"),
             expected_vision_pack: Some("mobileclip-s2-image-fp32"),
             expected_asr_pack: Some("whisper-base-int8"),
@@ -322,8 +322,8 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             app_state: AppState::Foreground,
             unmetered_network: true,
             expected_tier: DeviceTier::Low,
-            expected_model_pack: Some("ternary-bonsai-1.7b-mlx-2bit"),
-            expected_backend: Some("mlx"),
+            expected_model_pack: Some("ternary-bonsai-1.7b-q2_0"),
+            expected_backend: Some("llama.cpp_cpu"),
             expected_vision_pack: Some("mobileclip-s2-image-int8"),
             expected_asr_pack: Some("whisper-tiny-int8"),
             expected_safety_pack: "safety-classifier-int4",
@@ -414,29 +414,40 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
 
 /// Select the appropriate generative model for a tier and platform.
 ///
-/// - High tier on Apple (iOS/macOS): Macaw-4bit-MLX (MLX format, 1.5GB)
-/// - High tier on other platforms: qwen3.5-0.8b-q4 (GGUF, 500MB)
-/// - Medium tier: qwen3.5-0.8b-q4 (GGUF, 350MB)
-/// - Low tier: Bonsai-1.7B MLX (Apple, ~472MB) or GGUF (Android/Windows, ~442MB)
+/// - High tier on Apple Silicon (iOS/macOS): Ternary-Bonsai-8B MLX 2-bit (~2.1GB)
+/// - High tier on Android/Windows: Ternary-Bonsai-8B Q2_0 GGUF (~2.1GB)
+/// - Medium tier on Apple Silicon (iOS/macOS): Ternary-Bonsai-4B MLX 2-bit (~1.0GB)
+/// - Medium tier on other platforms: Ternary-Bonsai-4B Q2_0 GGUF (~1.0GB)
+/// - Low tier on Apple Silicon (iOS/macOS): Ternary-Bonsai-1.7B MLX 2-bit (~472MB)
+/// - Low tier on other platforms (including Intel Macs): Ternary-Bonsai-1.7B Q2_0 GGUF (~442MB)
 pub fn select_model_for_tier(tier: DeviceTier) -> Option<&'static str> {
-    select_model_for_tier_platform(tier, "")
+    select_model_for_tier_platform(tier, "", "aarch64")
 }
-/// Platform-aware model selection.
-pub fn select_model_for_tier_platform(tier: DeviceTier, platform: &str) -> Option<&'static str> {
+/// Platform- and arch-aware model selection.
+pub fn select_model_for_tier_platform(tier: DeviceTier, platform: &str, cpu_arch: &str) -> Option<&'static str> {
+    let is_apple_silicon = (platform == "ios" || platform == "macos") && cpu_arch == "aarch64";
     match tier {
         DeviceTier::Low => {
-            match platform {
-                "ios" | "macos" => Some("ternary-bonsai-1.7b-mlx-2bit"),  // Bonsai 1.7B MLX 2-bit, ~472MB
-                _ => Some("ternary-bonsai-1.7b-q2_0"),                     // Bonsai 1.7B Q2_0 GGUF, ~442MB
+            if is_apple_silicon {
+                Some("ternary-bonsai-1.7b-mlx-2bit")  // Bonsai 1.7B MLX 2-bit, ~472MB
+            } else {
+                Some("ternary-bonsai-1.7b-q2_0")       // Bonsai 1.7B Q2_0 GGUF, ~442MB
             }
         }
-        DeviceTier::Medium => Some("qwen3.5-0.8b-q4"),  // 0.8B Q4, ~500MB
+        DeviceTier::Medium => {
+            if is_apple_silicon {
+                Some("ternary-bonsai-4b-mlx-2bit")    // Bonsai 4B MLX 2-bit, ~1.0GB
+            } else {
+                Some("ternary-bonsai-4b-q2_0")         // Bonsai 4B Q2_0 GGUF, ~1.0GB
+            }
+        }
         DeviceTier::High => {
-            match platform {
-                "ios" | "macos" => Some("macaw-4bit-mlx"),          // Macaw 4-bit MLX, 1.5GB
-                "android" => Some("ternary-bonsai-4b-q2_0"),         // Ternary Bonsai 4B Q2_0, ~1.0GB
-                "windows" => Some("ternary-bonsai-8b-q2_0"),         // Ternary Bonsai 8B Q2_0, ~2.1GB
-                _ => Some("qwen3.5-0.8b-q8"),                        // Qwen 0.8B Q8 fallback, 850MB
+            if is_apple_silicon {
+                Some("ternary-bonsai-8b-mlx-2bit")    // Bonsai 8B MLX 2-bit, ~2.1GB
+            } else if platform == "android" || platform == "windows" {
+                Some("ternary-bonsai-8b-q2_0")         // Bonsai 8B Q2_0 GGUF, ~2.1GB
+            } else {
+                Some("qwen3.5-0.8b-q8")                // Qwen 0.8B Q8 fallback, 850MB
             }
         }
     }
@@ -638,7 +649,7 @@ fn test_tier_selection(p: &DeviceProfile) -> EvalResult {
 fn test_model_selection(p: &DeviceProfile, registry: &ModelRegistry) -> EvalResult {
     let caps = p.to_caps();
     let tier = TierSelection::select(&caps).unwrap_or(DeviceTier::Low);
-    let selected = select_model_for_tier_platform(tier, &caps.platform);
+    let selected = select_model_for_tier_platform(tier, &caps.platform, &caps.cpu_arch);
 
     if selected == p.expected_model_pack {
         // Verify the model exists in the registry and is compatible with the tier
@@ -671,7 +682,7 @@ fn test_backend_selection(p: &DeviceProfile) -> EvalResult {
     let tier = TierSelection::select(&caps).unwrap_or(DeviceTier::Low);
 
     // Use the real BackendType::select API from kchat-generation
-    let backend = BackendType::select(&caps.platform, tier).map(|b| b.as_str().to_string());
+    let backend = BackendType::select(&caps.platform, tier, &caps.cpu_arch).map(|b| b.as_str().to_string());
 
     let expected = p.expected_backend.map(|s| s.to_string());
 
@@ -841,14 +852,15 @@ fn test_memory_budget(p: &DeviceProfile) -> EvalResult {
     }
 
     // Check that the tier-appropriate model pack fits within the budget
-    let model_size = match (tier, p.platform) {
-        (DeviceTier::Low, "ios" | "macos") => 472_000_000,              // Bonsai 1.7B MLX ~472MB
-        (DeviceTier::Low, _) => 463_290_464,                            // Bonsai 1.7B Q2_0 GGUF ~442MB
-        (DeviceTier::Medium, _) => 500 * 1024 * 1024,                   // 0.8B Q4 ~500MB
-        (DeviceTier::High, "ios" | "macos") => 1_500 * 1024 * 1024,     // Macaw MLX ~1.5GB
-        (DeviceTier::High, "android") => 1_074_969_344,                 // Bonsai 4B Q2_0 ~1.0GB
-        (DeviceTier::High, "windows") => 2_182_184_672,                 // Bonsai 8B Q2_0 ~2.1GB
-        (DeviceTier::High, _) => 850 * 1024 * 1024,                     // 0.8B Q8 fallback ~850MB
+    let model_size = match (tier, &p.platform[..], &p.cpu_arch[..]) {
+        (DeviceTier::Low, "ios" | "macos", "aarch64") => 472_000_000,              // Bonsai 1.7B MLX ~472MB
+        (DeviceTier::Low, _, _) => 463_290_464,                                     // Bonsai 1.7B Q2_0 GGUF ~442MB
+        (DeviceTier::Medium, "ios" | "macos", "aarch64") => 1_000_000_000,         // Bonsai 4B MLX ~1.0GB
+        (DeviceTier::Medium, _, _) => 1_074_969_344,                               // Bonsai 4B Q2_0 GGUF ~1.0GB
+        (DeviceTier::High, "ios" | "macos", "aarch64") => 2_100_000_000,           // Bonsai 8B MLX ~2.1GB
+        (DeviceTier::High, "android", _) => 2_182_184_672,                         // Bonsai 8B Q2_0 GGUF ~2.1GB
+        (DeviceTier::High, "windows", _) => 2_182_184_672,                         // Bonsai 8B Q2_0 GGUF ~2.1GB
+        (DeviceTier::High, _, _) => 850 * 1024 * 1024,                             // 0.8B Q8 fallback ~850MB
     };
     if model_size > peak_budget {
         errors.push(format!(
@@ -1319,12 +1331,13 @@ fn test_registry_finds_model_for_high_tier(registry: &ModelRegistry) -> EvalResu
         let mut meta = HashMap::new();
         meta.insert("count".into(), format!("{}", results.len()));
         meta.insert("first".into(), results[0].pack_id.clone());
-        // High tier should find all 7 generative models
-        // (Bonsai-1.7B-MLX, Bonsai-1.7B-GGUF, 0.8B-Q4, Bonsai-4B, Macaw, Bonsai-8B, Q8)
-        if results.len() != 7 {
+        // High tier should find all 9 generative models
+        // (Bonsai-1.7B-MLX, Bonsai-1.7B-GGUF, 0.8B-Q4, Bonsai-4B-GGUF, Bonsai-4B-MLX,
+        //  Bonsai-8B-MLX, Macaw, Bonsai-8B-GGUF, Q8)
+        if results.len() != 9 {
             EvalResult::fail(
                 "registry_high_tier_model",
-                format!("expected 7 generative models for High tier, got {}", results.len()),
+                format!("expected 9 generative models for High tier, got {}", results.len()),
             )
         } else {
             EvalResult::pass_with_meta("registry_high_tier_model", 0, meta)
