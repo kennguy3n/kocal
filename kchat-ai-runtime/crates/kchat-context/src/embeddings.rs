@@ -1,14 +1,11 @@
 //! Dense embeddings — multilingual text embeddings for hybrid retrieval.
 //!
 //! Supports two embedding providers:
-//! - **ONNX Runtime** with multilingual-e5-small (384-dim, INT8, ~45MB) as primary
+//! - **ONNX Runtime** with kchat-encoder (XLM-RoBERTa-base, 768-dim) as primary
 //! - **llama.cpp** embeddings from the generative model as fallback
 //!
 //! The embedding manager tries the primary provider first, falling back to
 //! the secondary if the primary is unavailable or fails.
-//!
-//! e5 models require a prefix: `"query: "` for queries and `"passage: "` for
-//! documents.
 
 use serde::{Deserialize, Serialize};
 
@@ -82,7 +79,7 @@ impl EmbeddingManager {
         }
     }
 
-    /// Set the primary embedding provider (e.g., ONNX e5-small).
+    /// Set the primary embedding provider (e.g., kchat-encoder).
     pub fn with_primary(mut self, provider: Box<dyn EmbeddingProvider>) -> Self {
         self.primary = Some(provider);
         self
@@ -124,16 +121,20 @@ impl EmbeddingManager {
         Err(EmbeddingError::NoProvider)
     }
 
-    /// Embed a query (with "query: " prefix for e5 models).
+    /// Embed a query for retrieval.
+    ///
+    /// XLM-RoBERTa (kchat-encoder) does not use e5-style "query: " prefixes.
+    /// The text is embedded directly.
     pub fn embed_query(&self, query: &str) -> EmbeddingResult<Vec<f32>> {
-        let prefixed = format!("query: {}", query);
-        self.embed(&prefixed)
+        self.embed(query)
     }
 
-    /// Embed a document/passage (with "passage: " prefix for e5 models).
+    /// Embed a document/passage for indexing.
+    ///
+    /// XLM-RoBERTa (kchat-encoder) does not use e5-style "passage: " prefixes.
+    /// The text is embedded directly.
     pub fn embed_passage(&self, passage: &str) -> EmbeddingResult<Vec<f32>> {
-        let prefixed = format!("passage: {}", passage);
-        self.embed(&prefixed)
+        self.embed(passage)
     }
 }
 
@@ -159,40 +160,36 @@ pub fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
     dot / (norm_a * norm_b)
 }
 
-/// ONNX Runtime embedding provider using multilingual-e5-small.
+/// ONNX Runtime embedding provider using kchat-encoder (XLM-RoBERTa-base).
 ///
-/// This provider loads an ONNX model and tokenizer, runs inference to produce
-/// 384-dimensional embeddings. The model must be INT8 quantized (~45MB).
+/// This provider wraps a shared `kchat_encoder::EncoderSession` and delegates
+/// embedding to `kchat_encoder::EmbedHead`, producing 768-dimensional
+/// L2-normalized embeddings.
 #[cfg(feature = "embeddings")]
 pub struct OnnxEmbedder {
-    session: ort::session::Session,
-    tokenizer: tokenizers::Tokenizer,
-    dimension: usize,
-    model_name: String,
+    session: std::sync::Arc<kchat_encoder::EncoderSession>,
 }
 
 #[cfg(feature = "embeddings")]
 impl OnnxEmbedder {
-    /// Create a new ONNX embedder from a model file and tokenizer.
-    pub fn new(model_path: &str, tokenizer_path: &str) -> EmbeddingResult<Self> {
-        let session = ort::session::Session::builder()
-            .and_then(|b| b.with_optimization_level(ort::session::GraphOptimizationLevel::Level3))
-            .and_then(|b| b.with_intra_threads(2))
-            .map_err(|e| EmbeddingError::SessionError(e.to_string()))?
-            .commit_from_file(model_path)
+    /// Create a new ONNX embedder from a shared encoder session.
+    pub fn new(session: std::sync::Arc<kchat_encoder::EncoderSession>) -> Self {
+        Self { session }
+    }
+
+    /// Create a new ONNX embedder by loading a model from file.
+    ///
+    /// `intra_threads` controls ONNX Runtime intra-op parallelism (2 for low, 3 for medium, 4+ for high).
+    pub fn from_files(
+        model_path: &str,
+        tokenizer_path: &str,
+        quantization: kchat_encoder::Quantization,
+        intra_threads: usize,
+    ) -> EmbeddingResult<Self> {
+        let session = kchat_encoder::EncoderSession::new(model_path, tokenizer_path, quantization, intra_threads)
             .map_err(|e| EmbeddingError::SessionError(e.to_string()))?;
-
-        let tokenizer = tokenizers::Tokenizer::from_file(tokenizer_path)
-            .map_err(|e| EmbeddingError::TokenizerError(e.to_string()))?;
-
-        // e5-small has 384 dimensions
-        let dimension = 384;
-
         Ok(Self {
-            session,
-            tokenizer,
-            dimension,
-            model_name: "multilingual-e5-small-int8".into(),
+            session: std::sync::Arc::new(session),
         })
     }
 }
@@ -200,91 +197,17 @@ impl OnnxEmbedder {
 #[cfg(feature = "embeddings")]
 impl EmbeddingProvider for OnnxEmbedder {
     fn embed(&self, text: &str) -> EmbeddingResult<Vec<f32>> {
-        use ndarray::Array2;
-        use ort::session::inputs;
-
-        // Tokenize
-        let encoding = self
-            .tokenizer
-            .encode(text, true)
-            .map_err(|e| EmbeddingError::TokenizerError(e.to_string()))?;
-
-        let input_ids = encoding.get_ids();
-        let attention_mask = encoding.get_attention_mask();
-
-        // Convert to ndarray
-        let seq_len = input_ids.len();
-        let input_ids_arr = Array2::from_shape_vec((1, seq_len), input_ids.to_vec())
-            .map_err(|e| EmbeddingError::InferenceFailed(format!("array: {e}")))?;
-        let attention_arr = Array2::from_shape_vec((1, seq_len), attention_mask.to_vec())
-            .map_err(|e| EmbeddingError::InferenceFailed(format!("array: {e}")))?;
-
-        // Run inference
-        let inputs = inputs! {
-            "input_ids" => input_ids_arr.view(),
-            "attention_mask" => attention_arr.view(),
-        }
-        .map_err(|e| EmbeddingError::InferenceFailed(format!("inputs: {e}")))?;
-
-        let outputs = self
-            .session
-            .run(inputs)
-            .map_err(|e| EmbeddingError::InferenceFailed(format!("run: {e}")))?;
-
-        // Extract embeddings (last_hidden_state or embeddings output)
-        let embeddings = outputs
-            .get(0)
-            .ok_or_else(|| EmbeddingError::InferenceFailed("no output".into()))?
-            .try_extract_tensor::<f32>()
-            .map_err(|e| EmbeddingError::InferenceFailed(format!("extract: {e}")))?;
-
-        // Mean pool over sequence dimension
-        let data = embeddings.view();
-        let seq_len = data.shape()[1];
-        let dim = data.shape()[2];
-
-        if dim != self.dimension {
-            return Err(EmbeddingError::DimensionMismatch {
-                expected: self.dimension,
-                actual: dim,
-            });
-        }
-
-        if seq_len == 0 {
-            return Err(EmbeddingError::InferenceFailed(
-                "empty sequence after tokenization".into(),
-            ));
-        }
-
-        // Mean pool: sum first, divide once (more efficient than dividing per element)
-        let mut pooled = vec![0.0f32; dim];
-        for i in 0..seq_len {
-            for j in 0..dim {
-                pooled[j] += data[[0, i, j]];
-            }
-        }
-        let inv_seq_len = 1.0 / seq_len as f32;
-        for x in &mut pooled {
-            *x *= inv_seq_len;
-        }
-
-        // L2 normalize
-        let norm: f32 = pooled.iter().map(|x| x * x).sum::<f32>().sqrt();
-        if norm > 0.0 {
-            for x in &mut pooled {
-                *x /= norm;
-            }
-        }
-
-        Ok(pooled)
+        let head = kchat_encoder::EmbedHead::new(&self.session);
+        head.embed(text)
+            .map_err(|e| EmbeddingError::InferenceFailed(e.to_string()))
     }
 
     fn dimension(&self) -> usize {
-        self.dimension
+        kchat_encoder::EMBEDDING_DIM
     }
 
     fn model_name(&self) -> &str {
-        &self.model_name
+        self.session.model_name()
     }
 }
 
@@ -335,22 +258,95 @@ pub struct CachedEmbedding {
     pub model: String,
     /// Dimension
     pub dimension: usize,
+    /// Model version hash (e.g. "kchat-encoder-int8-v1.0.0") for cache invalidation.
+    /// If empty, the cache entry is from a legacy version and should be invalidated.
+    #[serde(default)]
+    pub model_version: String,
 }
 
+/// Current embedding model version string for cache compatibility checks.
+pub const ENCODER_MODEL_VERSION: &str = "kchat-encoder-v1.0.0";
+
 impl CachedEmbedding {
-    /// Serialize to bytes for storage.
+    /// Magic header for v2 binary format (includes model name + version).
+    const V2_MAGIC: u32 = 0x4B434532; // "KCE2"
+    /// Legacy v1 format has no magic — just dimension as first 4 bytes.
+    /// v1 entries always start with a small u32 (dimension <= 4096), so
+    /// the v2 magic (0x4B434532 = 1263369778) is easily distinguishable.
+
+    /// Serialize to bytes for storage (v2 format with model metadata).
     pub fn to_bytes(&self) -> Vec<u8> {
-        // Simple serialization: 4 bytes per f32 + header
-        let mut bytes = Vec::with_capacity(8 + self.vector.len() * 4);
+        // v2 format: magic(4) + dim(4) + model_len(4) + model_bytes + version_len(4) + version_bytes + vector(dim*4)
+        let model_bytes = self.model.as_bytes();
+        let version_bytes = self.model_version.as_bytes();
+        let mut bytes = Vec::with_capacity(16 + model_bytes.len() + version_bytes.len() + self.vector.len() * 4);
+        bytes.extend_from_slice(&Self::V2_MAGIC.to_le_bytes());
         bytes.extend_from_slice(&(self.dimension as u32).to_le_bytes());
+        bytes.extend_from_slice(&(model_bytes.len() as u32).to_le_bytes());
+        bytes.extend_from_slice(model_bytes);
+        bytes.extend_from_slice(&(version_bytes.len() as u32).to_le_bytes());
+        bytes.extend_from_slice(version_bytes);
         for v in &self.vector {
             bytes.extend_from_slice(&v.to_le_bytes());
         }
         bytes
     }
 
-    /// Deserialize from bytes.
+    /// Deserialize from bytes (supports both v1 and v2 formats).
     pub fn from_bytes(bytes: &[u8]) -> Option<Self> {
+        if bytes.len() < 4 {
+            return None;
+        }
+
+        // Check for v2 magic header
+        let magic = u32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]);
+        if magic == Self::V2_MAGIC {
+            return Self::from_bytes_v2(bytes);
+        }
+
+        // Legacy v1 format: dim(4) + vector(dim*4), no model metadata
+        Self::from_bytes_v1(bytes)
+    }
+
+    fn from_bytes_v2(bytes: &[u8]) -> Option<Self> {
+        if bytes.len() < 12 {
+            return None;
+        }
+        let dim = u32::from_le_bytes([bytes[4], bytes[5], bytes[6], bytes[7]]) as usize;
+        let model_len = u32::from_le_bytes([bytes[8], bytes[9], bytes[10], bytes[11]]) as usize;
+        let offset = 12;
+        if bytes.len() < offset + model_len + 4 {
+            return None;
+        }
+        let model = String::from_utf8(bytes[offset..offset + model_len].to_vec()).ok()?;
+        let version_offset = offset + model_len;
+        let version_len = u32::from_le_bytes([
+            bytes[version_offset],
+            bytes[version_offset + 1],
+            bytes[version_offset + 2],
+            bytes[version_offset + 3],
+        ]) as usize;
+        let version_start = version_offset + 4;
+        if bytes.len() < version_start + version_len + dim * 4 {
+            return None;
+        }
+        let model_version = String::from_utf8(bytes[version_start..version_start + version_len].to_vec()).ok()?;
+        let vec_start = version_start + version_len;
+        let mut vector = Vec::with_capacity(dim);
+        for i in 0..dim {
+            let off = vec_start + i * 4;
+            let v = f32::from_le_bytes([bytes[off], bytes[off + 1], bytes[off + 2], bytes[off + 3]]);
+            vector.push(v);
+        }
+        Some(Self {
+            vector,
+            model,
+            dimension: dim,
+            model_version,
+        })
+    }
+
+    fn from_bytes_v1(bytes: &[u8]) -> Option<Self> {
         if bytes.len() < 4 {
             return None;
         }
@@ -370,11 +366,23 @@ impl CachedEmbedding {
             ]);
             vector.push(v);
         }
+        // v1 entries have no model metadata — they will fail compatibility checks
+        // and be recomputed, which is the correct behavior for cache invalidation.
         Some(Self {
             vector,
             model: "unknown".into(),
             dimension: dim,
+            model_version: String::new(),
         })
+    }
+
+    /// Check if this cached embedding is compatible with the current encoder model.
+    ///
+    /// Returns `false` if the model version doesn't match or the dimension
+    /// doesn't match the expected embedding dimension, indicating the cache
+    /// entry should be invalidated and recomputed.
+    pub fn is_compatible_with(&self, expected_version: &str, expected_dim: usize) -> bool {
+        self.model_version == expected_version && self.dimension == expected_dim
     }
 }
 
@@ -384,9 +392,9 @@ mod tests {
 
     #[test]
     fn test_mock_embedder() {
-        let embedder = MockEmbedder::new(384);
+        let embedder = MockEmbedder::new(768);
         let vec = embedder.embed("hello world").unwrap();
-        assert_eq!(vec.len(), 384);
+        assert_eq!(vec.len(), 768);
 
         // L2 norm should be ~1.0
         let norm: f32 = vec.iter().map(|x| x * x).sum::<f32>().sqrt();
@@ -431,12 +439,12 @@ mod tests {
     #[test]
     fn test_embedding_manager_with_mock() {
         let manager = EmbeddingManager::new()
-            .with_primary(Box::new(MockEmbedder::new(384)));
+            .with_primary(Box::new(MockEmbedder::new(768)));
         assert!(manager.is_available());
-        assert_eq!(manager.dimension(), Some(384));
+        assert_eq!(manager.dimension(), Some(768));
 
         let vec = manager.embed("hello").unwrap();
-        assert_eq!(vec.len(), 384);
+        assert_eq!(vec.len(), 768);
     }
 
     #[test]
@@ -447,16 +455,16 @@ mod tests {
             fn embed(&self, _text: &str) -> EmbeddingResult<Vec<f32>> {
                 Err(EmbeddingError::InferenceFailed("intentional failure".into()))
             }
-            fn dimension(&self) -> usize { 384 }
+            fn dimension(&self) -> usize { 768 }
             fn model_name(&self) -> &str { "failing" }
         }
 
         let manager = EmbeddingManager::new()
             .with_primary(Box::new(FailingEmbedder))
-            .with_fallback(Box::new(MockEmbedder::new(384)));
+            .with_fallback(Box::new(MockEmbedder::new(768)));
 
         let vec = manager.embed("hello").unwrap();
-        assert_eq!(vec.len(), 384);
+        assert_eq!(vec.len(), 768);
     }
 
     #[test]
@@ -496,8 +504,9 @@ mod tests {
     fn test_cached_embedding_serialization() {
         let cached = CachedEmbedding {
             vector: vec![0.1, 0.2, 0.3, 0.4],
-            model: "test".into(),
+            model: "kchat-encoder-int8".into(),
             dimension: 4,
+            model_version: "kchat-encoder-v1.0.0".into(),
         };
 
         let bytes = cached.to_bytes();
@@ -505,15 +514,69 @@ mod tests {
 
         assert_eq!(restored.dimension, 4);
         assert_eq!(restored.vector.len(), 4);
+        assert_eq!(restored.model, "kchat-encoder-int8");
+        assert_eq!(restored.model_version, "kchat-encoder-v1.0.0");
         for (a, b) in cached.vector.iter().zip(restored.vector.iter()) {
             assert!((a - b).abs() < 0.001);
         }
     }
 
     #[test]
+    fn test_cached_embedding_v1_backward_compat() {
+        // v1 format: dim(4) + vector(dim*4), no model metadata
+        let dim: u32 = 4;
+        let mut v1_bytes = Vec::new();
+        v1_bytes.extend_from_slice(&dim.to_le_bytes());
+        for v in [0.1f32, 0.2, 0.3, 0.4] {
+            v1_bytes.extend_from_slice(&v.to_le_bytes());
+        }
+        let restored = CachedEmbedding::from_bytes(&v1_bytes).unwrap();
+        assert_eq!(restored.dimension, 4);
+        assert_eq!(restored.model, "unknown");
+        assert_eq!(restored.model_version, "");
+        // v1 entries should fail compatibility checks
+        assert!(!restored.is_compatible_with(ENCODER_MODEL_VERSION, 4));
+    }
+
+    #[test]
     fn test_cached_embedding_invalid_bytes() {
         assert!(CachedEmbedding::from_bytes(&[]).is_none());
         assert!(CachedEmbedding::from_bytes(&[1, 2]).is_none());
+    }
+
+    #[test]
+    fn test_cached_embedding_compatibility() {
+        let compatible = CachedEmbedding {
+            vector: vec![0.1; 768],
+            model: "kchat-encoder-int8".into(),
+            dimension: 768,
+            model_version: ENCODER_MODEL_VERSION.into(),
+        };
+        assert!(compatible.is_compatible_with(ENCODER_MODEL_VERSION, 768));
+
+        let wrong_version = CachedEmbedding {
+            vector: vec![0.1; 768],
+            model: "multilingual-e5-small".into(),
+            dimension: 768,
+            model_version: "e5-small-v1".into(),
+        };
+        assert!(!wrong_version.is_compatible_with(ENCODER_MODEL_VERSION, 768));
+
+        let wrong_dim = CachedEmbedding {
+            vector: vec![0.1; 384],
+            model: "multilingual-e5-small".into(),
+            dimension: 384,
+            model_version: ENCODER_MODEL_VERSION.into(),
+        };
+        assert!(!wrong_dim.is_compatible_with(ENCODER_MODEL_VERSION, 768));
+
+        let legacy = CachedEmbedding {
+            vector: vec![0.1; 384],
+            model: "unknown".into(),
+            dimension: 384,
+            model_version: String::new(),
+        };
+        assert!(!legacy.is_compatible_with(ENCODER_MODEL_VERSION, 768));
     }
 
     #[test]

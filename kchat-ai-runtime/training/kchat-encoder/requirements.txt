@@ -1,0 +1,7 @@
+torch>=2.0
+transformers>=4.36
+onnx>=1.14
+onnxruntime>=1.16
+datasets>=2.14
+accelerate>=0.24
+numpy>=1.24

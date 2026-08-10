@@ -440,7 +440,7 @@ mod tests {
         let pk_hex = hex::encode(verifying_key.to_bytes());
 
         let pack = ModelPackManifest {
-            pack_id: "qwen3.5-0.8b-q4".into(),
+            pack_id: "ternary-bonsai-1.7b-q2_0".into(),
             version: "1.0.0".into(),
             pack_type: PackType::GenerativeModel,
             content_sha256: "a".repeat(64),
@@ -538,7 +538,7 @@ mod tests {
 
         // The test chunk has sha256 = "b"*64, so any real data won't match
         let data = vec![0u8; 1024];
-        let result = rt.verify_chunk("qwen3.5-0.8b-q4", 0, &data);
+        let result = rt.verify_chunk("ternary-bonsai-1.7b-q2_0", 0, &data);
         assert!(result.is_err()); // hash mismatch expected
     }
 

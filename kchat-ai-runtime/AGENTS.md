@@ -68,19 +68,19 @@ To run generation tests, either:
 ### Per-Device Eval Setup
 
 The `--perdevice` mode tests each of the 12 device profiles against its assigned
-real model (7 unique generative models), running 150 tasks across 15 categories:
+real model (6 unique generative models), running 150 tasks across 15 categories:
 
 - **15 task categories**: summarization, translation, structured output, tool use,
   multi-turn conversation, code generation, reasoning, instruction following,
   safety, context retrieval, action, core, generation, WASM, bindings
-- **7 unique generative models**: ternary-bonsai-1.7b-mlx-2bit, ternary-bonsai-1.7b-q2_0,
+- **6 unique generative models**: ternary-bonsai-1.7b-mlx-2bit, ternary-bonsai-1.7b-q2_0,
   ternary-bonsai-4b-mlx-2bit, ternary-bonsai-4b-q2_0, ternary-bonsai-8b-mlx-2bit,
-  ternary-bonsai-8b-q2_0, macaw-4bit-mlx
-- **Non-generative models per profile**: vision (mobileclip-s2-image-int8/fp32),
-  safety encoder (safety-classifier-int4/int8), ASR (whisper-tiny/base-int8),
-  video (mobileclip-s2-video-int8 on Medium+ only)
+  ternary-bonsai-8b-q2_0
+- **Non-generative models per profile**: vision (mobileclip-s2-int8),
+  safety encoder (kchat-encoder-int4/int8), ASR (whisper-tiny/base-int8),
+  video (mobileclip-s2-int8, same model as vision)
 - **Multilingual coverage**: English, Vietnamese, Japanese, Korean, Chinese, Spanish,
-  Arabic, Hindi, Thai + mixed-language code-switching scenarios
+  Arabic, German, Hindi, French + mixed-language code-switching scenarios
 - **Judgment criteria**: task success rate (50%), quality (35% blended: 15% pass rate + 20% avg quality score),
   TTFT P95 vs tier target (10%), decode P50 vs tier target (5%)
 - **Quality scoring**: Each task's quality check returns a 0.0-1.0 score (not just pass/fail).
@@ -103,17 +103,22 @@ If the Swift binary is not available, the harness automatically falls back to
 
 ## Architecture
 
-The workspace is organized into 8 crates + 1 Go sidecar following the 4-plane architecture:
+The workspace is organized into 9 crates + 1 Go sidecar following the 4-plane architecture:
 
 - **kchat-core**: Capability probe (real OS APIs via sysctl/procfs/Win32),
   device tier selection, scheduler, signed manifest manager, telemetry,
   model manager (CDN download, LRU cache, mmap), resource governor,
   model registry (registry.toml). Foundation for all other crates.
+- **kchat-encoder**: Unified multi-task ONNX encoder — XLM-RoBERTa-base model
+  shared across safety classification (10 classes), text embedding (768-dim),
+  and cross-encoder reranking. Single model replaces separate safety-classifier,
+  e5-small embedding, and MiniLM reranker packs. Feature-gated behind
+  `onnx-runtime`; includes mock implementations for testing without ONNX.
 - **kchat-safety**: Deterministic safety plane — NFKC normalization, PII/scam/
   URL detectors, signed policy packs (Ed25519), encoder/SLM escalation,
-  ONNX Runtime safety encoder (INT8/INT4), media descriptor pipeline (10 score
-  fields), MobileCLIP-S2 vision encoder (ONNX, feature-gated behind
-  `onnx-runtime-vision`), video frame aggregation, vision bridge.
+  unified kchat-encoder for safety classification (INT8/INT4), media descriptor
+  pipeline (10 score fields), MobileCLIP-S2 vision encoder (ONNX, feature-gated
+  behind `onnx-runtime-vision`), video frame aggregation, vision bridge.
   Skill-pack system (feature-gated behind `skill-pack`): overlay-aware policy
   with 17-category taxonomy, 0-5 severity rubric, community/jurisdiction
   overlays, threshold policy (0.45/0.62/0.78/0.85), policy interpreter with
@@ -123,12 +128,12 @@ The workspace is organized into 8 crates + 1 Go sidecar following the 4-plane ar
   Works on ALL devices including low-tier (no generative model) and WASM (deterministic only).
 - **kchat-context**: Private context plane — SQLCipher encrypted store, FTS5
   BM25 retrieval, per-scope XChaCha20-Poly1305 encryption, provenance bundles,
-  dense embeddings (e5-small ONNX + fallback), cross-encoder reranker.
+  dense embeddings (kchat-encoder 768-dim ONNX + fallback), cross-encoder reranker (kchat-encoder).
 - **kchat-generation**: Grammar-constrained generative plane — prompt templates,
   JSON Schema/regex/Lark grammar validation (real Lark parser), backend
   adapters (llama.cpp via llama-cpp-2 with Metal/Vulkan/Cuda), model lifecycle
   with idle unload, token streaming with safety cancellation, LoRA hot-swap
-  (30 adapters: 5 tasks × 6 languages), swarm inference (multi-peer consensus).
+  (50 adapters: 5 tasks × 10 languages), swarm inference (multi-peer consensus).
 - **kchat-action**: Action plane — artifact AST (typed operations, no arbitrary
   code), ToolPlan validation against signed manifests, RBAC authorization
   broker, commit tokens, audit log.
@@ -158,21 +163,22 @@ The workspace is organized into 8 crates + 1 Go sidecar following the 4-plane ar
 
 ## Test Counts
 
-- kchat-core: 97 tests (capability probe, model manager, governor, registry)
+- kchat-core: 94 tests (capability probe, model manager, governor, registry)
 - kchat-safety: 389 tests (deterministic pipeline, encoder, policy packs, vision module)
   - 927 tests with `--features skill-pack` (adds skillpack loader, overlay merge, verifier,
     policy interpreter, threshold policy, revocation, anti-misuse, canonical JSON,
     jurisdiction tests, community overlay tests, adversarial corpus tests)
-- kchat-action: 31 tests
-- kchat-context: 41 tests (FTS, embeddings, reranker, provenance)
-- kchat-generation: 80 tests (llama.cpp backend, LoRA, swarm, Lark grammar, MLX)
+- kchat-action: 37 tests
+- kchat-context: 44 tests (FTS, embeddings, reranker, provenance, cache invalidation)
+- kchat-generation: 84 tests (llama.cpp backend, LoRA, swarm, Lark grammar, MLX)
 - kchat-bindings: 12 tests (FFI facade, capability probing, tier selection)
 - kchat-wasm: 10 tests (WASM safety classification)
+- kchat-encoder: 5 tests (mock safety, embed, rerank, session)
 - kchat-task-suite: 8 unit tests + 205 standard eval + 36 red-team cases
   - Standard eval: 44 synthetic + 161 device profile = 205 cases
   - Device profile suite: 12 profiles × 15 test categories + 9 standalone tests = 189 cases
   - Device simulator: `--simulate` flag runs 12 profiles × full decision tree (138 checks)
-- **Unit total: 680 tests, all passing**
+- **Unit total: 683 tests, all passing**
 - **Standard eval: 233 cases, all passing**
 - **Red-team eval: 36/36 cases (100%) across 7 attack categories**
 - **Real-world eval: 2005 safety + 221 guardrail + 13 context + 11 generation + 17 action = 2267 cases**
@@ -181,38 +187,31 @@ The workspace is organized into 8 crates + 1 Go sidecar following the 4-plane ar
   - Guardrail corpus: 221 YAML cases from `sample_messages.yaml` with 17-category taxonomy (0-16), severity rubric (0-5), jurisdiction codes, community overlays, locale tags
   - Real model: Qwen3.5-0.8B Q4_K_M via llama-server (Metal), ~130 tok/s, 30ms TTFT
 - **Go server offload: 7 tests, all passing**
-- **Per-device eval: 12 profiles × 150 tasks = 1800 task runs (7 unique generative models)**
+- **Per-device eval: 12 profiles × 150 tasks = 1800 task runs (6 unique generative models)**
   - 15 task categories: summarization, translation, structured output, tool use,
     multi-turn, code generation, reasoning, instruction following, safety,
     context retrieval, action, core, generation, WASM, bindings
-  - Multilingual: EN, VI, JA, KO, ZH, ES, AR, HI, TH + mixed-language
+  - Multilingual: EN, VI, JA, KO, ZH, ES, AR, DE, HI, FR + mixed-language
   - Judgment: Pass (≥75%), Marginal (50-74%), Fail (<50%)
-  - 7 unique generative models: ternary-bonsai-1.7b-mlx-2bit, ternary-bonsai-1.7b-q2_0,
+  - 6 unique generative models: ternary-bonsai-1.7b-mlx-2bit, ternary-bonsai-1.7b-q2_0,
     ternary-bonsai-4b-mlx-2bit, ternary-bonsai-4b-q2_0, ternary-bonsai-8b-mlx-2bit,
-    ternary-bonsai-8b-q2_0, macaw-4bit-mlx
-  - Also tracks per-profile: vision (mobileclip-s2), safety encoder (INT8/INT4),
-    ASR (whisper-tiny/base), and video (mobileclip-s2-video) model assignments
+    ternary-bonsai-8b-q2_0
+  - Also tracks per-profile: vision (mobileclip-s2-int8), safety encoder (INT8/INT4),
+    ASR (whisper-tiny/base), and video (mobileclip-s2-int8, same as vision) model assignments
 
-## Model Registry (18 packs)
+## Model Registry (11 packs)
 
 | Pack ID | Type | Min Tier | Size | Quant | Backend | Platform |
 |---------|------|----------|------|-------|---------|----------|
 | ternary-bonsai-1.7b-mlx-2bit | generative | Low | 472 MB | 2bit-MLX | MLX | ios/macos |
 | ternary-bonsai-1.7b-q2_0 | generative | Low | 442 MB | Q2_0 | llama.cpp Vulkan | android/windows |
-| qwen3.5-0.8b-q4 | generative | Medium | 500 MB | Q4_K_M | llama.cpp | all |
 | ternary-bonsai-4b-q2_0 | generative | Medium | 1.0 GB | Q2_0 | llama.cpp Vulkan | android |
 | ternary-bonsai-4b-mlx-2bit | generative | Medium | 1.0 GB | 2bit-MLX | MLX | ios/macos |
 | ternary-bonsai-8b-mlx-2bit | generative | High | 2.1 GB | 2bit-MLX | MLX | ios/macos |
-| macaw-4bit-mlx | generative | High | 1.5 GB | 4bit-MLX | MLX | ios/macos |
 | ternary-bonsai-8b-q2_0 | generative | High | 2.1 GB | Q2_0 | llama.cpp Vulkan | windows |
-| qwen3.5-0.8b-q8 | generative | High | 850 MB | Q8_0 | llama.cpp | fallback |
-| multilingual-e5-small-int8 | embedding | Medium | 45 MB | INT8 | ONNX | all |
-| safety-classifier-int8 | safety | Medium | 25 MB | INT8 | ONNX | all |
-| safety-classifier-int4 | safety | Low | 15 MB | INT4 | ONNX | all |
-| cross-encoder-miniLM-int8 | reranker | High | 25 MB | INT8 | ONNX | all |
-| mobileclip-s2-image-int8 | vision | Low | 70 MB | INT8 | ONNX | all |
-| mobileclip-s2-image-fp32 | vision | Medium | 137 MB | FP32 | ONNX | all |
-| mobileclip-s2-video-int8 | vision | Medium | 70 MB | INT8 | ONNX | all |
+| kchat-encoder-int8 | encoder | High | 270 MB | INT8 | ONNX | all |
+| kchat-encoder-int4 | encoder | Low | 90 MB | INT4 | ONNX | all |
+| mobileclip-s2-int8 | vision | Low | 70 MB | INT8 | ONNX | all |
 | whisper-tiny-int8 | asr | Low | 40 MB | INT8 | ONNX | all |
 | whisper-base-int8 | asr | Medium | 90 MB | INT8 | ONNX | all |
 
@@ -220,23 +219,27 @@ The workspace is organized into 8 crates + 1 Go sidecar following the 4-plane ar
 
 - **Low tier**:
   - Generative: iOS/macOS: `ternary-bonsai-1.7b-mlx-2bit` via **MLX** (472MB) / Android/Windows: `ternary-bonsai-1.7b-q2_0` via **llama.cpp Vulkan** (442MB)
-  - Vision: `mobileclip-s2-image-int8` (70MB, INT8, 17 categories)
-  - Safety: `safety-classifier-int4` (15MB, INT4)
+  - Vision: `mobileclip-s2-int8` (70MB, INT8, 17 categories, image + video)
+  - Encoder: `kchat-encoder-int4` (90MB, INT4) — safety + embedding + reranking
   - ASR: `whisper-tiny-int8` (40MB, INT8)
-  - Video: none (deterministic media descriptors only)
+  - Video: `mobileclip-s2-int8` (same model as vision)
 - **Medium tier**:
-  - Generative: iOS/macOS: `ternary-bonsai-4b-mlx-2bit` via **MLX** (1.0GB) / Android: `ternary-bonsai-4b-q2_0` via **llama.cpp Vulkan** (1.0GB) / Fallback: `qwen3.5-0.8b-q4` (500MB)
-  - Vision: `mobileclip-s2-image-fp32` (137MB, FP32)
-  - Safety: `safety-classifier-int8` (25MB, INT8)
+  - Generative: iOS/macOS: `ternary-bonsai-4b-mlx-2bit` via **MLX** (1.0GB) / Android: `ternary-bonsai-4b-q2_0` via **llama.cpp Vulkan** (1.0GB)
+  - Vision: `mobileclip-s2-int8` (70MB, INT8, image + video)
+  - Encoder: `kchat-encoder-int4` (90MB, INT4) — safety + embedding + reranking
   - ASR: `whisper-base-int8` (90MB, INT8)
-  - Video: `mobileclip-s2-video-int8` (70MB, INT8)
+  - Video: `mobileclip-s2-int8` (same model as vision)
 - **High tier**:
-  - Generative: iOS/macOS: `ternary-bonsai-8b-mlx-2bit` via **MLX** (2.1GB) / Android: `ternary-bonsai-8b-q2_0` via **llama.cpp Vulkan** (2.1GB) / Windows: `ternary-bonsai-8b-q2_0` via **llama.cpp Vulkan** (2.1GB) / Fallback: `qwen3.5-0.8b-q8` (850MB)
-  - Vision: `mobileclip-s2-image-fp32` (137MB, FP32)
-  - Safety: `safety-classifier-int8` (25MB, INT8)
+  - Generative: iOS/macOS: `ternary-bonsai-8b-mlx-2bit` via **MLX** (2.1GB) / Android: `ternary-bonsai-8b-q2_0` via **llama.cpp Vulkan** (2.1GB) / Windows: `ternary-bonsai-8b-q2_0` via **llama.cpp Vulkan** (2.1GB)
+  - Vision: `mobileclip-s2-int8` (70MB, INT8, image + video)
+  - Encoder: `kchat-encoder-int8` (270MB, INT8) — safety + embedding + reranking
   - ASR: `whisper-base-int8` (90MB, INT8)
-  - Video: `mobileclip-s2-video-int8` (70MB, INT8)
+  - Video: `mobileclip-s2-int8` (same model as vision)
 
 All generative models support `tool_use`. The "deterministic-first" principle is preserved —
 safety works on ALL devices without a generative model. Vision and ASR run on ALL tiers.
-Low-tier devices use INT8/INT4 quantized models to fit within memory budget.
+Low-tier devices use INT4 quantized encoder to fit within memory budget.
+The unified kchat-encoder replaces 4 separate model packs (e5-small, safety-int8,
+safety-int4, cross-encoder-miniLM) with 2 multi-task packs (INT8 + INT4).
+The unified mobileclip-s2-int8 replaces 3 separate vision packs (image-int8,
+image-fp32, video-int8) with 1 multi-task pack handling both image and video.

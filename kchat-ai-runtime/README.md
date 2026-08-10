@@ -82,8 +82,8 @@ kchat-ai-runtime/
 | Tier | Mobile RAM | Desktop RAM | Context | Output | Peak Memory | TTFT P95 |
 |------|-----------|-----------|---------|--------|------------|----------|
 | **Low** | 4–6 GB | 8 GB | 2,048 tok | 64–192 tok | 750 MB (mobile) / 2 GB (desktop) | 2,500 ms |
-| **Medium** | 6–8 GB | 16–24 GB | 4,096 tok | 256–512 tok | 1,400 MB (iOS) / 1,500 MB (Android) / 4 GB (desktop) | 1,500 ms |
-| **High** | 8 GB+ | 32 GB+ | 8,192 tok (mobile) / 16,384 tok (desktop) | 512–1,024 tok | 2,500 MB (iOS) / 3,000 MB (Android) / 8 GB (desktop) | 1,000 ms |
+| **Medium** | 6–8 GB | 16–24 GB | 4,096 tok | 256–512 tok | 1,700 MB (iOS) / 1,800 MB (Android) / 4 GB (desktop) | 1,500 ms |
+| **High** | 8 GB+ | 32 GB+ | 8,192 tok (mobile) / 16,384 tok (desktop) | 512–1,024 tok | 3,100 MB (iOS) / 3,200 MB (Android) / 8 GB (desktop) | 1,000 ms |
 
 ### Tier Selection Thresholds
 
@@ -94,7 +94,7 @@ kchat-ai-runtime/
 
 Thermal downgrade: Serious → drop one tier; Critical → force Low.
 
-## Model Registry (18 packs)
+## Model Registry (13 packs)
 
 ### Generative Models
 
@@ -102,25 +102,18 @@ Thermal downgrade: Serious → drop one tier; Critical → force Low.
 |---------|----------|------|-------|---------|----------|
 | `ternary-bonsai-1.7b-mlx-2bit` | Low | 472 MB | 2bit-MLX | MLX | iOS/macOS (Apple Silicon) |
 | `ternary-bonsai-1.7b-q2_0` | Low | 442 MB | Q2_0 | llama.cpp Vulkan/CPU | Android/Windows/Intel Mac |
-| `qwen3.5-0.8b-q4` | Medium | 500 MB | Q4_K_M | llama.cpp | All (fallback) |
 | `ternary-bonsai-4b-mlx-2bit` | Medium | 1,000 MB | 2bit-MLX | MLX | iOS/macOS (Apple Silicon) |
 | `ternary-bonsai-4b-q2_0` | Medium | 1,075 MB | Q2_0 | llama.cpp Vulkan | Android |
 | `ternary-bonsai-8b-mlx-2bit` | High | 2,100 MB | 2bit-MLX | MLX | iOS/macOS (Apple Silicon) |
-| `macaw-4bit-mlx` | High | 1,500 MB | 4bit-MLX | MLX | iOS/macOS (Apple Silicon) |
 | `ternary-bonsai-8b-q2_0` | High | 2,182 MB | Q2_0 | llama.cpp Vulkan | Android/Windows |
-| `qwen3.5-0.8b-q8` | High | 850 MB | Q8_0 | llama.cpp | Fallback |
 
 ### Non-Generative Models
 
 | Pack ID | Type | Min Tier | Size | Quant | Tasks |
 |---------|------|----------|------|-------|-------|
-| `multilingual-e5-small-int8` | embedding | Medium | 45 MB | INT8 | embed |
-| `safety-classifier-int8` | safety | Medium | 25 MB | INT8 | safety |
-| `safety-classifier-int4` | safety | Low | 15 MB | INT4 | safety |
-| `cross-encoder-miniLM-int8` | reranker | High | 25 MB | INT8 | rerank |
-| `mobileclip-s2-image-int8` | vision | Low | 70 MB | INT8 | image_classify, image_embed |
-| `mobileclip-s2-image-fp32` | vision | Medium | 137 MB | FP32 | image_classify, image_embed |
-| `mobileclip-s2-video-int8` | vision | Medium | 70 MB | INT8 | video_classify |
+| `kchat-encoder-int8` | encoder | High | 270 MB | INT8 | safety, embed, rerank |
+| `kchat-encoder-int4` | encoder | Low | 90 MB | INT4 | safety, embed, rerank |
+| `mobileclip-s2-int8` | vision | Low | 70 MB | INT8 | image_classify, image_embed, video_classify |
 | `whisper-tiny-int8` | asr | Low | 40 MB | INT8 | transcribe |
 | `whisper-base-int8` | asr | Medium | 90 MB | INT8 | transcribe |
 

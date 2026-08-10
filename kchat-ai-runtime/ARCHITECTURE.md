@@ -14,7 +14,7 @@ model. The deterministic safety plane uses:
 - **Regex-based PII detection** — emails, phone numbers, SSN, credit cards, addresses
 - **Scam/URL detectors** — known scam patterns, suspicious URL heuristics
 - **Signed policy packs (Ed25519)** — community/jurisdiction-specific rules
-- **ONNX Runtime safety encoder** — INT8 (Medium+) or INT4 (Low) quantized
+- **ONNX Runtime safety encoder** — INT8 (High tier, 270MB) or INT4 (Low/Medium, 90MB) quantized
 - **Skill-pack system** — 17-category taxonomy, 0-5 severity rubric, 38 communities,
   62 jurisdictions, threshold policy (0.45/0.62/0.78/0.85)
 
@@ -199,8 +199,8 @@ The foundation crate that all other crates depend on.
 - Multilingual support: 14 languages + 13 mixed-lingual code-switch combos
 
 **ONNX Runtime Safety Encoder**:
-- INT8 quantized (Medium+ tier, 25MB)
-- INT4 quantized (Low tier, 15MB)
+- INT8 quantized (High tier, 270MB)
+- INT4 quantized (Low/Medium tier, 90MB)
 - Escalation from deterministic → encoder → SLM
 
 **Skill-Pack System** (feature: `skill-pack`):
@@ -217,8 +217,8 @@ The foundation crate that all other crates depend on.
 - Embedded data via `include_str!`
 
 **Vision Module** (feature: `onnx-runtime-vision`):
-- MobileCLIP-S2 image encoder (ONNX)
-- INT8 (70MB, Low tier) and FP32 (137MB, Medium+)
+- MobileCLIP-S2 unified image + video encoder (ONNX)
+- INT8 (70MB, all tiers) — single model for both image and video
 - 512-dim embeddings, 17 categories
 - Video frame aggregation with temporal smoothing
 - Vision bridge connecting to safety pipeline
@@ -234,9 +234,9 @@ The foundation crate that all other crates depend on.
 - Scope-based access control (user/role authorization)
 
 **Retrieval Pipeline**:
-- Dense embeddings: multilingual-e5-small ONNX INT8 (45MB)
+- Dense embeddings: kchat-encoder (XLM-RoBERTa-base) ONNX INT4 (90MB, 768-dim) on Low/Medium, INT8 (270MB) on High
 - Fallback overlap scoring when embeddings unavailable
-- Cross-encoder reranker: miniLM INT8 (25MB, High tier)
+- Cross-encoder reranker: kchat-encoder shared session (all tiers)
 - Recency boost for recent results
 - Recall@10 and MRR metrics
 
@@ -245,7 +245,7 @@ The foundation crate that all other crates depend on.
 - Per-scope isolation
 - Forget/delete with tombstone preservation
 
-**Test Coverage**: 41 tests
+**Test Coverage**: 44 tests
 
 ### kchat-generation (Generation Plane)
 
@@ -287,7 +287,7 @@ The foundation crate that all other crates depend on.
 - Safety plane can abort generation mid-stream
 - Backpressure-aware
 
-**Test Coverage**: 80 tests
+**Test Coverage**: 84 tests
 
 ### kchat-action (Action Plane)
 
@@ -308,7 +308,7 @@ The foundation crate that all other crates depend on.
 - Commit tokens for atomic operations
 - Audit log for all actions
 
-**Test Coverage**: 31 tests
+**Test Coverage**: 37 tests
 
 ### kchat-bindings (FFI Surface)
 

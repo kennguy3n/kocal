@@ -1,4 +1,4 @@
-//! Reranker — cross-encoder reranking for High-tier retrieval precision.
+//! Reranker — cross-encoder reranking for retrieval precision.
 //!
 //! A cross-encoder reranker takes a query-document pair as input and produces
 //! a relevance score. Unlike bi-encoders (embeddings), the cross-encoder
@@ -6,7 +6,8 @@
 //! interactions. This gives better precision but is more expensive (O(n)
 //! model calls for n documents).
 //!
-//! On High-tier devices, the reranker re-ranks the top-N (e.g. 20) retrieval
+//! Uses the unified kchat-encoder (XLM-RoBERTa-base) shared session.
+//! On Medium+ tier devices, the reranker re-ranks the top-N (e.g. 20) retrieval
 //! results to produce a more accurate final ranking.
 
 use serde::{Deserialize, Serialize};
@@ -44,91 +45,36 @@ pub trait Reranker: Send + Sync {
     fn model_name(&self) -> &str;
 }
 
-/// ONNX Runtime cross-encoder reranker.
+/// ONNX Runtime cross-encoder reranker using kchat-encoder (XLM-RoBERTa-base).
 ///
-/// Uses a model like `cross-encoder/ms-marco-MiniLM-L-6-v2` (INT8, ~25MB).
-/// Input format: "[CLS] {query} [SEP] {document} [SEP]"
+/// Wraps a shared `kchat_encoder::EncoderSession` and delegates reranking
+/// to `kchat_encoder::RerankHead`.
 #[cfg(feature = "reranker")]
 pub struct CrossEncoderReranker {
-    session: ort::session::Session,
-    tokenizer: tokenizers::Tokenizer,
-    max_length: usize,
-    model_name: String,
+    session: std::sync::Arc<kchat_encoder::EncoderSession>,
 }
 
 #[cfg(feature = "reranker")]
 impl CrossEncoderReranker {
-    /// Create a new cross-encoder reranker.
-    pub fn new(model_path: &str, tokenizer_path: &str) -> RerankerResult<Self> {
-        let session = ort::session::Session::builder()
-            .and_then(|b| b.with_optimization_level(ort::session::GraphOptimizationLevel::Level3))
-            .and_then(|b| b.with_intra_threads(2))
-            .map_err(|e| RerankerError::InferenceFailed(format!("session: {e}")))?
-            .commit_from_file(model_path)
-            .map_err(|e| RerankerError::InferenceFailed(format!("load: {e}")))?;
-
-        let tokenizer = tokenizers::Tokenizer::from_file(tokenizer_path)
-            .map_err(|e| RerankerError::TokenizerError(e.to_string()))?;
-
-        Ok(Self {
-            session,
-            tokenizer,
-            max_length: 512,
-            model_name: "cross-encoder-ms-marco-MiniLM-L-6-v2-int8".into(),
-        })
+    /// Create a new cross-encoder reranker from a shared encoder session.
+    pub fn new(session: std::sync::Arc<kchat_encoder::EncoderSession>) -> Self {
+        Self { session }
     }
 
-    /// Compute relevance score for a single query-document pair.
-    fn score_pair(&self, query: &str, document: &str) -> RerankerResult<f64> {
-        use ndarray::Array2;
-        use ort::session::inputs;
-
-        // Cross-encoders take query+document as a pair
-        let encoding = self
-            .tokenizer
-            .encode(format!("{} [SEP] {}", query, document), true)
-            .map_err(|e| RerankerError::TokenizerError(e.to_string()))?;
-
-        let input_ids = encoding.get_ids();
-        let attention_mask = encoding.get_attention_mask();
-
-        let seq_len = input_ids.len().min(self.max_length);
-        let input_ids = &input_ids[..seq_len];
-        let attention_mask = &attention_mask[..seq_len];
-
-        let input_ids_arr = Array2::from_shape_vec((1, seq_len), input_ids.to_vec())
-            .map_err(|e| RerankerError::InferenceFailed(format!("array: {e}")))?;
-        let attention_arr = Array2::from_shape_vec((1, seq_len), attention_mask.to_vec())
-            .map_err(|e| RerankerError::InferenceFailed(format!("array: {e}")))?;
-
-        let inputs = inputs! {
-            "input_ids" => input_ids_arr.view(),
-            "attention_mask" => attention_arr.view(),
-        }
-        .map_err(|e| RerankerError::InferenceFailed(format!("inputs: {e}")))?;
-
-        let outputs = self
-            .session
-            .run(inputs)
-            .map_err(|e| RerankerError::InferenceFailed(format!("run: {e}")))?;
-
-        // Extract the relevance logit
-        let logits = outputs
-            .get(0)
-            .ok_or_else(|| RerankerError::InferenceFailed("no output".into()))?
-            .try_extract_tensor::<f32>()
-            .map_err(|e| RerankerError::InferenceFailed(format!("extract: {e}")))?;
-
-        let logit = logits.view().iter().next().copied().unwrap_or(0.0) as f64;
-
-        // Numerically stable sigmoid: avoids overflow for extreme logits
-        let prob = if logit >= 0.0 {
-            1.0 / (1.0 + (-logit).exp())
-        } else {
-            let e = logit.exp();
-            e / (1.0 + e)
-        };
-        Ok(prob)
+    /// Create a new cross-encoder reranker by loading a model from file.
+    ///
+    /// `intra_threads` controls ONNX Runtime intra-op parallelism (2 for low, 3 for medium, 4+ for high).
+    pub fn from_files(
+        model_path: &str,
+        tokenizer_path: &str,
+        quantization: kchat_encoder::Quantization,
+        intra_threads: usize,
+    ) -> RerankerResult<Self> {
+        let session = kchat_encoder::EncoderSession::new(model_path, tokenizer_path, quantization, intra_threads)
+            .map_err(|e| RerankerError::InferenceFailed(format!("encoder session: {e}")))?;
+        Ok(Self {
+            session: std::sync::Arc::new(session),
+        })
     }
 }
 
@@ -140,24 +86,13 @@ impl Reranker for CrossEncoderReranker {
         documents: &[String],
         top_k: usize,
     ) -> RerankerResult<Vec<(usize, f64)>> {
-        let mut scored: Vec<(usize, f64)> = Vec::with_capacity(documents.len());
-
-        for (i, doc) in documents.iter().enumerate() {
-            let score = self.score_pair(query, doc)?;
-            scored.push((i, score));
-        }
-
-        // Sort by score descending
-        scored.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
-
-        // Truncate to top_k
-        scored.truncate(top_k);
-
-        Ok(scored)
+        let head = kchat_encoder::RerankHead::new(&self.session);
+        head.rerank(query, documents, top_k)
+            .map_err(|e| RerankerError::InferenceFailed(e.to_string()))
     }
 
     fn model_name(&self) -> &str {
-        &self.model_name
+        self.session.model_name()
     }
 }
 

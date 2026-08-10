@@ -122,10 +122,10 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_tier: DeviceTier::High,
             expected_model_pack: Some("ternary-bonsai-8b-mlx-2bit"),
             expected_backend: Some("mlx"),
-            expected_vision_pack: Some("mobileclip-s2-image-fp32"),
+            expected_vision_pack: Some("mobileclip-s2-int8"),
             expected_asr_pack: Some("whisper-base-int8"),
-            expected_safety_pack: "safety-classifier-int8",
-            expected_video_pack: Some("mobileclip-s2-video-int8"),
+            expected_safety_pack: "kchat-encoder-int8",
+            expected_video_pack: Some("mobileclip-s2-int8"),
         },
         DeviceProfile {
             name: "iPhone 14 (6GB, A15)",
@@ -147,10 +147,10 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_tier: DeviceTier::Medium,
             expected_model_pack: Some("ternary-bonsai-4b-mlx-2bit"),
             expected_backend: Some("mlx"),
-            expected_vision_pack: Some("mobileclip-s2-image-fp32"),
+            expected_vision_pack: Some("mobileclip-s2-int8"),
             expected_asr_pack: Some("whisper-base-int8"),
-            expected_safety_pack: "safety-classifier-int8",
-            expected_video_pack: Some("mobileclip-s2-video-int8"),
+            expected_safety_pack: "kchat-encoder-int4",
+            expected_video_pack: Some("mobileclip-s2-int8"),
         },
         DeviceProfile {
             name: "iPhone SE 2022 (4GB, A15)",
@@ -172,10 +172,10 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_tier: DeviceTier::Low,
             expected_model_pack: Some("ternary-bonsai-1.7b-mlx-2bit"),
             expected_backend: Some("mlx"),
-            expected_vision_pack: Some("mobileclip-s2-image-int8"),
+            expected_vision_pack: Some("mobileclip-s2-int8"),
             expected_asr_pack: Some("whisper-tiny-int8"),
-            expected_safety_pack: "safety-classifier-int4",
-            expected_video_pack: None,
+            expected_safety_pack: "kchat-encoder-int4",
+            expected_video_pack: Some("mobileclip-s2-int8"),
         },
         // === Mobile: Android ===
         DeviceProfile {
@@ -198,10 +198,10 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_tier: DeviceTier::High,
             expected_model_pack: Some("ternary-bonsai-8b-q2_0"),
             expected_backend: Some("llama.cpp_vulkan"),
-            expected_vision_pack: Some("mobileclip-s2-image-fp32"),
+            expected_vision_pack: Some("mobileclip-s2-int8"),
             expected_asr_pack: Some("whisper-base-int8"),
-            expected_safety_pack: "safety-classifier-int8",
-            expected_video_pack: Some("mobileclip-s2-video-int8"),
+            expected_safety_pack: "kchat-encoder-int8",
+            expected_video_pack: Some("mobileclip-s2-int8"),
         },
         DeviceProfile {
             name: "Pixel 7a (8GB, Tensor G2)",
@@ -223,10 +223,10 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_tier: DeviceTier::Medium,
             expected_model_pack: Some("ternary-bonsai-4b-q2_0"),
             expected_backend: Some("llama.cpp_vulkan"),
-            expected_vision_pack: Some("mobileclip-s2-image-fp32"),
+            expected_vision_pack: Some("mobileclip-s2-int8"),
             expected_asr_pack: Some("whisper-base-int8"),
-            expected_safety_pack: "safety-classifier-int8",
-            expected_video_pack: Some("mobileclip-s2-video-int8"),
+            expected_safety_pack: "kchat-encoder-int4",
+            expected_video_pack: Some("mobileclip-s2-int8"),
         },
         DeviceProfile {
             name: "Galaxy A14 (4GB, Helio G80)",
@@ -248,10 +248,10 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_tier: DeviceTier::Low,
             expected_model_pack: Some("ternary-bonsai-1.7b-q2_0"),
             expected_backend: Some("llama.cpp_vulkan"),
-            expected_vision_pack: Some("mobileclip-s2-image-int8"),
+            expected_vision_pack: Some("mobileclip-s2-int8"),
             expected_asr_pack: Some("whisper-tiny-int8"),
-            expected_safety_pack: "safety-classifier-int4",
-            expected_video_pack: None,
+            expected_safety_pack: "kchat-encoder-int4",
+            expected_video_pack: Some("mobileclip-s2-int8"),
         },
         // === Desktop: macOS ===
         DeviceProfile {
@@ -274,10 +274,10 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_tier: DeviceTier::High,
             expected_model_pack: Some("ternary-bonsai-8b-mlx-2bit"),
             expected_backend: Some("mlx"),
-            expected_vision_pack: Some("mobileclip-s2-image-fp32"),
+            expected_vision_pack: Some("mobileclip-s2-int8"),
             expected_asr_pack: Some("whisper-base-int8"),
-            expected_safety_pack: "safety-classifier-int8",
-            expected_video_pack: Some("mobileclip-s2-video-int8"),
+            expected_safety_pack: "kchat-encoder-int8",
+            expected_video_pack: Some("mobileclip-s2-int8"),
         },
         DeviceProfile {
             name: "MacBook Air M2 (8GB)",
@@ -299,10 +299,10 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_tier: DeviceTier::Low,
             expected_model_pack: Some("ternary-bonsai-1.7b-mlx-2bit"),
             expected_backend: Some("mlx"),
-            expected_vision_pack: Some("mobileclip-s2-image-int8"),
+            expected_vision_pack: Some("mobileclip-s2-int8"),
             expected_asr_pack: Some("whisper-tiny-int8"),
-            expected_safety_pack: "safety-classifier-int4",
-            expected_video_pack: None,
+            expected_safety_pack: "kchat-encoder-int4",
+            expected_video_pack: Some("mobileclip-s2-int8"),
         },
         DeviceProfile {
             name: "Intel NUC (8GB, i3)",
@@ -324,10 +324,10 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_tier: DeviceTier::Low,
             expected_model_pack: Some("ternary-bonsai-1.7b-q2_0"),
             expected_backend: Some("llama.cpp_cpu"),
-            expected_vision_pack: Some("mobileclip-s2-image-int8"),
+            expected_vision_pack: Some("mobileclip-s2-int8"),
             expected_asr_pack: Some("whisper-tiny-int8"),
-            expected_safety_pack: "safety-classifier-int4",
-            expected_video_pack: None,
+            expected_safety_pack: "kchat-encoder-int4",
+            expected_video_pack: Some("mobileclip-s2-int8"),
         },
         // === Desktop: Windows ===
         DeviceProfile {
@@ -350,10 +350,10 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_tier: DeviceTier::High,
             expected_model_pack: Some("ternary-bonsai-8b-q2_0"),
             expected_backend: Some("llama.cpp_vulkan"),
-            expected_vision_pack: Some("mobileclip-s2-image-fp32"),
+            expected_vision_pack: Some("mobileclip-s2-int8"),
             expected_asr_pack: Some("whisper-base-int8"),
-            expected_safety_pack: "safety-classifier-int8",
-            expected_video_pack: Some("mobileclip-s2-video-int8"),
+            expected_safety_pack: "kchat-encoder-int8",
+            expected_video_pack: Some("mobileclip-s2-int8"),
         },
         DeviceProfile {
             name: "Windows Surface 8 (16GB)",
@@ -375,10 +375,10 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_tier: DeviceTier::Low,
             expected_model_pack: Some("ternary-bonsai-1.7b-q2_0"),
             expected_backend: Some("llama.cpp_vulkan"),
-            expected_vision_pack: Some("mobileclip-s2-image-int8"),
+            expected_vision_pack: Some("mobileclip-s2-int8"),
             expected_asr_pack: Some("whisper-tiny-int8"),
-            expected_safety_pack: "safety-classifier-int4",
-            expected_video_pack: None,
+            expected_safety_pack: "kchat-encoder-int4",
+            expected_video_pack: Some("mobileclip-s2-int8"),
         },
         DeviceProfile {
             name: "Windows Legacy (8GB, i5)",
@@ -400,10 +400,10 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_tier: DeviceTier::Low,
             expected_model_pack: Some("ternary-bonsai-1.7b-q2_0"),
             expected_backend: Some("llama.cpp_vulkan"),
-            expected_vision_pack: Some("mobileclip-s2-image-int8"),
+            expected_vision_pack: Some("mobileclip-s2-int8"),
             expected_asr_pack: Some("whisper-tiny-int8"),
-            expected_safety_pack: "safety-classifier-int4",
-            expected_video_pack: None,
+            expected_safety_pack: "kchat-encoder-int4",
+            expected_video_pack: Some("mobileclip-s2-int8"),
         },
     ]
 }
@@ -444,10 +444,8 @@ pub fn select_model_for_tier_platform(tier: DeviceTier, platform: &str, cpu_arch
         DeviceTier::High => {
             if is_apple_silicon {
                 Some("ternary-bonsai-8b-mlx-2bit")    // Bonsai 8B MLX 2-bit, ~2.1GB
-            } else if platform == "android" || platform == "windows" {
-                Some("ternary-bonsai-8b-q2_0")         // Bonsai 8B Q2_0 GGUF, ~2.1GB
             } else {
-                Some("qwen3.5-0.8b-q8")                // Qwen 0.8B Q8 fallback, 850MB
+                Some("ternary-bonsai-8b-q2_0")         // Bonsai 8B Q2_0 GGUF, ~2.1GB
             }
         }
     }
@@ -463,30 +461,22 @@ pub fn tier_to_min_tier(tier: DeviceTier) -> MinTier {
 
 /// Select the appropriate vision model for a tier.
 ///
-/// - Low tier: mobileclip-s2-image-int8 (70MB, INT8)
-/// - Medium/High tier: mobileclip-s2-image-fp32 (137MB, FP32)
-pub fn select_vision_model_for_tier(tier: DeviceTier) -> Option<&'static str> {
-    match tier {
-        DeviceTier::Low => Some("mobileclip-s2-image-int8"),
-        DeviceTier::Medium | DeviceTier::High => Some("mobileclip-s2-image-fp32"),
-    }
+/// - All tiers: mobileclip-s2-int8 (70MB, INT8) — unified image + video
+pub fn select_vision_model_for_tier(_tier: DeviceTier) -> Option<&'static str> {
+    Some("mobileclip-s2-int8")
 }
 
 /// Select the appropriate video model for a tier.
 ///
-/// - Low tier: None (deterministic media descriptors only)
-/// - Medium/High tier: mobileclip-s2-video-int8 (70MB, INT8)
-pub fn select_video_model_for_tier(tier: DeviceTier) -> Option<&'static str> {
-    match tier {
-        DeviceTier::Low => None,
-        DeviceTier::Medium | DeviceTier::High => Some("mobileclip-s2-video-int8"),
-    }
+/// - All tiers: mobileclip-s2-int8 (70MB, INT8) — same model as vision
+pub fn select_video_model_for_tier(_tier: DeviceTier) -> Option<&'static str> {
+    Some("mobileclip-s2-int8")
 }
 
 /// Select the appropriate ASR model for a tier.
 ///
-/// - Low tier: whisper-tiny-int8 (40MB, INT8)
-/// - Medium/High tier: whisper-base-int8 (90MB, INT8)
+/// - Low tier: whisper-tiny-int8 (~33MB, ONNX)
+/// - Medium/High tier: whisper-base-int8 (~82MB, ONNX)
 pub fn select_asr_model_for_tier(tier: DeviceTier) -> Option<&'static str> {
     match tier {
         DeviceTier::Low => Some("whisper-tiny-int8"),
@@ -496,12 +486,12 @@ pub fn select_asr_model_for_tier(tier: DeviceTier) -> Option<&'static str> {
 
 /// Select the appropriate safety encoder model for a tier.
 ///
-/// - Low tier: safety-classifier-int4 (15MB, INT4)
-/// - Medium/High tier: safety-classifier-int8 (25MB, INT8)
+/// - Low/Medium tier: kchat-encoder-int4 (90MB, INT4)
+/// - High tier: kchat-encoder-int8 (270MB, INT8)
 pub fn select_safety_model_for_tier(tier: DeviceTier) -> &'static str {
     match tier {
-        DeviceTier::Low => "safety-classifier-int4",
-        DeviceTier::Medium | DeviceTier::High => "safety-classifier-int8",
+        DeviceTier::Low | DeviceTier::Medium => "kchat-encoder-int4",
+        DeviceTier::High => "kchat-encoder-int8",
     }
 }
 
@@ -867,6 +857,31 @@ fn test_memory_budget(p: &DeviceProfile) -> EvalResult {
             "model_size {}MB > peak_budget {}MB",
             model_size / (1024 * 1024),
             peak_budget / (1024 * 1024)
+        ));
+    }
+
+    // Check total model footprint (generative + vision + encoder + ASR + video) fits within budget
+    let encoder_size: u64 = match tier {
+        DeviceTier::Low | DeviceTier::Medium => 90_000_000,   // kchat-encoder-int4 (90MB)
+        DeviceTier::High => 270_000_000,                       // kchat-encoder-int8 (270MB)
+    };
+    let vision_size: u64 = 70_000_000;                            // mobileclip-s2-int8 (unified, all tiers)
+    let asr_size: u64 = match tier {
+        DeviceTier::Low => 32_904_983,                         // whisper-tiny-int8 (encoder ONNX, ~33MB)
+        DeviceTier::Medium | DeviceTier::High => 82_468_069,   // whisper-base-int8 (encoder ONNX, ~82MB)
+    };
+    // Unified mobileclip-s2-int8 (70MB) handles both image and video on all tiers
+    // No separate video model needed — same ONNX session processes video frames
+    let total_footprint = model_size + encoder_size + vision_size + asr_size;
+    if total_footprint > safe_ai {
+        errors.push(format!(
+            "total_footprint {}MB (gen {}+enc {}+vis {}+asr {}) > safe_ai {}MB",
+            total_footprint / (1024 * 1024),
+            model_size / (1024 * 1024),
+            encoder_size / (1024 * 1024),
+            vision_size / (1024 * 1024),
+            asr_size / (1024 * 1024),
+            safe_ai / (1024 * 1024)
         ));
     }
 
@@ -1331,13 +1346,13 @@ fn test_registry_finds_model_for_high_tier(registry: &ModelRegistry) -> EvalResu
         let mut meta = HashMap::new();
         meta.insert("count".into(), format!("{}", results.len()));
         meta.insert("first".into(), results[0].pack_id.clone());
-        // High tier should find all 9 generative models
-        // (Bonsai-1.7B-MLX, Bonsai-1.7B-GGUF, 0.8B-Q4, Bonsai-4B-GGUF, Bonsai-4B-MLX,
-        //  Bonsai-8B-MLX, Macaw, Bonsai-8B-GGUF, Q8)
-        if results.len() != 9 {
+        // High tier should find all 6 generative models
+        // (Bonsai-1.7B-MLX, Bonsai-1.7B-GGUF, Bonsai-4B-GGUF, Bonsai-4B-MLX,
+        //  Bonsai-8B-MLX, Bonsai-8B-GGUF)
+        if results.len() != 6 {
             EvalResult::fail(
                 "registry_high_tier_model",
-                format!("expected 9 generative models for High tier, got {}", results.len()),
+                format!("expected 6 generative models for High tier, got {}", results.len()),
             )
         } else {
             EvalResult::pass_with_meta("registry_high_tier_model", 0, meta)
@@ -1371,17 +1386,14 @@ fn test_registry_finds_no_model_for_low_tier(registry: &ModelRegistry) -> EvalRe
         }
     }
 
-    // Reranker still requires High tier
+    // Reranker is available on all tiers via kchat-encoder-int4 (Low) and kchat-encoder-int8 (High)
     let high_only = registry.find_for_task("rerank", MinTier::High);
     let medium_only = registry.find_for_task("rerank", MinTier::Medium);
     if high_only.is_empty() {
         errors.push("no rerank models for High tier".into());
     }
-    if !medium_only.is_empty() {
-        errors.push(format!(
-            "rerank model found for Medium tier (should require High): {}",
-            medium_only[0].pack_id
-        ));
+    if medium_only.is_empty() {
+        errors.push("no rerank models for Medium tier (expected kchat-encoder-int4)".into());
     }
 
     if errors.is_empty() {
@@ -1411,11 +1423,11 @@ fn test_registry_finds_safety_for_medium(registry: &ModelRegistry) -> EvalResult
         let mut meta = HashMap::new();
         meta.insert("count".into(), format!("{}", results.len()));
         meta.insert("pack_ids".into(), results.iter().map(|e| e.pack_id.as_str()).collect::<Vec<_>>().join(", "));
-        // Medium tier should find both safety-classifier-int8 and safety-classifier-int4
-        if results.len() != 2 {
+        // Medium tier should find kchat-encoder-int4 only (INT8 is high-tier now)
+        if results.len() != 1 {
             EvalResult::fail(
                 "registry_safety_medium",
-                format!("expected 2 safety models for Medium tier, got {}", results.len()),
+                format!("expected 1 safety model for Medium tier, got {}", results.len()),
             )
         } else {
             EvalResult::pass_with_meta("registry_safety_medium", 0, meta)

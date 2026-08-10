@@ -4,9 +4,9 @@
 //! and languages by swapping small adapter files (3-5MB) instead of loading
 //! entirely different models. The swap takes <10ms.
 //!
-//! The system supports 30 adapters: 5 tasks × 6 languages.
+//! The system supports 50 adapters: 5 tasks × 10 languages.
 //! Tasks: summarize, translate, key_points, generate_doc, generate_slides
-//! Languages: en, vi, zh, ja, ko, es
+//! Languages: en, vi, zh, ja, ko, es, ar, de, hi, fr
 
 use parking_lot::Mutex;
 use std::collections::HashMap;
@@ -254,8 +254,12 @@ pub mod languages {
     pub const JA: &str = "ja";
     pub const KO: &str = "ko";
     pub const ES: &str = "es";
+    pub const AR: &str = "ar";
+    pub const DE: &str = "de";
+    pub const HI: &str = "hi";
+    pub const FR: &str = "fr";
 
-    pub const ALL: &[&str] = &[EN, VI, ZH, JA, KO, ES];
+    pub const ALL: &[&str] = &[EN, VI, ZH, JA, KO, ES, AR, DE, HI, FR];
 }
 
 #[cfg(test)]
@@ -335,7 +339,7 @@ mod tests {
         manager.register_all(make_test_adapters());
 
         let summarize_adapters = manager.adapters_for_task("summarize");
-        assert_eq!(summarize_adapters.len(), 6); // 6 languages
+        assert_eq!(summarize_adapters.len(), 10); // 10 languages
     }
 
     #[test]
@@ -367,12 +371,12 @@ mod tests {
     }
 
     #[test]
-    fn test_all_30_adapters() {
+    fn test_all_50_adapters() {
         let manager = LoraManager::new();
         manager.register_all(make_test_adapters());
 
         let all = manager.available_adapters();
-        assert_eq!(all.len(), 30); // 5 tasks × 6 languages
+        assert_eq!(all.len(), 50); // 5 tasks × 10 languages
     }
 
     #[test]

@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "crates/kchat-core",
+    "crates/kchat-encoder",
     "crates/kchat-safety",
     "crates/kchat-context",
     "crates/kchat-generation",

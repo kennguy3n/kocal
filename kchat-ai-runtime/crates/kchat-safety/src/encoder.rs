@@ -4,9 +4,9 @@
 //! detectors can't confidently classify. It's used on Medium+ tier devices
 //! when the deterministic pipeline returns Allow/Warn for group/minor contexts.
 //!
-//! The encoder loads an INT8 quantized ONNX model (~45MB) and tokenizes text
-//! using the model's tokenizer. It runs inference and maps the output logits
-//! to safety categories.
+//! The encoder uses the unified kchat-encoder crate (XLM-RoBERTa-base)
+//! which provides a shared ONNX session for safety classification, text
+//! embedding, and cross-encoder reranking.
 //!
 //! Categories (matching the deterministic pipeline):
 //! - 0: SAFE
@@ -22,171 +22,52 @@
 
 use crate::classify::{EncoderAdapter, EncoderError, EncoderVerdict};
 
-/// Category labels for the safety encoder.
-pub mod categories {
-    pub const SAFE: u32 = 0;
-    pub const HARASSMENT: u32 = 1;
-    pub const HATE_SPEECH: u32 = 2;
-    pub const SELF_HARM: u32 = 3;
-    pub const VIOLENCE: u32 = 4;
-    pub const SEXUAL_CONTENT: u32 = 5;
-    pub const CHILD_SAFETY: u32 = 6;
-    pub const SCAM: u32 = 7;
-    pub const PII: u32 = 8;
-    pub const URL_RISK: u32 = 9;
+/// Re-export category constants from kchat-encoder for convenience.
+pub use kchat_encoder::categories;
 
-    pub const NUM_CATEGORIES: usize = 10;
-
-    /// Get the category name for a category ID.
-    pub fn name(id: u32) -> &'static str {
-        match id {
-            SAFE => "safe",
-            HARASSMENT => "harassment",
-            HATE_SPEECH => "hate_speech",
-            SELF_HARM => "self_harm",
-            VIOLENCE => "violence",
-            SEXUAL_CONTENT => "sexual_content",
-            CHILD_SAFETY => "child_safety",
-            SCAM => "scam",
-            PII => "pii",
-            URL_RISK => "url_risk",
-            _ => "unknown",
-        }
-    }
-}
-
-/// ONNX Runtime safety encoder.
+/// ONNX Runtime safety encoder using the unified kchat-encoder.
 ///
-/// Loads an INT8 quantized ONNX model and runs classification on input text.
-/// The model should have a single output with logits for each category.
+/// Wraps a shared `kchat_encoder::EncoderSession` and delegates
+/// classification to `kchat_encoder::SafetyHead`.
 #[cfg(feature = "onnx-runtime")]
 pub struct OnnxEncoder {
-    session: parking_lot::Mutex<ort::session::Session>,
-    tokenizer: tokenizers::Tokenizer,
-    model_name: String,
-    max_length: usize,
+    session: std::sync::Arc<kchat_encoder::EncoderSession>,
 }
 
 #[cfg(feature = "onnx-runtime")]
 impl OnnxEncoder {
-    /// Create a new ONNX encoder from a model file and tokenizer.
-    pub fn new(model_path: &str, tokenizer_path: &str) -> Result<Self, EncoderError> {
-        let session = ort::session::Session::builder()
-            .map_err(|e| EncoderError::InferenceFailed(format!("session builder: {e}")))?
-            .with_optimization_level(ort::session::builder::GraphOptimizationLevel::Level3)
-            .map_err(|e| EncoderError::InferenceFailed(format!("optimization level: {e}")))?
-            .with_intra_threads(2)
-            .map_err(|e| EncoderError::InferenceFailed(format!("intra threads: {e}")))?
-            .commit_from_file(model_path)
-            .map_err(|e| EncoderError::InferenceFailed(format!("load model: {e}")))?;
-
-        let tokenizer = tokenizers::Tokenizer::from_file(tokenizer_path)
-            .map_err(|e| EncoderError::InferenceFailed(format!("tokenizer: {e}")))?;
-
-        Ok(Self {
-            session: parking_lot::Mutex::new(session),
-            tokenizer,
-            model_name: "safety-classifier-int8".into(),
-            max_length: 512,
-        })
+    /// Create a new ONNX encoder from a shared encoder session.
+    pub fn new(session: std::sync::Arc<kchat_encoder::EncoderSession>) -> Self {
+        Self { session }
     }
 
-    /// Softmax function to convert logits to probabilities.
-    fn softmax(logits: &[f32]) -> Vec<f32> {
-        let max = logits.iter().fold(f32::NEG_INFINITY, |a, &b| a.max(b));
-        let exp: Vec<f32> = logits.iter().map(|&l| (l - max).exp()).collect();
-        let sum: f32 = exp.iter().sum();
-        if sum == 0.0 {
-            return vec![1.0 / logits.len() as f32; logits.len()];
-        }
-        exp.iter().map(|e| e / sum).collect()
+    /// Create a new ONNX encoder by loading a model from file.
+    ///
+    /// `intra_threads` controls ONNX Runtime intra-op parallelism (2 for low, 3 for medium, 4+ for high).
+    pub fn from_files(
+        model_path: &str,
+        tokenizer_path: &str,
+        quantization: kchat_encoder::Quantization,
+        intra_threads: usize,
+    ) -> Result<Self, EncoderError> {
+        let session = kchat_encoder::EncoderSession::new(model_path, tokenizer_path, quantization, intra_threads)
+            .map_err(|e| EncoderError::InferenceFailed(format!("encoder session: {e}")))?;
+        Ok(Self {
+            session: std::sync::Arc::new(session),
+        })
     }
 }
 
 #[cfg(feature = "onnx-runtime")]
 impl EncoderAdapter for OnnxEncoder {
     fn classify(&self, text: &str) -> Result<EncoderVerdict, EncoderError> {
-        use ndarray::Array2;
-
-        // Truncate text to max_length tokens
-        let encoding = self
-            .tokenizer
-            .encode(text, true)
-            .map_err(|e| EncoderError::InferenceFailed(format!("tokenize: {e}")))?;
-
-        let input_ids = encoding.get_ids();
-        let attention_mask = encoding.get_attention_mask();
-
-        // Truncate to max_length
-        let seq_len = input_ids.len().min(self.max_length);
-        let input_ids = &input_ids[..seq_len];
-        let attention_mask = &attention_mask[..seq_len];
-
-        let input_ids_arr = Array2::from_shape_vec((1, seq_len), input_ids.iter().map(|&v| v as i64).collect())
-            .map_err(|e| EncoderError::InferenceFailed(format!("array: {e}")))?;
-        let attention_arr = Array2::from_shape_vec((1, seq_len), attention_mask.iter().map(|&v| v as i64).collect())
-            .map_err(|e| EncoderError::InferenceFailed(format!("array: {e}")))?;
-
-        let input_ids_tensor = ort::value::Tensor::from_array(input_ids_arr)
-            .map_err(|e| EncoderError::InferenceFailed(format!("input_ids tensor: {e}")))?;
-        let attention_tensor = ort::value::Tensor::from_array(attention_arr)
-            .map_err(|e| EncoderError::InferenceFailed(format!("attention tensor: {e}")))?;
-
-        let inputs = ort::inputs! {
-            "input_ids" => input_ids_tensor,
-            "attention_mask" => attention_tensor,
-        };
-
-        let mut session = self.session.lock();
-        let outputs = session
-            .run(inputs)
-            .map_err(|e| EncoderError::InferenceFailed(format!("run: {e}")))?;
-
-        // Extract logits — ort 2.0.0-rc.10 returns (Shape, &[f32])
-        let (logits_shape, logits_data) = outputs[0]
-            .try_extract_tensor::<f32>()
-            .map_err(|e| EncoderError::InferenceFailed(format!("extract: {e}")))?;
-
-        let dims: &[i64] = logits_shape;
-        let _num_classes = dims.last().copied().unwrap_or(0) as usize;
-
-        // Get logits for the first (and only) sequence
-        let logits_slice: Vec<f32> = if dims.len() == 2 {
-            // [1, num_classes]
-            logits_data.to_vec()
-        } else if dims.len() == 3 {
-            // [batch, seq, hidden] → take last token
-            let hidden = dims[2] as usize;
-            let offset = (seq_len - 1) * hidden;
-            logits_data[offset..offset + hidden].to_vec()
-        } else {
-            return Err(EncoderError::InferenceFailed(format!(
-                "unexpected output shape: {dims:?}"
-            )));
-        };
-
-        if logits_slice.len() < categories::NUM_CATEGORIES {
-            return Err(EncoderError::InferenceFailed(format!(
-                "expected >= {} classes, got {}",
-                categories::NUM_CATEGORIES,
-                logits_slice.len()
-            )));
-        }
-
-        // Softmax to get probabilities
-        let probs = Self::softmax(&logits_slice[..categories::NUM_CATEGORIES]);
-
-        // Find the category with highest probability
-        let (best_idx, best_prob) = probs
-            .iter()
-            .enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-            .map(|(i, p)| (i as u32, *p as f64))
-            .unwrap_or((0, 0.0));
-
+        let head = kchat_encoder::SafetyHead::new(&self.session);
+        let verdict = head
+            .classify(text)
+            .map_err(|e| EncoderError::InferenceFailed(format!("safety head: {e}")))?;
         Ok(EncoderVerdict {
-            category: best_idx,
-            confidence: best_prob,
+            category: verdict.category,
+            confidence: verdict.confidence,
         })
     }
 }

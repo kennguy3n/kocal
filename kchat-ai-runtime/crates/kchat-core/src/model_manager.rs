@@ -561,8 +561,8 @@ mod tests {
         assert!(validate_pack_id("foo\\bar").is_err());
         assert!(validate_pack_id("").is_err());
         // Valid pack IDs must be accepted
-        assert!(validate_pack_id("qwen3.5-0.8b-q4").is_ok());
-        assert!(validate_pack_id("safety-classifier-int8").is_ok());
+        assert!(validate_pack_id("ternary-bonsai-1.7b-q2_0").is_ok());
+        assert!(validate_pack_id("kchat-encoder-int8").is_ok());
         assert!(validate_pack_id("model_v2.0").is_ok());
     }
 

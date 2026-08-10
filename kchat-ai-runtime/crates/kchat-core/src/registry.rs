@@ -36,7 +36,7 @@ impl MinTier {
 /// A single entry in the model registry describing one downloadable pack.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct RegistryEntry {
-    /// Unique pack identifier (e.g. `qwen3.5-0.8b-q4`).
+    /// Unique pack identifier (e.g. `ternary-bonsai-1.7b-q2_0`).
     pub pack_id: String,
     /// Pack version (semver-style string).
     pub version: String,
@@ -56,6 +56,15 @@ pub struct RegistryEntry {
     pub languages: Vec<String>,
     /// Quantization recipe (e.g. `Q4_K_M`, `Q8_0`, `INT8`).
     pub quantization: String,
+}
+
+impl RegistryEntry {
+    /// Returns true if the SHA-256 hash is a placeholder (all zeros).
+    /// Placeholder hashes must not ship to production — they bypass
+    /// download integrity verification.
+    pub fn is_placeholder_hash(&self) -> bool {
+        self.sha256.chars().all(|c| c == '0') || self.sha256.is_empty()
+    }
 }
 
 /// The model registry: a catalog of all known downloadable packs.
@@ -123,11 +132,11 @@ impl ModelRegistry {
             version: "1.0.0".into(),
             pack_type: "generative".into(),
             download_url: "https://huggingface.co/prism-ml/Ternary-Bonsai-1.7B-mlx-2bit/resolve/main/model.safetensors".into(),
-            sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
+            sha256: "1945a52c46cdce6daa921fa292da6a54e466ab55e7e984f5cba8e68ec6b7eeb5".into(),
             size_bytes: 472_000_000, // ~472 MB
             min_tier: MinTier::Low,
             task_capabilities: vec!["summarize".into(), "translate".into(), "generate".into(), "tool_use".into()],
-            languages: vec!["en".into()],
+            languages: vec!["en".into(), "vi".into(), "zh".into(), "ja".into(), "ko".into(), "es".into(), "ar".into(), "de".into(), "hi".into(), "fr".into()],
             quantization: "2bit-MLX".into(),
         });
 
@@ -138,26 +147,12 @@ impl ModelRegistry {
             version: "1.0.0".into(),
             pack_type: "generative".into(),
             download_url: "https://huggingface.co/prism-ml/Ternary-Bonsai-1.7B-gguf/resolve/main/Ternary-Bonsai-1.7B-Q2_0.gguf".into(),
-            sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
+            sha256: "d97d94eb564590c9f0300e54d3f87bbbb25a78693d0ade9f6e177973dcb8228a".into(),
             size_bytes: 463_290_464, // ~442 MB (exact from HF API)
             min_tier: MinTier::Low,
             task_capabilities: vec!["summarize".into(), "translate".into(), "generate".into(), "tool_use".into()],
-            languages: vec!["en".into()],
+            languages: vec!["en".into(), "vi".into(), "zh".into(), "ja".into(), "ko".into(), "es".into(), "ar".into(), "de".into(), "hi".into(), "fr".into()],
             quantization: "Q2_0".into(),
-        });
-
-        // Medium tier: Qwen3.5 0.8B Q4 (500MB, fits in 1400MB+ mobile budget)
-        models.push(RegistryEntry {
-            pack_id: "qwen3.5-0.8b-q4".into(),
-            version: "1.0.0".into(),
-            pack_type: "generative".into(),
-            download_url: "https://cdn.kchat.dev/models/qwen3.5-0.8b-q4/1.0.0/qwen3.5-0.8b-q4.gguf".into(),
-            sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
-            size_bytes: 500_000_000,
-            min_tier: MinTier::Medium,
-            task_capabilities: vec!["summarize".into(), "translate".into(), "generate".into()],
-            languages: vec!["en".into(), "vi".into(), "zh".into(), "ja".into(), "ko".into(), "es".into()],
-            quantization: "Q4_K_M".into(),
         });
 
         // Medium tier: Ternary-Bonsai-4B for Android (Qwen3-4B, 1.58-bit Q2_0, ~1.0GB)
@@ -167,58 +162,42 @@ impl ModelRegistry {
             version: "1.0.0".into(),
             pack_type: "generative".into(),
             download_url: "https://huggingface.co/prism-ml/Ternary-Bonsai-4B-gguf/resolve/main/Ternary-Bonsai-4B-Q2_0.gguf".into(),
-            sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
+            sha256: "4e0bf8b737b0431552f8c2c97695ab7c0cb214c94bcdeb4f5f267e67ddf28b8b".into(),
             size_bytes: 1_074_969_344, // ~1.0 GB (exact from HF API)
             min_tier: MinTier::Medium,
             task_capabilities: vec!["summarize".into(), "translate".into(), "generate".into(), "tool_use".into()],
-            languages: vec!["en".into()],
+            languages: vec!["en".into(), "vi".into(), "zh".into(), "ja".into(), "ko".into(), "es".into(), "ar".into(), "de".into(), "hi".into(), "fr".into()],
             quantization: "Q2_0".into(),
         });
 
         // Medium tier: Ternary-Bonsai-4B MLX 2-bit for Apple platforms (iOS/macOS)
-        // ~1.0GB, Qwen3-4B base, 1.58-bit ternary, MLX format
+        // ~1.08GB, Qwen3-4B base, 1.58-bit ternary, MLX format
         models.push(RegistryEntry {
             pack_id: "ternary-bonsai-4b-mlx-2bit".into(),
             version: "1.0.0".into(),
             pack_type: "generative".into(),
             download_url: "https://huggingface.co/prism-ml/Ternary-Bonsai-4B-mlx-2bit/resolve/main/model.safetensors".into(),
-            sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
-            size_bytes: 1_000_000_000, // ~1.0 GB
+            sha256: "1f956eefc2fa23fc21048ac2d1a8e76d78558666d81bf6b1fa89d83ba59698ac".into(),
+            size_bytes: 1_131_565_944, // ~1.08 GB (exact from HF LFS)
             min_tier: MinTier::Medium,
             task_capabilities: vec!["summarize".into(), "translate".into(), "generate".into(), "tool_use".into()],
-            languages: vec!["en".into()],
+            languages: vec!["en".into(), "vi".into(), "zh".into(), "ja".into(), "ko".into(), "es".into(), "ar".into(), "de".into(), "hi".into(), "fr".into()],
             quantization: "2bit-MLX".into(),
         });
 
         // High tier: Ternary-Bonsai-8B MLX 2-bit for Apple platforms (iOS/macOS)
-        // ~2.1GB, Qwen3-8B base, 1.58-bit ternary, MLX format
+        // ~2.15GB, Qwen3-8B base, 1.58-bit ternary, MLX format
         models.push(RegistryEntry {
             pack_id: "ternary-bonsai-8b-mlx-2bit".into(),
             version: "1.0.0".into(),
             pack_type: "generative".into(),
             download_url: "https://huggingface.co/prism-ml/Ternary-Bonsai-8B-mlx-2bit/resolve/main/model.safetensors".into(),
-            sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
-            size_bytes: 2_100_000_000, // ~2.1 GB
+            sha256: "f43270cbae86830b7eecb25bb8a0a0a005a81f180b68868dc39c755cebfff362".into(),
+            size_bytes: 2_303_661_704, // ~2.15 GB (exact from HF LFS)
             min_tier: MinTier::High,
             task_capabilities: vec!["summarize".into(), "translate".into(), "generate".into(), "tool_use".into()],
-            languages: vec!["en".into()],
+            languages: vec!["en".into(), "vi".into(), "zh".into(), "ja".into(), "ko".into(), "es".into(), "ar".into(), "de".into(), "hi".into(), "fr".into()],
             quantization: "2bit-MLX".into(),
-        });
-
-        // High tier: Macaw-4bit-MLX for Apple platforms (iOS/macOS)
-        // 1.5GB download, ~2GB running, 128K context, 4-bit MLX format
-        // Requires Apple Silicon (M1+), uses MLX backend
-        models.push(RegistryEntry {
-            pack_id: "macaw-4bit-mlx".into(),
-            version: "1.0.0".into(),
-            pack_type: "generative".into(),
-            download_url: "https://huggingface.co/badtheorylabs/Macaw-4bit-MLX/resolve/main/model.safetensors".into(),
-            sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
-            size_bytes: 1_500_000_000, // 1.5 GB
-            min_tier: MinTier::High,
-            task_capabilities: vec!["summarize".into(), "translate".into(), "generate".into(), "tool_use".into()],
-            languages: vec!["en".into()],
-            quantization: "4bit-MLX".into(),
         });
 
         // High tier: Ternary-Bonsai-8B for Windows (Qwen3-8B, 1.58-bit Q2_0, ~2.1GB)
@@ -228,163 +207,94 @@ impl ModelRegistry {
             version: "1.0.0".into(),
             pack_type: "generative".into(),
             download_url: "https://huggingface.co/prism-ml/Ternary-Bonsai-8B-gguf/resolve/main/Ternary-Bonsai-8B-Q2_0.gguf".into(),
-            sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
+            sha256: "3c8d70470a5d97e5a2b9410ddd899cb740116591462626c60cb2fead6448f60b".into(),
             size_bytes: 2_182_184_672, // ~2.1 GB (exact from HF API)
             min_tier: MinTier::High,
             task_capabilities: vec!["summarize".into(), "translate".into(), "generate".into(), "tool_use".into()],
-            languages: vec!["en".into()],
+            languages: vec!["en".into(), "vi".into(), "zh".into(), "ja".into(), "ko".into(), "es".into(), "ar".into(), "de".into(), "hi".into(), "fr".into()],
             quantization: "Q2_0".into(),
         });
 
-        // High tier: high-precision Q8 variant (fallback for non-Bonsai environments)
+        // --- Unified multi-task encoder (XLM-RoBERTa-base) ---
+        // Replaces separate safety-classifier, embedding, and reranker models.
+        // Single ONNX model handles safety classification, text embedding, and reranking.
         models.push(RegistryEntry {
-            pack_id: "qwen3.5-0.8b-q8".into(),
+            pack_id: "kchat-encoder-int8".into(),
             version: "1.0.0".into(),
-            pack_type: "generative".into(),
-            download_url: "https://cdn.kchat.dev/models/qwen3.5-0.8b-q8/1.0.0/qwen3.5-0.8b-q8.gguf".into(),
+            pack_type: "encoder".into(),
+            download_url: "https://cdn.kchat.dev/models/kchat-encoder-int8/1.0.0/kchat-encoder-int8.onnx".into(),
             sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
-            size_bytes: 850_000_000,
+            size_bytes: 270_000_000,
             min_tier: MinTier::High,
-            task_capabilities: vec!["summarize".into(), "translate".into(), "generate".into()],
-            languages: vec!["en".into(), "vi".into(), "zh".into(), "ja".into(), "ko".into(), "es".into()],
-            quantization: "Q8_0".into(),
-        });
-
-        // --- Embedding model ---
-        models.push(RegistryEntry {
-            pack_id: "multilingual-e5-small-int8".into(),
-            version: "1.0.0".into(),
-            pack_type: "embedding".into(),
-            download_url: "https://cdn.kchat.dev/models/multilingual-e5-small-int8/1.0.0/multilingual-e5-small-int8.onnx".into(),
-            sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
-            size_bytes: 45_000_000,
-            min_tier: MinTier::Medium,
-            task_capabilities: vec!["embed".into()],
-            languages: vec!["en".into(), "vi".into(), "zh".into(), "ja".into(), "ko".into(), "es".into()],
+            task_capabilities: vec!["safety".into(), "embed".into(), "rerank".into()],
+            languages: vec!["en".into(), "vi".into(), "zh".into(), "ja".into(), "ko".into(), "es".into(), "ar".into(), "de".into(), "hi".into(), "fr".into()],
             quantization: "INT8".into(),
         });
 
-        // --- Safety classifier ---
-        models.push(RegistryEntry {
-            pack_id: "safety-classifier-int8".into(),
-            version: "1.0.0".into(),
-            pack_type: "safety".into(),
-            download_url: "https://cdn.kchat.dev/models/safety-classifier-int8/1.0.0/safety-classifier-int8.onnx".into(),
-            sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
-            size_bytes: 25_000_000,
-            min_tier: MinTier::Medium,
-            task_capabilities: vec!["safety".into()],
-            languages: vec!["en".into(), "vi".into(), "zh".into(), "ja".into(), "ko".into(), "es".into()],
-            quantization: "INT8".into(),
-        });
+        // --- Vision model (MobileCLIP-S2) ---
 
-        // --- Reranker ---
-        models.push(RegistryEntry {
-            pack_id: "cross-encoder-miniLM-int8".into(),
-            version: "1.0.0".into(),
-            pack_type: "reranker".into(),
-            download_url: "https://cdn.kchat.dev/models/cross-encoder-miniLM-int8/1.0.0/cross-encoder-miniLM-int8.onnx".into(),
-            sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
-            size_bytes: 25_000_000,
-            min_tier: MinTier::High,
-            task_capabilities: vec!["rerank".into()],
-            languages: vec!["en".into(), "vi".into(), "zh".into(), "ja".into(), "ko".into(), "es".into()],
-            quantization: "INT8".into(),
-        });
-
-        // --- Vision models (MobileCLIP-S2) ---
-
-        // Low tier: MobileCLIP-S2 INT8 for image classification
+        // Unified MobileCLIP-S2 INT8 for both image and video classification
         // 70MB, 512-dim embeddings, 17 categories
+        // Single model handles image_classify, image_embed, and video_classify
         models.push(RegistryEntry {
-            pack_id: "mobileclip-s2-image-int8".into(),
+            pack_id: "mobileclip-s2-int8".into(),
             version: "1.0.0".into(),
             pack_type: "vision".into(),
-            download_url: "https://cdn.kchat.dev/models/mobileclip-s2-image-int8/1.0.0/mobileclip-s2-image-int8.onnx".into(),
+            download_url: "https://cdn.kchat.dev/models/mobileclip-s2-int8/1.0.0/mobileclip-s2-int8.onnx".into(),
             sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
             size_bytes: 70_000_000,
             min_tier: MinTier::Low,
-            task_capabilities: vec!["image_classify".into(), "image_embed".into()],
-            languages: vec!["en".into()],
-            quantization: "INT8".into(),
-        });
-
-        // Medium tier: MobileCLIP-S2 FP32 for higher-accuracy image classification
-        // 137MB, same 512-dim / 17 categories
-        models.push(RegistryEntry {
-            pack_id: "mobileclip-s2-image-fp32".into(),
-            version: "1.0.0".into(),
-            pack_type: "vision".into(),
-            download_url: "https://cdn.kchat.dev/models/mobileclip-s2-image-fp32/1.0.0/mobileclip-s2-image-fp32.onnx".into(),
-            sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
-            size_bytes: 137_000_000,
-            min_tier: MinTier::Medium,
-            task_capabilities: vec!["image_classify".into(), "image_embed".into()],
-            languages: vec!["en".into()],
-            quantization: "FP32".into(),
-        });
-
-        // Medium tier: MobileCLIP-S2 INT8 for video frame classification
-        // 70MB, used with frame sampler + temporal aggregation
-        models.push(RegistryEntry {
-            pack_id: "mobileclip-s2-video-int8".into(),
-            version: "1.0.0".into(),
-            pack_type: "vision".into(),
-            download_url: "https://cdn.kchat.dev/models/mobileclip-s2-video-int8/1.0.0/mobileclip-s2-video-int8.onnx".into(),
-            sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
-            size_bytes: 70_000_000,
-            min_tier: MinTier::Medium,
-            task_capabilities: vec!["video_classify".into()],
+            task_capabilities: vec!["image_classify".into(), "image_embed".into(), "video_classify".into()],
             languages: vec!["en".into()],
             quantization: "INT8".into(),
         });
 
         // --- ASR models (Whisper) ---
 
-        // Low tier: Whisper Tiny INT8 for audio transcription
-        // 40MB, 39M params, 75+ languages
+        // Low tier: Whisper Tiny ONNX for audio transcription
+        // ~33MB encoder ONNX, fine-tuned on Norwegian (NbAiLab), supports no/nb/nn/en
+        // Full pack includes encoder + decoder + decoder_with_past ONNX files
         models.push(RegistryEntry {
             pack_id: "whisper-tiny-int8".into(),
             version: "1.0.0".into(),
             pack_type: "asr".into(),
-            download_url: "https://cdn.kchat.dev/models/whisper-tiny-int8/1.0.0/whisper-tiny-int8.onnx".into(),
-            sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
-            size_bytes: 40_000_000,
+            download_url: "https://huggingface.co/NbAiLabBeta/nb-whisper-tiny/resolve/main/onnx/encoder_model.onnx".into(),
+            sha256: "f4130dfa98ca79ca3b75d690535c4d1b43af357a31aae07b9af06d2264fe934d".into(),
+            size_bytes: 32_904_983,
             min_tier: MinTier::Low,
             task_capabilities: vec!["transcribe".into()],
             languages: vec!["en".into(), "vi".into(), "zh".into(), "ja".into(), "ko".into(), "es".into(), "fr".into(), "de".into(), "ar".into(), "hi".into(), "th".into()],
-            quantization: "INT8".into(),
+            quantization: "ONNX".into(),
         });
 
-        // Medium tier: Whisper Base INT8 for higher-accuracy transcription
-        // 90MB, 74M params
+        // Medium tier: Whisper Base ONNX for higher-accuracy transcription
+        // ~82MB encoder ONNX, fine-tuned on Norwegian (NbAiLab), supports no/nb/nn/en
+        // Full pack includes encoder + decoder + decoder_with_past ONNX files
         models.push(RegistryEntry {
             pack_id: "whisper-base-int8".into(),
             version: "1.0.0".into(),
             pack_type: "asr".into(),
-            download_url: "https://cdn.kchat.dev/models/whisper-base-int8/1.0.0/whisper-base-int8.onnx".into(),
-            sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
-            size_bytes: 90_000_000,
+            download_url: "https://huggingface.co/NbAiLabBeta/nb-whisper-base/resolve/main/onnx/encoder_model.onnx".into(),
+            sha256: "7f9a82b47fd1b82a5262c148d82b025df0c1ae7e1213f7db96f413e498fe2976".into(),
+            size_bytes: 82_468_069,
             min_tier: MinTier::Medium,
             task_capabilities: vec!["transcribe".into()],
             languages: vec!["en".into(), "vi".into(), "zh".into(), "ja".into(), "ko".into(), "es".into(), "fr".into(), "de".into(), "ar".into(), "hi".into(), "th".into()],
-            quantization: "INT8".into(),
+            quantization: "ONNX".into(),
         });
 
-        // --- Safety encoder variant ---
-
-        // Low tier: 4-bit safety encoder for low-tier devices
-        // 15MB, INT4 quantized
+        // --- Unified encoder INT4 variant (Low tier) ---
+        // 4-bit quantized version for low-tier devices
         models.push(RegistryEntry {
-            pack_id: "safety-classifier-int4".into(),
+            pack_id: "kchat-encoder-int4".into(),
             version: "1.0.0".into(),
-            pack_type: "safety".into(),
-            download_url: "https://cdn.kchat.dev/models/safety-classifier-int4/1.0.0/safety-classifier-int4.onnx".into(),
+            pack_type: "encoder".into(),
+            download_url: "https://cdn.kchat.dev/models/kchat-encoder-int4/1.0.0/kchat-encoder-int4.onnx".into(),
             sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
-            size_bytes: 15_000_000,
+            size_bytes: 90_000_000,
             min_tier: MinTier::Low,
-            task_capabilities: vec!["safety".into()],
-            languages: vec!["en".into(), "vi".into(), "zh".into(), "ja".into(), "ko".into(), "es".into()],
+            task_capabilities: vec!["safety".into(), "embed".into(), "rerank".into()],
+            languages: vec!["en".into(), "vi".into(), "zh".into(), "ja".into(), "ko".into(), "es".into(), "ar".into(), "de".into(), "hi".into(), "fr".into()],
             quantization: "INT4".into(),
         });
 
@@ -410,14 +320,14 @@ languages = ["en", "vi", "zh", "ja", "ko", "es"]
 quantization = "Q4_K_M"
 
 [[models]]
-pack_id = "multilingual-e5-small-int8"
+pack_id = "kchat-encoder-int8"
 version = "1.0.0"
-pack_type = "embedding"
-download_url = "https://cdn.kchat.dev/models/multilingual-e5-small-int8/1.0.0/multilingual-e5-small-int8.onnx"
+pack_type = "encoder"
+download_url = "https://cdn.kchat.dev/models/kchat-encoder-int8/1.0.0/kchat-encoder-int8.onnx"
 sha256 = "1111111111111111111111111111111111111111111111111111111111111111"
-size_bytes = 45000000
+size_bytes = 270000000
 min_tier = "medium"
-task_capabilities = ["embed"]
+task_capabilities = ["safety", "embed", "rerank"]
 languages = ["en", "vi", "zh"]
 quantization = "INT8"
 "#;
@@ -465,8 +375,8 @@ quantization = "INT8"
     #[test]
     fn test_find_returns_entry_by_id() {
         let registry = ModelRegistry::load_from_toml(SAMPLE_TOML).expect("parse");
-        let entry = registry.find("multilingual-e5-small-int8").expect("found");
-        assert_eq!(entry.pack_type, "embedding");
+        let entry = registry.find("kchat-encoder-int8").expect("found");
+        assert_eq!(entry.pack_type, "encoder");
     }
 
     #[test]
@@ -495,9 +405,10 @@ quantization = "INT8"
     #[test]
     fn test_find_for_task_embed_works_on_medium() {
         let registry = ModelRegistry::load_from_toml(SAMPLE_TOML).expect("parse");
+        // In the sample TOML, kchat-encoder-int8 is medium tier
         let results = registry.find_for_task("embed", MinTier::Medium);
         assert_eq!(results.len(), 1);
-        assert_eq!(results[0].pack_id, "multilingual-e5-small-int8");
+        assert_eq!(results[0].pack_id, "kchat-encoder-int8");
     }
 
     #[test]
@@ -511,7 +422,8 @@ quantization = "INT8"
     #[test]
     fn test_find_for_language_excludes_when_tier_too_low() {
         let registry = ModelRegistry::load_from_toml(SAMPLE_TOML).expect("parse");
-        // Both packs require at least medium tier, so a low-tier device runs none.
+        // The generative pack requires high tier; the encoder pack requires medium tier.
+        // A low-tier device runs neither.
         let results = registry.find_for_language("en", MinTier::Low);
         assert!(results.is_empty());
     }
@@ -519,17 +431,17 @@ quantization = "INT8"
     #[test]
     fn test_find_for_language_medium_tier_runs_embedding() {
         let registry = ModelRegistry::load_from_toml(SAMPLE_TOML).expect("parse");
-        // The embedding pack (medium tier) is runnable on a medium-tier device,
+        // The encoder pack (medium tier) is runnable on a medium-tier device,
         // but the generative pack (high tier) is not.
         let results = registry.find_for_language("en", MinTier::Medium);
         assert_eq!(results.len(), 1);
-        assert_eq!(results[0].pack_id, "multilingual-e5-small-int8");
+        assert_eq!(results[0].pack_id, "kchat-encoder-int8");
     }
 
     #[test]
-    fn test_default_registry_has_eighteen_entries() {
+    fn test_default_registry_has_eleven_entries() {
         let registry = ModelRegistry::default_registry();
-        assert_eq!(registry.list().len(), 18);
+        assert_eq!(registry.list().len(), 11);
     }
 
     #[test]
@@ -538,22 +450,15 @@ quantization = "INT8"
         let ids: Vec<&str> = registry.list().iter().map(|e| e.pack_id.as_str()).collect();
         assert!(ids.contains(&"ternary-bonsai-1.7b-mlx-2bit"));
         assert!(ids.contains(&"ternary-bonsai-1.7b-q2_0"));
-        assert!(ids.contains(&"qwen3.5-0.8b-q4"));
         assert!(ids.contains(&"ternary-bonsai-4b-q2_0"));
         assert!(ids.contains(&"ternary-bonsai-4b-mlx-2bit"));
         assert!(ids.contains(&"ternary-bonsai-8b-mlx-2bit"));
-        assert!(ids.contains(&"macaw-4bit-mlx"));
         assert!(ids.contains(&"ternary-bonsai-8b-q2_0"));
-        assert!(ids.contains(&"qwen3.5-0.8b-q8"));
-        assert!(ids.contains(&"multilingual-e5-small-int8"));
-        assert!(ids.contains(&"safety-classifier-int8"));
-        assert!(ids.contains(&"cross-encoder-miniLM-int8"));
-        assert!(ids.contains(&"mobileclip-s2-image-int8"));
-        assert!(ids.contains(&"mobileclip-s2-image-fp32"));
-        assert!(ids.contains(&"mobileclip-s2-video-int8"));
+        assert!(ids.contains(&"kchat-encoder-int8"));
+        assert!(ids.contains(&"kchat-encoder-int4"));
+        assert!(ids.contains(&"mobileclip-s2-int8"));
         assert!(ids.contains(&"whisper-tiny-int8"));
         assert!(ids.contains(&"whisper-base-int8"));
-        assert!(ids.contains(&"safety-classifier-int4"));
     }
 
     #[test]
@@ -561,31 +466,22 @@ quantization = "INT8"
         let registry = ModelRegistry::default_registry();
         let low_mlx = registry.find("ternary-bonsai-1.7b-mlx-2bit").expect("bonsai-1.7b-mlx");
         let low_gguf = registry.find("ternary-bonsai-1.7b-q2_0").expect("bonsai-1.7b-gguf");
-        let medium = registry.find("qwen3.5-0.8b-q4").expect("0.8b");
         let bonsai4 = registry.find("ternary-bonsai-4b-q2_0").expect("bonsai-4b");
         let bonsai4_mlx = registry.find("ternary-bonsai-4b-mlx-2bit").expect("bonsai-4b-mlx");
         let bonsai8_mlx = registry.find("ternary-bonsai-8b-mlx-2bit").expect("bonsai-8b-mlx");
-        let macaw = registry.find("macaw-4bit-mlx").expect("macaw");
         let bonsai8 = registry.find("ternary-bonsai-8b-q2_0").expect("bonsai-8b");
-        let high_q8 = registry.find("qwen3.5-0.8b-q8").expect("0.8b-q8");
         assert_eq!(low_mlx.min_tier, MinTier::Low);
         assert_eq!(low_gguf.min_tier, MinTier::Low);
-        assert_eq!(medium.min_tier, MinTier::Medium);
         assert_eq!(bonsai4.min_tier, MinTier::Medium);
         assert_eq!(bonsai4_mlx.min_tier, MinTier::Medium);
         assert_eq!(bonsai8_mlx.min_tier, MinTier::High);
-        assert_eq!(macaw.min_tier, MinTier::High);
         assert_eq!(bonsai8.min_tier, MinTier::High);
-        assert_eq!(high_q8.min_tier, MinTier::High);
         assert_eq!(low_mlx.quantization, "2bit-MLX");
         assert_eq!(low_gguf.quantization, "Q2_0");
-        assert_eq!(medium.quantization, "Q4_K_M");
         assert_eq!(bonsai4.quantization, "Q2_0");
         assert_eq!(bonsai4_mlx.quantization, "2bit-MLX");
         assert_eq!(bonsai8_mlx.quantization, "2bit-MLX");
-        assert_eq!(macaw.quantization, "4bit-MLX");
         assert_eq!(bonsai8.quantization, "Q2_0");
-        assert_eq!(high_q8.quantization, "Q8_0");
     }
 
     #[test]
@@ -637,79 +533,54 @@ quantization = "INT8"
     }
 
     #[test]
-    fn test_default_registry_macaw_fits_high_tier_budget() {
+    fn test_default_registry_encoder_int8_is_high_tier() {
         let registry = ModelRegistry::default_registry();
-        let macaw = registry.find("macaw-4bit-mlx").expect("macaw");
-        // Macaw is 1.5GB, iOS High tier budget is 2500MB
-        assert!(macaw.size_bytes <= 2500 * 1024 * 1024);
-        // Should be exactly 1.5GB
-        assert_eq!(macaw.size_bytes, 1_500_000_000);
-        // Should support tool_use
-        assert!(macaw.task_capabilities.contains(&"tool_use".to_string()));
-    }
-
-    #[test]
-    fn test_default_registry_medium_tier_model_fits_budget() {
-        let registry = ModelRegistry::default_registry();
-        let medium = registry.find("qwen3.5-0.8b-q4").expect("0.8b");
-        // Medium tier mobile budget is 1400MB (iOS); model should be well under that
-        assert!(medium.size_bytes < 1400 * 1024 * 1024);
-        // Should be ~500MB
-        assert_eq!(medium.size_bytes, 500_000_000);
-    }
-
-    #[test]
-    fn test_default_registry_embedding_is_medium_tier() {
-        let registry = ModelRegistry::default_registry();
-        let emb = registry.find("multilingual-e5-small-int8").expect("emb");
-        assert_eq!(emb.min_tier, MinTier::Medium);
-        assert_eq!(emb.pack_type, "embedding");
-        assert_eq!(emb.quantization, "INT8");
-    }
-
-    #[test]
-    fn test_default_registry_safety_is_medium_tier() {
-        let registry = ModelRegistry::default_registry();
-        let safety = registry.find("safety-classifier-int8").expect("safety");
-        assert_eq!(safety.min_tier, MinTier::Medium);
-        assert_eq!(safety.pack_type, "safety");
-        assert_eq!(safety.size_bytes, 25_000_000);
-    }
-
-    #[test]
-    fn test_default_registry_reranker_is_high_tier() {
-        let registry = ModelRegistry::default_registry();
-        let reranker = registry.find("cross-encoder-miniLM-int8").expect("reranker");
-        assert_eq!(reranker.min_tier, MinTier::High);
-        assert_eq!(reranker.pack_type, "reranker");
-        assert_eq!(reranker.quantization, "INT8");
+        let enc = registry.find("kchat-encoder-int8").expect("encoder-int8");
+        assert_eq!(enc.min_tier, MinTier::High);
+        assert_eq!(enc.pack_type, "encoder");
+        assert_eq!(enc.quantization, "INT8");
+        assert_eq!(enc.size_bytes, 270_000_000);
+        assert!(enc.task_capabilities.contains(&"safety".to_string()));
+        assert!(enc.task_capabilities.contains(&"embed".to_string()));
+        assert!(enc.task_capabilities.contains(&"rerank".to_string()));
     }
 
     #[test]
     fn test_default_registry_find_for_task_safety_on_medium() {
         let registry = ModelRegistry::default_registry();
-        // Medium tier can run both safety-classifier-int8 (medium) and safety-classifier-int4 (low)
+        // Medium tier can only run kchat-encoder-int4 (low tier); INT8 is now high-tier only
         let results = registry.find_for_task("safety", MinTier::Medium);
-        assert_eq!(results.len(), 2);
-        let ids: Vec<&str> = results.iter().map(|e| e.pack_id.as_str()).collect();
-        assert!(ids.contains(&"safety-classifier-int8"));
-        assert!(ids.contains(&"safety-classifier-int4"));
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].pack_id, "kchat-encoder-int4");
     }
 
     #[test]
     fn test_default_registry_find_for_task_safety_on_low() {
         let registry = ModelRegistry::default_registry();
-        // Low tier can only run safety-classifier-int4
+        // Low tier can only run kchat-encoder-int4
         let results = registry.find_for_task("safety", MinTier::Low);
         assert_eq!(results.len(), 1);
-        assert_eq!(results[0].pack_id, "safety-classifier-int4");
+        assert_eq!(results[0].pack_id, "kchat-encoder-int4");
     }
 
     #[test]
-    fn test_default_registry_find_for_task_rerank_requires_high() {
+    fn test_default_registry_find_for_task_safety_on_high() {
         let registry = ModelRegistry::default_registry();
-        assert!(registry.find_for_task("rerank", MinTier::Medium).is_empty());
-        assert_eq!(registry.find_for_task("rerank", MinTier::High).len(), 1);
+        // High tier can run both kchat-encoder-int8 (high) and kchat-encoder-int4 (low)
+        let results = registry.find_for_task("safety", MinTier::High);
+        assert_eq!(results.len(), 2);
+        let ids: Vec<&str> = results.iter().map(|e| e.pack_id.as_str()).collect();
+        assert!(ids.contains(&"kchat-encoder-int8"));
+        assert!(ids.contains(&"kchat-encoder-int4"));
+    }
+
+    #[test]
+    fn test_default_registry_find_for_task_rerank_on_medium() {
+        let registry = ModelRegistry::default_registry();
+        // Reranking on Medium tier via kchat-encoder-int4 only (INT8 is high-tier)
+        let results = registry.find_for_task("rerank", MinTier::Medium);
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].pack_id, "kchat-encoder-int4");
     }
 
     #[test]
@@ -722,51 +593,50 @@ quantization = "INT8"
         assert!(low_ids.contains(&"ternary-bonsai-1.7b-mlx-2bit"));
         assert!(low_ids.contains(&"ternary-bonsai-1.7b-q2_0"));
 
-        // Medium tier: should find 5 models (2 Bonsai-1.7B + 0.8B-Q4 + Bonsai-4B-MLX + Bonsai-4B-GGUF)
+        // Medium tier: should find 4 models (2 Bonsai-1.7B + Bonsai-4B-MLX + Bonsai-4B-GGUF)
         let medium = registry.find_for_task("summarize", MinTier::Medium);
-        assert_eq!(medium.len(), 5);
+        assert_eq!(medium.len(), 4);
         let medium_ids: Vec<&str> = medium.iter().map(|e| e.pack_id.as_str()).collect();
         assert!(medium_ids.contains(&"ternary-bonsai-1.7b-mlx-2bit"));
         assert!(medium_ids.contains(&"ternary-bonsai-1.7b-q2_0"));
-        assert!(medium_ids.contains(&"qwen3.5-0.8b-q4"));
         assert!(medium_ids.contains(&"ternary-bonsai-4b-mlx-2bit"));
         assert!(medium_ids.contains(&"ternary-bonsai-4b-q2_0"));
 
-        // High tier: should find all 9 generative models
-        // (Bonsai-1.7B-MLX, Bonsai-1.7B-GGUF, 0.8B-Q4, Bonsai-4B-GGUF, Bonsai-4B-MLX,
-        //  Bonsai-8B-MLX, Macaw, Bonsai-8B-GGUF, Q8)
+        // High tier: should find all 6 generative models
+        // (Bonsai-1.7B-MLX, Bonsai-1.7B-GGUF, Bonsai-4B-GGUF, Bonsai-4B-MLX,
+        //  Bonsai-8B-MLX, Bonsai-8B-GGUF)
         let high = registry.find_for_task("summarize", MinTier::High);
-        assert_eq!(high.len(), 9);
+        assert_eq!(high.len(), 6);
     }
 
     #[test]
-    fn test_default_registry_vision_packs_span_all_tiers() {
+    fn test_default_registry_vision_pack_spans_all_tiers() {
         let registry = ModelRegistry::default_registry();
-        // Low tier: only mobileclip-s2-image-int8
+        // Unified mobileclip-s2-int8 available on all tiers
         let low = registry.find_for_task("image_classify", MinTier::Low);
         assert_eq!(low.len(), 1);
-        assert_eq!(low[0].pack_id, "mobileclip-s2-image-int8");
+        assert_eq!(low[0].pack_id, "mobileclip-s2-int8");
 
-        // Medium tier: image-int8 + image-fp32
         let medium = registry.find_for_task("image_classify", MinTier::Medium);
-        assert_eq!(medium.len(), 2);
+        assert_eq!(medium.len(), 1);
+        assert_eq!(medium[0].pack_id, "mobileclip-s2-int8");
 
-        // High tier: same 2 image models
         let high = registry.find_for_task("image_classify", MinTier::High);
-        assert_eq!(high.len(), 2);
+        assert_eq!(high.len(), 1);
+        assert_eq!(high[0].pack_id, "mobileclip-s2-int8");
     }
 
     #[test]
-    fn test_default_registry_video_pack_is_medium_tier() {
+    fn test_default_registry_video_pack_is_low_tier() {
         let registry = ModelRegistry::default_registry();
-        let video = registry.find("mobileclip-s2-video-int8").expect("video");
-        assert_eq!(video.min_tier, MinTier::Medium);
+        let video = registry.find("mobileclip-s2-int8").expect("vision");
+        assert_eq!(video.min_tier, MinTier::Low);
         assert_eq!(video.pack_type, "vision");
         assert_eq!(video.size_bytes, 70_000_000);
-        // Low tier cannot run video
-        assert!(registry.find_for_task("video_classify", MinTier::Low).is_empty());
-        // Medium tier can
+        // Video classify is now available on all tiers (same model as image)
+        assert_eq!(registry.find_for_task("video_classify", MinTier::Low).len(), 1);
         assert_eq!(registry.find_for_task("video_classify", MinTier::Medium).len(), 1);
+        assert_eq!(registry.find_for_task("video_classify", MinTier::High).len(), 1);
     }
 
     #[test]
@@ -783,13 +653,13 @@ quantization = "INT8"
     }
 
     #[test]
-    fn test_default_registry_safety_int4_is_low_tier() {
+    fn test_default_registry_encoder_int4_is_low_tier() {
         let registry = ModelRegistry::default_registry();
-        let safety = registry.find("safety-classifier-int4").expect("safety-int4");
-        assert_eq!(safety.min_tier, MinTier::Low);
-        assert_eq!(safety.pack_type, "safety");
-        assert_eq!(safety.size_bytes, 15_000_000);
-        assert_eq!(safety.quantization, "INT4");
+        let enc = registry.find("kchat-encoder-int4").expect("encoder-int4");
+        assert_eq!(enc.min_tier, MinTier::Low);
+        assert_eq!(enc.pack_type, "encoder");
+        assert_eq!(enc.size_bytes, 90_000_000);
+        assert_eq!(enc.quantization, "INT4");
     }
 
     #[test]
@@ -807,6 +677,32 @@ quantization = "INT8"
         assert!(registry.list().is_empty());
         assert!(registry.find("anything").is_none());
         assert!(registry.find_for_task("anything", MinTier::High).is_empty());
+    }
+
+    #[test]
+    fn test_default_registry_no_placeholder_hashes_for_available_models() {
+        let registry = ModelRegistry::default_registry();
+        // Models with locally-available artifacts must have real SHA-256 hashes.
+        // Remaining placeholders: kchat-encoder-int8, kchat-encoder-int4, mobileclip-s2-int8
+        // (ONNX models not yet exported — must be hashed before release).
+        let must_have_real_hash = [
+            "ternary-bonsai-1.7b-mlx-2bit",
+            "ternary-bonsai-1.7b-q2_0",
+            "ternary-bonsai-4b-mlx-2bit",
+            "ternary-bonsai-4b-q2_0",
+            "ternary-bonsai-8b-mlx-2bit",
+            "ternary-bonsai-8b-q2_0",
+            "whisper-tiny-int8",
+            "whisper-base-int8",
+        ];
+        for pack_id in &must_have_real_hash {
+            let entry = registry.find(pack_id).unwrap_or_else(|| panic!("pack {} not found", pack_id));
+            assert!(
+                !entry.is_placeholder_hash(),
+                "pack {} still has placeholder SHA-256 — compute and set real hash before release",
+                pack_id
+            );
+        }
     }
 
     #[test]

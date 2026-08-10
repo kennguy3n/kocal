@@ -913,14 +913,6 @@ fn find_model_path(pack_id: &str) -> Option<PathBuf> {
                 None
             }
         }
-        "macaw-4bit-mlx" => {
-            let dir = pack_dir.join("macaw-4bit-mlx");
-            if dir.exists() {
-                Some(dir)
-            } else {
-                None
-            }
-        }
         "ternary-bonsai-1.7b-q2_0" => {
             let path = pack_dir.join("Ternary-Bonsai-1.7B-Q2_0.gguf");
             if path.exists() {
@@ -945,19 +937,6 @@ fn find_model_path(pack_id: &str) -> Option<PathBuf> {
                 None
             }
         }
-        "qwen3.5-0.8b-q4" => {
-            // Try multiple naming conventions
-            let candidates = [
-                pack_dir.join("Qwen3.5-0.8B-Q4_K_M.gguf"),
-                pack_dir.join("qwen3.5-0.8b-q4.gguf"),
-            ];
-            for c in &candidates {
-                if c.exists() {
-                    return Some(c.clone());
-                }
-            }
-            None
-        }
         _ => None,
     }
 }
@@ -975,9 +954,6 @@ fn get_model_config(pack_id: &str, port: u16) -> Option<ModelConfig> {
         "ternary-bonsai-8b-mlx-2bit" => {
             (ServerType::MlxServer, "Ternary-Bonsai-8B-MLX-2bit".into(), 8192)
         }
-        "macaw-4bit-mlx" => {
-            (ServerType::MlxServer, "Macaw-4bit-MLX".into(), 8192)
-        }
         "ternary-bonsai-1.7b-q2_0" => {
             (ServerType::LlamaServer, "Ternary-Bonsai-1.7B-Q2_0".into(), 2048)
         }
@@ -986,9 +962,6 @@ fn get_model_config(pack_id: &str, port: u16) -> Option<ModelConfig> {
         }
         "ternary-bonsai-8b-q2_0" => {
             (ServerType::LlamaServer, "Ternary-Bonsai-8B-Q2_0".into(), 8192)
-        }
-        "qwen3.5-0.8b-q4" => {
-            (ServerType::LlamaServer, "Qwen3.5-0.8B-Q4_K_M".into(), 4096)
         }
         _ => return None,
     };
@@ -1014,120 +987,120 @@ fn get_device_profiles() -> Vec<DeviceProfileInfo> {
             tier: "High".into(),
             platform: "ios".into(),
             model_pack_id: "ternary-bonsai-8b-mlx-2bit".into(),
-            vision_pack_id: Some("mobileclip-s2-image-fp32".into()),
-            safety_pack_id: "safety-classifier-int8".into(),
+            vision_pack_id: Some("mobileclip-s2-int8".into()),
+            safety_pack_id: "kchat-encoder-int8".into(),
             asr_pack_id: Some("whisper-base-int8".into()),
-            video_pack_id: Some("mobileclip-s2-video-int8".into()),
+            video_pack_id: Some("mobileclip-s2-int8".into()),
         },
         DeviceProfileInfo {
             name: "iPhone 14 (6GB, A15)".into(),
             tier: "Medium".into(),
             platform: "ios".into(),
             model_pack_id: "ternary-bonsai-4b-mlx-2bit".into(),
-            vision_pack_id: Some("mobileclip-s2-image-fp32".into()),
-            safety_pack_id: "safety-classifier-int8".into(),
+            vision_pack_id: Some("mobileclip-s2-int8".into()),
+            safety_pack_id: "kchat-encoder-int4".into(),
             asr_pack_id: Some("whisper-base-int8".into()),
-            video_pack_id: Some("mobileclip-s2-video-int8".into()),
+            video_pack_id: Some("mobileclip-s2-int8".into()),
         },
         DeviceProfileInfo {
             name: "iPhone SE 2022 (4GB, A15)".into(),
             tier: "Low".into(),
             platform: "ios".into(),
             model_pack_id: "ternary-bonsai-1.7b-mlx-2bit".into(),
-            vision_pack_id: Some("mobileclip-s2-image-int8".into()),
-            safety_pack_id: "safety-classifier-int4".into(),
+            vision_pack_id: Some("mobileclip-s2-int8".into()),
+            safety_pack_id: "kchat-encoder-int4".into(),
             asr_pack_id: Some("whisper-tiny-int8".into()),
-            video_pack_id: None,
+            video_pack_id: Some("mobileclip-s2-int8".into()),
         },
         DeviceProfileInfo {
             name: "Pixel 8 Pro (12GB, Tensor G3)".into(),
             tier: "High".into(),
             platform: "android".into(),
             model_pack_id: "ternary-bonsai-8b-q2_0".into(),
-            vision_pack_id: Some("mobileclip-s2-image-fp32".into()),
-            safety_pack_id: "safety-classifier-int8".into(),
+            vision_pack_id: Some("mobileclip-s2-int8".into()),
+            safety_pack_id: "kchat-encoder-int8".into(),
             asr_pack_id: Some("whisper-base-int8".into()),
-            video_pack_id: Some("mobileclip-s2-video-int8".into()),
+            video_pack_id: Some("mobileclip-s2-int8".into()),
         },
         DeviceProfileInfo {
             name: "Pixel 7a (8GB, Tensor G2)".into(),
             tier: "Medium".into(),
             platform: "android".into(),
             model_pack_id: "ternary-bonsai-4b-q2_0".into(),
-            vision_pack_id: Some("mobileclip-s2-image-fp32".into()),
-            safety_pack_id: "safety-classifier-int8".into(),
+            vision_pack_id: Some("mobileclip-s2-int8".into()),
+            safety_pack_id: "kchat-encoder-int4".into(),
             asr_pack_id: Some("whisper-base-int8".into()),
-            video_pack_id: Some("mobileclip-s2-video-int8".into()),
+            video_pack_id: Some("mobileclip-s2-int8".into()),
         },
         DeviceProfileInfo {
             name: "Galaxy A14 (4GB, Helio G80)".into(),
             tier: "Low".into(),
             platform: "android".into(),
             model_pack_id: "ternary-bonsai-1.7b-q2_0".into(),
-            vision_pack_id: Some("mobileclip-s2-image-int8".into()),
-            safety_pack_id: "safety-classifier-int4".into(),
+            vision_pack_id: Some("mobileclip-s2-int8".into()),
+            safety_pack_id: "kchat-encoder-int4".into(),
             asr_pack_id: Some("whisper-tiny-int8".into()),
-            video_pack_id: None,
+            video_pack_id: Some("mobileclip-s2-int8".into()),
         },
         DeviceProfileInfo {
             name: "MacBook Pro M3 Max (36GB)".into(),
             tier: "High".into(),
             platform: "macos".into(),
             model_pack_id: "ternary-bonsai-8b-mlx-2bit".into(),
-            vision_pack_id: Some("mobileclip-s2-image-fp32".into()),
-            safety_pack_id: "safety-classifier-int8".into(),
+            vision_pack_id: Some("mobileclip-s2-int8".into()),
+            safety_pack_id: "kchat-encoder-int8".into(),
             asr_pack_id: Some("whisper-base-int8".into()),
-            video_pack_id: Some("mobileclip-s2-video-int8".into()),
+            video_pack_id: Some("mobileclip-s2-int8".into()),
         },
         DeviceProfileInfo {
             name: "MacBook Air M2 (8GB)".into(),
             tier: "Low".into(),
             platform: "macos".into(),
             model_pack_id: "ternary-bonsai-1.7b-mlx-2bit".into(),
-            vision_pack_id: Some("mobileclip-s2-image-int8".into()),
-            safety_pack_id: "safety-classifier-int4".into(),
+            vision_pack_id: Some("mobileclip-s2-int8".into()),
+            safety_pack_id: "kchat-encoder-int4".into(),
             asr_pack_id: Some("whisper-tiny-int8".into()),
-            video_pack_id: None,
+            video_pack_id: Some("mobileclip-s2-int8".into()),
         },
         DeviceProfileInfo {
             name: "Intel NUC (8GB, i3)".into(),
             tier: "Low".into(),
             platform: "macos".into(),
             model_pack_id: "ternary-bonsai-1.7b-q2_0".into(),
-            vision_pack_id: Some("mobileclip-s2-image-int8".into()),
-            safety_pack_id: "safety-classifier-int4".into(),
+            vision_pack_id: Some("mobileclip-s2-int8".into()),
+            safety_pack_id: "kchat-encoder-int4".into(),
             asr_pack_id: Some("whisper-tiny-int8".into()),
-            video_pack_id: None,
+            video_pack_id: Some("mobileclip-s2-int8".into()),
         },
         DeviceProfileInfo {
             name: "Windows RTX 4090 (32GB)".into(),
             tier: "High".into(),
             platform: "windows".into(),
             model_pack_id: "ternary-bonsai-8b-q2_0".into(),
-            vision_pack_id: Some("mobileclip-s2-image-fp32".into()),
-            safety_pack_id: "safety-classifier-int8".into(),
+            vision_pack_id: Some("mobileclip-s2-int8".into()),
+            safety_pack_id: "kchat-encoder-int8".into(),
             asr_pack_id: Some("whisper-base-int8".into()),
-            video_pack_id: Some("mobileclip-s2-video-int8".into()),
+            video_pack_id: Some("mobileclip-s2-int8".into()),
         },
         DeviceProfileInfo {
             name: "Windows Surface 8 (16GB)".into(),
             tier: "Low".into(),
             platform: "windows".into(),
             model_pack_id: "ternary-bonsai-1.7b-q2_0".into(),
-            vision_pack_id: Some("mobileclip-s2-image-int8".into()),
-            safety_pack_id: "safety-classifier-int4".into(),
+            vision_pack_id: Some("mobileclip-s2-int8".into()),
+            safety_pack_id: "kchat-encoder-int4".into(),
             asr_pack_id: Some("whisper-tiny-int8".into()),
-            video_pack_id: None,
+            video_pack_id: Some("mobileclip-s2-int8".into()),
         },
         DeviceProfileInfo {
             name: "Windows Legacy (8GB, i5)".into(),
             tier: "Low".into(),
             platform: "windows".into(),
             model_pack_id: "ternary-bonsai-1.7b-q2_0".into(),
-            vision_pack_id: Some("mobileclip-s2-image-int8".into()),
-            safety_pack_id: "safety-classifier-int4".into(),
+            vision_pack_id: Some("mobileclip-s2-int8".into()),
+            safety_pack_id: "kchat-encoder-int4".into(),
             asr_pack_id: Some("whisper-tiny-int8".into()),
-            video_pack_id: None,
+            video_pack_id: Some("mobileclip-s2-int8".into()),
         },
     ]
 }
@@ -1306,7 +1279,7 @@ pub fn run() {
 fn run_task(server_url: &str, task: &TaskSpec, server_type: &ServerType) -> TaskResult {
     let start = Instant::now();
 
-    // Boost max_tokens for MLX models that generate thinking tokens (macaw/LFM2.5)
+    // Boost max_tokens for MLX models that generate thinking tokens (Bonsai MLX)
     // The thinking portion can consume 50-100 tokens before the actual answer
     let effective_max_tokens = match server_type {
         ServerType::MlxServer => (task.max_tokens as u32).saturating_mul(3).max(task.max_tokens as u32 * 2),

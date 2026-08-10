@@ -56,10 +56,10 @@ impl DeviceTier {
     pub fn peak_memory_budget(self, platform: &str) -> u64 {
         match (self, platform) {
             (DeviceTier::Low, "ios") | (DeviceTier::Low, "android") => 750 * 1024 * 1024,
-            (DeviceTier::Medium, "ios") => 1400 * 1024 * 1024,
-            (DeviceTier::Medium, "android") => 1500 * 1024 * 1024,
-            (DeviceTier::High, "ios") => 2500 * 1024 * 1024,
-            (DeviceTier::High, "android") => 3000 * 1024 * 1024,
+            (DeviceTier::Medium, "ios") => 1700 * 1024 * 1024,
+            (DeviceTier::Medium, "android") => 1800 * 1024 * 1024,
+            (DeviceTier::High, "ios") => 3100 * 1024 * 1024,
+            (DeviceTier::High, "android") => 3200 * 1024 * 1024,
             (DeviceTier::Low, "macos") | (DeviceTier::Low, "windows") => 2000 * 1024 * 1024,
             (DeviceTier::Medium, "macos") | (DeviceTier::Medium, "windows") => 4000 * 1024 * 1024,
             (DeviceTier::High, "macos") | (DeviceTier::High, "windows") => 8000 * 1024 * 1024,

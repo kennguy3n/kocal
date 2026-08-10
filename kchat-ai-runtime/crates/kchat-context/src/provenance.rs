@@ -112,8 +112,8 @@ mod tests {
 
         bundle.add_agent(ProvenanceAgent {
             agent_kind: AgentKind::LocalModel,
-            agent_id: "qwen3.5-0.8b".into(),
-            model_name: Some("Qwen3.5-0.8B-Q4".into()),
+            agent_id: "ternary-bonsai-1.7b".into(),
+            model_name: Some("Ternary-Bonsai-1.7B-Q2_0".into()),
             prompt_template_hash: Some("abc123".into()),
             tool_manifest_hash: None,
         });

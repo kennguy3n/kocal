@@ -86,6 +86,41 @@
       "content": "モバイルアプリのパフォーマンス目標: コールドスタート2秒以内、フレームレート60fps維持、メモリ使用量512MB以下。バックグラウンド同期は15分間隔。バッテリー消費は1時間あたり5%以下。",
       "language": "ja",
       "tags": ["performance", "mobile", "targets"]
+    },
+    {
+      "id": "doc_013",
+      "scope": "workspace_engineering",
+      "content": "微服务架构采用 gRPC 进行内部通信，使用 Protocol Buffers 序列化数据。API 网关基于 Envoy 实现，支持限流、熔断和重试。服务发现使用 Consul，配置中心使用 etcd。链路追踪通过 Jaeger 实现，日志收集使用 Fluentd + Elasticsearch。",
+      "language": "zh",
+      "tags": ["architecture", "microservices", "grpc"]
+    },
+    {
+      "id": "doc_014",
+      "scope": "workspace_legal",
+      "content": "اتفاقية عدم الإفصاح (NDA) تنص على أن جميع المعلومات السرية المتبادلة بين الطرفين يجب أن تظل سرية لمدة 5 سنوات من تاريخ التوقيع. يشمل ذلك البيانات التقنية والمالية وقوائم العملاء. أي إفصاح غير مصرح به يعرض الطرف المسؤول لتعويضات قد تصل إلى 10 ملايين دولار.",
+      "language": "ar",
+      "tags": ["legal", "nda", "confidentiality"]
+    },
+    {
+      "id": "doc_015",
+      "scope": "workspace_marketing",
+      "content": "Die Marketing-Strategie für 2026 konzentriert sich auf den DACH-Raum (Deutschland, Österreich, Schweiz). Das Budget beträgt 2,5 Millionen Euro, aufgeteilt in 45% digitale Werbung, 25% Content-Marketing, 20% Veranstaltungen und 10% Influencer-Kooperationen. Die Zielgruppe sind Personen zwischen 25 und 45 Jahren mit Interesse an Technologie.",
+      "language": "de",
+      "tags": ["marketing", "strategy", "budget"]
+    },
+    {
+      "id": "doc_016",
+      "scope": "workspace_engineering",
+      "content": "एप स्टोर ऑप्टिमाइज़ेशन (ASO) रणनीति: ऐप शीर्षक में प्राथमिक कीवर्ड शामिल करें। स्क्रीनशॉट में हिंदी और अंग्रेज़ी दोनों टेक्स्ट का उपयोग करें। ऐप विवरण में कम से कम 250 शब्द होने चाहिए। रेटिंग और समीक्षाएं एसईओ रैंकिंग को 40% तक बढ़ा सकती हैं।",
+      "language": "hi",
+      "tags": ["marketing", "aso", "optimization"]
+    },
+    {
+      "id": "doc_017",
+      "scope": "workspace_legal",
+      "content": "Le contrat de licence logicielle stipule que le concédant accorde au licencié une licence non exclusive, non transférable et mondiale pour utiliser le logiciel. La garantie est limitée à 90 jours. Les dommages indirects ne sont pas couverts. La résiliation peut intervenir en cas de violation des termes, avec un préavis de 30 jours.",
+      "language": "fr",
+      "tags": ["legal", "license", "software"]
     }
   ],
   "queries": [
@@ -184,6 +219,46 @@
       "allowed_scopes": ["workspace_marketing", "workspace_engineering", "workspace_legal"],
       "denied_scopes": [],
       "description": "Brand guidelines search"
+    },
+    {
+      "id": "q_013",
+      "query": "微服务 gRPC 架构",
+      "expected_doc_ids": ["doc_013"],
+      "allowed_scopes": ["workspace_engineering"],
+      "denied_scopes": [],
+      "description": "Chinese query, Chinese engineering doc"
+    },
+    {
+      "id": "q_014",
+      "query": "اتفاقية عدم الإفصاح سرية",
+      "expected_doc_ids": ["doc_014"],
+      "allowed_scopes": ["workspace_legal"],
+      "denied_scopes": [],
+      "description": "Arabic query, Arabic legal NDA doc"
+    },
+    {
+      "id": "q_015",
+      "query": "Marketing Strategie DACH Budget",
+      "expected_doc_ids": ["doc_015"],
+      "allowed_scopes": ["workspace_marketing"],
+      "denied_scopes": [],
+      "description": "German query, German marketing doc"
+    },
+    {
+      "id": "q_016",
+      "query": "ऐप स्टोर ऑप्टिमाइज़ेशन ASO",
+      "expected_doc_ids": ["doc_016"],
+      "allowed_scopes": ["workspace_engineering"],
+      "denied_scopes": [],
+      "description": "Hindi query, Hindi ASO doc"
+    },
+    {
+      "id": "q_017",
+      "query": "contrat licence logiciel garantie",
+      "expected_doc_ids": ["doc_017"],
+      "allowed_scopes": ["workspace_legal"],
+      "denied_scopes": [],
+      "description": "French query, French software license doc"
     }
   ]
 }
