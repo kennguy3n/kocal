@@ -333,12 +333,12 @@ fn simulate_profile(
     if model.is_some() {
         let model_size = match (tier, &profile.platform[..], &profile.cpu_arch[..]) {
             (DeviceTier::Low, "ios" | "macos", "aarch64") => 472_000_000,              // Bonsai 1.7B MLX ~472MB
-            (DeviceTier::Low, _, _) => 463_290_464,                                     // Bonsai 1.7B Q2_0 GGUF ~442MB
-            (DeviceTier::Medium, "ios" | "macos", "aarch64") => 1_000_000_000,         // Bonsai 4B MLX ~1.0GB
-            (DeviceTier::Medium, _, _) => 1_074_969_344,                               // Bonsai 4B Q2_0 GGUF ~1.0GB
-            (DeviceTier::High, "ios" | "macos", "aarch64") => 2_100_000_000,           // Bonsai 8B MLX ~2.1GB
-            (DeviceTier::High, "android", _) => 2_182_184_672,                         // Bonsai 8B Q2_0 GGUF ~2.1GB
-            (DeviceTier::High, "windows", _) => 2_182_184_672,                         // Bonsai 8B Q2_0 GGUF ~2.1GB
+            (DeviceTier::Low, _, _) => 463_290_464,                                     // Bonsai 1.7B Q2_0 GGUF ~442MB (exact)
+            (DeviceTier::Medium, "ios" | "macos", "aarch64") => 1_131_565_944,         // Bonsai 4B MLX ~1.08GB (exact from HF LFS)
+            (DeviceTier::Medium, _, _) => 1_074_969_344,                               // Bonsai 4B Q2_0 GGUF ~1.0GB (exact)
+            (DeviceTier::High, "ios" | "macos", "aarch64") => 2_303_661_704,           // Bonsai 8B MLX ~2.15GB (exact from HF LFS)
+            (DeviceTier::High, "android", _) => 2_182_184_672,                         // Bonsai 8B Q2_0 GGUF ~2.1GB (exact)
+            (DeviceTier::High, "windows", _) => 2_182_184_672,                         // Bonsai 8B Q2_0 GGUF ~2.1GB (exact)
             (DeviceTier::High, _, _) => 850 * 1024 * 1024,                             // 0.8B Q8 fallback ~850MB
         };
         let fits = model_size <= peak;

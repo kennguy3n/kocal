@@ -145,9 +145,11 @@ The foundation crate that all other crates depend on.
   decode rate target, max perf cores, idle unload timeout
 
 **Model Registry** (`registry.rs`):
-- 18 model packs (9 generative, 1 embedding, 2 safety, 1 reranker, 3 vision, 2 ASR)
+- 11 model packs (6 generative, 2 encoder, 1 vision, 2 ASR)
 - `RegistryEntry` with pack_id, version, pack_type, download_url, sha256,
   size_bytes, min_tier, task_capabilities, languages, quantization
+- 8/11 packs have real SHA-256 hashes from HuggingFace LFS metadata
+- 3 remaining placeholders (kchat-encoder-int8/int4, mobileclip-s2-int8) require ONNX export
 - `find_for_task(task, tier)` — filter by capability and tier eligibility
 - `find_for_language(lang, tier)` — filter by language and tier
 - `default_registry()` — hardcoded built-in catalog

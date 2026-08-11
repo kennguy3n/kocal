@@ -414,11 +414,11 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
 
 /// Select the appropriate generative model for a tier and platform.
 ///
-/// - High tier on Apple Silicon (iOS/macOS): Ternary-Bonsai-8B MLX 2-bit (~2.1GB)
+/// - High tier on Apple Silicon (iOS/macOS aarch64): Ternary-Bonsai-8B MLX 2-bit (~2.3GB)
 /// - High tier on Android/Windows: Ternary-Bonsai-8B Q2_0 GGUF (~2.1GB)
-/// - Medium tier on Apple Silicon (iOS/macOS): Ternary-Bonsai-4B MLX 2-bit (~1.0GB)
-/// - Medium tier on other platforms: Ternary-Bonsai-4B Q2_0 GGUF (~1.0GB)
-/// - Low tier on Apple Silicon (iOS/macOS): Ternary-Bonsai-1.7B MLX 2-bit (~472MB)
+/// - Medium tier on Apple Silicon (iOS/macOS aarch64): Ternary-Bonsai-4B MLX 2-bit (~1.13GB)
+/// - Medium tier on other platforms (including Intel Macs): Ternary-Bonsai-4B Q2_0 GGUF (~1.0GB)
+/// - Low tier on Apple Silicon (iOS/macOS aarch64): Ternary-Bonsai-1.7B MLX 2-bit (~472MB)
 /// - Low tier on other platforms (including Intel Macs): Ternary-Bonsai-1.7B Q2_0 GGUF (~442MB)
 pub fn select_model_for_tier(tier: DeviceTier) -> Option<&'static str> {
     select_model_for_tier_platform(tier, "", "aarch64")
@@ -436,14 +436,14 @@ pub fn select_model_for_tier_platform(tier: DeviceTier, platform: &str, cpu_arch
         }
         DeviceTier::Medium => {
             if is_apple_silicon {
-                Some("ternary-bonsai-4b-mlx-2bit")    // Bonsai 4B MLX 2-bit, ~1.0GB
+                Some("ternary-bonsai-4b-mlx-2bit")    // Bonsai 4B MLX 2-bit, ~1.13GB
             } else {
                 Some("ternary-bonsai-4b-q2_0")         // Bonsai 4B Q2_0 GGUF, ~1.0GB
             }
         }
         DeviceTier::High => {
             if is_apple_silicon {
-                Some("ternary-bonsai-8b-mlx-2bit")    // Bonsai 8B MLX 2-bit, ~2.1GB
+                Some("ternary-bonsai-8b-mlx-2bit")    // Bonsai 8B MLX 2-bit, ~2.3GB
             } else {
                 Some("ternary-bonsai-8b-q2_0")         // Bonsai 8B Q2_0 GGUF, ~2.1GB
             }
@@ -844,12 +844,12 @@ fn test_memory_budget(p: &DeviceProfile) -> EvalResult {
     // Check that the tier-appropriate model pack fits within the budget
     let model_size = match (tier, &p.platform[..], &p.cpu_arch[..]) {
         (DeviceTier::Low, "ios" | "macos", "aarch64") => 472_000_000,              // Bonsai 1.7B MLX ~472MB
-        (DeviceTier::Low, _, _) => 463_290_464,                                     // Bonsai 1.7B Q2_0 GGUF ~442MB
-        (DeviceTier::Medium, "ios" | "macos", "aarch64") => 1_000_000_000,         // Bonsai 4B MLX ~1.0GB
-        (DeviceTier::Medium, _, _) => 1_074_969_344,                               // Bonsai 4B Q2_0 GGUF ~1.0GB
-        (DeviceTier::High, "ios" | "macos", "aarch64") => 2_100_000_000,           // Bonsai 8B MLX ~2.1GB
-        (DeviceTier::High, "android", _) => 2_182_184_672,                         // Bonsai 8B Q2_0 GGUF ~2.1GB
-        (DeviceTier::High, "windows", _) => 2_182_184_672,                         // Bonsai 8B Q2_0 GGUF ~2.1GB
+        (DeviceTier::Low, _, _) => 463_290_464,                                     // Bonsai 1.7B Q2_0 GGUF ~442MB (exact)
+        (DeviceTier::Medium, "ios" | "macos", "aarch64") => 1_131_565_944,         // Bonsai 4B MLX ~1.08GB (exact from HF LFS)
+        (DeviceTier::Medium, _, _) => 1_074_969_344,                               // Bonsai 4B Q2_0 GGUF ~1.0GB (exact)
+        (DeviceTier::High, "ios" | "macos", "aarch64") => 2_303_661_704,           // Bonsai 8B MLX ~2.15GB (exact from HF LFS)
+        (DeviceTier::High, "android", _) => 2_182_184_672,                         // Bonsai 8B Q2_0 GGUF ~2.1GB (exact)
+        (DeviceTier::High, "windows", _) => 2_182_184_672,                         // Bonsai 8B Q2_0 GGUF ~2.1GB (exact)
         (DeviceTier::High, _, _) => 850 * 1024 * 1024,                             // 0.8B Q8 fallback ~850MB
     };
     if model_size > peak_budget {

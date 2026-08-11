@@ -6,7 +6,7 @@
 [![Build](https://img.shields.io/badge/build-passing-brightgreen)]()
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)]()
 [![Rust](https://img.shields.io/badge/rust-2021-orange)]()
-[![Tests](https://img.shields.io/badge/tests-680%20unit%20%2B%202267%20eval-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-685%20unit%20%2B%202267%20eval-brightgreen)]()
 
 ## Overview
 
@@ -34,7 +34,7 @@ The system is built around four core principles:
 # Build all crates
 cargo build --workspace
 
-# Run all unit tests (680 tests)
+# Run all unit tests (685 tests)
 cargo test --workspace
 
 # Run the standard eval harness (233 cases)
@@ -94,7 +94,7 @@ kchat-ai-runtime/
 
 Thermal downgrade: Serious → drop one tier; Critical → force Low.
 
-## Model Registry (13 packs)
+## Model Registry (11 packs)
 
 ### Generative Models
 
@@ -102,20 +102,22 @@ Thermal downgrade: Serious → drop one tier; Critical → force Low.
 |---------|----------|------|-------|---------|----------|
 | `ternary-bonsai-1.7b-mlx-2bit` | Low | 472 MB | 2bit-MLX | MLX | iOS/macOS (Apple Silicon) |
 | `ternary-bonsai-1.7b-q2_0` | Low | 442 MB | Q2_0 | llama.cpp Vulkan/CPU | Android/Windows/Intel Mac |
-| `ternary-bonsai-4b-mlx-2bit` | Medium | 1,000 MB | 2bit-MLX | MLX | iOS/macOS (Apple Silicon) |
+| `ternary-bonsai-4b-mlx-2bit` | Medium | 1,132 MB | 2bit-MLX | MLX | iOS/macOS (Apple Silicon) |
 | `ternary-bonsai-4b-q2_0` | Medium | 1,075 MB | Q2_0 | llama.cpp Vulkan | Android |
-| `ternary-bonsai-8b-mlx-2bit` | High | 2,100 MB | 2bit-MLX | MLX | iOS/macOS (Apple Silicon) |
+| `ternary-bonsai-8b-mlx-2bit` | High | 2,304 MB | 2bit-MLX | MLX | iOS/macOS (Apple Silicon) |
 | `ternary-bonsai-8b-q2_0` | High | 2,182 MB | Q2_0 | llama.cpp Vulkan | Android/Windows |
 
 ### Non-Generative Models
 
-| Pack ID | Type | Min Tier | Size | Quant | Tasks |
-|---------|------|----------|------|-------|-------|
-| `kchat-encoder-int8` | encoder | High | 270 MB | INT8 | safety, embed, rerank |
-| `kchat-encoder-int4` | encoder | Low | 90 MB | INT4 | safety, embed, rerank |
-| `mobileclip-s2-int8` | vision | Low | 70 MB | INT8 | image_classify, image_embed, video_classify |
-| `whisper-tiny-int8` | asr | Low | 40 MB | INT8 | transcribe |
-| `whisper-base-int8` | asr | Medium | 90 MB | INT8 | transcribe |
+| Pack ID | Type | Min Tier | Size | Quant | Tasks | SHA-256 |
+|---------|------|----------|------|-------|-------|---------|
+| `kchat-encoder-int8` | encoder | High | 270 MB | INT8 | safety, embed, rerank | ⏳ placeholder |
+| `kchat-encoder-int4` | encoder | Low | 90 MB | INT4 | safety, embed, rerank | ⏳ placeholder |
+| `mobileclip-s2-int8` | vision | Low | 70 MB | INT8 | image_classify, image_embed, video_classify | ⏳ placeholder |
+| `whisper-tiny-int8` | asr | Low | 33 MB | ONNX | transcribe | ✅ real |
+| `whisper-base-int8` | asr | Medium | 82 MB | ONNX | transcribe | ✅ real |
+
+8/11 packs have real SHA-256 hashes. 3 remaining placeholders require ONNX export.
 
 ## Performance Targets
 
@@ -132,7 +134,7 @@ Thermal downgrade: Serious → drop one tier; Critical → force Low.
 
 | Suite | Cases | Status |
 |-------|-------|--------|
-| Unit tests | 680 | All passing |
+| Unit tests | 685 | All passing |
 | Standard eval | 233 | All passing |
 | Red-team eval | 36 | 100% (7 attack categories) |
 | Real-world eval | 2,267 | Safety 100%, Context 100%, Generation 82%, Action 100% |
@@ -143,11 +145,11 @@ Thermal downgrade: Serious → drop one tier; Critical → force Low.
 
 | Platform | Backend | Generative | Safety | Vision | ASR |
 |----------|---------|-----------|--------|--------|-----|
-| iOS (Apple Silicon) | MLX | Bonsai MLX | ONNX INT4/INT8 | ONNX INT8/FP32 | ONNX INT8 |
-| macOS (Apple Silicon) | MLX | Bonsai MLX | ONNX INT4/INT8 | ONNX INT8/FP32 | ONNX INT8 |
-| macOS (Intel) | llama.cpp CPU | Bonsai GGUF | ONNX INT4/INT8 | ONNX INT8/FP32 | ONNX INT8 |
-| Android | llama.cpp Vulkan | Bonsai GGUF | ONNX INT4/INT8 | ONNX INT8/FP32 | ONNX INT8 |
-| Windows | llama.cpp Vulkan | Bonsai GGUF | ONNX INT4/INT8 | ONNX INT8/FP32 | ONNX INT8 |
+| iOS (Apple Silicon) | MLX | Bonsai MLX | ONNX INT4/INT8 | ONNX INT8 | ONNX |
+| macOS (Apple Silicon) | MLX | Bonsai MLX | ONNX INT4/INT8 | ONNX INT8 | ONNX |
+| macOS (Intel) | llama.cpp CPU | Bonsai GGUF | ONNX INT4/INT8 | ONNX INT8 | ONNX |
+| Android | llama.cpp Vulkan | Bonsai GGUF | ONNX INT4/INT8 | ONNX INT8 | ONNX |
+| Windows | llama.cpp Vulkan | Bonsai GGUF | ONNX INT4/INT8 | ONNX INT8 | ONNX |
 | Web (WASM) | — | — | Deterministic only | — | — |
 
 ## Documentation

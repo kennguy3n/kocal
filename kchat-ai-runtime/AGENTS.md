@@ -178,7 +178,7 @@ The workspace is organized into 9 crates + 1 Go sidecar following the 4-plane ar
   - Standard eval: 44 synthetic + 161 device profile = 205 cases
   - Device profile suite: 12 profiles × 15 test categories + 9 standalone tests = 189 cases
   - Device simulator: `--simulate` flag runs 12 profiles × full decision tree (138 checks)
-- **Unit total: 683 tests, all passing**
+- **Unit total: 685 tests, all passing**
 - **Standard eval: 233 cases, all passing**
 - **Red-team eval: 36/36 cases (100%) across 7 attack categories**
 - **Real-world eval: 2005 safety + 221 guardrail + 13 context + 11 generation + 17 action = 2267 cases**
@@ -201,19 +201,22 @@ The workspace is organized into 9 crates + 1 Go sidecar following the 4-plane ar
 
 ## Model Registry (11 packs)
 
-| Pack ID | Type | Min Tier | Size | Quant | Backend | Platform |
-|---------|------|----------|------|-------|---------|----------|
-| ternary-bonsai-1.7b-mlx-2bit | generative | Low | 472 MB | 2bit-MLX | MLX | ios/macos |
-| ternary-bonsai-1.7b-q2_0 | generative | Low | 442 MB | Q2_0 | llama.cpp Vulkan | android/windows |
-| ternary-bonsai-4b-q2_0 | generative | Medium | 1.0 GB | Q2_0 | llama.cpp Vulkan | android |
-| ternary-bonsai-4b-mlx-2bit | generative | Medium | 1.0 GB | 2bit-MLX | MLX | ios/macos |
-| ternary-bonsai-8b-mlx-2bit | generative | High | 2.1 GB | 2bit-MLX | MLX | ios/macos |
-| ternary-bonsai-8b-q2_0 | generative | High | 2.1 GB | Q2_0 | llama.cpp Vulkan | windows |
-| kchat-encoder-int8 | encoder | High | 270 MB | INT8 | ONNX | all |
-| kchat-encoder-int4 | encoder | Low | 90 MB | INT4 | ONNX | all |
-| mobileclip-s2-int8 | vision | Low | 70 MB | INT8 | ONNX | all |
-| whisper-tiny-int8 | asr | Low | 40 MB | INT8 | ONNX | all |
-| whisper-base-int8 | asr | Medium | 90 MB | INT8 | ONNX | all |
+| Pack ID | Type | Min Tier | Size | Quant | Backend | Platform | SHA-256 |
+|---------|------|----------|------|-------|---------|----------|---------|
+| ternary-bonsai-1.7b-mlx-2bit | generative | Low | 472 MB | 2bit-MLX | MLX | ios/macos | ✅ real |
+| ternary-bonsai-1.7b-q2_0 | generative | Low | 442 MB | Q2_0 | llama.cpp Vulkan | android/windows | ✅ real |
+| ternary-bonsai-4b-q2_0 | generative | Medium | 1,075 MB | Q2_0 | llama.cpp Vulkan | android | ✅ real |
+| ternary-bonsai-4b-mlx-2bit | generative | Medium | 1,132 MB | 2bit-MLX | MLX | ios/macos | ✅ real |
+| ternary-bonsai-8b-mlx-2bit | generative | High | 2,304 MB | 2bit-MLX | MLX | ios/macos | ✅ real |
+| ternary-bonsai-8b-q2_0 | generative | High | 2,182 MB | Q2_0 | llama.cpp Vulkan | windows | ✅ real |
+| kchat-encoder-int8 | encoder | High | 270 MB | INT8 | ONNX | all | ⏳ placeholder |
+| kchat-encoder-int4 | encoder | Low | 90 MB | INT4 | ONNX | all | ⏳ placeholder |
+| mobileclip-s2-int8 | vision | Low | 70 MB | INT8 | ONNX | all | ⏳ placeholder |
+| whisper-tiny-int8 | asr | Low | 33 MB | ONNX | ONNX | all | ✅ real |
+| whisper-base-int8 | asr | Medium | 82 MB | ONNX | ONNX | all | ✅ real |
+
+8/11 packs have real SHA-256 hashes. 3 remaining placeholders (kchat-encoder-int8/int4, mobileclip-s2-int8)
+require ONNX export before hashing.
 
 ### Model selection by tier and platform
 
@@ -221,20 +224,23 @@ The workspace is organized into 9 crates + 1 Go sidecar following the 4-plane ar
   - Generative: iOS/macOS: `ternary-bonsai-1.7b-mlx-2bit` via **MLX** (472MB) / Android/Windows: `ternary-bonsai-1.7b-q2_0` via **llama.cpp Vulkan** (442MB)
   - Vision: `mobileclip-s2-int8` (70MB, INT8, 17 categories, image + video)
   - Encoder: `kchat-encoder-int4` (90MB, INT4) — safety + embedding + reranking
-  - ASR: `whisper-tiny-int8` (40MB, INT8)
+  - ASR: `whisper-tiny-int8` (33MB, ONNX)
   - Video: `mobileclip-s2-int8` (same model as vision)
+  - **Total footprint**: ~665MB (Apple Silicon) / ~635MB (GGUF)
 - **Medium tier**:
-  - Generative: iOS/macOS: `ternary-bonsai-4b-mlx-2bit` via **MLX** (1.0GB) / Android: `ternary-bonsai-4b-q2_0` via **llama.cpp Vulkan** (1.0GB)
+  - Generative: iOS/macOS: `ternary-bonsai-4b-mlx-2bit` via **MLX** (1,132MB) / Android: `ternary-bonsai-4b-q2_0` via **llama.cpp Vulkan** (1,075MB)
   - Vision: `mobileclip-s2-int8` (70MB, INT8, image + video)
   - Encoder: `kchat-encoder-int4` (90MB, INT4) — safety + embedding + reranking
-  - ASR: `whisper-base-int8` (90MB, INT8)
+  - ASR: `whisper-base-int8` (82MB, ONNX)
   - Video: `mobileclip-s2-int8` (same model as vision)
+  - **Total footprint**: ~1,374MB (Apple Silicon) / ~1,317MB (Android)
 - **High tier**:
-  - Generative: iOS/macOS: `ternary-bonsai-8b-mlx-2bit` via **MLX** (2.1GB) / Android: `ternary-bonsai-8b-q2_0` via **llama.cpp Vulkan** (2.1GB) / Windows: `ternary-bonsai-8b-q2_0` via **llama.cpp Vulkan** (2.1GB)
+  - Generative: iOS/macOS: `ternary-bonsai-8b-mlx-2bit` via **MLX** (2,304MB) / Android: `ternary-bonsai-8b-q2_0` via **llama.cpp Vulkan** (2,182MB) / Windows: `ternary-bonsai-8b-q2_0` via **llama.cpp Vulkan** (2,182MB)
   - Vision: `mobileclip-s2-int8` (70MB, INT8, image + video)
   - Encoder: `kchat-encoder-int8` (270MB, INT8) — safety + embedding + reranking
-  - ASR: `whisper-base-int8` (90MB, INT8)
+  - ASR: `whisper-base-int8` (82MB, ONNX)
   - Video: `mobileclip-s2-int8` (same model as vision)
+  - **Total footprint**: ~2,726MB (Apple Silicon) / ~2,604MB (Android/Windows)
 
 All generative models support `tool_use`. The "deterministic-first" principle is preserved —
 safety works on ALL devices without a generative model. Vision and ASR run on ALL tiers.
