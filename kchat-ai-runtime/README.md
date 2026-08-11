@@ -111,13 +111,19 @@ Thermal downgrade: Serious → drop one tier; Critical → force Low.
 
 | Pack ID | Type | Min Tier | Size | Quant | Tasks | SHA-256 |
 |---------|------|----------|------|-------|-------|---------|
-| `kchat-encoder-int8` | encoder | High | 270 MB | INT8 | safety, embed, rerank | ⏳ placeholder |
-| `kchat-encoder-int4` | encoder | Low | 90 MB | INT4 | safety, embed, rerank | ⏳ placeholder |
+| `kchat-encoder-int8` | encoder | High | 266 MB | INT8 | safety, embed, rerank | ✅ real |
+| `kchat-encoder-int4` | encoder | Low | 143 MB | INT4 | safety, embed, rerank | ✅ real |
 | `mobileclip-s2-int8` | vision | Low | 70 MB | INT8 | image_classify, image_embed, video_classify | ⏳ placeholder |
-| `whisper-tiny-int8` | asr | Low | 33 MB | ONNX | transcribe | ✅ real |
-| `whisper-base-int8` | asr | Medium | 82 MB | ONNX | transcribe | ✅ real |
+| `whisper-tiny-int8` | asr | Low | 33 MB | ONNX (FP32) | transcribe (multilingual) | ✅ real |
+| `whisper-base-int8` | asr | Medium | 82 MB | ONNX (FP32) | transcribe (multilingual) | ✅ real |
 
-8/11 packs have real SHA-256 hashes. 3 remaining placeholders require ONNX export.
+10/11 packs have real SHA-256 hashes. 1 remaining placeholder (mobileclip-s2-int8) requires ONNX export.
+
+> **Note**: Whisper pack IDs retain `-int8` suffix for backward compatibility, but the
+> ONNX files are FP32 (not INT8-quantized). Base models are `nb-whisper-tiny` and
+> `nb-whisper-base` from NbAiLab (Norwegian fine-tunes of OpenAI Whisper). Despite the
+> Norwegian fine-tuning, both models retain full multilingual capability
+> (en, vi, zh, ja, ko, es, fr, de, ar, hi, th).
 
 ## Performance Targets
 

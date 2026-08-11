@@ -58,11 +58,12 @@ model size while maintaining reasonable quality.
 
 Unified multi-task XLM-RoBERTa-base ONNX model. Replaces separate embedding,
 safety, and reranker packs with a single shared encoder session.
+Source: `models/quantized_models/onnx_int8/` and `models/quantized_models/onnx_int4/`.
 
-| Pack ID | Base Model | Min Tier | Size | Quant | Backend | Tasks | Languages |
-|---------|-----------|----------|------|-------|---------|-------|-----------|
-| `kchat-encoder-int4` | XLM-RoBERTa-base | Low | 90 MB | INT4 | ONNX Runtime | safety, embed, rerank | en, vi, zh, ja, ko, es, ar, de, hi, fr |
-| `kchat-encoder-int8` | XLM-RoBERTa-base | High | 270 MB | INT8 | ONNX Runtime | safety, embed, rerank | en, vi, zh, ja, ko, es, ar, de, hi, fr |
+| Pack ID | Base Model | Min Tier | Size | Quant | Backend | Tasks | Languages | SHA-256 |
+|---------|-----------|----------|------|-------|---------|-------|-----------|---------|
+| `kchat-encoder-int4` | XLM-RoBERTa-base | Low | 143 MB | INT4 | ONNX Runtime | safety, embed, rerank | en, vi, zh, ja, ko, es, ar, de, hi, fr | ✅ real |
+| `kchat-encoder-int8` | XLM-RoBERTa-base | High | 266 MB | INT8 | ONNX Runtime | safety, embed, rerank | en, vi, zh, ja, ko, es, ar, de, hi, fr | ✅ real |
 
 ### Vision Model (1 pack)
 
@@ -75,14 +76,18 @@ classification/embedding and video frame classification.
 
 ### ASR Models (2 packs)
 
-Whisper ONNX models from NbAiLab (Norwegian fine-tuned). Full pack includes encoder +
-decoder + decoder_with_past ONNX files. Pack IDs retain `-int8` suffix for backward
-compatibility, but the ONNX files are FP32 (not INT8-quantized).
+Whisper ONNX models from NbAiLab (Norwegian Language Technology Lab). These are
+Norwegian fine-tunes of OpenAI's Whisper models — `nb-whisper-tiny` and `nb-whisper-base`.
+Despite the Norwegian fine-tuning, the models retain full multilingual capability
+inherited from the original Whisper models. Pack IDs retain the `-int8` suffix for
+backward compatibility, but the ONNX files are **FP32 (not INT8-quantized)**.
+
+Full pack includes encoder + decoder + decoder_with_past ONNX files.
 
 | Pack ID | Base Model | Params | Min Tier | Size | Quant | Backend | Languages | SHA-256 |
 |---------|-----------|--------|----------|------|-------|---------|-----------|---------|
-| `whisper-tiny-int8` | nb-whisper-tiny | 39M | Low | 33 MB | ONNX | ONNX Runtime | en, vi, zh, ja, ko, es, fr, de, ar, hi, th | ✅ real |
-| `whisper-base-int8` | nb-whisper-base | 74M | Medium | 82 MB | ONNX | ONNX Runtime | en, vi, zh, ja, ko, es, fr, de, ar, hi, th | ✅ real |
+| `whisper-tiny-int8` | nb-whisper-tiny | 39M | Low | 33 MB | ONNX (FP32) | ONNX Runtime | en, vi, zh, ja, ko, es, fr, de, ar, hi, th | ✅ real |
+| `whisper-base-int8` | nb-whisper-base | 74M | Medium | 82 MB | ONNX (FP32) | ONNX Runtime | en, vi, zh, ja, ko, es, fr, de, ar, hi, th | ✅ real |
 
 ## Device Tiers
 
@@ -171,7 +176,7 @@ Other                  → llama.cpp CPU
 | Model Type | Low Tier | Medium Tier | High Tier |
 |-----------|----------|-------------|-----------|
 | Vision (image+video) | mobileclip-s2-int8 (70 MB) | mobileclip-s2-int8 (70 MB) | mobileclip-s2-int8 (70 MB) |
-| Encoder | kchat-encoder-int4 (90 MB) | kchat-encoder-int4 (90 MB) | kchat-encoder-int8 (270 MB) |
+| Encoder | kchat-encoder-int4 (143 MB) | kchat-encoder-int4 (143 MB) | kchat-encoder-int8 (266 MB) |
 | ASR | whisper-tiny-int8 (33 MB) | whisper-base-int8 (82 MB) | whisper-base-int8 (82 MB) |
 | Video | mobileclip-s2-int8 (same as vision) | mobileclip-s2-int8 (same as vision) | mobileclip-s2-int8 (same as vision) |
 
@@ -200,10 +205,10 @@ and mirrored in `eval/kchat-task-suite/src/eval_perdevice.rs`.
 | Generative | `ternary-bonsai-8b-mlx-2bit` (2,304 MB) |
 | Backend | MLX |
 | Vision | `mobileclip-s2-int8` (70 MB) |
-| Encoder | `kchat-encoder-int8` (270 MB) |
+| Encoder | `kchat-encoder-int8` (266 MB) |
 | ASR | `whisper-base-int8` (82 MB) |
 | Video | `mobileclip-s2-int8` (same as vision) |
-| **Total model footprint** | **~2,726 MB** |
+| **Total model footprint** | **~2,722 MB** |
 
 #### 2. iPhone 14 (6GB, A15)
 
@@ -223,10 +228,10 @@ and mirrored in `eval/kchat-task-suite/src/eval_perdevice.rs`.
 | Generative | `ternary-bonsai-4b-mlx-2bit` (1,132 MB) |
 | Backend | MLX |
 | Vision | `mobileclip-s2-int8` (70 MB) |
-| Encoder | `kchat-encoder-int4` (90 MB) |
+| Encoder | `kchat-encoder-int4` (143 MB) |
 | ASR | `whisper-base-int8` (82 MB) |
 | Video | `mobileclip-s2-int8` (same as vision) |
-| **Total model footprint** | **~1,374 MB** |
+| **Total model footprint** | **~1,427 MB** |
 
 #### 3. iPhone SE 2022 (4GB, A15)
 
@@ -246,10 +251,10 @@ and mirrored in `eval/kchat-task-suite/src/eval_perdevice.rs`.
 | Generative | `ternary-bonsai-1.7b-mlx-2bit` (472 MB) |
 | Backend | MLX |
 | Vision | `mobileclip-s2-int8` (70 MB) |
-| Encoder | `kchat-encoder-int4` (90 MB) |
+| Encoder | `kchat-encoder-int4` (143 MB) |
 | ASR | `whisper-tiny-int8` (33 MB) |
 | Video | `mobileclip-s2-int8` (same as vision) |
-| **Total model footprint** | **~665 MB** |
+| **Total model footprint** | **~718 MB** |
 
 ### Mobile: Android
 
@@ -271,10 +276,10 @@ and mirrored in `eval/kchat-task-suite/src/eval_perdevice.rs`.
 | Generative | `ternary-bonsai-8b-q2_0` (2,182 MB) |
 | Backend | llama.cpp Vulkan |
 | Vision | `mobileclip-s2-int8` (70 MB) |
-| Encoder | `kchat-encoder-int8` (270 MB) |
+| Encoder | `kchat-encoder-int8` (266 MB) |
 | ASR | `whisper-base-int8` (82 MB) |
 | Video | `mobileclip-s2-int8` (same as vision) |
-| **Total model footprint** | **~2,604 MB** |
+| **Total model footprint** | **~2,600 MB** |
 
 #### 5. Pixel 7a (8GB, Tensor G2)
 
@@ -294,10 +299,10 @@ and mirrored in `eval/kchat-task-suite/src/eval_perdevice.rs`.
 | Generative | `ternary-bonsai-4b-q2_0` (1,075 MB) |
 | Backend | llama.cpp Vulkan |
 | Vision | `mobileclip-s2-int8` (70 MB) |
-| Encoder | `kchat-encoder-int4` (90 MB) |
+| Encoder | `kchat-encoder-int4` (143 MB) |
 | ASR | `whisper-base-int8` (82 MB) |
 | Video | `mobileclip-s2-int8` (same as vision) |
-| **Total model footprint** | **~1,317 MB** |
+| **Total model footprint** | **~1,370 MB** |
 
 #### 6. Galaxy A14 (4GB, Helio G80)
 
@@ -318,10 +323,10 @@ and mirrored in `eval/kchat-task-suite/src/eval_perdevice.rs`.
 | Generative | `ternary-bonsai-1.7b-q2_0` (442 MB) |
 | Backend | llama.cpp Vulkan |
 | Vision | `mobileclip-s2-int8` (70 MB) |
-| Encoder | `kchat-encoder-int4` (90 MB) |
+| Encoder | `kchat-encoder-int4` (143 MB) |
 | ASR | `whisper-tiny-int8` (33 MB) |
 | Video | `mobileclip-s2-int8` (same as vision) |
-| **Total model footprint** | **~635 MB** |
+| **Total model footprint** | **~688 MB** |
 
 ### Desktop: macOS
 
@@ -343,10 +348,10 @@ and mirrored in `eval/kchat-task-suite/src/eval_perdevice.rs`.
 | Generative | `ternary-bonsai-8b-mlx-2bit` (2,304 MB) |
 | Backend | MLX |
 | Vision | `mobileclip-s2-int8` (70 MB) |
-| Encoder | `kchat-encoder-int8` (270 MB) |
+| Encoder | `kchat-encoder-int8` (266 MB) |
 | ASR | `whisper-base-int8` (82 MB) |
 | Video | `mobileclip-s2-int8` (same as vision) |
-| **Total model footprint** | **~2,726 MB** |
+| **Total model footprint** | **~2,722 MB** |
 
 #### 8. MacBook Air M2 (8GB)
 
@@ -366,10 +371,10 @@ and mirrored in `eval/kchat-task-suite/src/eval_perdevice.rs`.
 | Generative | `ternary-bonsai-1.7b-mlx-2bit` (472 MB) |
 | Backend | MLX |
 | Vision | `mobileclip-s2-int8` (70 MB) |
-| Encoder | `kchat-encoder-int4` (90 MB) |
+| Encoder | `kchat-encoder-int4` (143 MB) |
 | ASR | `whisper-tiny-int8` (33 MB) |
 | Video | `mobileclip-s2-int8` (same as vision) |
-| **Total model footprint** | **~665 MB** |
+| **Total model footprint** | **~718 MB** |
 
 #### 9. Intel NUC (8GB, i3)
 
@@ -389,10 +394,10 @@ and mirrored in `eval/kchat-task-suite/src/eval_perdevice.rs`.
 | Generative | `ternary-bonsai-1.7b-q2_0` (442 MB, GGUF — no MLX on x86_64) |
 | Backend | llama.cpp CPU |
 | Vision | `mobileclip-s2-int8` (70 MB) |
-| Encoder | `kchat-encoder-int4` (90 MB) |
+| Encoder | `kchat-encoder-int4` (143 MB) |
 | ASR | `whisper-tiny-int8` (33 MB) |
 | Video | `mobileclip-s2-int8` (same as vision) |
-| **Total model footprint** | **~635 MB** |
+| **Total model footprint** | **~688 MB** |
 
 ### Desktop: Windows
 
@@ -414,10 +419,10 @@ and mirrored in `eval/kchat-task-suite/src/eval_perdevice.rs`.
 | Generative | `ternary-bonsai-8b-q2_0` (2,182 MB) |
 | Backend | llama.cpp Vulkan |
 | Vision | `mobileclip-s2-int8` (70 MB) |
-| Encoder | `kchat-encoder-int8` (270 MB) |
+| Encoder | `kchat-encoder-int8` (266 MB) |
 | ASR | `whisper-base-int8` (82 MB) |
 | Video | `mobileclip-s2-int8` (same as vision) |
-| **Total model footprint** | **~2,604 MB** |
+| **Total model footprint** | **~2,600 MB** |
 
 #### 11. Windows Surface 8 (16GB)
 
@@ -437,10 +442,10 @@ and mirrored in `eval/kchat-task-suite/src/eval_perdevice.rs`.
 | Generative | `ternary-bonsai-1.7b-q2_0` (442 MB) |
 | Backend | llama.cpp Vulkan |
 | Vision | `mobileclip-s2-int8` (70 MB) |
-| Encoder | `kchat-encoder-int4` (90 MB) |
+| Encoder | `kchat-encoder-int4` (143 MB) |
 | ASR | `whisper-tiny-int8` (33 MB) |
 | Video | `mobileclip-s2-int8` (same as vision) |
-| **Total model footprint** | **~635 MB** |
+| **Total model footprint** | **~688 MB** |
 
 #### 12. Windows Legacy (8GB, i5)
 
@@ -460,10 +465,10 @@ and mirrored in `eval/kchat-task-suite/src/eval_perdevice.rs`.
 | Generative | `ternary-bonsai-1.7b-q2_0` (442 MB) |
 | Backend | llama.cpp Vulkan |
 | Vision | `mobileclip-s2-int8` (70 MB) |
-| Encoder | `kchat-encoder-int4` (90 MB) |
+| Encoder | `kchat-encoder-int4` (143 MB) |
 | ASR | `whisper-tiny-int8` (33 MB) |
 | Video | `mobileclip-s2-int8` (same as vision) |
-| **Total model footprint** | **~635 MB** |
+| **Total model footprint** | **~688 MB** |
 
 ## Summary Tables
 
@@ -471,29 +476,29 @@ and mirrored in `eval/kchat-task-suite/src/eval_perdevice.rs`.
 
 | Tier | Generative | Vision (image+video) | Encoder | ASR | **Total** |
 |------|-----------|----------------------|---------|-----|-----------|
-| **Low (Apple Silicon)** | 472 MB | 70 MB | 90 MB | 33 MB | **665 MB** |
-| **Low (GGUF)** | 442 MB | 70 MB | 90 MB | 33 MB | **635 MB** |
-| **Medium (Apple Silicon)** | 1,132 MB | 70 MB | 90 MB | 82 MB | **1,374 MB** |
-| **Medium (Android)** | 1,075 MB | 70 MB | 90 MB | 82 MB | **1,317 MB** |
-| **High (Apple Silicon)** | 2,304 MB | 70 MB | 270 MB | 82 MB | **2,726 MB** |
-| **High (Android/Windows)** | 2,182 MB | 70 MB | 270 MB | 82 MB | **2,604 MB** |
+| **Low (Apple Silicon)** | 472 MB | 70 MB | 143 MB | 33 MB | **718 MB** |
+| **Low (GGUF)** | 442 MB | 70 MB | 143 MB | 33 MB | **688 MB** |
+| **Medium (Apple Silicon)** | 1,132 MB | 70 MB | 143 MB | 82 MB | **1,427 MB** |
+| **Medium (Android)** | 1,075 MB | 70 MB | 143 MB | 82 MB | **1,370 MB** |
+| **High (Apple Silicon)** | 2,304 MB | 70 MB | 266 MB | 82 MB | **2,722 MB** |
+| **High (Android/Windows)** | 2,182 MB | 70 MB | 266 MB | 82 MB | **2,600 MB** |
 
 ### Memory Budget vs Model Footprint
 
 | Tier | Platform | Peak Memory Budget | Model Footprint | KV Cache Headroom |
 |------|----------|-------------------|-----------------|-------------------|
-| Low | iOS | 750 MB | 665 MB | 85 MB |
-| Low | Android | 750 MB | 635 MB | 115 MB |
-| Low | macOS | 2,000 MB | 665 MB | 1,335 MB |
-| Low | Windows | 2,000 MB | 635 MB | 1,365 MB |
-| Medium | iOS | 1,700 MB | 1,374 MB | 326 MB |
-| Medium | Android | 1,800 MB | 1,317 MB | 483 MB |
-| Medium | macOS | 4,000 MB | 1,374 MB | 2,626 MB |
-| Medium | Windows | 4,000 MB | 1,317 MB | 2,683 MB |
-| High | iOS | 3,100 MB | 2,726 MB | 374 MB |
-| High | Android | 3,200 MB | 2,604 MB | 596 MB |
-| High | macOS | 8,000 MB | 2,726 MB | 5,274 MB |
-| High | Windows | 8,000 MB | 2,604 MB | 5,396 MB |
+| Low | iOS | 750 MB | 718 MB | 32 MB |
+| Low | Android | 750 MB | 688 MB | 62 MB |
+| Low | macOS | 2,000 MB | 718 MB | 1,282 MB |
+| Low | Windows | 2,000 MB | 688 MB | 1,312 MB |
+| Medium | iOS | 1,700 MB | 1,427 MB | 273 MB |
+| Medium | Android | 1,800 MB | 1,370 MB | 430 MB |
+| Medium | macOS | 4,000 MB | 1,427 MB | 2,573 MB |
+| Medium | Windows | 4,000 MB | 1,370 MB | 2,630 MB |
+| High | iOS | 3,100 MB | 2,722 MB | 378 MB |
+| High | Android | 3,200 MB | 2,600 MB | 600 MB |
+| High | macOS | 8,000 MB | 2,722 MB | 5,278 MB |
+| High | Windows | 8,000 MB | 2,600 MB | 5,400 MB |
 
 ### Unique Generative Models per Profile
 
@@ -533,8 +538,8 @@ and mirrored in `eval/kchat-task-suite/src/eval_perdevice.rs`.
 
 | Pack ID | Download URL |
 |---------|-------------|
-| `kchat-encoder-int8` | `https://cdn.kchat.dev/models/kchat-encoder-int8/1.0.0/kchat-encoder-int8.onnx` |
-| `kchat-encoder-int4` | `https://cdn.kchat.dev/models/kchat-encoder-int4/1.0.0/kchat-encoder-int4.onnx` |
+| `kchat-encoder-int8` | `https://cdn.kchat.dev/models/kchat-encoder-int8/1.0.0/model_quantized.onnx` |
+| `kchat-encoder-int4` | `https://cdn.kchat.dev/models/kchat-encoder-int4/1.0.0/model_quantized_int4.onnx` |
 | `mobileclip-s2-int8` | `https://cdn.kchat.dev/models/mobileclip-s2-int8/1.0.0/mobileclip-s2-int8.onnx` |
 | `whisper-tiny-int8` | `https://huggingface.co/NbAiLabBeta/nb-whisper-tiny/resolve/main/onnx/encoder_model.onnx` |
 | `whisper-base-int8` | `https://huggingface.co/NbAiLabBeta/nb-whisper-base/resolve/main/onnx/encoder_model.onnx` |

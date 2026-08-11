@@ -218,13 +218,14 @@ impl ModelRegistry {
         // --- Unified multi-task encoder (XLM-RoBERTa-base) ---
         // Replaces separate safety-classifier, embedding, and reranker models.
         // Single ONNX model handles safety classification, text embedding, and reranking.
+        // Source: models/quantized_models/onnx_int8/model_quantized.onnx
         models.push(RegistryEntry {
             pack_id: "kchat-encoder-int8".into(),
             version: "1.0.0".into(),
             pack_type: "encoder".into(),
-            download_url: "https://cdn.kchat.dev/models/kchat-encoder-int8/1.0.0/kchat-encoder-int8.onnx".into(),
-            sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
-            size_bytes: 270_000_000,
+            download_url: "https://cdn.kchat.dev/models/kchat-encoder-int8/1.0.0/model_quantized.onnx".into(),
+            sha256: "b00d0c170268c6c75d7c35d566c8db01b206029681e406c0560828617104cb90".into(),
+            size_bytes: 279_241_278, // ~266 MB (exact from local ONNX export)
             min_tier: MinTier::High,
             task_capabilities: vec!["safety".into(), "embed".into(), "rerank".into()],
             languages: vec!["en".into(), "vi".into(), "zh".into(), "ja".into(), "ko".into(), "es".into(), "ar".into(), "de".into(), "hi".into(), "fr".into()],
@@ -252,8 +253,10 @@ impl ModelRegistry {
         // --- ASR models (Whisper) ---
 
         // Low tier: Whisper Tiny ONNX for audio transcription
-        // ~33MB encoder ONNX, fine-tuned on Norwegian (NbAiLab), supports no/nb/nn/en
+        // ~33MB encoder ONNX, based on nb-whisper-tiny (NbAiLab Norwegian fine-tune of Whisper Tiny)
+        // Multilingual: supports en, vi, zh, ja, ko, es, fr, de, ar, hi, th
         // Full pack includes encoder + decoder + decoder_with_past ONNX files
+        // Pack ID retains -int8 suffix for backward compatibility; ONNX files are FP32 (not INT8-quantized)
         models.push(RegistryEntry {
             pack_id: "whisper-tiny-int8".into(),
             version: "1.0.0".into(),
@@ -268,8 +271,10 @@ impl ModelRegistry {
         });
 
         // Medium tier: Whisper Base ONNX for higher-accuracy transcription
-        // ~82MB encoder ONNX, fine-tuned on Norwegian (NbAiLab), supports no/nb/nn/en
+        // ~82MB encoder ONNX, based on nb-whisper-base (NbAiLab Norwegian fine-tune of Whisper Base)
+        // Multilingual: supports en, vi, zh, ja, ko, es, fr, de, ar, hi, th
         // Full pack includes encoder + decoder + decoder_with_past ONNX files
+        // Pack ID retains -int8 suffix for backward compatibility; ONNX files are FP32 (not INT8-quantized)
         models.push(RegistryEntry {
             pack_id: "whisper-base-int8".into(),
             version: "1.0.0".into(),
@@ -285,13 +290,14 @@ impl ModelRegistry {
 
         // --- Unified encoder INT4 variant (Low tier) ---
         // 4-bit quantized version for low-tier devices
+        // Source: models/quantized_models/onnx_int4/model_quantized_int4.onnx
         models.push(RegistryEntry {
             pack_id: "kchat-encoder-int4".into(),
             version: "1.0.0".into(),
             pack_type: "encoder".into(),
-            download_url: "https://cdn.kchat.dev/models/kchat-encoder-int4/1.0.0/kchat-encoder-int4.onnx".into(),
-            sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
-            size_bytes: 90_000_000,
+            download_url: "https://cdn.kchat.dev/models/kchat-encoder-int4/1.0.0/model_quantized_int4.onnx".into(),
+            sha256: "67e4cc6cf6a90144fcec2f1c4d9d8bd6b90049569953fc698626c6c5782954a5".into(),
+            size_bytes: 150_420_811, // ~143 MB (exact from local ONNX export)
             min_tier: MinTier::Low,
             task_capabilities: vec!["safety".into(), "embed".into(), "rerank".into()],
             languages: vec!["en".into(), "vi".into(), "zh".into(), "ja".into(), "ko".into(), "es".into(), "ar".into(), "de".into(), "hi".into(), "fr".into()],
@@ -539,7 +545,7 @@ quantization = "INT8"
         assert_eq!(enc.min_tier, MinTier::High);
         assert_eq!(enc.pack_type, "encoder");
         assert_eq!(enc.quantization, "INT8");
-        assert_eq!(enc.size_bytes, 270_000_000);
+        assert_eq!(enc.size_bytes, 279_241_278);
         assert!(enc.task_capabilities.contains(&"safety".to_string()));
         assert!(enc.task_capabilities.contains(&"embed".to_string()));
         assert!(enc.task_capabilities.contains(&"rerank".to_string()));
@@ -658,7 +664,7 @@ quantization = "INT8"
         let enc = registry.find("kchat-encoder-int4").expect("encoder-int4");
         assert_eq!(enc.min_tier, MinTier::Low);
         assert_eq!(enc.pack_type, "encoder");
-        assert_eq!(enc.size_bytes, 90_000_000);
+        assert_eq!(enc.size_bytes, 150_420_811);
         assert_eq!(enc.quantization, "INT4");
     }
 
@@ -683,8 +689,8 @@ quantization = "INT8"
     fn test_default_registry_no_placeholder_hashes_for_available_models() {
         let registry = ModelRegistry::default_registry();
         // Models with locally-available artifacts must have real SHA-256 hashes.
-        // Remaining placeholders: kchat-encoder-int8, kchat-encoder-int4, mobileclip-s2-int8
-        // (ONNX models not yet exported — must be hashed before release).
+        // Remaining placeholder: mobileclip-s2-int8
+        // (ONNX model not yet exported — must be hashed before release).
         let must_have_real_hash = [
             "ternary-bonsai-1.7b-mlx-2bit",
             "ternary-bonsai-1.7b-q2_0",
@@ -694,6 +700,8 @@ quantization = "INT8"
             "ternary-bonsai-8b-q2_0",
             "whisper-tiny-int8",
             "whisper-base-int8",
+            "kchat-encoder-int8",
+            "kchat-encoder-int4",
         ];
         for pack_id in &must_have_real_hash {
             let entry = registry.find(pack_id).unwrap_or_else(|| panic!("pack {} not found", pack_id));

@@ -209,38 +209,43 @@ The workspace is organized into 9 crates + 1 Go sidecar following the 4-plane ar
 | ternary-bonsai-4b-mlx-2bit | generative | Medium | 1,132 MB | 2bit-MLX | MLX | ios/macos | ✅ real |
 | ternary-bonsai-8b-mlx-2bit | generative | High | 2,304 MB | 2bit-MLX | MLX | ios/macos | ✅ real |
 | ternary-bonsai-8b-q2_0 | generative | High | 2,182 MB | Q2_0 | llama.cpp Vulkan | windows | ✅ real |
-| kchat-encoder-int8 | encoder | High | 270 MB | INT8 | ONNX | all | ⏳ placeholder |
-| kchat-encoder-int4 | encoder | Low | 90 MB | INT4 | ONNX | all | ⏳ placeholder |
+| kchat-encoder-int8 | encoder | High | 266 MB | INT8 | ONNX | all | ✅ real |
+| kchat-encoder-int4 | encoder | Low | 143 MB | INT4 | ONNX | all | ✅ real |
 | mobileclip-s2-int8 | vision | Low | 70 MB | INT8 | ONNX | all | ⏳ placeholder |
-| whisper-tiny-int8 | asr | Low | 33 MB | ONNX | ONNX | all | ✅ real |
-| whisper-base-int8 | asr | Medium | 82 MB | ONNX | ONNX | all | ✅ real |
+| whisper-tiny-int8 | asr | Low | 33 MB | ONNX (FP32) | ONNX | all | ✅ real |
+| whisper-base-int8 | asr | Medium | 82 MB | ONNX (FP32) | ONNX | all | ✅ real |
 
-8/11 packs have real SHA-256 hashes. 3 remaining placeholders (kchat-encoder-int8/int4, mobileclip-s2-int8)
-require ONNX export before hashing.
+10/11 packs have real SHA-256 hashes. 1 remaining placeholder (mobileclip-s2-int8)
+requires ONNX export before hashing.
+
+> **Note**: Whisper pack IDs retain `-int8` for backward compatibility, but ONNX files are
+> FP32 (not INT8-quantized). Base models: `nb-whisper-tiny` and `nb-whisper-base` from NbAiLab
+> (Norwegian fine-tunes of OpenAI Whisper). Both retain full multilingual capability
+> (en, vi, zh, ja, ko, es, fr, de, ar, hi, th).
 
 ### Model selection by tier and platform
 
 - **Low tier**:
   - Generative: iOS/macOS: `ternary-bonsai-1.7b-mlx-2bit` via **MLX** (472MB) / Android/Windows: `ternary-bonsai-1.7b-q2_0` via **llama.cpp Vulkan** (442MB)
   - Vision: `mobileclip-s2-int8` (70MB, INT8, 17 categories, image + video)
-  - Encoder: `kchat-encoder-int4` (90MB, INT4) — safety + embedding + reranking
-  - ASR: `whisper-tiny-int8` (33MB, ONNX)
+  - Encoder: `kchat-encoder-int4` (143MB, INT4) — safety + embedding + reranking
+  - ASR: `whisper-tiny-int8` (33MB, ONNX FP32, nb-whisper-tiny, multilingual)
   - Video: `mobileclip-s2-int8` (same model as vision)
-  - **Total footprint**: ~665MB (Apple Silicon) / ~635MB (GGUF)
+  - **Total footprint**: ~718MB (Apple Silicon) / ~688MB (GGUF)
 - **Medium tier**:
   - Generative: iOS/macOS: `ternary-bonsai-4b-mlx-2bit` via **MLX** (1,132MB) / Android: `ternary-bonsai-4b-q2_0` via **llama.cpp Vulkan** (1,075MB)
   - Vision: `mobileclip-s2-int8` (70MB, INT8, image + video)
-  - Encoder: `kchat-encoder-int4` (90MB, INT4) — safety + embedding + reranking
-  - ASR: `whisper-base-int8` (82MB, ONNX)
+  - Encoder: `kchat-encoder-int4` (143MB, INT4) — safety + embedding + reranking
+  - ASR: `whisper-base-int8` (82MB, ONNX FP32, nb-whisper-base, multilingual)
   - Video: `mobileclip-s2-int8` (same model as vision)
-  - **Total footprint**: ~1,374MB (Apple Silicon) / ~1,317MB (Android)
+  - **Total footprint**: ~1,427MB (Apple Silicon) / ~1,370MB (Android)
 - **High tier**:
   - Generative: iOS/macOS: `ternary-bonsai-8b-mlx-2bit` via **MLX** (2,304MB) / Android: `ternary-bonsai-8b-q2_0` via **llama.cpp Vulkan** (2,182MB) / Windows: `ternary-bonsai-8b-q2_0` via **llama.cpp Vulkan** (2,182MB)
   - Vision: `mobileclip-s2-int8` (70MB, INT8, image + video)
-  - Encoder: `kchat-encoder-int8` (270MB, INT8) — safety + embedding + reranking
-  - ASR: `whisper-base-int8` (82MB, ONNX)
+  - Encoder: `kchat-encoder-int8` (266MB, INT8) — safety + embedding + reranking
+  - ASR: `whisper-base-int8` (82MB, ONNX FP32, nb-whisper-base, multilingual)
   - Video: `mobileclip-s2-int8` (same model as vision)
-  - **Total footprint**: ~2,726MB (Apple Silicon) / ~2,604MB (Android/Windows)
+  - **Total footprint**: ~2,722MB (Apple Silicon) / ~2,600MB (Android/Windows)
 
 All generative models support `tool_use`. The "deterministic-first" principle is preserved —
 safety works on ALL devices without a generative model. Vision and ASR run on ALL tiers.

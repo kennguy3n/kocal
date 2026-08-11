@@ -474,9 +474,8 @@ pub fn select_video_model_for_tier(_tier: DeviceTier) -> Option<&'static str> {
 }
 
 /// Select the appropriate ASR model for a tier.
-///
-/// - Low tier: whisper-tiny-int8 (~33MB, ONNX)
-/// - Medium/High tier: whisper-base-int8 (~82MB, ONNX)
+/// - Low tier: whisper-tiny-int8 (~33MB, ONNX FP32, nb-whisper-tiny, multilingual)
+/// - Medium/High tier: whisper-base-int8 (~82MB, ONNX FP32, nb-whisper-base, multilingual)
 pub fn select_asr_model_for_tier(tier: DeviceTier) -> Option<&'static str> {
     match tier {
         DeviceTier::Low => Some("whisper-tiny-int8"),
