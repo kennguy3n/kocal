@@ -79,15 +79,14 @@ classification/embedding and video frame classification.
 Whisper ONNX models from NbAiLab (Norwegian Language Technology Lab). These are
 Norwegian fine-tunes of OpenAI's Whisper models — `nb-whisper-tiny` and `nb-whisper-base`.
 Despite the Norwegian fine-tuning, the models retain full multilingual capability
-inherited from the original Whisper models. Pack IDs retain the `-int8` suffix for
-backward compatibility, but the ONNX files are **FP32 (not INT8-quantized)**.
+inherited from the original Whisper models. The ONNX files are **FP32 (not INT8-quantized)**.
 
 Full pack includes encoder + decoder + decoder_with_past ONNX files.
 
 | Pack ID | Base Model | Params | Min Tier | Size | Quant | Backend | Languages | SHA-256 |
 |---------|-----------|--------|----------|------|-------|---------|-----------|---------|
-| `whisper-tiny-int8` | nb-whisper-tiny | 39M | Low | 33 MB | ONNX (FP32) | ONNX Runtime | en, vi, zh, ja, ko, es, fr, de, ar, hi, th | ✅ real |
-| `whisper-base-int8` | nb-whisper-base | 74M | Medium | 82 MB | ONNX (FP32) | ONNX Runtime | en, vi, zh, ja, ko, es, fr, de, ar, hi, th | ✅ real |
+| `whisper-tiny` | nb-whisper-tiny | 39M | Low | 33 MB | ONNX (FP32) | ONNX Runtime | en, vi, zh, ja, ko, es, fr, de, ar, hi, th | ✅ real |
+| `whisper-base` | nb-whisper-base | 74M | Medium | 82 MB | ONNX (FP32) | ONNX Runtime | en, vi, zh, ja, ko, es, fr, de, ar, hi, th | ✅ real |
 
 ## Device Tiers
 
@@ -177,7 +176,7 @@ Other                  → llama.cpp CPU
 |-----------|----------|-------------|-----------|
 | Vision (image+video) | mobileclip-s2-int8 (70 MB) | mobileclip-s2-int8 (70 MB) | mobileclip-s2-int8 (70 MB) |
 | Encoder | kchat-encoder-int4 (143 MB) | kchat-encoder-int4 (143 MB) | kchat-encoder-int4 (143 MB) |
-| ASR | whisper-tiny-int8 (33 MB) | whisper-base-int8 (82 MB) | whisper-base-int8 (82 MB) |
+| ASR | whisper-tiny (33 MB) | whisper-base (82 MB) | whisper-base (82 MB) |
 | Video | mobileclip-s2-int8 (same as vision) | mobileclip-s2-int8 (same as vision) | mobileclip-s2-int8 (same as vision) |
 
 > **Lazy-loading**: Vision, ASR, and safety encoder models are loaded on-demand for
@@ -211,7 +210,7 @@ and mirrored in `eval/kchat-task-suite/src/eval_perdevice.rs`.
 | Backend | MLX |
 | Vision | `mobileclip-s2-int8` (70 MB) |
 | Encoder | `kchat-encoder-int4` (143 MB) |
-| ASR | `whisper-base-int8` (82 MB) |
+| ASR | `whisper-base` (82 MB) |
 | Video | `mobileclip-s2-int8` (same as vision) |
 | **Total model footprint** | **~2,599 MB** |
 
@@ -234,7 +233,7 @@ and mirrored in `eval/kchat-task-suite/src/eval_perdevice.rs`.
 | Backend | MLX |
 | Vision | `mobileclip-s2-int8` (70 MB) |
 | Encoder | `kchat-encoder-int4` (143 MB) |
-| ASR | `whisper-base-int8` (82 MB) |
+| ASR | `whisper-base` (82 MB) |
 | Video | `mobileclip-s2-int8` (same as vision) |
 | **Total model footprint** | **~1,427 MB** |
 
@@ -257,7 +256,7 @@ and mirrored in `eval/kchat-task-suite/src/eval_perdevice.rs`.
 | Backend | MLX |
 | Vision | `mobileclip-s2-int8` (70 MB) |
 | Encoder | `kchat-encoder-int4` (143 MB) |
-| ASR | `whisper-tiny-int8` (33 MB) |
+| ASR | `whisper-tiny` (33 MB) |
 | Video | `mobileclip-s2-int8` (same as vision) |
 | **Total model footprint** | **~718 MB** |
 
@@ -282,7 +281,7 @@ and mirrored in `eval/kchat-task-suite/src/eval_perdevice.rs`.
 | Backend | llama.cpp Vulkan |
 | Vision | `mobileclip-s2-int8` (70 MB) |
 | Encoder | `kchat-encoder-int4` (143 MB) |
-| ASR | `whisper-base-int8` (82 MB) |
+| ASR | `whisper-base` (82 MB) |
 | Video | `mobileclip-s2-int8` (same as vision) |
 | **Total model footprint** | **~2,477 MB** |
 
@@ -305,7 +304,7 @@ and mirrored in `eval/kchat-task-suite/src/eval_perdevice.rs`.
 | Backend | llama.cpp Vulkan |
 | Vision | `mobileclip-s2-int8` (70 MB) |
 | Encoder | `kchat-encoder-int4` (143 MB) |
-| ASR | `whisper-base-int8` (82 MB) |
+| ASR | `whisper-base` (82 MB) |
 | Video | `mobileclip-s2-int8` (same as vision) |
 | **Total model footprint** | **~1,370 MB** |
 
@@ -329,7 +328,7 @@ and mirrored in `eval/kchat-task-suite/src/eval_perdevice.rs`.
 | Backend | llama.cpp Vulkan |
 | Vision | `mobileclip-s2-int8` (70 MB) |
 | Encoder | `kchat-encoder-int4` (143 MB) |
-| ASR | `whisper-tiny-int8` (33 MB) |
+| ASR | `whisper-tiny` (33 MB) |
 | Video | `mobileclip-s2-int8` (same as vision) |
 | **Total model footprint** | **~688 MB** |
 
@@ -354,7 +353,7 @@ and mirrored in `eval/kchat-task-suite/src/eval_perdevice.rs`.
 | Backend | MLX |
 | Vision | `mobileclip-s2-int8` (70 MB) |
 | Encoder | `kchat-encoder-int4` (143 MB) |
-| ASR | `whisper-base-int8` (82 MB) |
+| ASR | `whisper-base` (82 MB) |
 | Video | `mobileclip-s2-int8` (same as vision) |
 | **Total model footprint** | **~2,599 MB** |
 
@@ -377,7 +376,7 @@ and mirrored in `eval/kchat-task-suite/src/eval_perdevice.rs`.
 | Backend | MLX |
 | Vision | `mobileclip-s2-int8` (70 MB) |
 | Encoder | `kchat-encoder-int4` (143 MB) |
-| ASR | `whisper-tiny-int8` (33 MB) |
+| ASR | `whisper-tiny` (33 MB) |
 | Video | `mobileclip-s2-int8` (same as vision) |
 | **Total model footprint** | **~718 MB** |
 
@@ -400,7 +399,7 @@ and mirrored in `eval/kchat-task-suite/src/eval_perdevice.rs`.
 | Backend | llama.cpp CPU |
 | Vision | `mobileclip-s2-int8` (70 MB) |
 | Encoder | `kchat-encoder-int4` (143 MB) |
-| ASR | `whisper-tiny-int8` (33 MB) |
+| ASR | `whisper-tiny` (33 MB) |
 | Video | `mobileclip-s2-int8` (same as vision) |
 | **Total model footprint** | **~688 MB** |
 
@@ -425,7 +424,7 @@ and mirrored in `eval/kchat-task-suite/src/eval_perdevice.rs`.
 | Backend | llama.cpp Vulkan |
 | Vision | `mobileclip-s2-int8` (70 MB) |
 | Encoder | `kchat-encoder-int4` (143 MB) |
-| ASR | `whisper-base-int8` (82 MB) |
+| ASR | `whisper-base` (82 MB) |
 | Video | `mobileclip-s2-int8` (same as vision) |
 | **Total model footprint** | **~2,477 MB** |
 
@@ -448,7 +447,7 @@ and mirrored in `eval/kchat-task-suite/src/eval_perdevice.rs`.
 | Backend | llama.cpp Vulkan |
 | Vision | `mobileclip-s2-int8` (70 MB) |
 | Encoder | `kchat-encoder-int4` (143 MB) |
-| ASR | `whisper-tiny-int8` (33 MB) |
+| ASR | `whisper-tiny` (33 MB) |
 | Video | `mobileclip-s2-int8` (same as vision) |
 | **Total model footprint** | **~688 MB** |
 
@@ -471,7 +470,7 @@ and mirrored in `eval/kchat-task-suite/src/eval_perdevice.rs`.
 | Backend | llama.cpp Vulkan |
 | Vision | `mobileclip-s2-int8` (70 MB) |
 | Encoder | `kchat-encoder-int4` (143 MB) |
-| ASR | `whisper-tiny-int8` (33 MB) |
+| ASR | `whisper-tiny` (33 MB) |
 | Video | `mobileclip-s2-int8` (same as vision) |
 | **Total model footprint** | **~688 MB** |
 
@@ -590,8 +589,8 @@ Desktop context caps: Low 2K, Medium 4K, High 16K (generous memory budgets).
 | `kchat-encoder-int8` | `https://cdn.kchat.dev/models/kchat-encoder-int8/1.0.0/model_quantized.onnx` |
 | `kchat-encoder-int4` | `https://cdn.kchat.dev/models/kchat-encoder-int4/1.0.0/model_quantized_int4.onnx` |
 | `mobileclip-s2-int8` | `https://cdn.kchat.dev/models/mobileclip-s2-int8/1.0.0/mobileclip-s2-int8.onnx` |
-| `whisper-tiny-int8` | `https://huggingface.co/NbAiLabBeta/nb-whisper-tiny/resolve/main/onnx/encoder_model.onnx` |
-| `whisper-base-int8` | `https://huggingface.co/NbAiLabBeta/nb-whisper-base/resolve/main/onnx/encoder_model.onnx` |
+| `whisper-tiny` | `https://huggingface.co/NbAiLabBeta/nb-whisper-tiny/resolve/main/onnx/encoder_model.onnx` |
+| `whisper-base` | `https://huggingface.co/NbAiLabBeta/nb-whisper-base/resolve/main/onnx/encoder_model.onnx` |
 
 ## Inference Servers
 

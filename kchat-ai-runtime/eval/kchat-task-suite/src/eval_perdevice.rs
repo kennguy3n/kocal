@@ -989,7 +989,7 @@ fn get_device_profiles() -> Vec<DeviceProfileInfo> {
             model_pack_id: "ternary-bonsai-8b-mlx-2bit".into(),
             vision_pack_id: Some("mobileclip-s2-int8".into()),
             safety_pack_id: "kchat-encoder-int8".into(),
-            asr_pack_id: Some("whisper-base-int8".into()),
+            asr_pack_id: Some("whisper-base".into()),
             video_pack_id: Some("mobileclip-s2-int8".into()),
         },
         DeviceProfileInfo {
@@ -999,7 +999,7 @@ fn get_device_profiles() -> Vec<DeviceProfileInfo> {
             model_pack_id: "ternary-bonsai-4b-mlx-2bit".into(),
             vision_pack_id: Some("mobileclip-s2-int8".into()),
             safety_pack_id: "kchat-encoder-int4".into(),
-            asr_pack_id: Some("whisper-base-int8".into()),
+            asr_pack_id: Some("whisper-base".into()),
             video_pack_id: Some("mobileclip-s2-int8".into()),
         },
         DeviceProfileInfo {
@@ -1009,7 +1009,7 @@ fn get_device_profiles() -> Vec<DeviceProfileInfo> {
             model_pack_id: "ternary-bonsai-1.7b-mlx-2bit".into(),
             vision_pack_id: Some("mobileclip-s2-int8".into()),
             safety_pack_id: "kchat-encoder-int4".into(),
-            asr_pack_id: Some("whisper-tiny-int8".into()),
+            asr_pack_id: Some("whisper-tiny".into()),
             video_pack_id: Some("mobileclip-s2-int8".into()),
         },
         DeviceProfileInfo {
@@ -1019,7 +1019,7 @@ fn get_device_profiles() -> Vec<DeviceProfileInfo> {
             model_pack_id: "ternary-bonsai-8b-q2_0".into(),
             vision_pack_id: Some("mobileclip-s2-int8".into()),
             safety_pack_id: "kchat-encoder-int8".into(),
-            asr_pack_id: Some("whisper-base-int8".into()),
+            asr_pack_id: Some("whisper-base".into()),
             video_pack_id: Some("mobileclip-s2-int8".into()),
         },
         DeviceProfileInfo {
@@ -1029,7 +1029,7 @@ fn get_device_profiles() -> Vec<DeviceProfileInfo> {
             model_pack_id: "ternary-bonsai-4b-q2_0".into(),
             vision_pack_id: Some("mobileclip-s2-int8".into()),
             safety_pack_id: "kchat-encoder-int4".into(),
-            asr_pack_id: Some("whisper-base-int8".into()),
+            asr_pack_id: Some("whisper-base".into()),
             video_pack_id: Some("mobileclip-s2-int8".into()),
         },
         DeviceProfileInfo {
@@ -1039,7 +1039,7 @@ fn get_device_profiles() -> Vec<DeviceProfileInfo> {
             model_pack_id: "ternary-bonsai-1.7b-q2_0".into(),
             vision_pack_id: Some("mobileclip-s2-int8".into()),
             safety_pack_id: "kchat-encoder-int4".into(),
-            asr_pack_id: Some("whisper-tiny-int8".into()),
+            asr_pack_id: Some("whisper-tiny".into()),
             video_pack_id: Some("mobileclip-s2-int8".into()),
         },
         DeviceProfileInfo {
@@ -1049,7 +1049,7 @@ fn get_device_profiles() -> Vec<DeviceProfileInfo> {
             model_pack_id: "ternary-bonsai-8b-mlx-2bit".into(),
             vision_pack_id: Some("mobileclip-s2-int8".into()),
             safety_pack_id: "kchat-encoder-int8".into(),
-            asr_pack_id: Some("whisper-base-int8".into()),
+            asr_pack_id: Some("whisper-base".into()),
             video_pack_id: Some("mobileclip-s2-int8".into()),
         },
         DeviceProfileInfo {
@@ -1059,7 +1059,7 @@ fn get_device_profiles() -> Vec<DeviceProfileInfo> {
             model_pack_id: "ternary-bonsai-1.7b-mlx-2bit".into(),
             vision_pack_id: Some("mobileclip-s2-int8".into()),
             safety_pack_id: "kchat-encoder-int4".into(),
-            asr_pack_id: Some("whisper-tiny-int8".into()),
+            asr_pack_id: Some("whisper-tiny".into()),
             video_pack_id: Some("mobileclip-s2-int8".into()),
         },
         DeviceProfileInfo {
@@ -1069,7 +1069,7 @@ fn get_device_profiles() -> Vec<DeviceProfileInfo> {
             model_pack_id: "ternary-bonsai-1.7b-q2_0".into(),
             vision_pack_id: Some("mobileclip-s2-int8".into()),
             safety_pack_id: "kchat-encoder-int4".into(),
-            asr_pack_id: Some("whisper-tiny-int8".into()),
+            asr_pack_id: Some("whisper-tiny".into()),
             video_pack_id: Some("mobileclip-s2-int8".into()),
         },
         DeviceProfileInfo {
@@ -1079,7 +1079,7 @@ fn get_device_profiles() -> Vec<DeviceProfileInfo> {
             model_pack_id: "ternary-bonsai-8b-q2_0".into(),
             vision_pack_id: Some("mobileclip-s2-int8".into()),
             safety_pack_id: "kchat-encoder-int8".into(),
-            asr_pack_id: Some("whisper-base-int8".into()),
+            asr_pack_id: Some("whisper-base".into()),
             video_pack_id: Some("mobileclip-s2-int8".into()),
         },
         DeviceProfileInfo {
@@ -1089,7 +1089,7 @@ fn get_device_profiles() -> Vec<DeviceProfileInfo> {
             model_pack_id: "ternary-bonsai-1.7b-q2_0".into(),
             vision_pack_id: Some("mobileclip-s2-int8".into()),
             safety_pack_id: "kchat-encoder-int4".into(),
-            asr_pack_id: Some("whisper-tiny-int8".into()),
+            asr_pack_id: Some("whisper-tiny".into()),
             video_pack_id: Some("mobileclip-s2-int8".into()),
         },
         DeviceProfileInfo {
@@ -1099,7 +1099,7 @@ fn get_device_profiles() -> Vec<DeviceProfileInfo> {
             model_pack_id: "ternary-bonsai-1.7b-q2_0".into(),
             vision_pack_id: Some("mobileclip-s2-int8".into()),
             safety_pack_id: "kchat-encoder-int4".into(),
-            asr_pack_id: Some("whisper-tiny-int8".into()),
+            asr_pack_id: Some("whisper-tiny".into()),
             video_pack_id: Some("mobileclip-s2-int8".into()),
         },
     ]

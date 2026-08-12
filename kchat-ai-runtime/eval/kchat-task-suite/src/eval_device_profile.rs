@@ -123,7 +123,7 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_model_pack: Some("ternary-bonsai-8b-mlx-2bit"),
             expected_backend: Some("mlx"),
             expected_vision_pack: Some("mobileclip-s2-int8"),
-            expected_asr_pack: Some("whisper-base-int8"),
+            expected_asr_pack: Some("whisper-base"),
             expected_safety_pack: "kchat-encoder-int4",
             expected_video_pack: Some("mobileclip-s2-int8"),
         },
@@ -148,7 +148,7 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_model_pack: Some("ternary-bonsai-4b-mlx-2bit"),
             expected_backend: Some("mlx"),
             expected_vision_pack: Some("mobileclip-s2-int8"),
-            expected_asr_pack: Some("whisper-base-int8"),
+            expected_asr_pack: Some("whisper-base"),
             expected_safety_pack: "kchat-encoder-int4",
             expected_video_pack: Some("mobileclip-s2-int8"),
         },
@@ -173,7 +173,7 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_model_pack: Some("ternary-bonsai-1.7b-mlx-2bit"),
             expected_backend: Some("mlx"),
             expected_vision_pack: Some("mobileclip-s2-int8"),
-            expected_asr_pack: Some("whisper-tiny-int8"),
+            expected_asr_pack: Some("whisper-tiny"),
             expected_safety_pack: "kchat-encoder-int4",
             expected_video_pack: Some("mobileclip-s2-int8"),
         },
@@ -199,7 +199,7 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_model_pack: Some("ternary-bonsai-8b-q2_0"),
             expected_backend: Some("llama.cpp_vulkan"),
             expected_vision_pack: Some("mobileclip-s2-int8"),
-            expected_asr_pack: Some("whisper-base-int8"),
+            expected_asr_pack: Some("whisper-base"),
             expected_safety_pack: "kchat-encoder-int4",
             expected_video_pack: Some("mobileclip-s2-int8"),
         },
@@ -224,7 +224,7 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_model_pack: Some("ternary-bonsai-4b-q2_0"),
             expected_backend: Some("llama.cpp_vulkan"),
             expected_vision_pack: Some("mobileclip-s2-int8"),
-            expected_asr_pack: Some("whisper-base-int8"),
+            expected_asr_pack: Some("whisper-base"),
             expected_safety_pack: "kchat-encoder-int4",
             expected_video_pack: Some("mobileclip-s2-int8"),
         },
@@ -249,7 +249,7 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_model_pack: Some("ternary-bonsai-1.7b-q2_0"),
             expected_backend: Some("llama.cpp_vulkan"),
             expected_vision_pack: Some("mobileclip-s2-int8"),
-            expected_asr_pack: Some("whisper-tiny-int8"),
+            expected_asr_pack: Some("whisper-tiny"),
             expected_safety_pack: "kchat-encoder-int4",
             expected_video_pack: Some("mobileclip-s2-int8"),
         },
@@ -275,7 +275,7 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_model_pack: Some("ternary-bonsai-8b-mlx-2bit"),
             expected_backend: Some("mlx"),
             expected_vision_pack: Some("mobileclip-s2-int8"),
-            expected_asr_pack: Some("whisper-base-int8"),
+            expected_asr_pack: Some("whisper-base"),
             expected_safety_pack: "kchat-encoder-int4",
             expected_video_pack: Some("mobileclip-s2-int8"),
         },
@@ -300,7 +300,7 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_model_pack: Some("ternary-bonsai-1.7b-mlx-2bit"),
             expected_backend: Some("mlx"),
             expected_vision_pack: Some("mobileclip-s2-int8"),
-            expected_asr_pack: Some("whisper-tiny-int8"),
+            expected_asr_pack: Some("whisper-tiny"),
             expected_safety_pack: "kchat-encoder-int4",
             expected_video_pack: Some("mobileclip-s2-int8"),
         },
@@ -325,7 +325,7 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_model_pack: Some("ternary-bonsai-1.7b-q2_0"),
             expected_backend: Some("llama.cpp_cpu"),
             expected_vision_pack: Some("mobileclip-s2-int8"),
-            expected_asr_pack: Some("whisper-tiny-int8"),
+            expected_asr_pack: Some("whisper-tiny"),
             expected_safety_pack: "kchat-encoder-int4",
             expected_video_pack: Some("mobileclip-s2-int8"),
         },
@@ -351,7 +351,7 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_model_pack: Some("ternary-bonsai-8b-q2_0"),
             expected_backend: Some("llama.cpp_vulkan"),
             expected_vision_pack: Some("mobileclip-s2-int8"),
-            expected_asr_pack: Some("whisper-base-int8"),
+            expected_asr_pack: Some("whisper-base"),
             expected_safety_pack: "kchat-encoder-int4",
             expected_video_pack: Some("mobileclip-s2-int8"),
         },
@@ -376,7 +376,7 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_model_pack: Some("ternary-bonsai-1.7b-q2_0"),
             expected_backend: Some("llama.cpp_vulkan"),
             expected_vision_pack: Some("mobileclip-s2-int8"),
-            expected_asr_pack: Some("whisper-tiny-int8"),
+            expected_asr_pack: Some("whisper-tiny"),
             expected_safety_pack: "kchat-encoder-int4",
             expected_video_pack: Some("mobileclip-s2-int8"),
         },
@@ -401,7 +401,7 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_model_pack: Some("ternary-bonsai-1.7b-q2_0"),
             expected_backend: Some("llama.cpp_vulkan"),
             expected_vision_pack: Some("mobileclip-s2-int8"),
-            expected_asr_pack: Some("whisper-tiny-int8"),
+            expected_asr_pack: Some("whisper-tiny"),
             expected_safety_pack: "kchat-encoder-int4",
             expected_video_pack: Some("mobileclip-s2-int8"),
         },
@@ -474,12 +474,12 @@ pub fn select_video_model_for_tier(_tier: DeviceTier) -> Option<&'static str> {
 }
 
 /// Select the appropriate ASR model for a tier.
-/// - Low tier: whisper-tiny-int8 (~33MB, ONNX FP32, nb-whisper-tiny, multilingual)
-/// - Medium/High tier: whisper-base-int8 (~82MB, ONNX FP32, nb-whisper-base, multilingual)
+/// - Low tier: whisper-tiny (~33MB, ONNX FP32, nb-whisper-tiny, multilingual)
+/// - Medium/High tier: whisper-base (~82MB, ONNX FP32, nb-whisper-base, multilingual)
 pub fn select_asr_model_for_tier(tier: DeviceTier) -> Option<&'static str> {
     match tier {
-        DeviceTier::Low => Some("whisper-tiny-int8"),
-        DeviceTier::Medium | DeviceTier::High => Some("whisper-base-int8"),
+        DeviceTier::Low => Some("whisper-tiny"),
+        DeviceTier::Medium | DeviceTier::High => Some("whisper-base"),
     }
 }
 
@@ -863,8 +863,8 @@ fn test_memory_budget(p: &DeviceProfile) -> EvalResult {
     let encoder_size: u64 = 150_420_811;  // kchat-encoder-int4 (143MB, used on all tiers)
     let vision_size: u64 = 70_000_000;                            // mobileclip-s2-int8 (unified, all tiers)
     let asr_size: u64 = match tier {
-        DeviceTier::Low => 32_904_983,                         // whisper-tiny-int8 (encoder ONNX, ~33MB)
-        DeviceTier::Medium | DeviceTier::High => 82_468_069,   // whisper-base-int8 (encoder ONNX, ~82MB)
+        DeviceTier::Low => 32_904_983,                         // whisper-tiny (encoder ONNX, ~33MB)
+        DeviceTier::Medium | DeviceTier::High => 82_468_069,   // whisper-base (encoder ONNX, ~82MB)
     };
     // Unified mobileclip-s2-int8 (70MB) handles both image and video on all tiers
     // No separate video model needed — same ONNX session processes video frames

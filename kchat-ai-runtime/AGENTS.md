@@ -77,7 +77,7 @@ real model (6 unique generative models), running 150 tasks across 15 categories:
   ternary-bonsai-4b-mlx-2bit, ternary-bonsai-4b-q2_0, ternary-bonsai-8b-mlx-2bit,
   ternary-bonsai-8b-q2_0
 - **Non-generative models per profile**: vision (mobileclip-s2-int8),
-  safety encoder (kchat-encoder-int4), ASR (whisper-tiny/base-int8),
+  safety encoder (kchat-encoder-int4), ASR (whisper-tiny/base),
   video (mobileclip-s2-int8, same model as vision)
 - **Multilingual coverage**: English, Vietnamese, Japanese, Korean, Chinese, Spanish,
   Arabic, German, Hindi, French + mixed-language code-switching scenarios
@@ -212,14 +212,13 @@ The workspace is organized into 9 crates + 1 Go sidecar following the 4-plane ar
 | kchat-encoder-int8 | encoder | High | 266 MB | INT8 | ONNX | all | ✅ real |
 | kchat-encoder-int4 | encoder | Low | 143 MB | INT4 | ONNX | all | ✅ real |
 | mobileclip-s2-int8 | vision | Low | 70 MB | INT8 | ONNX | all | ⏳ placeholder |
-| whisper-tiny-int8 | asr | Low | 33 MB | ONNX (FP32) | ONNX | all | ✅ real |
-| whisper-base-int8 | asr | Medium | 82 MB | ONNX (FP32) | ONNX | all | ✅ real |
+| whisper-tiny | asr | Low | 33 MB | ONNX (FP32) | ONNX | all | ✅ real |
+| whisper-base | asr | Medium | 82 MB | ONNX (FP32) | ONNX | all | ✅ real |
 
 10/11 packs have real SHA-256 hashes. 1 remaining placeholder (mobileclip-s2-int8)
 requires ONNX export before hashing.
 
-> **Note**: Whisper pack IDs retain `-int8` for backward compatibility, but ONNX files are
-> FP32 (not INT8-quantized). Base models: `nb-whisper-tiny` and `nb-whisper-base` from NbAiLab
+> **Note**: Whisper ONNX files are FP32 (not INT8-quantized). Base models: `nb-whisper-tiny` and `nb-whisper-base` from NbAiLab
 > (Norwegian fine-tunes of OpenAI Whisper). Both retain full multilingual capability
 > (en, vi, zh, ja, ko, es, fr, de, ar, hi, th).
 
@@ -229,7 +228,7 @@ requires ONNX export before hashing.
   - Generative: iOS/macOS: `ternary-bonsai-1.7b-mlx-2bit` via **MLX** (472MB) / Android/Windows: `ternary-bonsai-1.7b-q2_0` via **llama.cpp Vulkan** (442MB)
   - Vision: `mobileclip-s2-int8` (70MB, INT8, 17 categories, image + video)
   - Encoder: `kchat-encoder-int4` (143MB, INT4) — safety + embedding + reranking
-  - ASR: `whisper-tiny-int8` (33MB, ONNX FP32, nb-whisper-tiny, multilingual)
+  - ASR: `whisper-tiny` (33MB, ONNX FP32, nb-whisper-tiny, multilingual)
   - Video: `mobileclip-s2-int8` (same model as vision)
   - **Total footprint**: ~718MB all loaded / ~472MB effective (Apple Silicon) / ~442MB effective (GGUF)
   - Context cap: 1,024 tokens (iOS) / 2,048 (Android) / 2,048 (desktop)
@@ -237,7 +236,7 @@ requires ONNX export before hashing.
   - Generative: iOS/macOS: `ternary-bonsai-4b-mlx-2bit` via **MLX** (1,132MB) / Android: `ternary-bonsai-4b-q2_0` via **llama.cpp Vulkan** (1,075MB)
   - Vision: `mobileclip-s2-int8` (70MB, INT8, image + video)
   - Encoder: `kchat-encoder-int4` (143MB, INT4) — safety + embedding + reranking
-  - ASR: `whisper-base-int8` (82MB, ONNX FP32, nb-whisper-base, multilingual)
+  - ASR: `whisper-base` (82MB, ONNX FP32, nb-whisper-base, multilingual)
   - Video: `mobileclip-s2-int8` (same model as vision)
   - **Total footprint**: ~1,427MB all loaded / ~1,132MB effective (Apple Silicon) / ~1,075MB effective (Android)
   - Context cap: 2,048 tokens (iOS) / 4,096 (Android) / 4,096 (desktop)
@@ -245,7 +244,7 @@ requires ONNX export before hashing.
   - Generative: iOS/macOS: `ternary-bonsai-8b-mlx-2bit` via **MLX** (2,304MB) / Android: `ternary-bonsai-8b-q2_0` via **llama.cpp Vulkan** (2,182MB) / Windows: `ternary-bonsai-8b-q2_0` via **llama.cpp Vulkan** (2,182MB)
   - Vision: `mobileclip-s2-int8` (70MB, INT8, image + video)
   - Encoder: `kchat-encoder-int4` (143MB, INT4) — safety + embedding + reranking
-  - ASR: `whisper-base-int8` (82MB, ONNX FP32, nb-whisper-base, multilingual)
+  - ASR: `whisper-base` (82MB, ONNX FP32, nb-whisper-base, multilingual)
   - Video: `mobileclip-s2-int8` (same model as vision)
   - **Total footprint**: ~2,599MB all loaded (Apple Silicon) / ~2,477MB all loaded (Android/Windows) / ~2,304MB effective (Apple Silicon) / ~2,182MB effective (Android/Windows)
   - Context cap: 4,096 tokens (iOS) / 8,192 (Android) / 16,384 (desktop)

@@ -256,9 +256,9 @@ impl ModelRegistry {
         // ~33MB encoder ONNX, based on nb-whisper-tiny (NbAiLab Norwegian fine-tune of Whisper Tiny)
         // Multilingual: supports en, vi, zh, ja, ko, es, fr, de, ar, hi, th
         // Full pack includes encoder + decoder + decoder_with_past ONNX files
-        // Pack ID retains -int8 suffix for backward compatibility; ONNX files are FP32 (not INT8-quantized)
+        // ONNX files are FP32 (not INT8-quantized)
         models.push(RegistryEntry {
-            pack_id: "whisper-tiny-int8".into(),
+            pack_id: "whisper-tiny".into(),
             version: "1.0.0".into(),
             pack_type: "asr".into(),
             download_url: "https://huggingface.co/NbAiLabBeta/nb-whisper-tiny/resolve/main/onnx/encoder_model.onnx".into(),
@@ -274,9 +274,9 @@ impl ModelRegistry {
         // ~82MB encoder ONNX, based on nb-whisper-base (NbAiLab Norwegian fine-tune of Whisper Base)
         // Multilingual: supports en, vi, zh, ja, ko, es, fr, de, ar, hi, th
         // Full pack includes encoder + decoder + decoder_with_past ONNX files
-        // Pack ID retains -int8 suffix for backward compatibility; ONNX files are FP32 (not INT8-quantized)
+        // ONNX files are FP32 (not INT8-quantized)
         models.push(RegistryEntry {
-            pack_id: "whisper-base-int8".into(),
+            pack_id: "whisper-base".into(),
             version: "1.0.0".into(),
             pack_type: "asr".into(),
             download_url: "https://huggingface.co/NbAiLabBeta/nb-whisper-base/resolve/main/onnx/encoder_model.onnx".into(),
@@ -463,8 +463,8 @@ quantization = "INT8"
         assert!(ids.contains(&"kchat-encoder-int8"));
         assert!(ids.contains(&"kchat-encoder-int4"));
         assert!(ids.contains(&"mobileclip-s2-int8"));
-        assert!(ids.contains(&"whisper-tiny-int8"));
-        assert!(ids.contains(&"whisper-base-int8"));
+        assert!(ids.contains(&"whisper-tiny"));
+        assert!(ids.contains(&"whisper-base"));
     }
 
     #[test]
@@ -648,10 +648,10 @@ quantization = "INT8"
     #[test]
     fn test_default_registry_asr_packs_span_all_tiers() {
         let registry = ModelRegistry::default_registry();
-        // Low tier: only whisper-tiny-int8
+        // Low tier: only whisper-tiny
         let low = registry.find_for_task("transcribe", MinTier::Low);
         assert_eq!(low.len(), 1);
-        assert_eq!(low[0].pack_id, "whisper-tiny-int8");
+        assert_eq!(low[0].pack_id, "whisper-tiny");
 
         // Medium tier: both whisper-tiny + whisper-base
         let medium = registry.find_for_task("transcribe", MinTier::Medium);
@@ -698,8 +698,8 @@ quantization = "INT8"
             "ternary-bonsai-4b-q2_0",
             "ternary-bonsai-8b-mlx-2bit",
             "ternary-bonsai-8b-q2_0",
-            "whisper-tiny-int8",
-            "whisper-base-int8",
+            "whisper-tiny",
+            "whisper-base",
             "kchat-encoder-int8",
             "kchat-encoder-int4",
         ];
