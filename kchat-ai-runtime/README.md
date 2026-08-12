@@ -113,11 +113,11 @@ Thermal downgrade: Serious → drop one tier; Critical → force Low.
 |---------|------|----------|------|-------|-------|---------|
 | `kchat-encoder-int8` | encoder | High | 266 MB | INT8 | safety, embed, rerank | ✅ real |
 | `kchat-encoder-int4` | encoder | Low | 143 MB | INT4 | safety, embed, rerank | ✅ real |
-| `mobileclip-s2-int8` | vision | Low | 70 MB | INT8 | image_classify, image_embed, video_classify | ⏳ placeholder |
+| `mobileclip-s2-int8` | vision | Low | 97 MB | INT8 | image_classify, image_embed, video_classify | ✅ real |
 | `whisper-tiny` | asr | Low | 33 MB | ONNX (FP32) | transcribe (multilingual) | ✅ real |
 | `whisper-base` | asr | Medium | 82 MB | ONNX (FP32) | transcribe (multilingual) | ✅ real |
 
-10/11 packs have real SHA-256 hashes. 1 remaining placeholder (mobileclip-s2-int8) requires ONNX export.
+11/11 packs have real SHA-256 hashes.
 
 > **Note**: Whisper ONNX files are FP32 (not INT8-quantized). Base models are `nb-whisper-tiny` and
 > `nb-whisper-base` from NbAiLab (Norwegian fine-tunes of OpenAI Whisper). Despite the

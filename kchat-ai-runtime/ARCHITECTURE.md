@@ -152,7 +152,7 @@ The foundation crate that all other crates depend on.
 - 11 model packs (6 generative, 2 encoder, 1 vision, 2 ASR)
 - `RegistryEntry` with pack_id, version, pack_type, download_url, sha256,
   size_bytes, min_tier, task_capabilities, languages, quantization
-- 10/11 packs have real SHA-256 hashes (mobileclip-s2-int8 is the remaining placeholder)
+- 11/11 packs have real SHA-256 hashes
 - `find_for_task(task, tier)` — filter by capability and tier eligibility
 - `find_for_language(lang, tier)` — filter by language and tier
 - `default_registry()` — hardcoded built-in catalog
@@ -223,7 +223,7 @@ The foundation crate that all other crates depend on.
 
 **Vision Module** (feature: `onnx-runtime-vision`):
 - MobileCLIP-S2 unified image + video encoder (ONNX)
-- INT8 (70MB, all tiers) — single model for both image and video
+- INT8 (97MB pack, 37MB runtime, all tiers) — single model for both image and video
 - 512-dim embeddings, 17 categories
 - Video frame aggregation with temporal smoothing
 - Vision bridge connecting to safety pipeline

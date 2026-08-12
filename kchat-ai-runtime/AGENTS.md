@@ -211,12 +211,11 @@ The workspace is organized into 9 crates + 1 Go sidecar following the 4-plane ar
 | ternary-bonsai-8b-q2_0 | generative | High | 2,182 MB | Q2_0 | llama.cpp Vulkan | windows | ✅ real |
 | kchat-encoder-int8 | encoder | High | 266 MB | INT8 | ONNX | all | ✅ real |
 | kchat-encoder-int4 | encoder | Low | 143 MB | INT4 | ONNX | all | ✅ real |
-| mobileclip-s2-int8 | vision | Low | 70 MB | INT8 | ONNX | all | ⏳ placeholder |
+| mobileclip-s2-int8 | vision | Low | 97 MB | INT8 | ONNX | all | ✅ real |
 | whisper-tiny | asr | Low | 33 MB | ONNX (FP32) | ONNX | all | ✅ real |
 | whisper-base | asr | Medium | 82 MB | ONNX (FP32) | ONNX | all | ✅ real |
 
-10/11 packs have real SHA-256 hashes. 1 remaining placeholder (mobileclip-s2-int8)
-requires ONNX export before hashing.
+11/11 packs have real SHA-256 hashes.
 
 > **Note**: Whisper ONNX files are FP32 (not INT8-quantized). Base models: `nb-whisper-tiny` and `nb-whisper-base` from NbAiLab
 > (Norwegian fine-tunes of OpenAI Whisper). Both retain full multilingual capability
@@ -226,27 +225,27 @@ requires ONNX export before hashing.
 
 - **Low tier**:
   - Generative: iOS/macOS: `ternary-bonsai-1.7b-mlx-2bit` via **MLX** (472MB) / Android/Windows: `ternary-bonsai-1.7b-q2_0` via **llama.cpp Vulkan** (442MB)
-  - Vision: `mobileclip-s2-int8` (70MB, INT8, 17 categories, image + video)
+  - Vision: `mobileclip-s2-int8` (37MB runtime, INT8, 17 categories, image + video)
   - Encoder: `kchat-encoder-int4` (143MB, INT4) — safety + embedding + reranking
   - ASR: `whisper-tiny` (33MB, ONNX FP32, nb-whisper-tiny, multilingual)
   - Video: `mobileclip-s2-int8` (same model as vision)
-  - **Total footprint**: ~718MB all loaded / ~472MB effective (Apple Silicon) / ~442MB effective (GGUF)
+  - **Total footprint**: ~685MB all loaded / ~472MB effective (Apple Silicon) / ~442MB effective (GGUF)
   - Context cap: 1,024 tokens (iOS) / 2,048 (Android) / 2,048 (desktop)
 - **Medium tier**:
   - Generative: iOS/macOS: `ternary-bonsai-4b-mlx-2bit` via **MLX** (1,132MB) / Android: `ternary-bonsai-4b-q2_0` via **llama.cpp Vulkan** (1,075MB)
-  - Vision: `mobileclip-s2-int8` (70MB, INT8, image + video)
+  - Vision: `mobileclip-s2-int8` (37MB runtime, INT8, image + video)
   - Encoder: `kchat-encoder-int4` (143MB, INT4) — safety + embedding + reranking
   - ASR: `whisper-base` (82MB, ONNX FP32, nb-whisper-base, multilingual)
   - Video: `mobileclip-s2-int8` (same model as vision)
-  - **Total footprint**: ~1,427MB all loaded / ~1,132MB effective (Apple Silicon) / ~1,075MB effective (Android)
+  - **Total footprint**: ~1,394MB all loaded / ~1,132MB effective (Apple Silicon) / ~1,075MB effective (Android)
   - Context cap: 2,048 tokens (iOS) / 4,096 (Android) / 4,096 (desktop)
 - **High tier**:
   - Generative: iOS/macOS: `ternary-bonsai-8b-mlx-2bit` via **MLX** (2,304MB) / Android: `ternary-bonsai-8b-q2_0` via **llama.cpp Vulkan** (2,182MB) / Windows: `ternary-bonsai-8b-q2_0` via **llama.cpp Vulkan** (2,182MB)
-  - Vision: `mobileclip-s2-int8` (70MB, INT8, image + video)
+  - Vision: `mobileclip-s2-int8` (37MB runtime, INT8, image + video)
   - Encoder: `kchat-encoder-int4` (143MB, INT4) — safety + embedding + reranking
   - ASR: `whisper-base` (82MB, ONNX FP32, nb-whisper-base, multilingual)
   - Video: `mobileclip-s2-int8` (same model as vision)
-  - **Total footprint**: ~2,599MB all loaded (Apple Silicon) / ~2,477MB all loaded (Android/Windows) / ~2,304MB effective (Apple Silicon) / ~2,182MB effective (Android/Windows)
+  - **Total footprint**: ~2,566MB all loaded (Apple Silicon) / ~2,444MB all loaded (Android/Windows) / ~2,304MB effective (Apple Silicon) / ~2,182MB effective (Android/Windows)
   - Context cap: 4,096 tokens (iOS) / 8,192 (Android) / 16,384 (desktop)
 
 All generative models support `tool_use`. The "deterministic-first" principle is preserved —

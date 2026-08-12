@@ -861,12 +861,12 @@ fn test_memory_budget(p: &DeviceProfile) -> EvalResult {
 
     // Check total model footprint (generative + vision + encoder + ASR + video) fits within budget
     let encoder_size: u64 = 150_420_811;  // kchat-encoder-int4 (143MB, used on all tiers)
-    let vision_size: u64 = 70_000_000;                            // mobileclip-s2-int8 (unified, all tiers)
+    let vision_size: u64 = 37_561_169;                            // mobileclip-s2-int8 visual encoder (runtime, all tiers)
     let asr_size: u64 = match tier {
         DeviceTier::Low => 32_904_983,                         // whisper-tiny (encoder ONNX, ~33MB)
         DeviceTier::Medium | DeviceTier::High => 82_468_069,   // whisper-base (encoder ONNX, ~82MB)
     };
-    // Unified mobileclip-s2-int8 (70MB) handles both image and video on all tiers
+    // mobileclip-s2-int8 visual encoder (~37MB runtime) handles both image and video on all tiers
     // No separate video model needed — same ONNX session processes video frames
     let total_footprint = model_size + encoder_size + vision_size + asr_size;
     if total_footprint > safe_ai {

@@ -235,15 +235,16 @@ impl ModelRegistry {
         // --- Vision model (MobileCLIP-S2) ---
 
         // Unified MobileCLIP-S2 INT8 for both image and video classification
-        // 70MB, 512-dim embeddings, 17 categories
-        // Single model handles image_classify, image_embed, and video_classify
+        // Pack includes visual_encoder_int8.onnx (~37MB) + text_encoder_int8.onnx (~64MB)
+        // Runtime loads only visual encoder for image_classify/image_embed/video_classify
+        // 512-dim embeddings, 17 categories
         models.push(RegistryEntry {
             pack_id: "mobileclip-s2-int8".into(),
             version: "1.0.0".into(),
             pack_type: "vision".into(),
-            download_url: "https://cdn.kchat.dev/models/mobileclip-s2-int8/1.0.0/mobileclip-s2-int8.onnx".into(),
-            sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(),
-            size_bytes: 70_000_000,
+            download_url: "https://cdn.kchat.dev/models/mobileclip-s2-int8/1.0.0/visual_encoder_int8.onnx".into(),
+            sha256: "bcf1e864f3c30ae03eab1c61cba3d176d6baedb25868af43170dc821bdece797".into(),
+            size_bytes: 102_011_590,
             min_tier: MinTier::Low,
             task_capabilities: vec!["image_classify".into(), "image_embed".into(), "video_classify".into()],
             languages: vec!["en".into()],
@@ -638,7 +639,7 @@ quantization = "INT8"
         let video = registry.find("mobileclip-s2-int8").expect("vision");
         assert_eq!(video.min_tier, MinTier::Low);
         assert_eq!(video.pack_type, "vision");
-        assert_eq!(video.size_bytes, 70_000_000);
+        assert_eq!(video.size_bytes, 102_011_590);
         // Video classify is now available on all tiers (same model as image)
         assert_eq!(registry.find_for_task("video_classify", MinTier::Low).len(), 1);
         assert_eq!(registry.find_for_task("video_classify", MinTier::Medium).len(), 1);
@@ -688,9 +689,7 @@ quantization = "INT8"
     #[test]
     fn test_default_registry_no_placeholder_hashes_for_available_models() {
         let registry = ModelRegistry::default_registry();
-        // Models with locally-available artifacts must have real SHA-256 hashes.
-        // Remaining placeholder: mobileclip-s2-int8
-        // (ONNX model not yet exported — must be hashed before release).
+        // All packs now have real SHA-256 hashes (mobileclip-s2-int8 included).
         let must_have_real_hash = [
             "ternary-bonsai-1.7b-mlx-2bit",
             "ternary-bonsai-1.7b-q2_0",
@@ -702,6 +701,7 @@ quantization = "INT8"
             "whisper-base",
             "kchat-encoder-int8",
             "kchat-encoder-int4",
+            "mobileclip-s2-int8",
         ];
         for pack_id in &must_have_real_hash {
             let entry = registry.find(pack_id).unwrap_or_else(|| panic!("pack {} not found", pack_id));
