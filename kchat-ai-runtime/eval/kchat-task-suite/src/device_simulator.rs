@@ -240,7 +240,7 @@ fn simulate_profile(
     println!("├──────────────────────────────────────────────────────────────────────────────┤");
     println!("│  RESOURCE BUDGET                                                             │");
     let budget = TierBudget::for_tier(tier, profile.platform);
-    let budget_ok = budget.context_cap == tier.context_cap()
+    let budget_ok = budget.context_cap == tier.context_cap_for_platform(profile.platform)
         && budget.output_token_range == tier.output_cap()
         && budget.max_memory_bytes == tier.peak_memory_budget(profile.platform)
         && budget.max_perf_cores == tier.max_perf_cores();

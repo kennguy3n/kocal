@@ -89,14 +89,14 @@ impl BackendConfig {
         tier: DeviceTier,
         platform: &str,
     ) -> Self {
-        let (context_size, threads, gpu_layers) = match (tier, platform) {
-            (DeviceTier::Medium, "ios") => (4096, 4, -1),
-            (DeviceTier::Medium, "android") => (4096, 4, -1),
-            (DeviceTier::Medium, "macos") | (DeviceTier::Medium, "windows") => (4096, 6, -1),
-            (DeviceTier::High, "ios") => (8192, 6, -1),
-            (DeviceTier::High, "android") => (8192, 6, -1),
-            (DeviceTier::High, "macos") | (DeviceTier::High, "windows") => (16384, 8, -1),
-            _ => (2048, 2, 0),
+        let context_size = tier.context_cap_for_platform(platform);
+        let (threads, gpu_layers) = match (tier, platform) {
+            (DeviceTier::Low, _) => (2, 0),
+            (DeviceTier::Medium, "ios") | (DeviceTier::Medium, "android") => (4, -1),
+            (DeviceTier::Medium, "macos") | (DeviceTier::Medium, "windows") => (6, -1),
+            (DeviceTier::High, "ios") | (DeviceTier::High, "android") => (6, -1),
+            (DeviceTier::High, "macos") | (DeviceTier::High, "windows") => (8, -1),
+            _ => (2, 0),
         };
 
         Self {
@@ -345,7 +345,7 @@ mod tests {
             DeviceTier::Medium,
             "ios",
         );
-        assert_eq!(config.context_size, 4096);
+        assert_eq!(config.context_size, 2048);
         assert_eq!(config.gpu_layers, -1);
     }
 

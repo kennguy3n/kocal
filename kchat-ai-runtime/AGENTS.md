@@ -77,7 +77,7 @@ real model (6 unique generative models), running 150 tasks across 15 categories:
   ternary-bonsai-4b-mlx-2bit, ternary-bonsai-4b-q2_0, ternary-bonsai-8b-mlx-2bit,
   ternary-bonsai-8b-q2_0
 - **Non-generative models per profile**: vision (mobileclip-s2-int8),
-  safety encoder (kchat-encoder-int4/int8), ASR (whisper-tiny/base-int8),
+  safety encoder (kchat-encoder-int4), ASR (whisper-tiny/base-int8),
   video (mobileclip-s2-int8, same model as vision)
 - **Multilingual coverage**: English, Vietnamese, Japanese, Korean, Chinese, Spanish,
   Arabic, German, Hindi, French + mixed-language code-switching scenarios
@@ -196,7 +196,7 @@ The workspace is organized into 9 crates + 1 Go sidecar following the 4-plane ar
   - 6 unique generative models: ternary-bonsai-1.7b-mlx-2bit, ternary-bonsai-1.7b-q2_0,
     ternary-bonsai-4b-mlx-2bit, ternary-bonsai-4b-q2_0, ternary-bonsai-8b-mlx-2bit,
     ternary-bonsai-8b-q2_0
-  - Also tracks per-profile: vision (mobileclip-s2-int8), safety encoder (INT8/INT4),
+  - Also tracks per-profile: vision (mobileclip-s2-int8), safety encoder (INT4),
     ASR (whisper-tiny/base), and video (mobileclip-s2-int8, same as vision) model assignments
 
 ## Model Registry (11 packs)
@@ -231,25 +231,34 @@ requires ONNX export before hashing.
   - Encoder: `kchat-encoder-int4` (143MB, INT4) — safety + embedding + reranking
   - ASR: `whisper-tiny-int8` (33MB, ONNX FP32, nb-whisper-tiny, multilingual)
   - Video: `mobileclip-s2-int8` (same model as vision)
-  - **Total footprint**: ~718MB (Apple Silicon) / ~688MB (GGUF)
+  - **Total footprint**: ~718MB all loaded / ~472MB effective (Apple Silicon) / ~442MB effective (GGUF)
+  - Context cap: 1,024 tokens (iOS) / 2,048 (Android) / 2,048 (desktop)
 - **Medium tier**:
   - Generative: iOS/macOS: `ternary-bonsai-4b-mlx-2bit` via **MLX** (1,132MB) / Android: `ternary-bonsai-4b-q2_0` via **llama.cpp Vulkan** (1,075MB)
   - Vision: `mobileclip-s2-int8` (70MB, INT8, image + video)
   - Encoder: `kchat-encoder-int4` (143MB, INT4) — safety + embedding + reranking
   - ASR: `whisper-base-int8` (82MB, ONNX FP32, nb-whisper-base, multilingual)
   - Video: `mobileclip-s2-int8` (same model as vision)
-  - **Total footprint**: ~1,427MB (Apple Silicon) / ~1,370MB (Android)
+  - **Total footprint**: ~1,427MB all loaded / ~1,132MB effective (Apple Silicon) / ~1,075MB effective (Android)
+  - Context cap: 2,048 tokens (iOS) / 4,096 (Android) / 4,096 (desktop)
 - **High tier**:
   - Generative: iOS/macOS: `ternary-bonsai-8b-mlx-2bit` via **MLX** (2,304MB) / Android: `ternary-bonsai-8b-q2_0` via **llama.cpp Vulkan** (2,182MB) / Windows: `ternary-bonsai-8b-q2_0` via **llama.cpp Vulkan** (2,182MB)
   - Vision: `mobileclip-s2-int8` (70MB, INT8, image + video)
-  - Encoder: `kchat-encoder-int8` (266MB, INT8) — safety + embedding + reranking
+  - Encoder: `kchat-encoder-int4` (143MB, INT4) — safety + embedding + reranking
   - ASR: `whisper-base-int8` (82MB, ONNX FP32, nb-whisper-base, multilingual)
   - Video: `mobileclip-s2-int8` (same model as vision)
-  - **Total footprint**: ~2,722MB (Apple Silicon) / ~2,600MB (Android/Windows)
+  - **Total footprint**: ~2,599MB all loaded (Apple Silicon) / ~2,477MB all loaded (Android/Windows) / ~2,304MB effective (Apple Silicon) / ~2,182MB effective (Android/Windows)
+  - Context cap: 4,096 tokens (iOS) / 8,192 (Android) / 16,384 (desktop)
 
 All generative models support `tool_use`. The "deterministic-first" principle is preserved —
 safety works on ALL devices without a generative model. Vision and ASR run on ALL tiers.
 Low-tier devices use INT4 quantized encoder to fit within memory budget.
+All tiers use INT4 encoder for consistency and efficiency.
+Vision, ASR, and safety encoder models are lazy-loaded on-demand (not co-resident with generative model).
+During generation, only the generative model is resident. All tiers use kchat-encoder-int4 (143MB) for efficiency.
+KV cache: Q8_0 quantized for llama.cpp (Android/Windows/Intel Mac), FP16 for MLX (Apple Silicon).
+Context caps: iOS 1K/2K/4K (FP16 KV cache), Android 2K/4K/8K (Q8 KV cache), desktop 2K/4K/16K.
+No budget increases needed — all profiles fit with 163+ MB headroom on mobile.
 The unified kchat-encoder replaces 4 separate model packs (e5-small, safety-int8,
 safety-int4, cross-encoder-miniLM) with 2 multi-task packs (INT8 + INT4).
 The unified mobileclip-s2-int8 replaces 3 separate vision packs (image-int8,

@@ -129,6 +129,9 @@ Thermal downgrade: Serious → drop one tier; Critical → force Low.
 
 | Metric | Low | Medium | High |
 |--------|-----|--------|------|
+| Context cap (iOS) | 1,024 tokens | 2,048 tokens | 4,096 tokens |
+| Context cap (Android) | 2,048 tokens | 4,096 tokens | 8,192 tokens |
+| Context cap (desktop) | 2,048 tokens | 4,096 tokens | 16,384 tokens |
 | TTFT P95 | 2,500 ms | 1,500 ms | 1,000 ms |
 | Decode P50 (mobile) | 8 tok/s | 15 tok/s | 25 tok/s |
 | Decode P50 (desktop) | 10 tok/s | 20 tok/s | 35 tok/s |

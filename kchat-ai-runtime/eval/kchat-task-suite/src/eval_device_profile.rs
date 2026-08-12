@@ -124,7 +124,7 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_backend: Some("mlx"),
             expected_vision_pack: Some("mobileclip-s2-int8"),
             expected_asr_pack: Some("whisper-base-int8"),
-            expected_safety_pack: "kchat-encoder-int8",
+            expected_safety_pack: "kchat-encoder-int4",
             expected_video_pack: Some("mobileclip-s2-int8"),
         },
         DeviceProfile {
@@ -200,7 +200,7 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_backend: Some("llama.cpp_vulkan"),
             expected_vision_pack: Some("mobileclip-s2-int8"),
             expected_asr_pack: Some("whisper-base-int8"),
-            expected_safety_pack: "kchat-encoder-int8",
+            expected_safety_pack: "kchat-encoder-int4",
             expected_video_pack: Some("mobileclip-s2-int8"),
         },
         DeviceProfile {
@@ -276,7 +276,7 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_backend: Some("mlx"),
             expected_vision_pack: Some("mobileclip-s2-int8"),
             expected_asr_pack: Some("whisper-base-int8"),
-            expected_safety_pack: "kchat-encoder-int8",
+            expected_safety_pack: "kchat-encoder-int4",
             expected_video_pack: Some("mobileclip-s2-int8"),
         },
         DeviceProfile {
@@ -352,7 +352,7 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             expected_backend: Some("llama.cpp_vulkan"),
             expected_vision_pack: Some("mobileclip-s2-int8"),
             expected_asr_pack: Some("whisper-base-int8"),
-            expected_safety_pack: "kchat-encoder-int8",
+            expected_safety_pack: "kchat-encoder-int4",
             expected_video_pack: Some("mobileclip-s2-int8"),
         },
         DeviceProfile {
@@ -485,12 +485,12 @@ pub fn select_asr_model_for_tier(tier: DeviceTier) -> Option<&'static str> {
 
 /// Select the appropriate safety encoder model for a tier.
 ///
-/// - Low/Medium tier: kchat-encoder-int4 (90MB, INT4)
-/// - High tier: kchat-encoder-int8 (270MB, INT8)
+/// - All tiers: kchat-encoder-int4 (143MB, INT4)
+/// - INT4 encoder is used everywhere for memory efficiency.
+///   The encoder is lazy-loaded for safety checks and unloaded before generation.
 pub fn select_safety_model_for_tier(tier: DeviceTier) -> &'static str {
     match tier {
-        DeviceTier::Low | DeviceTier::Medium => "kchat-encoder-int4",
-        DeviceTier::High => "kchat-encoder-int8",
+        DeviceTier::Low | DeviceTier::Medium | DeviceTier::High => "kchat-encoder-int4",
     }
 }
 
@@ -692,8 +692,8 @@ fn test_resource_budget(p: &DeviceProfile) -> EvalResult {
 
     let mut errors = Vec::new();
 
-    // Context cap must match tier
-    let expected_ctx = tier.context_cap();
+    // Context cap must match tier (platform-aware)
+    let expected_ctx = tier.context_cap_for_platform(p.platform);
     if budget.context_cap != expected_ctx {
         errors.push(format!(
             "context_cap {} != {}",
@@ -860,10 +860,7 @@ fn test_memory_budget(p: &DeviceProfile) -> EvalResult {
     }
 
     // Check total model footprint (generative + vision + encoder + ASR + video) fits within budget
-    let encoder_size: u64 = match tier {
-        DeviceTier::Low | DeviceTier::Medium => 90_000_000,   // kchat-encoder-int4 (90MB)
-        DeviceTier::High => 270_000_000,                       // kchat-encoder-int8 (270MB)
-    };
+    let encoder_size: u64 = 150_420_811;  // kchat-encoder-int4 (143MB, used on all tiers)
     let vision_size: u64 = 70_000_000;                            // mobileclip-s2-int8 (unified, all tiers)
     let asr_size: u64 = match tier {
         DeviceTier::Low => 32_904_983,                         // whisper-tiny-int8 (encoder ONNX, ~33MB)
@@ -1239,14 +1236,17 @@ fn test_idle_unload_timeout(p: &DeviceProfile) -> EvalResult {
 fn test_context_cap_mobile() -> EvalResult {
     let mut errors: Vec<String> = Vec::new();
 
-    if DeviceTier::Low.context_cap_for_platform("ios") != 2048 {
-        errors.push("Low/ios context cap != 2048".into());
+    if DeviceTier::Low.context_cap_for_platform("ios") != 1024 {
+        errors.push("Low/ios context cap != 1024".into());
     }
     if DeviceTier::Medium.context_cap_for_platform("android") != 4096 {
         errors.push("Medium/android context cap != 4096".into());
     }
-    if DeviceTier::High.context_cap_for_platform("ios") != 8192 {
-        errors.push("High/ios context cap != 8192".into());
+    if DeviceTier::High.context_cap_for_platform("android") != 8192 {
+        errors.push("High/android context cap != 8192".into());
+    }
+    if DeviceTier::High.context_cap_for_platform("ios") != 4096 {
+        errors.push("High/ios context cap != 4096".into());
     }
 
     if errors.is_empty() {
@@ -1385,7 +1385,7 @@ fn test_registry_finds_no_model_for_low_tier(registry: &ModelRegistry) -> EvalRe
         }
     }
 
-    // Reranker is available on all tiers via kchat-encoder-int4 (Low) and kchat-encoder-int8 (High)
+    // Reranker is available on all tiers via kchat-encoder-int4
     let high_only = registry.find_for_task("rerank", MinTier::High);
     let medium_only = registry.find_for_task("rerank", MinTier::Medium);
     if high_only.is_empty() {

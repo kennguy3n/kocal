@@ -141,8 +141,12 @@ The foundation crate that all other crates depend on.
 - Memory-based initial gate with platform-specific thresholds
 - Thermal downgrade (Serious → drop one tier, Critical → force Low)
 - Enterprise policy cap (can lower but not elevate)
-- Per-tier budgets: context cap, output token range, peak memory, TTFT target,
-  decode rate target, max perf cores, idle unload timeout
+- Per-tier budgets: context cap (platform-aware: iOS 1K/2K/4K, Android 2K/4K/8K, desktop 2K/4K/16K),
+  output token range, peak memory, TTFT target, decode rate target, max perf cores,
+  idle unload timeout
+- Memory optimization: Q8_0 KV cache for llama.cpp, FP16 for MLX, lazy-loaded encoder/vision/ASR
+  (only generative model resident during inference), all tiers use INT4 encoder,
+  all profiles fit within peak memory budgets with 163+ MB mobile headroom
 
 **Model Registry** (`registry.rs`):
 - 11 model packs (6 generative, 2 encoder, 1 vision, 2 ASR)

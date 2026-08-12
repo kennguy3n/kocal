@@ -21,22 +21,32 @@ pub enum DeviceTier {
 }
 
 impl DeviceTier {
-    /// Maximum active context window in tokens.
-    /// High tier returns 8K for mobile, 16K for desktop.
+    /// Maximum active context window in tokens (mobile defaults).
+    /// Use `context_cap_for_platform` for platform-aware values.
     pub fn context_cap(self) -> usize {
         match self {
-            DeviceTier::Low => 2048,
-            DeviceTier::Medium => 4096,
-            DeviceTier::High => 8192,
+            DeviceTier::Low => 1024,
+            DeviceTier::Medium => 2048,
+            DeviceTier::High => 4096,
         }
     }
 
-    /// Platform-aware context cap: 16K for desktop, 8K for mobile.
+    /// Platform-aware context cap.
+    /// iOS: Low 1K, Medium 2K, High 4K (MLX FP16 KV cache, tight budgets).
+    /// Android: Low 2K, Medium 4K, High 8K (llama.cpp Q8 KV cache, efficient).
+    /// Desktop: Low 2K, Medium 4K, High 16K (generous memory budgets).
     pub fn context_cap_for_platform(self, platform: &str) -> usize {
         match self {
-            DeviceTier::Low => 2048,
-            DeviceTier::Medium => 4096,
+            DeviceTier::Low => match platform {
+                "ios" => 1024,
+                _ => 2048,
+            },
+            DeviceTier::Medium => match platform {
+                "ios" => 2048,
+                _ => 4096,
+            },
             DeviceTier::High => match platform {
+                "ios" => 4096,
                 "macos" | "windows" => 16384,
                 _ => 8192,
             },
@@ -126,7 +136,7 @@ impl TierBudget {
 
         Self {
             tier,
-            context_cap: tier.context_cap(),
+            context_cap: tier.context_cap_for_platform(platform),
             output_token_range: tier.output_cap(),
             max_memory_bytes: tier.peak_memory_budget(platform),
             max_perf_cores: tier.max_perf_cores(),
@@ -346,9 +356,9 @@ mod tests {
 
     #[test]
     fn test_context_caps() {
-        assert_eq!(DeviceTier::Low.context_cap(), 2048);
-        assert_eq!(DeviceTier::Medium.context_cap(), 4096);
-        assert_eq!(DeviceTier::High.context_cap(), 8192);
+        assert_eq!(DeviceTier::Low.context_cap(), 1024);
+        assert_eq!(DeviceTier::Medium.context_cap(), 2048);
+        assert_eq!(DeviceTier::High.context_cap(), 4096);
     }
 
     #[test]

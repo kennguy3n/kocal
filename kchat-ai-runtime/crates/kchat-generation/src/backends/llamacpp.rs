@@ -17,7 +17,7 @@ use crate::backend::{
 };
 use crate::grammar::GrammarType;
 use crate::stream::StreamHandle;
-use llama_cpp_2::context::params::LlamaContextParams;
+use llama_cpp_2::context::params::{KvCacheType, LlamaContextParams};
 use llama_cpp_2::llama_backend::LlamaBackend;
 use llama_cpp_2::llama_batch::{BatchAddError, LlamaBatch};
 use llama_cpp_2::model::params::LlamaModelParams;
@@ -193,7 +193,9 @@ impl LlamaCppBackend {
         let ctx_params = LlamaContextParams::default()
             .with_n_ctx(NonZeroU32::new(backend_config.context_size as u32))
             .with_n_threads(backend_config.threads as i32)
-            .with_n_threads_batch(backend_config.threads as i32);
+            .with_n_threads_batch(backend_config.threads as i32)
+            .with_type_k(KvCacheType::Q8_0)
+            .with_type_v(KvCacheType::Q8_0);
 
         let mut ctx = model
             .new_context(llama_backend(), ctx_params)
