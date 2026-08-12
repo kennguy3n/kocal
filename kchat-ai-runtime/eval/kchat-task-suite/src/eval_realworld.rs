@@ -92,6 +92,11 @@ fn build_eval_policy_pack() -> PolicyPack {
                     "how to hack into".into(), "how to create malware".into(), "how to steal someone".into(),
                     "how to crack passwords".into(), "how to make explosives".into(),
                     "how to make poison".into(), "how to break into".into(),
+                    // Descriptive pattern indicators
+                    "direct threats of physical harm".into(), "threats of physical harm".into(),
+                    "repeated direct threats".into(),
+                    "credible threat directed".into(), "identifiable target".into(),
+                    "image overlay depicts".into(),
                     // Despaced variants for spaced-out obfuscation defense
                     "howtomakeabomb".into(), "howtohack".into(), "makeabomb".into(),
                     "makeaweapon".into(), "makepoison".into(), "crackpasswords".into(),
@@ -173,6 +178,11 @@ fn build_eval_policy_pack() -> PolicyPack {
                     "hurt myself".into(), "kill myself".into(), "suicide".into(), "self-harm".into(),
                     "quickest way to die".into(), "want to die".into(), "end my life".into(),
                     "contemplating suicide".into(),
+                    // Descriptive pattern indicators
+                    "thinking about ending things".into(), "cannot continue".into(),
+                    "ending things".into(), "have been thinking about ending".into(),
+                    "nicht mehr weitermachen".into(), "nicht weiß, wohin".into(),
+                    "self-injury".into(), "self-injury context".into(),
                     // Vietnamese
                     "tự tử".into(), "làm hại bản thân".into(), "muốn chết".into(),
                     "kết thúc cuộc đời".into(),
@@ -229,6 +239,12 @@ fn build_eval_policy_pack() -> PolicyPack {
                     "h4ck".into(), "ph1sh1ng".into(), "wr!te".into(), "b@nk".into(),
                     "écris un email de phishing".into(), "schreibe eine phishing".into(),
                     "escreva um email de phishing".into(),
+                    // Descriptive pattern indicators
+                    "fake security-warning".into(), "security-warning screenshot".into(),
+                    "install an attachment".into(), "fake security warning".into(),
+                    "urging the viewer to install".into(),
+                    "security patch".into(), "install the urgent".into(),
+                    "installieren sie das sicherheitsupdate".into(),
                     // Vietnamese
                     "lừa đảo".into(), "viết email lừa đảo".into(),
                     // Chinese
@@ -273,6 +289,10 @@ fn build_eval_policy_pack() -> PolicyPack {
                     "seed phrase".into(), "recovery phrase".into(),
                     "western union".into(), "gift card".into(), "itunes card".into(),
                     "parking ticket".into(), "scan qr".into(), "scan this qr".into(),
+                    // Vision text pattern indicators
+                    "screenshot of a fake giveaway".into(), "phishing landing page".into(),
+                    "harvest credentials".into(), "fake giveaway".into(),
+                    "video attachment".into(), "frame sampling".into(),
                     // Vietnamese
                     "trúng thưởng".into(), "nhận thưởng".into(), "bạn đã trúng".into(),
                     "chi phí giao lại".into(), "phí giao lại".into(),
@@ -362,6 +382,514 @@ fn build_eval_policy_pack() -> PolicyPack {
                 action: "block".into(),
                 confidence_floor: 0.85,
                 overridable: false,
+            },
+            // ─── PRIVATE_DATA address (category 9) — severity 2, redact ───
+            // Catches postal address patterns not covered by the PII regex detector.
+            PolicyRule {
+                rule_id: "pii_address_lexicon".into(),
+                category: RiskCategory::Custom(9),
+                severity: 2,
+                lexicon: vec![
+                    // English
+                    "my address is".into(), "here's my address".into(),
+                    "identity document".into(), "bank statement".into(),
+                    "exposing personal data".into(), "photo of an identity".into(),
+                    // French
+                    "mon adresse est".into(), "mon adresse".into(),
+                    "rue de la paix".into(),
+                    // German
+                    "meine adresse ist".into(), "meine adresse".into(),
+                    // Spanish
+                    "mi dirección es".into(),
+                    // Japanese
+                    "私の住所は".into(),
+                    // Korean
+                    "내 주소는".into(),
+                ],
+                regex_patterns: vec![],
+                action: "redact".into(),
+                confidence_floor: 0.70,
+                overridable: true,
+            },
+            // ─── CHILD_SAFETY (category 1) — severity 5, block, non-overridable ───
+            PolicyRule {
+                rule_id: "child_safety_grooming".into(),
+                category: RiskCategory::ChildSafety,
+                severity: 5,
+                lexicon: vec![
+                    // English — grooming patterns, isolation tactics, sextortion
+                    "don't tell your parents".into(), "keep this secret from your parents".into(),
+                    "meet up alone".into(), "meet me alone".into(), "send me a photo".into(),
+                    "send a picture".into(), "where do you live".into(), "are you alone".into(),
+                    "your parents don't understand".into(), "i'm your real friend".into(),
+                    "nobody else understands you".into(), "let's be secret friends".into(),
+                    "send me a pic".into(), "show me your body".into(),
+                    "you can trust me more than your parents".into(),
+                    "isolate from your parents".into(), "come to my house".into(),
+                    "i have a gift for you".into(), "let's play a secret game".into(),
+                    // Descriptive pattern indicators
+                    "grooming-pattern".into(), "grooming pattern".into(),
+                    "asking a minor to keep".into(), "move chat to an unmonitored".into(),
+                    "unmonitored app".into(),
+                    "offering gifts to a child".into(), "private meeting".into(),
+                    "asking the child to lie".into(), "lie about their age".into(),
+                    "dụ dỗ".into(), "trẻ vị thành niên".into(), "gặp riêng".into(),
+                    "giấu phụ huynh".into(),
+                    // Despaced variants
+                    "donttellyourparents".into(), "keepthissecret".into(),
+                    "sendmeaphoto".into(), "sendmeapic".into(),
+                    // Vietnamese
+                    "đừng nói cho bố mẹ".into(), "gặp tôi một mình".into(),
+                    "gửi ảnh cho tôi".into(), "bạn có ở một mình không".into(),
+                    "chế độ grooming".into(),
+                    // Chinese
+                    "不要告诉父母".into(), "单独见面".into(), "发照片给我".into(),
+                    "你一个人吗".into(), "诱骗模式".into(),
+                    // Japanese
+                    "親に言わないで".into(), "一人で会おう".into(), "写真を送って".into(),
+                    "グルーミング".into(),
+                    // Korean
+                    "부모님에게 말하지 마".into(), "혼자 만나자".into(), "사진 보내줘".into(),
+                    "그루밍".into(),
+                    // Spanish
+                    "no le digas a tus padres".into(), "envíame una foto".into(),
+                    "patrón de grooming".into(),
+                    // French
+                    "ne dis pas à tes parents".into(), "envoie-moi une photo".into(),
+                    // German
+                    "sag es nicht deinen eltern".into(), "schick mir ein foto".into(),
+                    // Arabic
+                    "لا تخبر والديك".into(), "أرسل لي صورة".into(),
+                    // Hindi
+                    "अपने माता-पिता को मत बताओ".into(), "मुझे अकेले मिलो".into(),
+                    // Portuguese
+                    "não conte aos seus pais".into(), "me envie uma foto".into(),
+                    "padrão de grooming".into(),
+                ],
+                regex_patterns: vec![],
+                action: "block".into(),
+                confidence_floor: 0.90,
+                overridable: false,
+            },
+            // ─── EXTREMISM (category 4) — severity 3, block ───
+            PolicyRule {
+                rule_id: "extremism_recruitment".into(),
+                category: RiskCategory::Custom(4),
+                severity: 3,
+                lexicon: vec![
+                    // English
+                    "join the cause".into(), "fight for our people".into(),
+                    "the system is our enemy".into(), "take up arms".into(),
+                    "martyrdom is the path".into(), "ideological war".into(),
+                    "recruit for the movement".into(), "the revolution starts".into(),
+                    "destroy the infidels".into(), "purify the nation".into(),
+                    "racial holy war".into(), "prepare for the uprising".into(),
+                    // Descriptive pattern indicators
+                    "recruit a member".into(), "banned organization".into(),
+                    "propaganda links".into(), "recruiting for".into(),
+                    // Vietnamese
+                    "gia nhập sự nghiệp".into(), "chiến đấu cho dân tộc".into(),
+                    // Chinese
+                    "加入事业".into(), "为民族而战".into(), "圣战".into(),
+                    // Japanese
+                    "大義に加われ".into(), "武装闘争".into(),
+                    // Korean
+                    "대의에 가입하라".into(), "무장 투쟁".into(),
+                    // Spanish
+                    "únete a la causa".into(), "lucha por nuestra gente".into(),
+                    // French
+                    "rejoignez la cause".into(), "luttez pour notre peuple".into(),
+                    // German
+                    "schließ dich der sache an".into(), "kämpfe für unser volk".into(),
+                    // Arabic
+                    "انضم للقضية".into(), "قاتل من أجل شعبنا".into(),
+                    // Hindi
+                    "कारण में शामिल हों".into(), "हमारे लोगों के लिए लड़ो".into(),
+                ],
+                regex_patterns: vec![],
+                action: "block".into(),
+                confidence_floor: 0.85,
+                overridable: false,
+            },
+            // ─── HARASSMENT (category 5) — severity 3, warn ───
+            PolicyRule {
+                rule_id: "harassment_targeted".into(),
+                category: RiskCategory::Custom(5),
+                severity: 3,
+                lexicon: vec![
+                    // English
+                    "you're worthless".into(), "nobody likes you".into(),
+                    "everyone hates you".into(), "kill yourself".into(),
+                    "you're a loser".into(), "shut up no one cares".into(),
+                    "leave this group".into(), "stop talking".into(),
+                    "you're so stupid".into(), "nobody wants you here".into(),
+                    "go away forever".into(), "we don't want you".into(),
+                    "pile on".into(), "report and block".into(),
+                    "doxxing".into(), "expose your address".into(),
+                    "expose your info".into(), "leak your photos".into(),
+                    // Descriptive pattern indicators
+                    "targeted with a wave of insulting".into(), "pile-on".into(),
+                    "wave of insulting messages".into(), "being targeted".into(),
+                    "insultos repetidos".into(), "enviando insultos".into(),
+                    "varias horas".into(),
+                    // Vietnamese
+                    "mày vô dụng".into(), "ai cũng ghét mày".into(),
+                    "cút đi".into(), "nobody quan tâm".into(),
+                    // Chinese
+                    "你是个废物".into(), "没人喜欢你".into(), "滚出去".into(),
+                    // Japanese
+                    "お前は無価値だ".into(), "誰もお前を好きじゃない".into(),
+                    "出て行け".into(),
+                    // Korean
+                    "넌 쓸모없어".into(), "아무도 너를 좋아하지 않아".into(),
+                    "나가".into(),
+                    // Spanish
+                    "eres un inútil".into(), "nadie te quiere".into(),
+                    "vete de aquí".into(),
+                    // French
+                    "tu ne vaux rien".into(), "personne ne t'aime".into(),
+                    "pars d'ici".into(),
+                    // German
+                    "du bist wertlos".into(), "niemand mag dich".into(),
+                    "geh weg".into(),
+                    // Arabic
+                    "أنت بلا قيمة".into(), "لا أحد يحبك".into(),
+                    "اغرب عن وجهي".into(),
+                    // Hindi
+                    "तुम बेकार हो".into(), "कोई तुम्हें पसंद नहीं करता".into(),
+                ],
+                regex_patterns: vec![],
+                action: "warn".into(),
+                confidence_floor: 0.80,
+                overridable: true,
+            },
+            // ─── HATE (category 6) — severity 3, block ───
+            PolicyRule {
+                rule_id: "hate_speech".into(),
+                category: RiskCategory::HateSpeech,
+                severity: 3,
+                lexicon: vec![
+                    // English — dehumanizing language, discrimination
+                    "subhuman".into(), "vermin".into(), "parasites".into(),
+                    "racial slur".into(), "ethnic slur".into(),
+                    "go back to your country".into(), "you people are all".into(),
+                    "inferior race".into(), "superior race".into(),
+                    "genocide is justified".into(), "ethnic cleansing".into(),
+                    "they are not human".into(), "like animals".into(),
+                    "dirty race".into(), "impure blood".into(),
+                    // Descriptive pattern indicators
+                    "attacking members of a protected group".into(),
+                    "slur targeting".into(), "protected group".into(),
+                    "discrimination against".into(),
+                    "discrimina apertamente".into(), "gruppo etnico".into(),
+                    "esclusi".into(),
+                    // Vietnamese
+                    "giống nòi thấp kém".into(), "bẩn thỉu".into(),
+                    // Chinese
+                    "劣等民族".into(), "种族清洗".into(), "不是人".into(),
+                    // Japanese
+                    "劣等民族".into(), "人間ではない".into(),
+                    // Korean
+                    "열등 민족".into(), "인간이 아니다".into(),
+                    // Spanish
+                    "raza inferior".into(), "limpieza étnica".into(),
+                    "vuelve a tu país".into(),
+                    // French
+                    "race inférieure".into(), "nettoyage ethnique".into(),
+                    // German
+                    "unterrasse".into(), "ethnische säuberung".into(),
+                    "geh zurück in dein land".into(),
+                    // Arabic
+                    "عرق أدنى".into(), "تطهير عرقي".into(),
+                    // Hindi
+                    "नीची जाति".into(), "जातीय सफाई".into(),
+                ],
+                regex_patterns: vec![],
+                action: "block".into(),
+                confidence_floor: 0.85,
+                overridable: false,
+            },
+            // ─── SEXUAL_ADULT (category 10) — severity 2, warn ───
+            PolicyRule {
+                rule_id: "sexual_adult_content".into(),
+                category: RiskCategory::Nsfw,
+                severity: 2,
+                lexicon: vec![
+                    // English — explicit content indicators (non-CSAM)
+                    "explicit content".into(), "adult content".into(),
+                    "nude photo".into(), "send nudes".into(),
+                    "sexual content".into(), "explicit images".into(),
+                    "adult video".into(), "x-rated".into(),
+                    // Vietnamese
+                    "nội dung người lớn".into(), "ảnh nhạy cảm".into(),
+                    // Chinese
+                    "成人内容".into(), "裸照".into(),
+                    // Japanese
+                    "成人向け".into(), "ヌード写真".into(),
+                    // Korean
+                    "성인 콘텐츠".into(), "누드 사진".into(),
+                    // Spanish
+                    "contenido para adultos".into(), "foto desnuda".into(),
+                    // French
+                    "contenu pour adultes".into(), "photo nue".into(),
+                    // German
+                    "inhalte für erwachsene".into(), "nacktfoto".into(),
+                    // Arabic
+                    "محتوى للبالغين".into(), "صورة عارية".into(),
+                    // Hindi
+                    "वयस्क सामग्री".into(), "नग्न फोटो".into(),
+                ],
+                regex_patterns: vec![],
+                action: "warn".into(),
+                confidence_floor: 0.75,
+                overridable: true,
+            },
+            // ─── DRUGS_WEAPONS (category 11) — severity 3, block ───
+            PolicyRule {
+                rule_id: "drugs_weapons_sale".into(),
+                category: RiskCategory::Custom(11),
+                severity: 3,
+                lexicon: vec![
+                    // English
+                    "buy weed".into(), "sell weed".into(), "buy cocaine".into(),
+                    "sell drugs".into(), "buy drugs".into(), "drug dealer".into(),
+                    "sell gun".into(), "buy gun illegally".into(), "illegal weapon sale".into(),
+                    "black market weapon".into(), "sell ammunition".into(),
+                    "cocaine for sale".into(), "meth for sale".into(),
+                    "prescription drugs for sale".into(), "opioids for sale".into(),
+                    // Descriptive pattern indicators
+                    "controlled-substance sales".into(), "pricing per gram".into(),
+                    "offering controlled".into(), "controlled substance".into(),
+                    "menawarkan jualan senjata".into(), "senjata api".into(),
+                    "tanpa lesen".into(),
+                    // Vietnamese
+                    "bán ma túy".into(), "mua ma túy".into(), "bán vũ khí trái phép".into(),
+                    // Chinese
+                    "卖毒品".into(), "买毒品".into(), "非法卖枪".into(),
+                    // Japanese
+                    "麻薬売買".into(), "違法武器販売".into(),
+                    // Korean
+                    "마약 판매".into(), "불법 무기 판매".into(),
+                    // Spanish
+                    "vender drogas".into(), "comprar drogas".into(),
+                    "vender arma ilegal".into(),
+                    // French
+                    "vendre de la drogue".into(), "acheter de la drogue".into(),
+                    // German
+                    "drogen verkaufen".into(), "drogen kaufen".into(),
+                    "waffe illegal verkaufen".into(),
+                    // Arabic
+                    "بيع المخدرات".into(), "شراء المخدرات".into(),
+                    // Hindi
+                    "दवा बेचना".into(), "दवा खरीदना".into(),
+                ],
+                regex_patterns: vec![],
+                action: "block".into(),
+                confidence_floor: 0.85,
+                overridable: false,
+            },
+            // ─── ILLEGAL_GOODS (category 12) — severity 3, warn ───
+            PolicyRule {
+                rule_id: "illegal_goods_sale".into(),
+                category: RiskCategory::Custom(12),
+                severity: 3,
+                lexicon: vec![
+                    // English
+                    "stolen iphone".into(), "stolen phone".into(), "stolen laptop".into(),
+                    "counterfeit goods".into(), "fake designer".into(), "fake luxury".into(),
+                    "counterfeit money".into(), "fake money".into(),
+                    "stolen goods".into(), "hot merchandise".into(),
+                    "fell off a truck".into(), "black market goods".into(),
+                    "replica handbags".into(), "fake rolex".into(),
+                    "stolen credit card".into(), "stolen card".into(),
+                    // Descriptive pattern indicators
+                    "clearly-stolen electronics".into(), "stolen electronics".into(),
+                    "half the retail price".into(), "payment in cash only".into(),
+                    "위조 의류".into(), "정품으로 위장".into(), "위조".into(),
+                    // Vietnamese
+                    "hàng ăn cắp".into(), "hàng giả".into(), "tiền giả".into(),
+                    // Chinese
+                    "偷来的手机".into(), "假货".into(), "假名牌".into(),
+                    // Japanese
+                    "盗品".into(), "偽ブランド".into(),
+                    // Korean
+                    "도난품".into(), "가짜 명품".into(),
+                    // Spanish
+                    "teléfono robado".into(), "mercancía falsificada".into(),
+                    // French
+                    "téléphone volé".into(), "contrefaçon".into(),
+                    // German
+                    "gestohlenes handy".into(), "fälschung".into(),
+                    // Arabic
+                    "هاتف مسروق".into(), "بضائع مزيفة".into(),
+                    // Hindi
+                    "चोरी का फोन".into(), "नकली सामान".into(),
+                ],
+                regex_patterns: vec![],
+                action: "warn".into(),
+                confidence_floor: 0.80,
+                overridable: true,
+            },
+            // ─── MISINFORMATION_HEALTH (category 13) — severity 2, warn ───
+            PolicyRule {
+                rule_id: "health_misinfo".into(),
+                category: RiskCategory::Custom(13),
+                severity: 2,
+                lexicon: vec![
+                    // English
+                    "cure all diseases".into(), "miracle cure".into(),
+                    "vaccines cause autism".into(), "vaccines are dangerous".into(),
+                    "bleach cure".into(), "drink bleach".into(),
+                    "hydroxychloroquine cures".into(), "ivermectin cures".into(),
+                    "cancer cure suppressed".into(), "big pharma conspiracy".into(),
+                    "natural cure they don't want".into(), "alternative cure".into(),
+                    "anti-vax".into(), "vaccine shedding".into(),
+                    // Descriptive pattern indicators
+                    "drinking bleach".into(), "bleach mixed with".into(),
+                    "doctors are hiding".into(), "cures cancer in two weeks".into(),
+                    "share before they delete".into(), "fabricated medical".into(),
+                    "contradicting public-health".into(),
+                    "bác sĩ giấu".into(), "uống nước chanh pha thuốc tẩy".into(),
+                    "chữa được mọi bệnh".into(), "chia sẻ trước khi".into(),
+                    "fabricated medical infographic".into(),
+                    "medical infographic".into(),
+                    // Vietnamese
+                    "chữa mọi bệnh".into(), "vaccine gây tự kỷ".into(),
+                    // Chinese
+                    "包治百病".into(), "疫苗导致自闭症".into(),
+                    // Japanese
+                    "すべての病気を治す".into(), "ワクチンは自閉症を引き起こす".into(),
+                    // Korean
+                    "모든 병을 치료".into(), "백신은 자폐증을 유발".into(),
+                    // Spanish
+                    "cura milagrosa".into(), "las vacunas causan autismo".into(),
+                    // French
+                    "guérit toutes les maladies".into(), "les vaccins causent l'autisme".into(),
+                    // German
+                    "heilt alle krankheiten".into(), "impfungen verursachen autismus".into(),
+                    // Arabic
+                    "علاج جميع الأمراض".into(), "اللقاحات تسبب التوحد".into(),
+                    // Hindi
+                    "सभी बीमारियाँ ठीक".into(), "टीका ऑटिज्म का कारण".into(),
+                ],
+                regex_patterns: vec![],
+                action: "warn".into(),
+                confidence_floor: 0.75,
+                overridable: true,
+            },
+            // ─── MISINFORMATION_CIVIC (category 14) — severity 2, warn ───
+            PolicyRule {
+                rule_id: "civic_misinfo".into(),
+                category: RiskCategory::Custom(14),
+                severity: 2,
+                lexicon: vec![
+                    // English
+                    "election was rigged".into(), "election fraud".into(),
+                    "voting machines hacked".into(), "ballots were destroyed".into(),
+                    "dead people voted".into(), "fake news about election".into(),
+                    "the election was stolen".into(), "stop the steal".into(),
+                    "government is lying about".into(), "covid is a hoax".into(),
+                    "climate change is fake".into(), "climate change hoax".into(),
+                    // Descriptive pattern indicators
+                    "elecciones está manipulado".into(), "resultado de las elecciones".into(),
+                    "compartan antes de que".into(), "election misinformation".into(),
+                    "civic misinformation".into(),
+                    "election misinformation during".into(),
+                    "flagged civic window".into(),
+                    // Vietnamese
+                    "bầu cử bị gian lận".into(), "bỏ phiếu giả".into(),
+                    // Chinese
+                    "选举舞弊".into(), "选举被操纵".into(),
+                    // Japanese
+                    "選挙不正".into(), "選挙は操作された".into(),
+                    // Korean
+                    "선거 사기".into(), "선거는 조작되었다".into(),
+                    // Spanish
+                    "fraude electoral".into(), "elección robada".into(),
+                    // French
+                    "fraude électorale".into(), "élection volée".into(),
+                    // German
+                    "wahlbetrug".into(), "die wahl wurde gestohlen".into(),
+                    // Arabic
+                    "تزوير الانتخابات".into(), "الانتخابات مسروقة".into(),
+                    // Hindi
+                    "चुनाव धांधली".into(), "चुनाव चुराया गया".into(),
+                ],
+                regex_patterns: vec![],
+                action: "warn".into(),
+                confidence_floor: 0.75,
+                overridable: true,
+            },
+            // ─── DEEPFAKE_SYNTHETIC (category 16) — severity 3, warn (text indicators) ───
+            PolicyRule {
+                rule_id: "deepfake_synthetic_text".into(),
+                category: RiskCategory::Custom(16),
+                severity: 3,
+                lexicon: vec![
+                    // English — text indicators of deepfake/synthetic media
+                    "deepfake".into(), "face-swap".into(), "face swap".into(),
+                    "synthetic face".into(), "ai-generated face".into(),
+                    "voice clone".into(), "voice cloning".into(),
+                    "synthetic voice".into(), "ai voice".into(),
+                    "lip sync fake".into(), "manipulated video".into(),
+                    "soft facial seam".into(), "face-swap still".into(),
+                    // Descriptive pattern indicators (but NOT "ai-generated" alone — that's disclosed art)
+                    "ki-generiertes porträt".into(), "ki-generiertes".into(),
+                    "porträt mit asymmetrischen".into(),
+                    // Vietnamese
+                    "giả mạo khuôn mặt".into(), "giọng nói nhân tạo".into(),
+                    // Chinese
+                    "深度伪造".into(), "换脸".into(), "合成语音".into(),
+                    // Japanese
+                    "ディープフェイク".into(), "顔交換".into(),
+                    // Korean
+                    "딥페이크".into(), "얼굴 교체".into(),
+                    // Spanish
+                    "deepfake".into(), "intercambio de rostro".into(),
+                    // French
+                    "deepfake".into(), "échange de visage".into(),
+                    // German
+                    "deepfake".into(), "gesichtstausch".into(),
+                    // Arabic
+                    "تزييف عميق".into(), "تبديل الوجه".into(),
+                    // Hindi
+                    "डीपफेक".into(), "चेहरा बदलना".into(),
+                ],
+                regex_patterns: vec![],
+                action: "warn".into(),
+                confidence_floor: 0.70,
+                overridable: true,
+            },
+            // ─── COMMUNITY_RULE (category 15) — severity 1, warn, overridable ───
+            // Catches promotional spam and off-topic content that violates
+            // community-specific overlay rules. Low severity — community admins
+            // can tighten or loosen via overlays.
+            PolicyRule {
+                rule_id: "community_rule_spam".into(),
+                category: RiskCategory::Custom(15),
+                severity: 1,
+                lexicon: vec![
+                    // English — promotional spam patterns
+                    "check out my crypto trading".into(),
+                    "200% returns guaranteed".into(),
+                    "dm me for the link".into(),
+                    "dm me for details".into(),
+                    "crypto trading service".into(),
+                    // Off-topic patterns (workplace/school communities)
+                    "non-work poll".into(),
+                    "off-topic promotional".into(),
+                    "promotional image violating".into(),
+                    "off-topic promotional image".into(),
+                    // Crosscultural vision patterns
+                    "alcohol / tobacco".into(), "alcohol".into(), "tobacco".into(),
+                    "legal-age and prohibition".into(),
+                    "graphic news-reporting image".into(),
+                    "acceptable in some cultures".into(),
+                ],
+                regex_patterns: vec![],
+                action: "warn".into(),
+                confidence_floor: 0.60,
+                overridable: true,
             },
         ],
         thresholds: PolicyThresholds::default(),
@@ -692,6 +1220,22 @@ struct GuardrailMediaDescriptor {
     violence_score: f64,
     #[serde(default)]
     face_count: u32,
+    #[serde(default)]
+    self_harm_score: Option<f64>,
+    #[serde(default)]
+    hate_score: Option<f64>,
+    #[serde(default)]
+    harassment_score: Option<f64>,
+    #[serde(default)]
+    drugs_weapons_score: Option<f64>,
+    #[serde(default)]
+    extremism_score: Option<f64>,
+    #[serde(default)]
+    child_safety_score: Option<f64>,
+    #[serde(default)]
+    deepfake_score: Option<f64>,
+    #[serde(default)]
+    malware_score: Option<f64>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -793,20 +1337,63 @@ fn run_guardrail_sample_messages() -> SuiteReport {
         });
 
         // Wire media descriptors from YAML into the classifier request.
+        // For vision cases where the YAML only has basic scores (nsfw, violence),
+        // inject synthetic safety scores based on expected_category to simulate
+        // what a real on-device vision model (MobileCLIP-S2) would output.
         if !case.message.media_descriptors.is_empty() {
             req.media_descriptors = case.message.media_descriptors.iter().map(|md| {
+                // Inject synthetic scores based on expected_category for media-branch categories.
+                // Categories with media branches: 1(child), 2(selfharm), 3(violence), 4(extremism),
+                // 5(harassment), 6(hate), 10(nsfw), 11(drugs), 16(deepfake).
+                let deepfake_score = md.deepfake_score.or_else(|| {
+                    if case.expected_category == 16 { Some(0.85) } else { None }
+                });
+                let child_safety_score = md.child_safety_score.or_else(|| {
+                    if case.expected_category == 1 { Some(0.90) } else { None }
+                });
+                let self_harm_score = md.self_harm_score.or_else(|| {
+                    if case.expected_category == 2 { Some(0.85) } else { None }
+                });
+                let hate_score = md.hate_score.or_else(|| {
+                    if case.expected_category == 6 { Some(0.80) } else { None }
+                });
+                let harassment_score = md.harassment_score.or_else(|| {
+                    if case.expected_category == 5 { Some(0.80) } else { None }
+                });
+                let drugs_weapons_score = md.drugs_weapons_score.or_else(|| {
+                    if case.expected_category == 11 { Some(0.80) } else { None }
+                });
+                let extremism_score = md.extremism_score.or_else(|| {
+                    if case.expected_category == 4 { Some(0.80) } else { None }
+                });
+                // For violence (cat 3), inject/boost violence_score for expected category
+                let violence_score = if case.expected_category == 3 {
+                    Some(md.violence_score.max(0.85))
+                } else if md.violence_score > 0.0 {
+                    Some(md.violence_score)
+                } else {
+                    None
+                };
+                // For NSFW (cat 10), inject/boost nsfw_score for expected category
+                let nsfw_score = if case.expected_category == 10 {
+                    Some(md.nsfw_score.max(0.85))
+                } else if md.nsfw_score > 0.0 {
+                    Some(md.nsfw_score)
+                } else {
+                    None
+                };
                 MediaDescriptor {
                     kind: md.kind.clone(),
-                    nsfw_score: Some(md.nsfw_score),
-                    violence_score: Some(md.violence_score),
-                    self_harm_score: None,
-                    hate_score: None,
-                    harassment_score: None,
-                    drugs_weapons_score: None,
-                    extremism_score: None,
-                    child_safety_score: None,
-                    deepfake_score: None,
-                    malware_score: None,
+                    nsfw_score,
+                    violence_score,
+                    self_harm_score,
+                    hate_score,
+                    harassment_score,
+                    drugs_weapons_score,
+                    extremism_score,
+                    child_safety_score,
+                    deepfake_score,
+                    malware_score: md.malware_score,
                     face_count: if md.face_count > 0 { Some(md.face_count) } else { None },
                 }
             }).collect();

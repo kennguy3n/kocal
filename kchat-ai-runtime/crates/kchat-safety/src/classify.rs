@@ -198,8 +198,16 @@ fn should_demote_for_protected_speech(
     category: u32,
     hints: &[ContextHint],
 ) -> Option<&ContextHint> {
-    // CHILD_SAFETY is never demoted — defense in depth.
-    if category == detectors::categories::CHILD_SAFETY {
+    // Critical safety categories are never demoted — defense in depth.
+    // CHILD_SAFETY, SELF_HARM, VIOLENCE_THREAT, MISINFORMATION_HEALTH, and
+    // DEEPFAKE_SYNTHETIC represent direct harm signals that should not be
+    // suppressed by community context (news, education, counterspeech).
+    if category == detectors::categories::CHILD_SAFETY
+        || category == detectors::categories::SELF_HARM
+        || category == detectors::categories::VIOLENCE_THREAT
+        || category == detectors::categories::MISINFORMATION_HEALTH
+        || category == detectors::categories::DEEPFAKE_SYNTHETIC
+    {
         return None;
     }
     hints.iter().find(|h| h.context_confidence >= CONTEXT_DEMOTION_CONFIDENCE_THRESHOLD)
@@ -629,12 +637,28 @@ impl SafetyClassifier {
     /// Check for high-risk indicators that warrant encoder escalation.
     fn has_high_risk_indicators(&self, text: &str) -> bool {
         let lower = text.to_lowercase();
-        // Simple heuristic: certain keywords suggest encoder review is warranted
         let indicators = [
-            "kill", "hurt", "die", "suicide", "self-harm",
-            "nude", "nsfw", "sexual",
-            "weapon", "gun", "bomb",
-            "drug", "illegal",
+            // Violence / self-harm
+            "kill", "hurt", "die", "suicide", "self-harm", "cut myself",
+            // Sexual / NSFW
+            "nude", "nsfw", "sexual", "explicit",
+            // Weapons / drugs
+            "weapon", "gun", "bomb", "drug", "cocaine", "meth", "opioid",
+            // Child safety
+            "minor", "child", "underage", "groom", "loli",
+            // Harassment / hate
+            "harass", "bully", "doxx", "subhuman", "vermin", "parasite",
+            "inferior race", "ethnic cleansing", "genocide",
+            // Extremism
+            "extremist", "radical", "terror", "martyrdom", "uprising",
+            // Scam / fraud
+            "scam", "fraud", "phishing", "lottery", "you've won", "prize",
+            "crypto", "bitcoin", "wallet", "seed phrase",
+            // Misinformation
+            "miracle cure", "vaccine", "anti-vax", "election fraud",
+            "deepfake", "fake news", "hoax",
+            // Illegal
+            "illegal", "stolen", "counterfeit", "black market",
         ];
         indicators.iter().any(|i| lower.contains(i))
     }

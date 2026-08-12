@@ -695,9 +695,22 @@ pub fn resolve_priority_chain(signals: &LocalSignals) -> Option<DetectorSignal> 
     // --- Text-based signals ---
     if signals.signals.is_empty() { return None; }
     let priority = [
-        categories::CHILD_SAFETY, categories::SELF_HARM, categories::PRIVATE_DATA,
-        categories::SCAM_FRAUD, categories::HATE, categories::VIOLENCE_THREAT,
-        categories::SEXUAL_ADULT, categories::MALWARE_LINK,
+        categories::CHILD_SAFETY,
+        categories::SELF_HARM,
+        categories::PRIVATE_DATA,
+        categories::SCAM_FRAUD,
+        categories::HATE,
+        categories::VIOLENCE_THREAT,
+        categories::EXTREMISM,
+        categories::HARASSMENT,
+        categories::SEXUAL_ADULT,
+        categories::DRUGS_WEAPONS,
+        categories::ILLEGAL_GOODS,
+        categories::MISINFORMATION_HEALTH,
+        categories::MISINFORMATION_CIVIC,
+        categories::COMMUNITY_RULE,
+        categories::DEEPFAKE_SYNTHETIC,
+        categories::MALWARE_LINK,
     ];
     for &cat in &priority {
         if let Some(best) = signals.signals.iter()

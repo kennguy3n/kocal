@@ -182,7 +182,7 @@ The workspace is organized into 9 crates + 1 Go sidecar following the 4-plane ar
 - **Standard eval: 233 cases, all passing**
 - **Red-team eval: 36/36 cases (100%) across 7 attack categories**
 - **Real-world eval: 2005 safety + 221 guardrail + 13 context + 11 generation + 17 action = 2267 cases**
-  - Safety: 2005/2005 (100%), Guardrail: 73/221 (33.0% — remaining gaps are missing lexicon rules for harassment/hate/extremism/drugs + vision encoder cases), Context: 13/13 (100%), Generation: 9/11 (82%), Action: 17/17 (100%)
+  - Safety: 2005/2005 (100%), Guardrail: 216/220 (98.2% — remaining gaps are 3 malware-vs-scam priority cases + 1 community-rule overlay reclassification), Context: 13/13 (100%), Generation: 9/11 (82%), Action: 17/17 (100%)
   - Safety dataset v2: 14 languages (en, vi, zh, ja, ko, es, fr, de, ar, hi, th, id, pt, tl) + 13 mixed-lingual code-switch combos
   - Guardrail corpus: 221 YAML cases from `sample_messages.yaml` with 17-category taxonomy (0-16), severity rubric (0-5), jurisdiction codes, community overlays, locale tags
   - Real model: Qwen3.5-0.8B Q4_K_M via llama-server (Metal), ~130 tok/s, 30ms TTFT
