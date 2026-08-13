@@ -48,6 +48,23 @@ impl Severity {
     pub const HIGH: Severity = Severity(4);
     pub const CRITICAL: Severity = Severity(5);
 
+    /// Maximum valid severity value.
+    pub const MAX: u8 = 5;
+
+    /// Create a Severity from a u8, returning an error if out of range (0-5).
+    pub fn from_u8(value: u8) -> Result<Self, &'static str> {
+        if value > Self::MAX {
+            Err("severity out of range (0-5)")
+        } else {
+            Ok(Severity(value))
+        }
+    }
+
+    /// Returns the raw u8 value.
+    pub fn raw(self) -> u8 {
+        self.0
+    }
+
     pub fn is_safe(self) -> bool {
         self.0 <= 1
     }
@@ -207,5 +224,19 @@ mod tests {
         assert_eq!(v.severity, Severity::CRITICAL);
         assert_eq!(v.category, 1);
         assert!(!v.reason_codes.is_empty());
+    }
+
+    #[test]
+    fn test_severity_from_u8() {
+        assert_eq!(Severity::from_u8(0).unwrap(), Severity::SAFE);
+        assert_eq!(Severity::from_u8(5).unwrap(), Severity::CRITICAL);
+        assert!(Severity::from_u8(6).is_err());
+        assert!(Severity::from_u8(255).is_err());
+    }
+
+    #[test]
+    fn test_severity_raw() {
+        assert_eq!(Severity::CRITICAL.raw(), 5);
+        assert_eq!(Severity::SAFE.raw(), 0);
     }
 }

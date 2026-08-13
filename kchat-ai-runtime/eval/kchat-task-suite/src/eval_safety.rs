@@ -159,12 +159,11 @@ fn test_url_risk_detection() -> EvalResult {
     let req = ClassifyRequest::from_text("Visit http://suspicious-site.tk/login now!");
     let result = classifier.classify(&req);
 
-    // The URL detector should flag the .tk TLD as suspicious
-    // It may return Warn (scam) or Allow (if no other signals)
-    if result.verdict.action == Action::Warn || result.verdict.action == Action::Allow {
+    // The URL detector should flag the .tk TLD as suspicious and return Warn
+    if result.verdict.action == Action::Warn {
         EvalResult::pass("url_risk_detection")
     } else {
-        EvalResult::fail("url_risk_detection", format!("expected Warn or Allow, got {:?}", result.verdict.action))
+        EvalResult::fail("url_risk_detection", format!("expected Warn, got {:?}", result.verdict.action))
     }
 }
 

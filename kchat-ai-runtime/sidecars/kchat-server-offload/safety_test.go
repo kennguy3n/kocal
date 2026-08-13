@@ -126,14 +126,70 @@ func TestRunSafetyChecks(t *testing.T) {
 	}
 }
 
-func TestIsAllDigits(t *testing.T) {
-	if !isAllDigits("123") {
-		t.Error("isAllDigits('123') should be true")
+func TestHasEmail(t *testing.T) {
+	tests := []struct {
+		text     string
+		expected bool
+	}{
+		{"contact me at alice@example.com", true},
+		{"no email here", false},
+		{"send to bob.smith+work@mail.example.co.uk", true},
 	}
-	if isAllDigits("abc") {
-		t.Error("isAllDigits('abc') should be false")
+	for _, tt := range tests {
+		got := hasEmail(tt.text)
+		if got != tt.expected {
+			t.Errorf("hasEmail(%q) = %v, want %v", tt.text, got, tt.expected)
+		}
 	}
-	if isAllDigits("") {
-		t.Error("isAllDigits('') should be false")
+}
+
+func TestHasPhoneNumber(t *testing.T) {
+	tests := []struct {
+		text     string
+		expected bool
+	}{
+		{"call +1-415-555-0199", true},
+		{"no phone here", false},
+		{"dial 01189998819991197253", true},
+	}
+	for _, tt := range tests {
+		got := hasPhoneNumber(tt.text)
+		if got != tt.expected {
+			t.Errorf("hasPhoneNumber(%q) = %v, want %v", tt.text, got, tt.expected)
+		}
+	}
+}
+
+func TestHasIBAN(t *testing.T) {
+	tests := []struct {
+		text     string
+		expected bool
+	}{
+		{"wire to GB82WEST12345698765432", true},
+		{"no iban here", false},
+		{"iban GB82WEST12345698765432 please", true},
+	}
+	for _, tt := range tests {
+		got := hasIBAN(tt.text)
+		if got != tt.expected {
+			t.Errorf("hasIBAN(%q) = %v, want %v", tt.text, got, tt.expected)
+		}
+	}
+}
+
+func TestHasCredentialLeak(t *testing.T) {
+	tests := []struct {
+		text     string
+		expected bool
+	}{
+		{"user: admin password: hunter2", true},
+		{"login=admin pwd=secret", true},
+		{"no credentials here", false},
+	}
+	for _, tt := range tests {
+		got := hasCredentialLeak(tt.text)
+		if got != tt.expected {
+			t.Errorf("hasCredentialLeak(%q) = %v, want %v", tt.text, got, tt.expected)
+		}
 	}
 }

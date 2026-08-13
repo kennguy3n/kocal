@@ -74,6 +74,8 @@ pub struct FfiSafetyResult {
     pub used_encoder: bool,
     pub used_slm: bool,
     pub duration_us: u64,
+    pub rationale_id: String,
+    pub resource_link_id: Option<String>,
 }
 
 impl From<kchat_safety::classify::ClassifyResult> for FfiSafetyResult {
@@ -88,6 +90,8 @@ impl From<kchat_safety::classify::ClassifyResult> for FfiSafetyResult {
             used_encoder: v.used_encoder,
             used_slm: v.used_slm,
             duration_us: result.duration_us,
+            rationale_id: v.rationale_id.clone(),
+            resource_link_id: v.resource_link_id.clone(),
         }
     }
 }

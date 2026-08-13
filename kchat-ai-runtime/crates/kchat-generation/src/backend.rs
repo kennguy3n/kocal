@@ -37,7 +37,10 @@ impl BackendType {
     /// - Intel Macs (x86_64) on macOS: llama.cpp CPU (no MLX support)
     /// - Android/Windows: llama.cpp Vulkan
     /// - Other: llama.cpp CPU
-    pub fn select(platform: &str, tier: DeviceTier, cpu_arch: &str) -> Option<Self> {
+    pub fn select(platform: &str, _tier: DeviceTier, cpu_arch: &str) -> Option<Self> {
+        // Note: tier is currently unused — all tiers use MLX on Apple Silicon.
+        // The parameter is retained for future tier-aware backend selection
+        // (e.g. falling back to CPU on Low tier if MLX is unavailable).
         match platform {
             "ios" => Some(BackendType::Mlx),
             "macos" => {

@@ -26,6 +26,8 @@ dictionary FfiSafetyResult {
   boolean used_encoder;
   boolean used_slm;
   u64 duration_us;
+  string rationale_id;
+  string? resource_link_id;
 };
 
 dictionary FfiRetrievalResult {

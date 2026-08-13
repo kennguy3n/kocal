@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -58,10 +59,11 @@ func classifySafety(c *gin.Context) {
 // runSafetyChecks runs deterministic safety rules on the text.
 //
 // This mirrors the Rust kchat-safety crate's deterministic pipeline:
-// 1. PII detection (credit cards, SSN, phone, email)
+// 1. PII detection (credit cards, SSN, phone, email, IBAN, credentials)
 // 2. Scam detection (urgency, authority, phishing patterns)
 // 3. URL risk detection
-// 4. Obfuscation detection (homoglyphs, mixed scripts)
+// 4. Prompt injection detection
+// 5. Obfuscation detection (homoglyphs, mixed scripts)
 func runSafetyChecks(req *SafetyRequest) *SafetyResult {
 	text := req.Text
 	reasonCodes := []string{}
@@ -85,7 +87,47 @@ func runSafetyChecks(req *SafetyRequest) *SafetyResult {
 		reasonCodes = append(reasonCodes, "pii_ssn")
 	}
 
-	// 3. Scam patterns
+	// 3. Email detection
+	if hasEmail(text) {
+		if action == "allow" {
+			action = "redact"
+			severity = 2
+			category = 8
+		}
+		reasonCodes = append(reasonCodes, "pii_email")
+	}
+
+	// 4. Phone number detection
+	if hasPhoneNumber(text) {
+		if action == "allow" {
+			action = "redact"
+			severity = 2
+			category = 8
+		}
+		reasonCodes = append(reasonCodes, "pii_phone")
+	}
+
+	// 5. IBAN detection
+	if hasIBAN(text) {
+		if action == "allow" {
+			action = "redact"
+			severity = 3
+			category = 8
+		}
+		reasonCodes = append(reasonCodes, "pii_iban")
+	}
+
+	// 6. Credential leak detection
+	if hasCredentialLeak(text) {
+		if action == "allow" {
+			action = "redact"
+			severity = 3
+			category = 8
+		}
+		reasonCodes = append(reasonCodes, "pii_credentials")
+	}
+
+	// 7. Scam patterns
 	if hasScamPattern(text) {
 		if action == "allow" {
 			action = "warn"
@@ -95,7 +137,7 @@ func runSafetyChecks(req *SafetyRequest) *SafetyResult {
 		reasonCodes = append(reasonCodes, "scam_pattern")
 	}
 
-	// 4. URL risk
+	// 8. URL risk
 	if hasRiskyURL(text) {
 		if action == "allow" {
 			action = "warn"
@@ -105,7 +147,7 @@ func runSafetyChecks(req *SafetyRequest) *SafetyResult {
 		reasonCodes = append(reasonCodes, "url_risk")
 	}
 
-	// 5. Prompt injection
+	// 9. Prompt injection
 	if hasPromptInjection(text) {
 		if action == "allow" {
 			action = "block"
@@ -115,7 +157,7 @@ func runSafetyChecks(req *SafetyRequest) *SafetyResult {
 		reasonCodes = append(reasonCodes, "prompt_injection")
 	}
 
-	// 6. Group context adds stricter rules
+	// 10. Group context adds stricter rules
 	if req.IsGroup && action == "allow" {
 		if hasGroupRisk(text) {
 			action = "warn"
@@ -273,6 +315,37 @@ func hasPromptInjection(text string) bool {
 	return false
 }
 
+// hasEmail checks for email addresses.
+var emailRe = regexp.MustCompile(`[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}`)
+
+func hasEmail(text string) bool {
+	return emailRe.MatchString(text)
+}
+
+// hasPhoneNumber checks for phone numbers (international and US formats).
+// Requires at least 8 consecutive digits with optional +, spaces, dashes, parens.
+var phoneRe = regexp.MustCompile(`(?:\+?\d[\s\-()]*){8,}`)
+
+func hasPhoneNumber(text string) bool {
+	return phoneRe.MatchString(text)
+}
+
+// hasIBAN checks for International Bank Account Numbers.
+// IBAN format: 2 country letters + 2 check digits + 11-30 alphanumeric chars.
+var ibanRe = regexp.MustCompile(`\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b`)
+
+func hasIBAN(text string) bool {
+	upper := strings.ToUpper(text)
+	return ibanRe.MatchString(upper)
+}
+
+// hasCredentialLeak checks for paired username/password patterns.
+var credentialRe = regexp.MustCompile(`(?i)(?:user|username|login|password|passwd|pwd)\s*[:=]\s*\S+`)
+
+func hasCredentialLeak(text string) bool {
+	return credentialRe.MatchString(text)
+}
+
 // hasGroupRisk checks for risks specific to group contexts.
 func hasGroupRisk(text string) bool {
 	lower := strings.ToLower(text)
@@ -286,14 +359,4 @@ func hasGroupRisk(text string) bool {
 		}
 	}
 	return false
-}
-
-// isAllDigits checks if a string is all digits.
-func isAllDigits(s string) bool {
-	for _, r := range s {
-		if r < '0' || r > '9' {
-			return false
-		}
-	}
-	return len(s) > 0
 }

@@ -32,6 +32,7 @@ fn main() {
     let args: Vec<String> = std::env::args().collect();
     let realworld_mode = args.iter().any(|a| a == "--realworld" || a == "--real");
     let redteam_mode = args.iter().any(|a| a == "--redteam" || a == "--red");
+    let redteam_encoder_mode = args.iter().any(|a| a == "--redteam-encoder" || a == "--red-enc");
     let simulate_mode = args.iter().any(|a| a == "--simulate" || a == "--sim");
     let perdevice_mode = args.iter().any(|a| a == "--perdevice" || a == "--perdev");
 
@@ -40,8 +41,9 @@ fn main() {
         println!("Mode: PER-DEVICE (real model inference per device profile)");
     } else if realworld_mode {
         println!("Mode: REAL-WORLD (comprehensive datasets + model inference)");
-    } else if redteam_mode {
-        println!("Mode: RED-TEAM (adversarial attack suite)");
+    } else if redteam_mode || redteam_encoder_mode {
+        println!("Mode: RED-TEAM ({}adversarial attack suite)",
+            if redteam_encoder_mode { "encoder-escalation " } else { "" });
     } else if simulate_mode {
         println!("Mode: SIMULATE (device profile simulation)");
     } else {
@@ -67,15 +69,20 @@ fn main() {
         report.add_suite(eval_realworld::run_context_realworld());
         report.add_suite(eval_realworld::run_generation_realworld());
         report.add_suite(eval_realworld::run_action_realworld());
-    } else if redteam_mode {
+    } else if redteam_mode || redteam_encoder_mode {
         // Run the red-team adversarial suite
         let suite = redteam::RedTeamSuite::new();
-        let (suite_report, summary) = suite.run();
+        let (suite_report, summary) = if redteam_encoder_mode {
+            suite.run_with_encoder()
+        } else {
+            suite.run()
+        };
         report.add_suite(suite_report);
 
         // Print per-category breakdown
-        println!("Red-Team Category Breakdown");
-        println!("---------------------------");
+        let mode_label = if redteam_encoder_mode { " (Encoder Escalation)" } else { "" };
+        println!("Red-Team Category Breakdown{}", mode_label);
+        println!("---------------------------{}", if redteam_encoder_mode { "-----------------------" } else { "" });
         let mut categories: Vec<(&&str, &redteam::CategoryTally)> =
             summary.by_category.iter().collect();
         categories.sort_by_key(|(k, _)| *k);

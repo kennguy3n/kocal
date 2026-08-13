@@ -228,30 +228,43 @@ pub fn init() {
     console_error_panic_hook::set_once();
 }
 
+fn with_classifier<F, R>(f: F) -> R
+where
+    F: FnOnce(&KChatWasm) -> R,
+{
+    use std::cell::RefCell;
+    thread_local! {
+        static CLASSIFIER: RefCell<KChatWasm> = RefCell::new(KChatWasm::new());
+    }
+    CLASSIFIER.with(|c| f(&c.borrow()))
+}
+
 /// Standalone function: classify safety without creating a runtime instance.
 #[wasm_bindgen]
 pub fn classify_safety(text: &str, is_group: bool) -> SafetyResult {
-    let runtime = KChatWasm::new();
-    runtime.classify_safety(text, is_group)
+    with_classifier(|rt| rt.classify_safety(text, is_group))
 }
 
 /// Standalone function: check if text is safe.
 #[wasm_bindgen]
 pub fn is_safe(text: &str, is_group: bool) -> bool {
-    let runtime = KChatWasm::new();
-    runtime.is_safe(text, is_group)
+    with_classifier(|rt| rt.is_safe(text, is_group))
 }
 
 /// Standalone function: check if text contains PII.
 #[wasm_bindgen]
 pub fn contains_pii(text: &str) -> bool {
-    let runtime = KChatWasm::new();
-    runtime.contains_pii(text)
+    with_classifier(|rt| rt.contains_pii(text))
 }
 
 /// Standalone function: normalize text.
+/// Limits input to 10,000 characters to prevent memory exhaustion.
 #[wasm_bindgen]
 pub fn normalize_text(text: &str) -> String {
+    const MAX_TEXT_CHARS: usize = 10_000;
+    if text.chars().count() > MAX_TEXT_CHARS {
+        return String::new();
+    }
     kchat_safety::normalize::normalize_for_patterns(text)
 }
 
