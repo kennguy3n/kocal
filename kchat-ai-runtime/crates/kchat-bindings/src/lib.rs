@@ -223,9 +223,9 @@ impl KChatAiRuntime {
     /// Check if generative AI is available on this device.
     ///
     /// All tiers now have tier-appropriate generative models:
-    /// - Low: 0.3B Q4 (~200MB)
-    /// - Medium: 0.5B Q4 (~350MB)
-    /// - High: 0.8B Q4/Q8 (~500-850MB)
+    /// - Low: 1.7B Q2_0 (~442MB)
+    /// - Medium: 4B Q2_0 (~1.0GB)
+    /// - High: 8B Q2_0 (~2.1GB)
     pub fn can_generate(&self) -> bool {
         true
     }

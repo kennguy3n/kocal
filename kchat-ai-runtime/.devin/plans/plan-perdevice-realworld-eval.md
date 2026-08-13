@@ -52,7 +52,7 @@ a judgment report on whether each model is "good enough" for its tier.
 |-------|--------|------|-----------------|--------------|
 | ternary-bonsai-1.7b-mlx-2bit | MLX | 472MB | iPhone SE, MacBook Air, Intel NUC | kchat-mlx-server |
 | ternary-bonsai-1.7b-q2_0 | GGUF | 442MB | Galaxy A14, Windows Surface, Windows Legacy | llama-cpp-2 |
-| qwen3.5-0.8b-q4 | GGUF Q4_K_M | 500MB | iPhone 14, Pixel 7a | llama-cpp-2 |
+| ternary-bonsai-4b-mlx-2bit | MLX | 1.08GB | iPhone 14, Pixel 7a | kchat-mlx-server |
 | ternary-bonsai-4b-q2_0 | GGUF Q2_0 | 1.0GB | Pixel 8 Pro | llama-cpp-2 |
 | macaw-4bit-mlx | MLX | 1.5GB | iPhone 15 Pro, MacBook Pro M3 Max | kchat-mlx-server |
 | ternary-bonsai-8b-q2_0 | GGUF Q2_0 | 2.1GB | Windows RTX 4090 | llama-cpp-2 |
@@ -78,7 +78,7 @@ huggingface-cli download prism-ml/Ternary-Bonsai-1.7B-mlx-2bit \
 huggingface-cli download badtheorylabs/Macaw-4bit-MLX \
   --local-dir manifest/packs/macaw-4bit-mlx/
 
-# Already have: Qwen3.5-0.8B-Q4_K_M.gguf in manifest/packs/
+# Already have: Ternary-Bonsai-1.7B-Q2_0.gguf in manifest/packs/
 ```
 
 ## Phase 2: Build Swift MLX CLI (kchat-mlx-server)
@@ -396,7 +396,7 @@ For each MLX model:
 ║ Device                       Tier   Model                    Judge   Score  ║
 ╠══════════════════════════════════════════════════════════════════════════════╣
 ║ iPhone 15 Pro                High   macaw-4bit-mlx           PASS    87%    ║
-║ iPhone 14                    Med    qwen3.5-0.8b-q4          PASS    82%    ║
+║ iPhone 14                    Med    ternary-bonsai-4b-mlx     PASS    82%    ║
 ║ iPhone SE 2022               Low    bonsai-1.7b-mlx-2bit     MARG    65%    ║
 ║ ...                                                                          ║
 ╚══════════════════════════════════════════════════════════════════════════════╝

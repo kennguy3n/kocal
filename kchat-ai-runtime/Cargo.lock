@@ -1649,6 +1649,7 @@ dependencies = [
  "kchat-bindings",
  "kchat-context",
  "kchat-core",
+ "kchat-encoder",
  "kchat-generation",
  "kchat-safety",
  "num_cpus",

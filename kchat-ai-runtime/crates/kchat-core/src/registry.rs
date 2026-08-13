@@ -315,16 +315,16 @@ mod tests {
 
     const SAMPLE_TOML: &str = r#"
 [[models]]
-pack_id = "qwen3.5-0.8b-q4"
+pack_id = "ternary-bonsai-1.7b-q2_0"
 version = "1.0.0"
 pack_type = "generative"
-download_url = "https://cdn.kchat.dev/models/qwen3.5-0.8b-q4/1.0.0/qwen3.5-0.8b-q4.gguf"
+download_url = "https://huggingface.co/prism-ml/Ternary-Bonsai-1.7B-gguf/resolve/main/Ternary-Bonsai-1.7B-Q2_0.gguf"
 sha256 = "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"
-size_bytes = 500000000
-min_tier = "high"
-task_capabilities = ["summarize", "translate", "generate"]
-languages = ["en", "vi", "zh", "ja", "ko", "es"]
-quantization = "Q4_K_M"
+size_bytes = 463290464
+min_tier = "low"
+task_capabilities = ["summarize", "translate", "generate", "tool_use"]
+languages = ["en", "vi", "zh", "ja", "ko", "es", "ar", "de", "hi", "fr"]
+quantization = "Q2_0"
 
 [[models]]
 pack_id = "kchat-encoder-int8"
@@ -348,14 +348,14 @@ quantization = "INT8"
     #[test]
     fn test_load_from_toml_fields_parsed_correctly() {
         let registry = ModelRegistry::load_from_toml(SAMPLE_TOML).expect("parse");
-        let entry = registry.find("qwen3.5-0.8b-q4").expect("found");
+        let entry = registry.find("ternary-bonsai-1.7b-q2_0").expect("found");
         assert_eq!(entry.version, "1.0.0");
         assert_eq!(entry.pack_type, "generative");
-        assert_eq!(entry.size_bytes, 500_000_000);
-        assert_eq!(entry.min_tier, MinTier::High);
-        assert_eq!(entry.quantization, "Q4_K_M");
-        assert_eq!(entry.task_capabilities, vec!["summarize", "translate", "generate"]);
-        assert_eq!(entry.languages.len(), 6);
+        assert_eq!(entry.size_bytes, 463_290_464);
+        assert_eq!(entry.min_tier, MinTier::Low);
+        assert_eq!(entry.quantization, "Q2_0");
+        assert_eq!(entry.task_capabilities, vec!["summarize", "translate", "generate", "tool_use"]);
+        assert_eq!(entry.languages.len(), 10);
     }
 
     #[test]
@@ -395,17 +395,17 @@ quantization = "INT8"
     #[test]
     fn test_find_for_task_filters_by_task_and_tier() {
         let registry = ModelRegistry::load_from_toml(SAMPLE_TOML).expect("parse");
-        // "summarize" only on the high-tier generative pack; high tier satisfies it.
-        let results = registry.find_for_task("summarize", MinTier::High);
+        // "summarize" only on the low-tier generative pack; low tier satisfies it.
+        let results = registry.find_for_task("summarize", MinTier::Low);
         assert_eq!(results.len(), 1);
-        assert_eq!(results[0].pack_id, "qwen3.5-0.8b-q4");
+        assert_eq!(results[0].pack_id, "ternary-bonsai-1.7b-q2_0");
     }
 
     #[test]
     fn test_find_for_task_excludes_when_tier_too_low() {
         let registry = ModelRegistry::load_from_toml(SAMPLE_TOML).expect("parse");
-        // The generative pack requires high tier; a low-tier device cannot run it.
-        let results = registry.find_for_task("summarize", MinTier::Low);
+        // The encoder pack requires medium tier; a low-tier device cannot run it.
+        let results = registry.find_for_task("embed", MinTier::Low);
         assert!(results.is_empty());
     }
 
@@ -429,20 +429,24 @@ quantization = "INT8"
     #[test]
     fn test_find_for_language_excludes_when_tier_too_low() {
         let registry = ModelRegistry::load_from_toml(SAMPLE_TOML).expect("parse");
-        // The generative pack requires high tier; the encoder pack requires medium tier.
-        // A low-tier device runs neither.
-        let results = registry.find_for_language("en", MinTier::Low);
-        assert!(results.is_empty());
+        // The encoder pack requires medium tier; a low-tier device cannot run it.
+        // The generative pack is low tier so it IS available.
+        let results = registry.find_for_language("vi", MinTier::Low);
+        // Only the generative pack supports Vietnamese at low tier.
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].pack_id, "ternary-bonsai-1.7b-q2_0");
     }
 
     #[test]
     fn test_find_for_language_medium_tier_runs_embedding() {
         let registry = ModelRegistry::load_from_toml(SAMPLE_TOML).expect("parse");
-        // The encoder pack (medium tier) is runnable on a medium-tier device,
-        // but the generative pack (high tier) is not.
+        // At medium tier, both the generative pack (low tier) and encoder pack (medium tier)
+        // are available for English.
         let results = registry.find_for_language("en", MinTier::Medium);
-        assert_eq!(results.len(), 1);
-        assert_eq!(results[0].pack_id, "kchat-encoder-int8");
+        assert_eq!(results.len(), 2);
+        let ids: Vec<&str> = results.iter().map(|e| e.pack_id.as_str()).collect();
+        assert!(ids.contains(&"ternary-bonsai-1.7b-q2_0"));
+        assert!(ids.contains(&"kchat-encoder-int8"));
     }
 
     #[test]
@@ -719,6 +723,6 @@ quantization = "INT8"
         let toml_str = toml::to_string(&registry).expect("serialize");
         let parsed = ModelRegistry::load_from_toml(&toml_str).expect("parse");
         assert_eq!(parsed.list().len(), registry.list().len());
-        assert_eq!(parsed.find("qwen3.5-0.8b-q4"), registry.find("qwen3.5-0.8b-q4"));
+        assert_eq!(parsed.find("ternary-bonsai-1.7b-q2_0"), registry.find("ternary-bonsai-1.7b-q2_0"));
     }
 }

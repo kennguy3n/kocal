@@ -375,8 +375,47 @@ impl SafetyClassifier {
             request.community_overlay_id.as_deref(),
         );
 
+        // Community-aware reclassification: when a community overlay is present
+        // and the winning signal is SCAM_FRAUD from a regex detector, check if
+        // there's also a COMMUNITY_RULE lexicon signal. Community overlays can
+        // reclassify promotional spam (e.g., "crypto trading service" in a
+        // workplace) as a community rule violation rather than outright scam.
+        let resolved_signal = {
+            let winner = detectors::resolve_priority_chain(&signals);
+            if let Some(ref sig) = winner {
+                if sig.category == detectors::categories::SCAM_FRAUD
+                    && sig.reason_code.starts_with("scam_")
+                    && request.community_overlay_id.is_some()
+                {
+                    // Look for a COMMUNITY_RULE lexicon signal
+                    let community_signal = signals.signals.iter()
+                        .find(|s| s.category == detectors::categories::COMMUNITY_RULE);
+                    if let Some(cs) = community_signal {
+                        // Check if the community overlay is a type that would
+                        // reclassify promotional content (workplace, school, etc.)
+                        let overlay_lower = request.community_overlay_id
+                            .as_ref()
+                            .map(|s| s.to_ascii_lowercase())
+                            .unwrap_or_default();
+                        let reclassifying = ["workplace", "school", "education", "professional"];
+                        if reclassifying.iter().any(|r| overlay_lower.contains(r)) {
+                            Some(cs.clone())
+                        } else {
+                            winner
+                        }
+                    } else {
+                        winner
+                    }
+                } else {
+                    winner
+                }
+            } else {
+                winner
+            }
+        };
+
         // Resolve deterministic verdict
-        let verdict = if let Some(signal) = detectors::resolve_priority_chain(&signals) {
+        let verdict = if let Some(signal) = resolved_signal {
             // Check protected-speech demotion BEFORE building the verdict.
             // CHILD_SAFETY is never demoted — defense in depth.
             if let Some(hint) = should_demote_for_protected_speech(signal.category, &context_hints) {

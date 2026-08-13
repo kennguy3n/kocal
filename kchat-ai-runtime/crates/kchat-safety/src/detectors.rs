@@ -413,6 +413,67 @@ impl UrlDetector {
     }
 }
 
+// ---------------------------------------------------------------------------
+// Malware URL detector — fires on URLs with executable extensions or
+// malware-specific download patterns. Distinguishes malware links from
+// generic scam/phishing URLs.
+// ---------------------------------------------------------------------------
+
+pub struct MalwareUrlDetector;
+
+impl MalwareUrlDetector {
+    pub fn detect(text: &str) -> Vec<DetectorSignal> {
+        let cleaned = crate::normalize::strip_zero_width(text);
+        let url_re = URL_RE.get_or_init(|| {
+            Regex::new(r#"(?i)(?:https?://|www\.)[^\s<>"']{3,}"#).unwrap()
+        });
+        let urls: Vec<String> = url_re.find_iter(&cleaned).map(|m| m.as_str().to_string()).collect();
+        if urls.is_empty() { return vec![]; }
+
+        let exe_ext_re = EXE_EXT_RE.get_or_init(|| {
+            Regex::new(r#"(?i)\.(exe|scr|bat|msi|apk|dmg|com|pif|reg|vbs|js|jar|ps1)(?:$|[/?\s])"#).unwrap()
+        });
+        let malware_path_re = MALWARE_PATH_RE.get_or_init(|| {
+            Regex::new(r#"(?i)/(?:setup|install|download|update|patch|firmware)(?:[/\.?]|$)"#).unwrap()
+        });
+
+        let mut signals = Vec::new();
+        let lower_text = cleaned.to_ascii_lowercase();
+        for url in &urls {
+            let lowered = url.to_ascii_lowercase();
+            let has_exe = exe_ext_re.is_match(&lowered);
+            let has_malware_path = malware_path_re.is_match(&lowered);
+            let on_high_risk_tld = high_risk_tlds().iter().any(|tld| {
+                lowered.ends_with(&format!(".{tld}")) || lowered.contains(&format!(".{tld}/"))
+            });
+            let has_install_context = lower_text.contains("install")
+                || lower_text.contains("setup")
+                || lower_text.contains("security patch")
+                || lower_text.contains("security update")
+                || lower_text.contains("sicherheitsupdate")
+                || lower_text.contains("attached document")
+                || lower_text.contains("open the attached");
+
+            // Fire if URL has executable extension, or URL has malware path on high-risk TLD,
+            // or URL is on high-risk TLD with install context in surrounding text
+            if has_exe || (has_malware_path && on_high_risk_tld) || (on_high_risk_tld && has_install_context) {
+                signals.push(DetectorSignal {
+                    category: categories::MALWARE_LINK,
+                    severity: Severity::SEVERE,
+                    confidence: 0.90,
+                    reason_code: "malware_url_exe".into(),
+                    action: Action::Warn,
+                });
+                break; // One signal is enough
+            }
+        }
+        signals
+    }
+}
+
+static EXE_EXT_RE: OnceLock<Regex> = OnceLock::new();
+static MALWARE_PATH_RE: OnceLock<Regex> = OnceLock::new();
+
 /// Aggregate URL risk score in [0.0, 1.0].
 pub fn score_url_risk(normalized_text: &str) -> f64 {
     let cleaned = crate::normalize::strip_zero_width(normalized_text);
@@ -650,9 +711,10 @@ pub fn run_all_detectors(
 ) -> LocalSignals {
     let mut signals = LocalSignals::default();
 
-    // PII and URL run on the digit-preserving view only.
+    // PII, URL, and malware URL run on the digit-preserving view only.
     for s in PiiDetector::detect(pattern_text) { signals.add(s); }
     for s in UrlDetector::detect(pattern_text) { signals.add(s); }
+    for s in MalwareUrlDetector::detect(pattern_text) { signals.add(s); }
 
     // Scam and lexicon run across all defang variants — union hits, dedupe.
     let mut seen_scam: HashSet<String> = HashSet::new();
@@ -698,6 +760,7 @@ pub fn resolve_priority_chain(signals: &LocalSignals) -> Option<DetectorSignal> 
         categories::CHILD_SAFETY,
         categories::SELF_HARM,
         categories::PRIVATE_DATA,
+        categories::MALWARE_LINK,
         categories::SCAM_FRAUD,
         categories::HATE,
         categories::VIOLENCE_THREAT,
@@ -710,7 +773,6 @@ pub fn resolve_priority_chain(signals: &LocalSignals) -> Option<DetectorSignal> 
         categories::MISINFORMATION_CIVIC,
         categories::COMMUNITY_RULE,
         categories::DEEPFAKE_SYNTHETIC,
-        categories::MALWARE_LINK,
     ];
     for &cat in &priority {
         if let Some(best) = signals.signals.iter()

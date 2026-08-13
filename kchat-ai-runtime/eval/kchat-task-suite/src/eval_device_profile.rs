@@ -849,7 +849,7 @@ fn test_memory_budget(p: &DeviceProfile) -> EvalResult {
         (DeviceTier::High, "ios" | "macos", "aarch64") => 2_303_661_704,           // Bonsai 8B MLX ~2.15GB (exact from HF LFS)
         (DeviceTier::High, "android", _) => 2_182_184_672,                         // Bonsai 8B Q2_0 GGUF ~2.1GB (exact)
         (DeviceTier::High, "windows", _) => 2_182_184_672,                         // Bonsai 8B Q2_0 GGUF ~2.1GB (exact)
-        (DeviceTier::High, _, _) => 850 * 1024 * 1024,                             // 0.8B Q8 fallback ~850MB
+        (DeviceTier::High, _, _) => 2_182_184_672,                             // Bonsai 8B Q2_0 fallback ~2.1GB
     };
     if model_size > peak_budget {
         errors.push(format!(

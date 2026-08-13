@@ -74,7 +74,7 @@ impl SwarmConfig {
 pub struct Peer {
     /// Unique peer identifier.
     pub id: String,
-    /// Model name (e.g. "qwen3.5-0.8b-q4").
+    /// Model name (e.g. "ternary-bonsai-1.7b-q2_0").
     pub model_name: String,
     /// Task specialty (e.g. "summarize", "translate").
     pub specialty: String,
@@ -473,9 +473,9 @@ mod tests {
 
     #[test]
     fn test_peer_creation() {
-        let peer = Peer::new("p1", "qwen3.5-0.8b", "summarize");
+        let peer = Peer::new("p1", "ternary-bonsai-1.7b-q2_0", "summarize");
         assert_eq!(peer.id, "p1");
-        assert_eq!(peer.model_name, "qwen3.5-0.8b");
+        assert_eq!(peer.model_name, "ternary-bonsai-1.7b-q2_0");
         assert_eq!(peer.specialty, "summarize");
     }
 

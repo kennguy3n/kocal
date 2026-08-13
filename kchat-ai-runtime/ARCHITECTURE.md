@@ -362,7 +362,7 @@ The foundation crate that all other crates depend on.
 - 2,005 safety cases (14 languages + 13 code-switch combos)
 - 221 guardrail cases (17-category taxonomy, YAML from sample_messages.yaml)
 - 13 context cases (multilingual, ACL tests)
-- 11 generation cases (real Qwen3.5-0.8B inference via llama-server)
+- 11 generation cases (real Ternary-Bonsai-1.7B inference via llama-server)
 - 17 action cases (tool plans, artifact ops, commit tokens)
 
 **Per-Device Eval** (1,800 task runs):

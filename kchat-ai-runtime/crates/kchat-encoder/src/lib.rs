@@ -27,7 +27,7 @@ pub mod rerank;
 pub use mock::{MockEncoderSession, MockSafetyHead, MockEmbedHead, MockRerankHead};
 
 #[cfg(feature = "onnx-runtime")]
-pub use session::{EncoderSession, ForwardOutput, Quantization};
+pub use session::{EncoderSession, ForwardOutput};
 
 #[cfg(feature = "onnx-runtime")]
 pub use safety::SafetyHead;

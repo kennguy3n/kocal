@@ -19,19 +19,38 @@ use serde_json::json;
 use std::path::PathBuf;
 
 /// Locate the test model file.
+/// Prefers Ternary-Bonsai models, falls back to any available GGUF in manifest/packs/.
 fn model_path() -> Option<PathBuf> {
-    let candidates = [
-        "manifest/packs/Qwen3.5-0.8B-Q4_K_M.gguf",
-        "../manifest/packs/Qwen3.5-0.8B-Q4_K_M.gguf",
-        "../../manifest/packs/Qwen3.5-0.8B-Q4_K_M.gguf",
+    let pack_dirs = [
+        PathBuf::from("manifest/packs"),
+        PathBuf::from("../manifest/packs"),
+        PathBuf::from("../../manifest/packs"),
     ];
-    for candidate in &candidates {
-        let path = PathBuf::from(candidate);
-        if path.exists() {
-            return Some(path.canonicalize().unwrap_or(path));
+
+    // Collect all available GGUF files
+    let mut gguf_files: Vec<PathBuf> = Vec::new();
+    for dir in &pack_dirs {
+        if let Ok(entries) = std::fs::read_dir(dir) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.extension().map_or(false, |ext| ext == "gguf") {
+                    gguf_files.push(path);
+                }
+            }
+        }
+        if !gguf_files.is_empty() {
+            break;
         }
     }
-    None
+
+    // Prefer standard quantization formats (Q4_K_M, Q8_0) that llama.cpp can reliably load.
+    // Q2_0 ternary models may not be supported by all llama.cpp versions.
+    gguf_files.sort_by_key(|p| {
+        let name = p.file_name().map_or(false, |n| n.to_str().map_or(false, |s| s.contains("Q4_K_M") || s.contains("Q8_0")));
+        if name { 0 } else { 1 }
+    });
+
+    gguf_files.first().map(|p| p.canonicalize().unwrap_or_else(|_| p.clone()))
 }
 
 #[test]
@@ -47,9 +66,9 @@ fn test_llamacpp_load_and_generate() {
     let backend = LlamaCppBackend::new();
     let config = BackendConfig::for_tier(
         BackendType::LlamaCppMetal,
-        "qwen3.5-0.8b-q4",
+        "test-gguf-model",
         model_path.to_str().unwrap(),
-        DeviceTier::High,
+        DeviceTier::Low,
         "macos",
     );
 
@@ -96,9 +115,9 @@ fn test_llamacpp_streaming() {
     let backend = LlamaCppBackend::new();
     let config = BackendConfig::for_tier(
         BackendType::LlamaCppMetal,
-        "qwen3.5-0.8b-q4",
+        "test-gguf-model",
         model_path.to_str().unwrap(),
-        DeviceTier::High,
+        DeviceTier::Low,
         "macos",
     );
 
@@ -147,9 +166,9 @@ fn test_llamacpp_json_schema_grammar() {
     let backend = LlamaCppBackend::new();
     let config = BackendConfig::for_tier(
         BackendType::LlamaCppMetal,
-        "qwen3.5-0.8b-q4",
+        "test-gguf-model",
         model_path.to_str().unwrap(),
-        DeviceTier::High,
+        DeviceTier::Low,
         "macos",
     );
 
@@ -216,9 +235,9 @@ fn test_llamacpp_cancellation() {
     let backend = LlamaCppBackend::new();
     let config = BackendConfig::for_tier(
         BackendType::LlamaCppMetal,
-        "qwen3.5-0.8b-q4",
+        "test-gguf-model",
         model_path.to_str().unwrap(),
-        DeviceTier::High,
+        DeviceTier::Low,
         "macos",
     );
 

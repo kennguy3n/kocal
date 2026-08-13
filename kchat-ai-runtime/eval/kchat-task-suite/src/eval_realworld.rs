@@ -1272,6 +1272,202 @@ struct GuardrailCase {
     description: String,
 }
 
+/// Eval tier level — controls which pipeline stages are active.
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum EvalTier {
+    /// Deterministic-only (low-tier device simulation)
+    Deterministic,
+    /// Deterministic + ONNX encoder (medium-tier simulation)
+    WithEncoder,
+    /// Deterministic + encoder + vision (high-tier simulation)
+    FullPipeline,
+}
+
+/// Default ONNX INT4 encoder model path.
+const ENCODER_MODEL_PATH: &str = "/Users/Ken/workspaces/models/quantized_models/onnx_int4/model_quantized_int4.onnx";
+const ENCODER_TOKENIZER_PATH: &str = "/Users/Ken/workspaces/models/quantized_models/onnx_int4/tokenizer.json";
+
+/// Default MobileCLIP-S2 vision model path.
+const VISION_MODEL_PATH: &str = "/Users/Ken/workspaces/models/quantized_models/mobileclip_s2_int8/visual_encoder_int8.onnx";
+
+/// Check if the ONNX Runtime shared library is available on the system.
+/// The ort crate panics if the dylib is not found, so we must check first.
+fn onnx_runtime_available() -> bool {
+    // Check common dylib locations on macOS
+    let candidates = [
+        "libonnxruntime.dylib",
+        "/usr/local/lib/libonnxruntime.dylib",
+        "/opt/homebrew/lib/libonnxruntime.dylib",
+    ];
+    for candidate in &candidates {
+        if std::fs::metadata(candidate).is_ok() {
+            return true;
+        }
+    }
+    // Also check via KCHAT_ONNX_LIB env var
+    if let Ok(path) = std::env::var("KCHAT_ONNX_LIB") {
+        if std::fs::metadata(&path).is_ok() {
+            return true;
+        }
+    }
+    false
+}
+
+/// Try to load the ONNX INT4 encoder session. Returns None if model files
+/// are missing, the ONNX Runtime dylib is not available, or the onnx-runtime
+/// feature is not enabled.
+#[cfg(feature = "onnx-runtime")]
+fn load_encoder_session() -> Option<std::sync::Arc<kchat_encoder::EncoderSession>> {
+    if !onnx_runtime_available() {
+        eprintln!("[guardrail] ONNX Runtime dylib not found, skipping encoder");
+        return None;
+    }
+
+    let model_path = std::env::var("KCHAT_ENCODER_PATH").unwrap_or_else(|_| ENCODER_MODEL_PATH.to_string());
+    let tokenizer_path = std::env::var("KCHAT_ENCODER_TOKENIZER").unwrap_or_else(|_| ENCODER_TOKENIZER_PATH.to_string());
+
+    if !Path::new(&model_path).exists() {
+        eprintln!("[guardrail] Encoder model not found at {model_path}, skipping encoder");
+        return None;
+    }
+    if !Path::new(&tokenizer_path).exists() {
+        eprintln!("[guardrail] Tokenizer not found at {tokenizer_path}, skipping encoder");
+        return None;
+    }
+
+    match kchat_encoder::EncoderSession::new(
+        &model_path,
+        &tokenizer_path,
+        kchat_encoder::Quantization::Int4,
+        2, // intra_threads=2 for eval
+    ) {
+        Ok(session) => {
+            eprintln!("[guardrail] Loaded ONNX INT4 encoder ({}MB)", model_path);
+            Some(std::sync::Arc::new(session))
+        }
+        Err(e) => {
+            eprintln!("[guardrail] Failed to load encoder: {e}");
+            None
+        }
+    }
+}
+
+#[cfg(not(feature = "onnx-runtime"))]
+fn load_encoder_session() -> Option<()> {
+    None
+}
+
+/// Try to build a VisionEncoderAdapter from the MobileCLIP-S2 ONNX model.
+/// Returns None if model file is missing or onnx-runtime-vision feature is not enabled.
+#[cfg(feature = "onnx-runtime-vision")]
+fn load_vision_adapter() -> Option<kchat_safety::vision::VisionEncoderAdapter> {
+    if !onnx_runtime_available() {
+        eprintln!("[guardrail] ONNX Runtime dylib not found, skipping vision adapter");
+        return None;
+    }
+
+    let model_path = std::env::var("KCHAT_VISION_MODEL_PATH").unwrap_or_else(|_| VISION_MODEL_PATH.to_string());
+
+    if !Path::new(&model_path).exists() {
+        eprintln!("[guardrail] Vision model not found at {model_path}, skipping vision");
+        return None;
+    }
+
+    // Heuristic score mapper: maps 512-dim embedding to MediaDescriptor scores.
+    // In production, this would use a prototype-bank cosine similarity mapper.
+    // For now, returns all-None scores — vision cases rely on YAML media descriptors.
+    let mapper = |_embedding: &[f32]| {
+        kchat_safety::media::MediaDescriptor {
+            kind: "image".into(),
+            nsfw_score: None,
+            violence_score: None,
+            self_harm_score: None,
+            hate_score: None,
+            harassment_score: None,
+            drugs_weapons_score: None,
+            extremism_score: None,
+            child_safety_score: None,
+            deepfake_score: None,
+            malware_score: None,
+            face_count: None,
+        }
+    };
+
+    match kchat_safety::vision::VisionEncoderAdapter::builder()
+        .with_onnx_model_file(&model_path)
+        .with_intra_threads(2)
+        .with_score_mapper(mapper)
+        .build()
+    {
+        Ok(adapter) => {
+            eprintln!("[guardrail] Loaded MobileCLIP-S2 vision adapter");
+            Some(adapter)
+        }
+        Err(e) => {
+            eprintln!("[guardrail] Failed to load vision adapter: {e}");
+            None
+        }
+    }
+}
+
+#[cfg(not(feature = "onnx-runtime-vision"))]
+fn load_vision_adapter() -> Option<()> {
+    None
+}
+
+/// Determine the eval tier based on available features, model files, and ONNX Runtime dylib.
+fn determine_eval_tier() -> EvalTier {
+    if !onnx_runtime_available() {
+        return EvalTier::Deterministic;
+    }
+    #[cfg(feature = "onnx-runtime-vision")]
+    {
+        let vision_path = std::env::var("KCHAT_VISION_MODEL_PATH").unwrap_or_else(|_| VISION_MODEL_PATH.to_string());
+        if Path::new(&vision_path).exists() {
+            return EvalTier::FullPipeline;
+        }
+    }
+    #[cfg(feature = "onnx-runtime")]
+    {
+        let encoder_path = std::env::var("KCHAT_ENCODER_PATH").unwrap_or_else(|_| ENCODER_MODEL_PATH.to_string());
+        if Path::new(&encoder_path).exists() {
+            return EvalTier::WithEncoder;
+        }
+    }
+    EvalTier::Deterministic
+}
+
+/// Apply jurisdiction severity floors to a verdict (Phase 2: skill-pack overlay).
+/// Raises the severity to at least the jurisdiction-mandated floor for the category.
+#[cfg(feature = "skill-pack")]
+fn apply_severity_floors(
+    category: u32,
+    severity: u8,
+    jurisdiction: Option<&str>,
+) -> u8 {
+    if let Some(code) = jurisdiction {
+        let floors = kchat_safety::skillpack::data::loaders::extract_jurisdiction_severity_floors(code);
+        for floor in &floors {
+            if floor.category == category && severity < floor.severity_floor {
+                return floor.severity_floor;
+            }
+        }
+    }
+    severity
+}
+
+#[cfg(not(feature = "skill-pack"))]
+fn apply_severity_floors(_category: u32, severity: u8, _jurisdiction: Option<&str>) -> u8 {
+    severity
+}
+
+/// Per-category pass/fail tracking for detailed reporting.
+#[derive(Default)]
+struct CategoryStats {
+    correct: u32,
+    total: u32,
+}
+
 /// Load and run the guardrail sample-messages YAML corpus.
 /// These cases use the full 17-category taxonomy (0-16) with jurisdiction
 /// and community overlay context, testing harmonized classification.
@@ -1307,12 +1503,51 @@ fn run_guardrail_sample_messages() -> SuiteReport {
     use kchat_safety::media::MediaDescriptor;
     use std::sync::Arc;
 
+    // Determine eval tier and load models accordingly (Phase 3/4/5/7).
+    let tier = determine_eval_tier();
+    eprintln!("[guardrail] Eval tier: {:?}", tier);
+
     let classifier = SafetyClassifier::new();
     classifier.load_policy_pack(Arc::new(build_eval_policy_pack()));
+
+    // Lazily load ONNX encoder for medium+ tier (Phase 3).
+    let encoder_available = {
+        #[cfg(feature = "onnx-runtime")]
+        {
+            let session = match tier {
+                EvalTier::WithEncoder | EvalTier::FullPipeline => load_encoder_session(),
+                EvalTier::Deterministic => None,
+            };
+            if let Some(s) = session {
+                use kchat_safety::encoder::OnnxEncoder;
+                classifier.attach_encoder(Box::new(OnnxEncoder::new(s)));
+                true
+            } else {
+                false
+            }
+        }
+        #[cfg(not(feature = "onnx-runtime"))]
+        {
+            let _ = tier;
+            false
+        }
+    };
+
+    // Lazily load vision adapter for high tier (Phase 4).
+    // Vision adapter is loaded but not directly attached — vision cases use
+    // media descriptors from YAML (synthetic scores) rather than real image inference.
+    // The adapter would be used if image bytes were available.
+    let _vision_adapter = match tier {
+        EvalTier::FullPipeline => load_vision_adapter(),
+        _ => None,
+    };
 
     let mut correct = 0u32;
     let mut total = 0u32;
     let mut latencies: Vec<u64> = Vec::new();
+    let mut category_stats: HashMap<u32, CategoryStats> = HashMap::new();
+    let mut det_latencies: Vec<u64> = Vec::new();
+    let mut enc_latencies: Vec<u64> = Vec::new();
 
     for case in &cases {
         let mut req = ClassifyRequest::from_text(&case.message.text);
@@ -1413,13 +1648,26 @@ fn run_guardrail_sample_messages() -> SuiteReport {
             _ => None,
         };
 
+        // Enable encoder escalation for medium+ tier (Phase 3).
+        if encoder_available {
+            req = req.with_encoder();
+        }
+
         let start = std::time::Instant::now();
         let result = classifier.classify(&req);
         let duration_ms = start.elapsed().as_millis() as u64;
         latencies.push(duration_ms);
 
+        // Track latency by source (Phase 5: per-path reporting).
+        if result.verdict.used_encoder {
+            enc_latencies.push(duration_ms);
+        } else {
+            det_latencies.push(duration_ms);
+        }
+
         let predicted_cat = result.verdict.category;
-        let predicted_sev = result.verdict.severity.0;
+        // Apply jurisdiction severity floors (Phase 2: skill-pack overlay).
+        let predicted_sev = apply_severity_floors(predicted_cat, result.verdict.severity.0, req.jurisdiction.as_deref());
         let cat_match = predicted_cat == case.expected_category;
         // For SAFE (0) cases, severity must be 0. For non-SAFE, severity should
         // be >= 1 but we don't require exact match since the deterministic layer
@@ -1434,6 +1682,13 @@ fn run_guardrail_sample_messages() -> SuiteReport {
         total += 1;
         if is_correct {
             correct += 1;
+        }
+
+        // Track per-category stats (Phase 5: per-category reporting).
+        let stats = category_stats.entry(case.expected_category).or_default();
+        stats.total += 1;
+        if is_correct {
+            stats.correct += 1;
         }
 
         let mut meta = HashMap::new();
@@ -1488,12 +1743,44 @@ fn run_guardrail_sample_messages() -> SuiteReport {
     let p95 = if !latencies.is_empty() { latencies[latencies.len() * 95 / 100] } else { 0 };
     let accuracy = if total > 0 { correct as f64 / total as f64 } else { 0.0 };
 
+    // Per-path latency reporting (Phase 5).
+    det_latencies.sort();
+    enc_latencies.sort();
+    let det_p50 = if !det_latencies.is_empty() { det_latencies[det_latencies.len() / 2] } else { 0 };
+    let det_p95 = if !det_latencies.is_empty() { det_latencies[det_latencies.len() * 95 / 100] } else { 0 };
+    let enc_p50 = if !enc_latencies.is_empty() { enc_latencies[enc_latencies.len() / 2] } else { 0 };
+    let enc_p95 = if !enc_latencies.is_empty() { enc_latencies[enc_latencies.len() * 95 / 100] } else { 0 };
+
     let mut summary_meta = HashMap::new();
     summary_meta.insert("accuracy".into(), format!("{:.4}", accuracy));
     summary_meta.insert("total_cases".into(), total.to_string());
     summary_meta.insert("correct".into(), correct.to_string());
     summary_meta.insert("latency_p50_ms".into(), p50.to_string());
     summary_meta.insert("latency_p95_ms".into(), p95.to_string());
+    summary_meta.insert("eval_tier".into(), format!("{:?}", tier));
+    summary_meta.insert("encoder_available".into(), encoder_available.to_string());
+    summary_meta.insert("det_latency_p50_ms".into(), det_p50.to_string());
+    summary_meta.insert("det_latency_p95_ms".into(), det_p95.to_string());
+    summary_meta.insert("enc_latency_p50_ms".into(), enc_p50.to_string());
+    summary_meta.insert("enc_latency_p95_ms".into(), enc_p95.to_string());
+    summary_meta.insert("det_cases".into(), det_latencies.len().to_string());
+    summary_meta.insert("enc_cases".into(), enc_latencies.len().to_string());
+
+    // Per-category breakdown (Phase 5).
+    let mut cat_keys: Vec<u32> = category_stats.keys().copied().collect();
+    cat_keys.sort();
+    for cat in cat_keys {
+        let stats = &category_stats[&cat];
+        let cat_accuracy = if stats.total > 0 {
+            stats.correct as f64 / stats.total as f64
+        } else {
+            0.0
+        };
+        summary_meta.insert(
+            format!("cat_{}", cat),
+            format!("{}/{} ({:.1}%)", stats.correct, stats.total, cat_accuracy * 100.0),
+        );
+    }
 
     suite.add(EvalResult::pass_with_meta(
         "guardrail_summary_metrics",
@@ -2235,7 +2522,7 @@ pub fn run_generation_realworld() -> SuiteReport {
                 total_outputs += 1;
                 let text = resp.content.trim().to_string();
 
-                // Strip thinking tags if present (Qwen3.5 thinking mode)
+                // Strip thinking tags if present (Qwen3 thinking mode)
                 let text_clean = if text.contains("<think>") {
                     // Extract content after </think>
                     if let Some(end) = text.find("</think>") {

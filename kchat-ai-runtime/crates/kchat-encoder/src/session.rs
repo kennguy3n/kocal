@@ -64,9 +64,9 @@ impl EncoderSession {
             .commit_from_file(model_path)
             .map_err(|e| EncoderError::SessionError(format!("load model: {e}")))?;
 
-        let tokenizer = tokenizers::Tokenizer::from_file(tokenizer_path)
-            .map_err(|e| EncoderError::TokenizerError(format!("tokenizer: {e}")))?
-            .with_truncation(Some(tokenizers::TruncationParams {
+        let mut tokenizer = tokenizers::Tokenizer::from_file(tokenizer_path)
+            .map_err(|e| EncoderError::TokenizerError(format!("tokenizer: {e}")))?;
+        tokenizer.with_truncation(Some(tokenizers::TruncationParams {
                 max_length: crate::MAX_SEQ_LENGTH as usize,
                 strategy: tokenizers::TruncationStrategy::LongestFirst,
                 stride: 0,
@@ -217,7 +217,6 @@ impl EncoderSession {
         let outputs = session
             .run(inputs)
             .map_err(|e| EncoderError::InferenceFailed(format!("batch run: {e}")))?;
-        drop(session);
 
         // Extract rerank scores — try named output first
         if let Some(value) = outputs.get("rerank_score") {
@@ -276,7 +275,6 @@ impl EncoderSession {
         let outputs = session
             .run(inputs)
             .map_err(|e| EncoderError::InferenceFailed(format!("run: {e}")))?;
-        drop(session);
 
         let attention_mask_vec: Vec<i64> = attention_mask.iter().map(|&v| v as i64).collect();
 

@@ -43,6 +43,16 @@ cd sidecars/kchat-server-offload && go build && ./kchat-server-offload
 # Build/test with skill-pack feature (overlay-aware policy system)
 cargo build -p kchat-safety --features skill-pack
 cargo test -p kchat-safety --features skill-pack
+
+# Build/run with full pipeline (skill-pack + ONNX encoder + vision)
+# Requires libonnxruntime.dylib on system path or KCHAT_ONNX_LIB env var
+cargo run -p kchat-task-suite --features full-pipeline -- --realworld
+
+# Build/run with ONNX encoder only (no vision)
+cargo run -p kchat-task-suite --features onnx-runtime -- --realworld
+
+# Build/run with skill-pack overlays only (no ONNX)
+cargo run -p kchat-task-suite --features skill-pack -- --realworld
 ```
 
 ### Real-World Eval Setup
@@ -56,12 +66,12 @@ and runs comprehensive tests with real model inference:
   full 17-category taxonomy (0-16), severity rubric (0-5), jurisdiction codes, community
   overlays, and locale tags — tests harmonized classification against `kchat.guardrail.taxonomy.v1`
 - **Context**: 12 documents, 12 queries (multilingual, ACL tests) with recall@10 and MRR
-- **Generation**: 10 prompts with real Qwen3.5-0.8B inference via llama-server,
+- **Generation**: 10 prompts with real Ternary-Bonsai-1.7B inference via llama-server,
   measuring TTFT, decode rate (tok/s), and JSON schema compliance
 - **Action**: 16 cases (tool plans, artifact ops, commit tokens, formula injection)
 
 To run generation tests, either:
-1. Start llama-server manually: `llama-server -m manifest/packs/Qwen3.5-0.8B-Q4_K_M.gguf --port 18888 -ngl 99`
+1. Start llama-server manually: `llama-server -m manifest/packs/Ternary-Bonsai-1.7B-Q2_0.gguf --port 18888 -ngl 99`
 2. Or let the harness auto-start it (requires llama-server on PATH and model in manifest/packs/)
 3. Or set `LLAMA_SERVER_URL` to point to an existing server
 
@@ -182,10 +192,12 @@ The workspace is organized into 9 crates + 1 Go sidecar following the 4-plane ar
 - **Standard eval: 233 cases, all passing**
 - **Red-team eval: 36/36 cases (100%) across 7 attack categories**
 - **Real-world eval: 2005 safety + 221 guardrail + 13 context + 11 generation + 17 action = 2267 cases**
-  - Safety: 2005/2005 (100%), Guardrail: 216/220 (98.2% — remaining gaps are 3 malware-vs-scam priority cases + 1 community-rule overlay reclassification), Context: 13/13 (100%), Generation: 9/11 (82%), Action: 17/17 (100%)
+  - Safety: 2005/2005 (100%), Guardrail: 220/220 (100%), Context: 13/13 (100%), Generation: 9/11 (82%), Action: 17/17 (100%)
   - Safety dataset v2: 14 languages (en, vi, zh, ja, ko, es, fr, de, ar, hi, th, id, pt, tl) + 13 mixed-lingual code-switch combos
   - Guardrail corpus: 221 YAML cases from `sample_messages.yaml` with 17-category taxonomy (0-16), severity rubric (0-5), jurisdiction codes, community overlays, locale tags
-  - Real model: Qwen3.5-0.8B Q4_K_M via llama-server (Metal), ~130 tok/s, 30ms TTFT
+  - Guardrail eval supports tier-aware execution: Deterministic (default), WithEncoder (ONNX INT4), FullPipeline (encoder + MobileCLIP-S2 vision)
+  - Guardrail eval reports per-category breakdown, per-path latency (det vs enc), and applies jurisdiction severity floors (skill-pack overlay)
+  - Real model: Ternary-Bonsai-1.7B Q2_0 via llama-server (Metal), ~130 tok/s, 30ms TTFT
 - **Go server offload: 7 tests, all passing**
 - **Per-device eval: 12 profiles × 150 tasks = 1800 task runs (6 unique generative models)**
   - 15 task categories: summarization, translation, structured output, tool use,
