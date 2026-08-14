@@ -533,14 +533,18 @@ mod with_ort {
     /// Create one ONNX session with EP selection and graph
     /// optimisation, routing any ORT error through
     /// [`AsrError::Ort`] with the call-site `op` label.
-    fn create_whisper_session(model_path: &Path, op: &'static str) -> AsrResult<Session> {
+    fn create_whisper_session(
+        model_path: &Path,
+        op: &'static str,
+        intra_threads: usize,
+    ) -> AsrResult<Session> {
         let mut builder = ort::session::Session::builder()
             .map_err(|e| AsrError::Ort { op, detail: format!("builder: {e}") })?;
         builder = builder
             .with_optimization_level(ort::session::builder::GraphOptimizationLevel::Level3)
             .map_err(|e| AsrError::Ort { op, detail: format!("optimization: {e}") })?;
         builder = builder
-            .with_intra_threads(2)
+            .with_intra_threads(intra_threads)
             .map_err(|e| AsrError::Ort { op, detail: format!("threads: {e}") })?;
         let ep_eps = build_ort_eps_for_host();
         if !ep_eps.is_empty() {
@@ -593,22 +597,39 @@ mod with_ort {
         /// HuggingFace layout: `encoder_model.onnx`,
         /// `decoder_model.onnx`, `tokenizer.json` colocated in
         /// the same directory as `encoder_dir`.
-        pub fn new(encoder_dir: &Path) -> AsrResult<Self> {
+        ///
+        /// `intra_threads` controls ONNX Runtime intra-op
+        /// parallelism. Use 2 for low-tier devices, 3 for
+        /// medium, 4+ for high-tier.
+        pub fn new(encoder_dir: &Path, intra_threads: usize) -> AsrResult<Self> {
             let encoder_path = encoder_dir.join(WHISPER_DEFAULT_ENCODER_FILENAME);
             let decoder_path = encoder_dir.join(WHISPER_DEFAULT_DECODER_FILENAME);
             let tokenizer_path = encoder_dir.join(WHISPER_DEFAULT_TOKENIZER_FILENAME);
-            Self::new_with_paths(&encoder_path, &decoder_path, &tokenizer_path)
+            Self::new_with_paths(&encoder_path, &decoder_path, &tokenizer_path, intra_threads)
         }
 
         /// Build a Whisper transcriber from explicit paths to
         /// the three artifacts.
+        ///
+        /// `intra_threads` controls ONNX Runtime intra-op
+        /// parallelism. Use 2 for low-tier devices, 3 for
+        /// medium, 4+ for high-tier.
         pub fn new_with_paths(
             encoder_path: &Path,
             decoder_path: &Path,
             tokenizer_path: &Path,
+            intra_threads: usize,
         ) -> AsrResult<Self> {
-            let encoder = create_whisper_session(encoder_path, "whisper_encoder_session_create")?;
-            let decoder = create_whisper_session(decoder_path, "whisper_decoder_session_create")?;
+            let encoder = create_whisper_session(
+                encoder_path,
+                "whisper_encoder_session_create",
+                intra_threads,
+            )?;
+            let decoder = create_whisper_session(
+                decoder_path,
+                "whisper_decoder_session_create",
+                intra_threads,
+            )?;
 
             let tokenizer = load_whisper_tokenizer(tokenizer_path)?;
             let special = resolve_special_tokens(&tokenizer)?;
@@ -1089,7 +1110,7 @@ pub struct OnnxWhisperTranscriber;
 #[cfg(not(feature = "onnx-runtime"))]
 impl OnnxWhisperTranscriber {
     /// Always returns [`AsrError::Custom`].
-    pub fn new(_encoder_dir: &std::path::Path) -> AsrResult<Self> {
+    pub fn new(_encoder_dir: &std::path::Path, _intra_threads: usize) -> AsrResult<Self> {
         Err(AsrError::msg(
             "OnnxWhisperTranscriber::new (onnx-runtime feature disabled)",
         ))
@@ -1100,6 +1121,7 @@ impl OnnxWhisperTranscriber {
         _encoder: &std::path::Path,
         _decoder: &std::path::Path,
         _tokenizer: &std::path::Path,
+        _intra_threads: usize,
     ) -> AsrResult<Self> {
         Err(AsrError::msg(
             "OnnxWhisperTranscriber::new_with_paths (onnx-runtime feature disabled)",
@@ -1498,8 +1520,11 @@ mod tests {
     #[cfg(not(feature = "onnx-runtime"))]
     #[test]
     fn stub_new_reports_feature_gate() {
-        let err =
-            OnnxWhisperTranscriber::new(&std::path::PathBuf::from("/nonexistent")).unwrap_err();
+        let err = OnnxWhisperTranscriber::new(
+            &std::path::PathBuf::from("/nonexistent"),
+            2,
+        )
+        .unwrap_err();
         assert!(matches!(err, AsrError::Custom(_)));
     }
 

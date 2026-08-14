@@ -13,12 +13,17 @@ use crate::backend::{SkipWhisperTranscriber, WhisperTranscriber};
 
 /// Transcribe raw audio bytes to text.
 ///
-/// This is a convenience function that selects the appropriate
-/// backend and runs transcription. For production use, prefer
-/// constructing a long-lived transcriber (e.g.
-/// [`crate::onnx_session::OnnxWhisperTranscriber`] when the
-/// `onnx-runtime` feature is enabled) to amortize model load
-/// across calls.
+/// **Without `onnx-runtime`:** uses [`crate::backend::SkipWhisperTranscriber`]
+/// which returns an empty transcript (audio ingestion continues but
+/// no transcription is produced).
+///
+/// **With `onnx-runtime`:** returns [`AsrError::Custom`] because this
+/// convenience function cannot construct an [`OnnxWhisperTranscriber`]
+/// without knowing where the model artifacts live on disk. Callers
+/// that need real transcription should construct an
+/// [`crate::onnx_session::OnnxWhisperTranscriber`] with the
+/// encoder/decoder/tokenizer paths and call `transcribe` on it
+/// directly. This amortizes the session-load cost across calls.
 pub fn transcribe(
     audio_data: &[u8],
     mime_type: &str,
@@ -33,14 +38,15 @@ pub fn transcribe(
     }
 
     // With onnx-runtime, the caller should construct an
-    // OnnxWhisperTranscriber directly — this function is a
-    // convenience for the no-feature path.
+    // OnnxWhisperTranscriber directly — this function cannot
+    // load model artifacts from an unknown location.
     #[cfg(feature = "onnx-runtime")]
     {
         let _ = (audio_data, mime_type);
         Err(crate::AsrError::msg(
-            "transcribe() convenience fn does not construct an ONNX session; \
-             use OnnxWhisperTranscriber::new() directly when the onnx-runtime feature is enabled",
+            "transcribe() convenience fn cannot construct an OnnxWhisperTranscriber \
+             without model paths; use OnnxWhisperTranscriber::new(encoder_dir, intra_threads) \
+             directly when the onnx-runtime feature is enabled",
         ))
     }
 }
