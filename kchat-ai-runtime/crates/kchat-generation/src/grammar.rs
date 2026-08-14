@@ -7,6 +7,8 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+use crate::skills::{SkillDef, SkillGrammarType};
+
 /// Type of grammar constraint.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
@@ -78,6 +80,126 @@ impl Grammar {
     pub fn with_stop_sequence(mut self, seq: impl Into<String>) -> Self {
         self.stop_sequences.push(seq.into());
         self
+    }
+
+    /// Build a grammar constraint for a skill.
+    ///
+    /// Returns `None` if the skill uses free text with no grammar constraint.
+    /// For JSON Schema skills, returns the appropriate schema.
+    /// For Regex skills, returns the appropriate pattern.
+    pub fn for_skill(skill: &SkillDef) -> Option<Grammar> {
+        match skill.grammar_type {
+            SkillGrammarType::FreeText => {
+                // Free text with stop sequences and optional newline stop
+                let mut grammar = Grammar::free_text(skill.max_tokens);
+                for stop in &skill.stop {
+                    grammar = grammar.with_stop_sequence(stop.clone());
+                }
+                // Some skills stop on newline (titles, headings)
+                if skill.stop.iter().any(|s| s == "\n") {
+                    grammar.stop_on_newline = true;
+                }
+                if grammar.stop_sequences.is_empty() {
+                    None
+                } else {
+                    Some(grammar)
+                }
+            }
+            SkillGrammarType::JsonSchema => {
+                let schema = Self::json_schema_for_skill(&skill.id);
+                let mut grammar = Grammar::json_schema(schema, skill.max_tokens);
+                for stop in &skill.stop {
+                    grammar = grammar.with_stop_sequence(stop.clone());
+                }
+                Some(grammar)
+            }
+            SkillGrammarType::Regex => {
+                let pattern = Self::regex_for_skill(&skill.id);
+                let mut grammar = Grammar::regex(pattern, skill.max_tokens);
+                for stop in &skill.stop {
+                    grammar = grammar.with_stop_sequence(stop.clone());
+                }
+                Some(grammar)
+            }
+        }
+    }
+
+    /// Get the JSON Schema for a skill that requires structured output.
+    fn json_schema_for_skill(skill_id: &str) -> Value {
+        match skill_id {
+            "doc_extract_dates" => serde_json::json!({
+                "type": "object",
+                "required": ["dates"],
+                "properties": {
+                    "dates": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "required": ["date", "context"],
+                            "properties": {
+                                "date": { "type": "string" },
+                                "context": { "type": "string" }
+                            }
+                        }
+                    }
+                }
+            }),
+            "doc_readability_score" => serde_json::json!({
+                "type": "object",
+                "required": ["grade_level", "score", "suggestions"],
+                "properties": {
+                    "grade_level": { "type": "number" },
+                    "score": { "type": "number" },
+                    "suggestions": { "type": "string" }
+                }
+            }),
+            "doc_word_count" => serde_json::json!({
+                "type": "object",
+                "required": ["words", "chars", "paragraphs", "reading_time_min"],
+                "properties": {
+                    "words": { "type": "number" },
+                    "chars": { "type": "number" },
+                    "paragraphs": { "type": "number" },
+                    "reading_time_min": { "type": "number" }
+                }
+            }),
+            "doc_find_contradictions" => serde_json::json!({
+                "type": "object",
+                "required": ["contradictions"],
+                "properties": {
+                    "contradictions": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "required": ["quote1", "quote2", "explanation"],
+                            "properties": {
+                                "quote1": { "type": "string" },
+                                "quote2": { "type": "string" },
+                                "explanation": { "type": "string" }
+                            }
+                        }
+                    }
+                }
+            }),
+            "create_seo_meta" => serde_json::json!({
+                "type": "object",
+                "required": ["title", "description"],
+                "properties": {
+                    "title": { "type": "string" },
+                    "description": { "type": "string" }
+                }
+            }),
+            _ => serde_json::json!({"type": "object"}),
+        }
+    }
+
+    /// Get the regex pattern for a skill that requires regex-constrained output.
+    fn regex_for_skill(skill_id: &str) -> String {
+        match skill_id {
+            "create_suggest_title" => r"^.+$".to_string(),
+            "create_suggest_heading" => r"^.+$".to_string(),
+            _ => r".*".to_string(),
+        }
     }
 }
 
@@ -871,5 +993,84 @@ mod tests {
         let grammar = Grammar::lark(grammar_text, 100);
         let result = GrammarValidator::validate("1", &grammar);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_for_skill_free_text() {
+        let registry = crate::skills::SkillRegistry::new();
+        let skill = registry.get("edit_fix_grammar").unwrap();
+        let grammar = Grammar::for_skill(skill);
+        assert!(grammar.is_some());
+        let g = grammar.unwrap();
+        assert_eq!(g.grammar_type, GrammarType::None);
+        assert!(!g.stop_sequences.is_empty());
+    }
+
+    #[test]
+    fn test_for_skill_json_schema() {
+        let registry = crate::skills::SkillRegistry::new();
+        let skill = registry.get("doc_extract_dates").unwrap();
+        let grammar = Grammar::for_skill(skill);
+        assert!(grammar.is_some());
+        let g = grammar.unwrap();
+        assert!(matches!(g.grammar_type, GrammarType::JsonSchema { .. }));
+    }
+
+    #[test]
+    fn test_for_skill_seo_meta_schema() {
+        let registry = crate::skills::SkillRegistry::new();
+        let skill = registry.get("create_seo_meta").unwrap();
+        let grammar = Grammar::for_skill(skill);
+        assert!(grammar.is_some());
+        let g = grammar.unwrap();
+        assert!(matches!(g.grammar_type, GrammarType::JsonSchema { .. }));
+    }
+
+    #[test]
+    fn test_for_skill_contradictions_schema() {
+        let registry = crate::skills::SkillRegistry::new();
+        let skill = registry.get("doc_find_contradictions").unwrap();
+        let grammar = Grammar::for_skill(skill);
+        assert!(grammar.is_some());
+        let g = grammar.unwrap();
+        assert!(matches!(g.grammar_type, GrammarType::JsonSchema { .. }));
+    }
+
+    #[test]
+    fn test_for_skill_title_stops_on_newline() {
+        let registry = crate::skills::SkillRegistry::new();
+        let skill = registry.get("create_suggest_title").unwrap();
+        let grammar = Grammar::for_skill(skill);
+        assert!(grammar.is_some());
+        let g = grammar.unwrap();
+        assert!(g.stop_on_newline);
+        assert!(g.stop_sequences.iter().any(|s| s == "\n"));
+    }
+
+    #[test]
+    fn test_for_skill_validates_json_output() {
+        let registry = crate::skills::SkillRegistry::new();
+        let skill = registry.get("create_seo_meta").unwrap();
+        let grammar = Grammar::for_skill(skill).unwrap();
+        let valid_output = r#"{"title": "AI Writing Tools", "description": "Best AI tools for writing"}"#;
+        assert!(GrammarValidator::validate(valid_output, &grammar).is_ok());
+    }
+
+    #[test]
+    fn test_for_skill_validates_dates_output() {
+        let registry = crate::skills::SkillRegistry::new();
+        let skill = registry.get("doc_extract_dates").unwrap();
+        let grammar = Grammar::for_skill(skill).unwrap();
+        let valid_output = r#"{"dates": [{"date": "2026-01-15", "context": "Project deadline"}]}"#;
+        assert!(GrammarValidator::validate(valid_output, &grammar).is_ok());
+    }
+
+    #[test]
+    fn test_for_skill_rejects_invalid_json() {
+        let registry = crate::skills::SkillRegistry::new();
+        let skill = registry.get("create_seo_meta").unwrap();
+        let grammar = Grammar::for_skill(skill).unwrap();
+        let invalid_output = "not json at all";
+        assert!(GrammarValidator::validate(invalid_output, &grammar).is_err());
     }
 }

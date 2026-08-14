@@ -80,6 +80,22 @@ struct QualityCheck {
     /// Sub-checks for multi_check type — all must pass, score is average
     #[serde(skip_serializing_if = "Option::is_none")]
     checks: Option<Vec<QualityCheck>>,
+    // --- Skill-specific quality check fields ---
+    /// Input text that should not be echoed in the output (for no_input_echo)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    input_text: Option<String>,
+    /// Expected length ratio for length_delta: "longer" or "shorter"
+    #[serde(skip_serializing_if = "Option::is_none")]
+    expected_ratio: Option<String>,
+    /// Expected number of JSON fields (for json_field_count)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    expected_fields: Option<Vec<String>>,
+    /// Minimum number of markdown headings (for heading_count)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    min_headings: Option<usize>,
+    /// Expected tone for tone_match: professional, casual, confident, friendly, persuasive, empathetic
+    #[serde(skip_serializing_if = "Option::is_none")]
+    expected_tone: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -612,8 +628,231 @@ fn run_quality_check(output: &str, check: &QualityCheck) -> f64 {
                 sum / total
             } else { 1.0 }
         }
+        "markdown_structure" => check_markdown_structure(output),
+        "no_input_echo" => {
+            if let Some(input) = &check.input_text {
+                check_no_input_echo(output, input)
+            } else { 1.0 }
+        }
+        "tone_match" => {
+            if let Some(tone) = &check.expected_tone {
+                check_tone_match(output, tone)
+            } else { 1.0 }
+        }
+        "length_delta" => {
+            if let Some(ratio) = &check.expected_ratio {
+                if let Some(input) = &check.input_text {
+                    check_length_delta(output, input, ratio)
+                } else { 1.0 }
+            } else { 1.0 }
+        }
+        "json_field_count" => {
+            if let Some(fields) = &check.expected_fields {
+                check_json_field_count(output, fields)
+            } else { 1.0 }
+        }
+        "heading_count" => {
+            let min = check.min_headings.unwrap_or(0);
+            let count = count_markdown_headings(output);
+            if count >= min { 1.0 } else if min > 0 {
+                count as f64 / min as f64
+            } else { 1.0 }
+        }
         _ => 1.0,
     }
+}
+
+fn check_markdown_structure(output: &str) -> f64 {
+    let lines: Vec<&str> = output.lines().collect();
+    if lines.is_empty() || output.trim().is_empty() {
+        return 0.0;
+    }
+    let mut score = 0.0;
+    let mut has_heading = false;
+    let mut has_paragraph = false;
+    let mut has_list = false;
+    let mut has_code_block = false;
+    let mut heading_levels: Vec<usize> = Vec::new();
+
+    for line in &lines {
+        let trimmed = line.trim_start();
+        if trimmed.starts_with('#') {
+            let level = trimmed.chars().take_while(|c| *c == '#').count();
+            if level <= 6 {
+                has_heading = true;
+                heading_levels.push(level);
+            }
+        }
+        if trimmed.starts_with("- ") || trimmed.starts_with("* ") || trimmed.starts_with("+ ") {
+            has_list = true;
+        }
+        if trimmed.starts_with("```") {
+            has_code_block = !has_code_block;
+        }
+        if !trimmed.is_empty() && !trimmed.starts_with('#') && !trimmed.starts_with('-')
+            && !trimmed.starts_with('*') && !trimmed.starts_with('+')
+            && !trimmed.starts_with("```") && !trimmed.starts_with('|')
+        {
+            has_paragraph = true;
+        }
+    }
+
+    if has_heading { score += 0.4; }
+    if has_paragraph { score += 0.3; }
+    if has_list { score += 0.15; }
+    if has_code_block { score += 0.15; }
+
+    // Check heading hierarchy: levels should not jump more than 1
+    if heading_levels.len() > 1 {
+        let mut hierarchy_ok = true;
+        for i in 1..heading_levels.len() {
+            if heading_levels[i] > heading_levels[i - 1] + 1 {
+                hierarchy_ok = false;
+                break;
+            }
+        }
+        if !hierarchy_ok {
+            score *= 0.8;
+        }
+    }
+
+    if score > 1.0 { 1.0 } else { score }
+}
+
+fn check_no_input_echo(output: &str, input_text: &str) -> f64 {
+    if input_text.is_empty() || input_text.len() < 20 {
+        return 1.0;
+    }
+    let output_lower = output.to_lowercase();
+    let input_lower = input_text.to_lowercase();
+    // Check if substantial portions of input appear in output
+    let input_words: Vec<&str> = input_lower.split_whitespace().collect();
+    if input_words.len() < 5 {
+        return 1.0;
+    }
+    // Check for consecutive word sequences from input in output
+    let window_size = 5.min(input_words.len());
+    let mut echo_count = 0;
+    let mut total_windows = 0;
+    for i in 0..=input_words.len().saturating_sub(window_size) {
+        let window = input_words[i..i + window_size].join(" ");
+        total_windows += 1;
+        if output_lower.contains(&window) {
+            echo_count += 1;
+        }
+    }
+    if total_windows == 0 {
+        return 1.0;
+    }
+    let echo_ratio = echo_count as f64 / total_windows as f64;
+    1.0 - echo_ratio
+}
+
+fn check_tone_match(output: &str, expected_tone: &str) -> f64 {
+    let lower = output.to_lowercase();
+    let mut score = 0.5; // neutral baseline
+
+    match expected_tone {
+        "professional" => {
+            let professional_markers = ["dear", "regards", "sincerely", "furthermore", "however", "therefore", "pursuant", "respectfully"];
+            let casual_markers = ["gonna", "wanna", "hey", "cheers", "no biggie", "lol", "btw", "yeah", "ok "];
+            let prof_count = professional_markers.iter().filter(|m| lower.contains(*m)).count();
+            let casual_count = casual_markers.iter().filter(|m| lower.contains(*m)).count();
+            score = 0.5 + prof_count as f64 * 0.1 - casual_count as f64 * 0.2;
+        }
+        "casual" => {
+            let casual_markers = ["hey", "thanks", "cheers", "sounds good", "let me know", "no worries"];
+            let formal_markers = ["pursuant", "aforementioned", "forthwith", "hereby", "wherewith"];
+            let casual_count = casual_markers.iter().filter(|m| lower.contains(*m)).count();
+            let formal_count = formal_markers.iter().filter(|m| lower.contains(*m)).count();
+            score = 0.5 + casual_count as f64 * 0.15 - formal_count as f64 * 0.2;
+        }
+        "confident" => {
+            let confident_markers = ["will", "certainly", "definitely", "absolutely", "committed", "ensure", "guarantee"];
+            let hesitant_markers = ["maybe", "perhaps", "might", "not sure", "i think", "possibly", "i guess"];
+            let conf_count = confident_markers.iter().filter(|m| lower.contains(*m)).count();
+            let hes_count = hesitant_markers.iter().filter(|m| lower.contains(*m)).count();
+            score = 0.5 + conf_count as f64 * 0.15 - hes_count as f64 * 0.2;
+        }
+        "friendly" => {
+            let friendly_markers = ["hope", "great", "wonderful", "happy", "looking forward", "pleased", "warm"];
+            let cold_markers = ["must", "required", "immediately", "consequences", "failure", "unacceptable"];
+            let friend_count = friendly_markers.iter().filter(|m| lower.contains(*m)).count();
+            let cold_count = cold_markers.iter().filter(|m| lower.contains(*m)).count();
+            score = 0.5 + friend_count as f64 * 0.15 - cold_count as f64 * 0.2;
+        }
+        "persuasive" => {
+            let persuasive_markers = ["imagine", "benefit", "opportunity", "exclusive", "limited", "don't miss", "act now", "value", "advantage"];
+            let count = persuasive_markers.iter().filter(|m| lower.contains(*m)).count();
+            score = 0.5 + count as f64 * 0.1;
+        }
+        "empathetic" => {
+            let empathetic_markers = ["understand", "appreciate", "recognize", "sorry", "challenging", "difficult", "support", "care"];
+            let count = empathetic_markers.iter().filter(|m| lower.contains(*m)).count();
+            score = 0.5 + count as f64 * 0.1;
+        }
+        _ => score = 1.0,
+    }
+
+    if score < 0.0 { 0.0 } else if score > 1.0 { 1.0 } else { score }
+}
+
+fn check_length_delta(output: &str, input_text: &str, expected_ratio: &str) -> f64 {
+    let input_len = input_text.chars().count();
+    let output_len = output.chars().count();
+    if input_len == 0 {
+        return 1.0;
+    }
+    match expected_ratio {
+        "longer" => {
+            if output_len > input_len {
+                let ratio = output_len as f64 / input_len as f64;
+                if ratio >= 1.5 { 1.0 } else { ratio / 1.5 }
+            } else {
+                0.0
+            }
+        }
+        "shorter" => {
+            if output_len < input_len {
+                let ratio = output_len as f64 / input_len as f64;
+                if ratio <= 0.7 { 1.0 } else { (1.0 - ratio) / 0.3 }
+            } else {
+                0.0
+            }
+        }
+        _ => 1.0,
+    }
+}
+
+fn check_json_field_count(output: &str, expected_fields: &[String]) -> f64 {
+    let json_text = extract_json(output);
+    if json_text.is_empty() {
+        return 0.0;
+    }
+    let parsed: serde_json::Value = match serde_json::from_str(&json_text) {
+        Ok(v) => v,
+        Err(_) => return 0.0,
+    };
+    let obj = match parsed.as_object() {
+        Some(o) => o,
+        None => return 0.0,
+    };
+    let mut found = 0;
+    for field in expected_fields {
+        if obj.contains_key(field) {
+            found += 1;
+        }
+    }
+    found as f64 / expected_fields.len() as f64
+}
+
+fn count_markdown_headings(text: &str) -> usize {
+    text.lines()
+        .filter(|line| {
+            let trimmed = line.trim_start();
+            trimmed.starts_with('#') && trimmed.chars().take_while(|c| *c == '#').count() <= 6
+        })
+        .count()
 }
 
 fn number_to_words(n: u64) -> Option<String> {

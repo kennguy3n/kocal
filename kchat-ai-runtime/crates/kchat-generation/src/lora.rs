@@ -4,8 +4,10 @@
 //! and languages by swapping small adapter files (3-5MB) instead of loading
 //! entirely different models. The swap takes <10ms.
 //!
-//! The system supports 50 adapters: 5 tasks × 10 languages.
-//! Tasks: summarize, translate, key_points, generate_doc, generate_slides
+//! The system supports 120 adapters: 12 tasks × 10 languages.
+//! Tasks: summarize, translate, key_points, generate_doc, generate_slides,
+//!        edit_grammar, edit_style, edit_format, create_email, create_social,
+//!        create_pr, extract_info
 //! Languages: en, vi, zh, ja, ko, es, ar, de, hi, fr
 
 use parking_lot::Mutex;
@@ -236,6 +238,13 @@ pub mod tasks {
     pub const KEY_POINTS: &str = "key_points";
     pub const GENERATE_DOC: &str = "generate_doc";
     pub const GENERATE_SLIDES: &str = "generate_slides";
+    pub const EDIT_GRAMMAR: &str = "edit_grammar";
+    pub const EDIT_STYLE: &str = "edit_style";
+    pub const EDIT_FORMAT: &str = "edit_format";
+    pub const CREATE_EMAIL: &str = "create_email";
+    pub const CREATE_SOCIAL: &str = "create_social";
+    pub const CREATE_PR: &str = "create_pr";
+    pub const EXTRACT_INFO: &str = "extract_info";
 
     pub const ALL: &[&str] = &[
         SUMMARIZE,
@@ -243,7 +252,75 @@ pub mod tasks {
         KEY_POINTS,
         GENERATE_DOC,
         GENERATE_SLIDES,
+        EDIT_GRAMMAR,
+        EDIT_STYLE,
+        EDIT_FORMAT,
+        CREATE_EMAIL,
+        CREATE_SOCIAL,
+        CREATE_PR,
+        EXTRACT_INFO,
     ];
+}
+
+/// Maps a `SkillDef` to the appropriate LoRA adapter based on the skill's
+/// `lora_task` field and the detected document language.
+///
+/// If no adapter is found for the detected language, falls back to English.
+/// If the skill has no `lora_task`, returns `None` (use base model).
+pub struct SkillLoRAResolver<'a> {
+    manager: &'a LoraManager,
+}
+
+impl<'a> SkillLoRAResolver<'a> {
+    /// Create a resolver bound to a LoRA manager.
+    pub fn new(manager: &'a LoraManager) -> Self {
+        Self { manager }
+    }
+
+    /// Resolve the adapter for a skill and language.
+    ///
+    /// Returns the adapter ID string if a suitable adapter is found,
+    /// or `None` if the skill uses the base model.
+    pub fn resolve(&self, lora_task: &str, language: &str) -> Option<String> {
+        if lora_task.is_empty() {
+            return None;
+        }
+
+        // Try exact language match first
+        if let Some(adapter) = self.manager.find(lora_task, language) {
+            return Some(adapter.adapter_id);
+        }
+
+        // Fall back to English
+        if language != "en" {
+            if let Some(adapter) = self.manager.find(lora_task, "en") {
+                return Some(adapter.adapter_id);
+            }
+        }
+
+        None
+    }
+
+    /// Resolve and swap the adapter for a skill.
+    ///
+    /// If the skill has no LoRA task, detaches the current adapter.
+    /// Returns the adapter ID if swapped, `None` if detached or not found.
+    pub fn resolve_and_swap(
+        &self,
+        lora_task: &str,
+        language: &str,
+    ) -> Result<Option<String>, LoraError> {
+        match self.resolve(lora_task, language) {
+            Some(adapter_id) => {
+                self.manager.swap(&adapter_id)?;
+                Ok(Some(adapter_id))
+            }
+            None => {
+                self.manager.detach()?;
+                Ok(None)
+            }
+        }
+    }
 }
 
 /// Supported languages for LoRA adapters.
@@ -348,7 +425,7 @@ mod tests {
         manager.register_all(make_test_adapters());
 
         let vi_adapters = manager.adapters_for_language("vi");
-        assert_eq!(vi_adapters.len(), 5); // 5 tasks
+        assert_eq!(vi_adapters.len(), 12); // 12 tasks
     }
 
     #[test]
@@ -371,12 +448,12 @@ mod tests {
     }
 
     #[test]
-    fn test_all_50_adapters() {
+    fn test_all_120_adapters() {
         let manager = LoraManager::new();
         manager.register_all(make_test_adapters());
 
         let all = manager.available_adapters();
-        assert_eq!(all.len(), 50); // 5 tasks × 10 languages
+        assert_eq!(all.len(), 120); // 12 tasks × 10 languages
     }
 
     #[test]
@@ -399,5 +476,82 @@ mod tests {
         let duration = manager.last_swap_duration_ms();
         // Should be very small (just state update)
         assert!(duration < 100);
+    }
+
+    #[test]
+    fn test_resolver_finds_adapter() {
+        let manager = LoraManager::new();
+        manager.register_all(make_test_adapters());
+
+        let resolver = SkillLoRAResolver::new(&manager);
+        let adapter_id = resolver.resolve("summarize", "vi");
+        assert_eq!(adapter_id.as_deref(), Some("summarize.vi"));
+    }
+
+    #[test]
+    fn test_resolver_falls_back_to_english() {
+        let manager = LoraManager::new();
+        // Register only English adapter for a task
+        manager.register(LoraAdapter::new("edit_grammar.en", "/path", "edit_grammar", "en"));
+
+        let resolver = SkillLoRAResolver::new(&manager);
+        let adapter_id = resolver.resolve("edit_grammar", "vi");
+        assert_eq!(adapter_id.as_deref(), Some("edit_grammar.en"));
+    }
+
+    #[test]
+    fn test_resolver_empty_task_returns_none() {
+        let manager = LoraManager::new();
+        manager.register_all(make_test_adapters());
+
+        let resolver = SkillLoRAResolver::new(&manager);
+        assert!(resolver.resolve("", "en").is_none());
+    }
+
+    #[test]
+    fn test_resolver_not_found_returns_none() {
+        let manager = LoraManager::new();
+
+        let resolver = SkillLoRAResolver::new(&manager);
+        assert!(resolver.resolve("nonexistent", "en").is_none());
+    }
+
+    #[test]
+    fn test_resolver_resolve_and_swap() {
+        let manager = LoraManager::new();
+        manager.register_all(make_test_adapters());
+
+        let resolver = SkillLoRAResolver::new(&manager);
+        let result = resolver.resolve_and_swap("translate", "zh").unwrap();
+        assert_eq!(result.as_deref(), Some("translate.zh"));
+        assert_eq!(manager.current_adapter(), Some("translate.zh".into()));
+    }
+
+    #[test]
+    fn test_resolver_resolve_and_swap_detaches() {
+        let manager = LoraManager::new();
+        manager.register_all(make_test_adapters());
+
+        // First swap to something
+        manager.swap("summarize.en").unwrap();
+        assert!(manager.has_active_adapter());
+
+        // Now resolve with empty task — should detach
+        let resolver = SkillLoRAResolver::new(&manager);
+        let result = resolver.resolve_and_swap("", "en").unwrap();
+        assert!(result.is_none());
+        assert!(!manager.has_active_adapter());
+    }
+
+    #[test]
+    fn test_12_tasks_exist() {
+        assert_eq!(tasks::ALL.len(), 12);
+        assert!(tasks::ALL.contains(&tasks::EDIT_GRAMMAR));
+        assert!(tasks::ALL.contains(&tasks::EDIT_STYLE));
+        assert!(tasks::ALL.contains(&tasks::EDIT_FORMAT));
+        assert!(tasks::ALL.contains(&tasks::CREATE_EMAIL));
+        assert!(tasks::ALL.contains(&tasks::CREATE_SOCIAL));
+        assert!(tasks::ALL.contains(&tasks::CREATE_PR));
+        assert!(tasks::ALL.contains(&tasks::EXTRACT_INFO));
     }
 }

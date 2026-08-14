@@ -22,6 +22,7 @@ mod eval_integration;
 mod eval_realworld;
 mod eval_device_profile;
 mod eval_perdevice;
+mod eval_skills;
 mod device_simulator;
 mod redteam;
 mod report;
@@ -35,9 +36,16 @@ fn main() {
     let redteam_encoder_mode = args.iter().any(|a| a == "--redteam-encoder" || a == "--red-enc");
     let simulate_mode = args.iter().any(|a| a == "--simulate" || a == "--sim");
     let perdevice_mode = args.iter().any(|a| a == "--perdevice" || a == "--perdev");
+    let skills_mode = args.iter().any(|a| a == "--skills");
 
     println!("kchat-task-suite: Evaluation harness for kchat-ai-runtime");
-    if perdevice_mode {
+    if skills_mode {
+        if realworld_mode {
+            println!("Mode: SKILLS (real model inference + quality measurement)");
+        } else {
+            println!("Mode: SKILLS (mock CI validation — prompt/grammar/budget/pipeline/LoRA)");
+        }
+    } else if perdevice_mode {
         println!("Mode: PER-DEVICE (real model inference per device profile)");
     } else if realworld_mode {
         println!("Mode: REAL-WORLD (comprehensive datasets + model inference)");
@@ -50,6 +58,11 @@ fn main() {
         println!("Mode: STANDARD (synthetic unit-level evals)");
     }
     println!("=========================================================\n");
+
+    if skills_mode {
+        eval_skills::run(realworld_mode);
+        return;
+    }
 
     if perdevice_mode {
         eval_perdevice::run();

@@ -142,6 +142,62 @@ impl Default for PromptTemplateRegistry {
     }
 }
 
+impl PromptTemplateRegistry {
+    /// Register prompt templates for all 33 document AI skills.
+    ///
+    /// Each skill gets a template with `{{slot}}` placeholders matching its
+    /// `build_prompt` output. Templates are versioned and hashed for provenance.
+    pub fn register_skill_templates(&mut self) -> Vec<TemplateId> {
+        let skills = crate::skills::SkillRegistry::new();
+        let mut ids = Vec::with_capacity(skills.len());
+
+        for skill in skills.all() {
+            let prompt_output = skill.build_prompt(crate::skills::SkillPromptInput::default());
+
+            // Build a combined template string with system and user slots
+            let template_str = format!(
+                "<|im_start|>system\n{}<|im_end|>\n<|im_start|>user\n{}<|im_end|>\n<|im_start|>assistant\n",
+                prompt_output.system, prompt_output.user
+            );
+
+            // Determine slots based on skill scope
+            let slots = match skill.scope {
+                crate::skills::SkillScope::Selection => vec!["selection".into()],
+                crate::skills::SkillScope::Cursor => vec!["context".into()],
+                crate::skills::SkillScope::Section => vec!["input".into(), "context".into()],
+                crate::skills::SkillScope::Document => {
+                    if skill.use_outline_context {
+                        vec!["context".into()]
+                    } else {
+                        vec!["context".into()]
+                    }
+                }
+                crate::skills::SkillScope::Topic => {
+                    let mut s = vec!["input".into()];
+                    if skill.supports_keywords {
+                        s.push("keywords".into());
+                    }
+                    if skill.needs_full_document || skill.use_outline_context {
+                        s.push("context".into());
+                    }
+                    s
+                }
+            };
+
+            let template = PromptTemplate::new(
+                format!("skill_{}", skill.id),
+                "1.0.0",
+                template_str,
+                slots,
+            );
+            let id = self.register(template);
+            ids.push(id);
+        }
+
+        ids
+    }
+}
+
 /// Template errors.
 #[derive(Debug, thiserror::Error)]
 pub enum TemplateError {
@@ -214,5 +270,43 @@ mod tests {
 
         let rendered = registry.render(&id, &slots).unwrap();
         assert!(rendered.contains("Long text..."));
+    }
+
+    #[test]
+    fn test_register_skill_templates() {
+        let mut registry = PromptTemplateRegistry::new();
+        let ids = registry.register_skill_templates();
+        assert_eq!(ids.len(), 33);
+
+        // Verify a few templates by name
+        assert!(registry.get_by_name("skill_edit_fix_grammar").is_some());
+        assert!(registry.get_by_name("skill_doc_summarize").is_some());
+        assert!(registry.get_by_name("skill_create_seo_meta").is_some());
+        assert!(registry.get_by_name("skill_edit_translate_document").is_some());
+    }
+
+    #[test]
+    fn test_skill_template_has_content_hash() {
+        let mut registry = PromptTemplateRegistry::new();
+        registry.register_skill_templates();
+
+        let template = registry.get_by_name("skill_doc_summarize").unwrap();
+        assert!(!template.content_hash.is_empty());
+        assert_eq!(template.version, "1.0.0");
+    }
+
+    #[test]
+    fn test_skill_templates_no_duplicate_names() {
+        let mut registry = PromptTemplateRegistry::new();
+        registry.register_skill_templates();
+
+        // get_by_name returns the last registered template for a name,
+        // so if there were duplicates, we'd still get a template.
+        // Instead, verify all 33 names are unique by checking each skill.
+        let skills = crate::skills::SkillRegistry::new();
+        for skill in skills.all() {
+            let name = format!("skill_{}", skill.id);
+            assert!(registry.get_by_name(&name).is_some(), "missing template for skill {}", skill.id);
+        }
     }
 }

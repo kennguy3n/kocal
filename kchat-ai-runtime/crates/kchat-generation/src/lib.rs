@@ -13,10 +13,13 @@
 
 pub mod backend;
 pub mod backends;
+pub mod budget;
 pub mod grammar;
 pub mod lifecycle;
 pub mod lora;
+pub mod pipeline;
 pub mod prompt;
+pub mod skills;
 pub mod stream;
 pub mod swarm;
 
@@ -24,9 +27,19 @@ pub use backend::{BackendAdapter, BackendConfig, BackendType, GenerationConfig, 
 pub use backends::{select_backend, MockBackend};
 #[cfg(feature = "llamacpp")]
 pub use backends::LlamaCppBackend;
+pub use budget::{
+    adaptive_max_output, budget_for_context, chunk_document, estimate_tokens_text,
+    extract_outline_context, get_local_context, truncate_context, truncate_head,
+    truncate_tail, DocChunk,
+};
 pub use grammar::{Grammar, GrammarType, GrammarValidator};
 pub use lifecycle::{ModelLifecycle, ModelState};
-pub use lora::{LoraAdapter, LoraManager, LoraError};
+pub use lora::{LoraAdapter, LoraManager, LoraError, SkillLoRAResolver};
+pub use pipeline::{GenerationPipeline, PipelineProgress, PipelineResult};
 pub use prompt::{PromptTemplate, PromptTemplateRegistry, TemplateId};
+pub use skills::{
+    SkillDef, SkillGrammarType, SkillGroup, SkillMode, SkillPromptInput, SkillPromptOutput,
+    SkillRegistry, SkillScope, SkillSubVariant, SkillSurface, SkillTier,
+};
 pub use stream::{StreamEvent, StreamHandle, StreamId};
 pub use swarm::{Peer, Swarm, SwarmConfig, SwarmError, SwarmResult};
