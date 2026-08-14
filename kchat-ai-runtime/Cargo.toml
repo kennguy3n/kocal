@@ -4,6 +4,7 @@ members = [
     "crates/kchat-core",
     "crates/kchat-encoder",
     "crates/kchat-safety",
+    "crates/kchat-asr",
     "crates/kchat-context",
     "crates/kchat-generation",
     "crates/kchat-action",

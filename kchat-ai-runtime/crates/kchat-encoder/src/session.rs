@@ -49,18 +49,35 @@ impl EncoderSession {
     ///
     /// `intra_threads` controls ONNX Runtime intra-op parallelism. Use 2 for
     /// low-tier devices, 3 for medium, 4+ for high-tier.
+    ///
+    /// EP selection is driven by [`kchat_core::ep::ExecutionProviderSelector`]:
+    /// the host platform's preferred accelerator EP (CoreML on Apple,
+    /// DirectML on Windows, NNAPI on Android) is attempted first, with
+    /// automatic CPU fallback if the accelerator fails to register.
     pub fn new(
         model_path: &str,
         tokenizer_path: &str,
         quantization: Quantization,
         intra_threads: usize,
     ) -> EncoderResult<Self> {
-        let session = ort::session::Session::builder()
-            .map_err(|e| EncoderError::SessionError(format!("builder: {e}")))?
+        let mut builder = ort::session::Session::builder()
+            .map_err(|e| EncoderError::SessionError(format!("builder: {e}")))?;
+        builder = builder
             .with_optimization_level(ort::session::builder::GraphOptimizationLevel::Level3)
-            .map_err(|e| EncoderError::SessionError(format!("optimization: {e}")))?
+            .map_err(|e| EncoderError::SessionError(format!("optimization: {e}")))?;
+        builder = builder
             .with_intra_threads(intra_threads)
-            .map_err(|e| EncoderError::SessionError(format!("threads: {e}")))?
+            .map_err(|e| EncoderError::SessionError(format!("threads: {e}")))?;
+
+        // Apply platform-aware EP selection from kchat-core.
+        let ep_eps = build_ort_eps_for_host();
+        if !ep_eps.is_empty() {
+            builder = builder
+                .with_execution_providers(&ep_eps)
+                .map_err(|e| EncoderError::SessionError(format!("ep selection: {e}")))?;
+        }
+
+        let session = builder
             .commit_from_file(model_path)
             .map_err(|e| EncoderError::SessionError(format!("load model: {e}")))?;
 
@@ -430,5 +447,127 @@ impl EncoderSession {
             return vec![1.0 / logits.len() as f32; logits.len()];
         }
         exp.iter().map(|e| e / sum).collect()
+    }
+}
+
+// ---------------------------------------------------------------------------
+// EP selection — maps kchat-core's platform-aware EP state machine to
+// ort execution-provider dispatch objects.
+// ---------------------------------------------------------------------------
+
+/// Build the ort execution-provider dispatch list for the current host
+/// using [`kchat_core::ep`] selection.
+///
+/// Returns a `Vec<ExecutionProviderDispatch>` suitable for
+/// [`ort::session::SessionBuilder::with_execution_providers`]. The
+/// list is ordered most-preferred-first; ort's runtime handles
+/// silent fallback to CPU if an accelerator EP fails to register.
+#[cfg(feature = "onnx-runtime")]
+fn build_ort_eps_for_host() -> Vec<ort::execution_providers::ExecutionProviderDispatch> {
+    use kchat_core::ep::{EpDeviceCapabilities, EpFallbackChain, Platform};
+
+    // Detect host platform from cfg.
+    let (os, arch) = {
+        #[cfg(all(target_arch = "aarch64", any(target_os = "macos", target_os = "ios")))]
+        {
+            (Platform::MacOs, kchat_core::ep::Arch::Aarch64)
+        }
+        #[cfg(all(not(all(target_arch = "aarch64", any(target_os = "macos", target_os = "ios"))), target_os = "macos"))]
+        {
+            (Platform::MacOs, kchat_core::ep::Arch::X86_64)
+        }
+        #[cfg(target_os = "ios")]
+        {
+            (Platform::Ios, kchat_core::ep::Arch::Aarch64)
+        }
+        #[cfg(target_os = "android")]
+        {
+            (Platform::Android, kchat_core::ep::Arch::Aarch64)
+        }
+        #[cfg(target_os = "windows")]
+        {
+            (
+                Platform::Windows,
+                if cfg!(target_arch = "aarch64") {
+                    kchat_core::ep::Arch::Aarch64
+                } else {
+                    kchat_core::ep::Arch::X86_64
+                },
+            )
+        }
+        #[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "openbsd"))]
+        {
+            (
+                Platform::Linux,
+                if cfg!(target_arch = "aarch64") {
+                    kchat_core::ep::Arch::Aarch64
+                } else {
+                    kchat_core::ep::Arch::X86_64
+                },
+            )
+        }
+        #[cfg(not(any(
+            target_os = "macos",
+            target_os = "ios",
+            target_os = "android",
+            target_os = "windows",
+            target_os = "linux",
+            target_os = "freebsd",
+            target_os = "openbsd",
+        )))]
+        {
+            (Platform::Unknown, kchat_core::ep::Arch::Other)
+        }
+    };
+
+    // Build capabilities — assume accelerator is present on Apple Silicon
+    // and Windows with GPU. Production code should probe via
+    // `kchat_core::capability::CapabilityProbe::probe()` and bridge through
+    // `EpDeviceCapabilities::from_full_caps`.
+    let caps = match os {
+        Platform::MacOs | Platform::Ios => EpDeviceCapabilities::apple_silicon_mac(),
+        Platform::Android => EpDeviceCapabilities::android_with_npu(),
+        Platform::Windows => EpDeviceCapabilities::windows_with_gpu("auto"),
+        _ => EpDeviceCapabilities::cpu_only(os, arch),
+    };
+
+    let chain = EpFallbackChain::for_platform(os, &caps);
+    chain
+        .as_slice()
+        .iter()
+        .filter_map(|ep| ep_to_ort_dispatch(*ep))
+        .collect()
+}
+
+/// Map a [`kchat_core::ep::ExecutionProvider`] to the corresponding
+/// ort execution-provider dispatch object. Returns `None` for EPs
+/// that have no ort equivalent (should not happen with the current
+/// enum, but keeps the match exhaustive).
+#[cfg(feature = "onnx-runtime")]
+fn ep_to_ort_dispatch(
+    ep: kchat_core::ep::ExecutionProvider,
+) -> Option<ort::execution_providers::ExecutionProviderDispatch> {
+    use ort::execution_providers::{
+        CPUExecutionProvider, CoreMLExecutionProvider, DirectMLExecutionProvider,
+        NNAPIExecutionProvider,
+    };
+
+    match ep {
+        kchat_core::ep::ExecutionProvider::CoreMl => {
+            Some(CoreMLExecutionProvider::default().build())
+        }
+        kchat_core::ep::ExecutionProvider::Nnapi => {
+            Some(NNAPIExecutionProvider::default().build())
+        }
+        kchat_core::ep::ExecutionProvider::DirectMl => {
+            Some(DirectMLExecutionProvider::default().build())
+        }
+        kchat_core::ep::ExecutionProvider::MetalPerformanceShaders => {
+            // MPS is not a standalone ort EP; CoreML subsumes it on Apple.
+            None
+        }
+        kchat_core::ep::ExecutionProvider::Cpu => {
+            Some(CPUExecutionProvider::default().build())
+        }
     }
 }

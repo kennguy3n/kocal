@@ -11,6 +11,9 @@
 
 pub mod mock;
 
+#[cfg(feature = "domain-adapters")]
+pub mod domain_adapters;
+
 #[cfg(feature = "onnx-runtime")]
 pub mod session;
 

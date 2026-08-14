@@ -13,6 +13,7 @@
 //! Hosts that only need text classification omit this feature and pay zero
 //! binary-size cost for the `image` crate.
 
+pub mod ep_helpers;
 pub mod frame_aggregation;
 pub mod image_preprocess;
 pub mod mobileclip_session;

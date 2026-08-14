@@ -1,5 +1,5 @@
 [package]
-name = "kchat-encoder"
+name = "kchat-asr"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -7,22 +7,21 @@ authors.workspace = true
 
 [features]
 default = []
-onnx-runtime = ["dep:ort", "dep:tokenizers", "dep:ndarray"]
-domain-adapters = ["dep:rusqlite"]
+onnx-runtime = ["dep:ort", "dep:tokenizers", "dep:ndarray", "dep:kchat-core"]
 
 [dependencies]
-kchat-core = { path = "../kchat-core" }
+kchat-core = { path = "../kchat-core", optional = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 parking_lot = { workspace = true }
+blake3 = "1"
+rustfft = { version = "6.2", default-features = false }
 
 # Optional ONNX deps
 ort = { version = "=2.0.0-rc.10", default-features = false, features = ["load-dynamic", "ndarray"], optional = true }
 tokenizers = { version = "0.21", default-features = false, features = ["fancy-regex"], optional = true }
 ndarray = { version = "0.16", optional = true }
 
-# Optional domain-adapter persistence
-rusqlite = { version = "0.36", features = ["bundled-sqlcipher-vendored-openssl"], optional = true }
-
 [dev-dependencies]
+tempfile = "3"

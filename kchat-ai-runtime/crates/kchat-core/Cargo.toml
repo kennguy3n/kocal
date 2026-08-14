@@ -5,6 +5,11 @@ edition.workspace = true
 license.workspace = true
 authors.workspace = true
 
+[features]
+default = []
+test-support = []
+sqlcipher = ["dep:rusqlite"]
+
 [dependencies]
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -23,6 +28,10 @@ bytes = { workspace = true }
 hex = "0.4"
 memmap2 = "0.9"
 toml = "0.8"
+blake3 = "1"
+
+# Optional SQLCipher dep for inference cache
+rusqlite = { version = "0.36", features = ["bundled-sqlcipher-vendored-openssl"], optional = true }
 
 # Platform-specific dependencies for device profiling
 [target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]

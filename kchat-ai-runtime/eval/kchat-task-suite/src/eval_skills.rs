@@ -1141,8 +1141,8 @@ pub fn run_mock() {
         let effective_max = skill.effective_max_tokens(tier_enum);
         if total_prompt_tokens + effective_max > context_window {
             errors.push(format!(
-                "token budget overflow: prompt={} + max_tokens={} > context_window={}",
-                total_prompt_tokens, tc.max_tokens, context_window
+                "token budget overflow: prompt={} + effective_max_tokens={} > context_window={}",
+                total_prompt_tokens, effective_max, context_window
             ));
             checks_passed = false;
         }

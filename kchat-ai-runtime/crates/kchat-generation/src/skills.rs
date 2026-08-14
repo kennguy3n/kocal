@@ -1635,4 +1635,145 @@ mod tests {
             assert_ne!(skill.mode, SkillMode::OneClick);
         }
     }
+
+    #[test]
+    fn test_effective_max_tokens_clamps_to_tier() {
+        let registry = SkillRegistry::new();
+        let skill = registry.get("create_brainstorm").unwrap(); // max_tokens=600
+        assert_eq!(skill.effective_max_tokens(SkillTier::Low), 192);
+        assert_eq!(skill.effective_max_tokens(SkillTier::Medium), 512);
+        assert_eq!(skill.effective_max_tokens(SkillTier::High), 600);
+    }
+
+    #[test]
+    fn test_effective_max_tokens_high_tier_thinking_boost() {
+        let registry = SkillRegistry::new();
+        let skill = registry.get("doc_find_contradictions").unwrap(); // max_tokens=400, allows thinking
+        let high = skill.effective_max_tokens(SkillTier::High);
+        assert_eq!(high, 800); // 400.min(1024) * 2 = 800
+    }
+
+    #[test]
+    fn test_effective_max_tokens_low_tier_no_boost() {
+        let registry = SkillRegistry::new();
+        let skill = registry.get("doc_find_contradictions").unwrap();
+        let low = skill.effective_max_tokens(SkillTier::Low);
+        assert_eq!(low, 192); // 400.min(192) = 192, no boost on low
+    }
+
+    #[test]
+    fn test_to_chatml_format() {
+        let output = SkillPromptOutput {
+            system: "You are helpful.".into(),
+            user: "Hello".into(),
+        };
+        let chatml = output.to_chatml(None);
+        assert!(chatml.contains("<|im_start|>system\nYou are helpful.\n<|im_end|>"));
+        assert!(chatml.contains("<|im_start|>user\nHello\n<|im_end|>"));
+        assert!(chatml.ends_with("<|im_start|>assistant\n"));
+    }
+
+    #[test]
+    fn test_to_chatml_with_response_prefix() {
+        let output = SkillPromptOutput {
+            system: "System".into(),
+            user: "User".into(),
+        };
+        let chatml = output.to_chatml(Some("{\n"));
+        assert!(chatml.ends_with("{\n"));
+    }
+
+    #[test]
+    fn test_build_chatml_prompt_integration() {
+        let registry = SkillRegistry::new();
+        let skill = registry.get("edit_fix_grammar").unwrap();
+        let chatml = skill.build_chatml_prompt(SkillPromptInput {
+            input: "This are a test.",
+            tier: Some(SkillTier::Low),
+            ..Default::default()
+        });
+        assert!(chatml.contains("<|im_start|>system"));
+        assert!(chatml.contains("/no_think"));
+        assert!(chatml.contains("<|im_start|>assistant"));
+    }
+
+    #[test]
+    fn test_build_prompt_no_think_low_tier() {
+        let registry = SkillRegistry::new();
+        let skill = registry.get("edit_fix_grammar").unwrap();
+        let output = skill.build_prompt(SkillPromptInput {
+            input: "Test",
+            tier: Some(SkillTier::Low),
+            ..Default::default()
+        });
+        assert!(output.system.starts_with("/no_think"));
+    }
+
+    #[test]
+    fn test_build_prompt_no_think_medium_tier() {
+        let registry = SkillRegistry::new();
+        let skill = registry.get("edit_fix_grammar").unwrap();
+        let output = skill.build_prompt(SkillPromptInput {
+            input: "Test",
+            tier: Some(SkillTier::Medium),
+            ..Default::default()
+        });
+        assert!(output.system.starts_with("/no_think"));
+    }
+
+    #[test]
+    fn test_build_prompt_thinking_allowed_high_tier_contradictions() {
+        let registry = SkillRegistry::new();
+        let skill = registry.get("doc_find_contradictions").unwrap();
+        let output = skill.build_prompt(SkillPromptInput {
+            context: "Some text",
+            tier: Some(SkillTier::High),
+            ..Default::default()
+        });
+        assert!(!output.system.starts_with("/no_think"));
+    }
+
+    #[test]
+    fn test_build_prompt_no_think_high_tier_other_skills() {
+        let registry = SkillRegistry::new();
+        let skill = registry.get("edit_fix_grammar").unwrap();
+        let output = skill.build_prompt(SkillPromptInput {
+            input: "Test",
+            tier: Some(SkillTier::High),
+            ..Default::default()
+        });
+        assert!(output.system.starts_with("/no_think"));
+    }
+
+    #[test]
+    fn test_build_prompt_no_tier_no_directive() {
+        let registry = SkillRegistry::new();
+        let skill = registry.get("edit_fix_grammar").unwrap();
+        let output = skill.build_prompt(SkillPromptInput {
+            input: "Test",
+            ..Default::default()
+        });
+        assert!(!output.system.starts_with("/no_think"));
+    }
+
+    #[test]
+    fn test_allows_thinking_for() {
+        assert!(SkillTier::allows_thinking_for("doc_find_contradictions"));
+        assert!(!SkillTier::allows_thinking_for("edit_fix_grammar"));
+        assert!(!SkillTier::allows_thinking_for("doc_summarize"));
+    }
+
+    #[test]
+    fn test_skill_tier_output_cap() {
+        assert_eq!(SkillTier::Low.output_cap(), (64, 192));
+        assert_eq!(SkillTier::Medium.output_cap(), (256, 512));
+        assert_eq!(SkillTier::High.output_cap(), (512, 1024));
+    }
+
+    #[test]
+    fn test_skill_tier_context_cap() {
+        assert_eq!(SkillTier::Low.context_cap(), 2048);
+        assert_eq!(SkillTier::Medium.context_cap(), 4096);
+        assert_eq!(SkillTier::High.context_cap(), 16384);
+    }
 }

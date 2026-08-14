@@ -9,7 +9,7 @@ authors.workspace = true
 default = ["text-pipeline"]
 text-pipeline = []
 encoder = []
-onnx-runtime = ["encoder", "dep:ort", "dep:tokenizers", "dep:ndarray"]
+onnx-runtime = ["encoder", "kchat-encoder/onnx-runtime", "dep:ort", "dep:tokenizers", "dep:ndarray"]
 onnx-runtime-vision = ["onnx-runtime", "dep:image"]
 skill-pack = ["text-pipeline", "dep:zip", "dep:serde_yaml", "zip/deflate"]
 

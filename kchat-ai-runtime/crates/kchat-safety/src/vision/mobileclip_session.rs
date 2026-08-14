@@ -13,6 +13,7 @@ use ort::value::Tensor;
 use parking_lot::Mutex;
 
 use super::{MOBILECLIP_EMBED_DIM, MOBILECLIP_IMAGE_SIZE};
+use crate::vision::ep_helpers::build_ort_eps_for_host;
 
 /// Errors raised by [`MobileClipSession`].
 #[derive(Debug)]
@@ -55,12 +56,20 @@ pub struct MobileClipSession {
 impl MobileClipSession {
     /// Load from a filesystem path.
     pub fn from_file(path: impl AsRef<Path>, intra_threads: usize) -> Result<Self, MobileClipSessionError> {
-        let builder = Session::builder()
-            .map_err(|e| MobileClipSessionError::LoadFailed { reason: format!("session builder: {e}") })?
+        let mut builder = Session::builder()
+            .map_err(|e| MobileClipSessionError::LoadFailed { reason: format!("session builder: {e}") })?;
+        builder = builder
             .with_optimization_level(GraphOptimizationLevel::Level3)
-            .map_err(|e| MobileClipSessionError::LoadFailed { reason: format!("set optimization level: {e}") })?
+            .map_err(|e| MobileClipSessionError::LoadFailed { reason: format!("set optimization level: {e}") })?;
+        builder = builder
             .with_intra_threads(intra_threads)
             .map_err(|e| MobileClipSessionError::LoadFailed { reason: format!("set intra threads: {e}") })?;
+        let ep_eps = build_ort_eps_for_host();
+        if !ep_eps.is_empty() {
+            builder = builder
+                .with_execution_providers(&ep_eps)
+                .map_err(|e| MobileClipSessionError::LoadFailed { reason: format!("ep selection: {e}") })?;
+        }
         let session = builder
             .commit_from_file(path.as_ref())
             .map_err(|e| MobileClipSessionError::LoadFailed { reason: format!("commit from file: {e}") })?;
@@ -69,12 +78,20 @@ impl MobileClipSession {
 
     /// Load from in-memory bytes.
     pub fn from_bytes(bytes: &[u8], intra_threads: usize) -> Result<Self, MobileClipSessionError> {
-        let builder = Session::builder()
-            .map_err(|e| MobileClipSessionError::LoadFailed { reason: format!("session builder: {e}") })?
+        let mut builder = Session::builder()
+            .map_err(|e| MobileClipSessionError::LoadFailed { reason: format!("session builder: {e}") })?;
+        builder = builder
             .with_optimization_level(GraphOptimizationLevel::Level3)
-            .map_err(|e| MobileClipSessionError::LoadFailed { reason: format!("set optimization level: {e}") })?
+            .map_err(|e| MobileClipSessionError::LoadFailed { reason: format!("set optimization level: {e}") })?;
+        builder = builder
             .with_intra_threads(intra_threads)
             .map_err(|e| MobileClipSessionError::LoadFailed { reason: format!("set intra threads: {e}") })?;
+        let ep_eps = build_ort_eps_for_host();
+        if !ep_eps.is_empty() {
+            builder = builder
+                .with_execution_providers(&ep_eps)
+                .map_err(|e| MobileClipSessionError::LoadFailed { reason: format!("ep selection: {e}") })?;
+        }
         let session = builder
             .commit_from_memory(bytes)
             .map_err(|e| MobileClipSessionError::LoadFailed { reason: format!("commit from memory: {e}") })?;
