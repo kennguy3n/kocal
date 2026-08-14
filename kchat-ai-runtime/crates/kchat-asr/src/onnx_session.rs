@@ -571,6 +571,9 @@ mod with_ort {
         tokenizer: tokenizers::Tokenizer,
         mel_kernel: WhisperMelKernel,
         special: WhisperSpecialTokens,
+        /// Cached language token ids for `detect_language` — avoids
+        /// re-collecting from `special.languages` on every call.
+        language_ids: Vec<u32>,
         task: WhisperTask,
         language: Option<String>,
         with_timestamps: bool,
@@ -636,6 +639,7 @@ mod with_ort {
             let vocab_size = tokenizer.get_vocab_size(true);
             let suppress = Self::compute_suppression_set(&special);
             let suppress_no_timestamps = Self::compute_suppression_set_no_timestamps(&special);
+            let language_ids: Vec<u32> = special.languages.values().copied().collect();
 
             Ok(Self {
                 encoder: Mutex::new(encoder),
@@ -643,6 +647,7 @@ mod with_ort {
                 tokenizer,
                 mel_kernel: WhisperMelKernel::new(),
                 special,
+                language_ids,
                 task: WhisperTask::Transcribe,
                 language: None,
                 with_timestamps: true,
@@ -855,8 +860,7 @@ mod with_ort {
             let probe_prefix = [self.special.start_of_transcript];
             let logits = self.run_decoder(&probe_prefix, hidden_tensor)?;
             let row: &[f32] = &logits;
-            let language_ids: Vec<u32> = self.special.languages.values().copied().collect();
-            argmax_language_token(row, &language_ids).ok_or_else(|| AsrError::Ort {
+            argmax_language_token(row, &self.language_ids).ok_or_else(|| AsrError::Ort {
                 op: "whisper_detect_language",
                 detail: "decoder emitted no language-token logits during detection".into(),
             })
@@ -996,7 +1000,7 @@ mod with_ort {
             }
             debug_assert!(
                 prefix.len() <= WHISPER_DECODER_CONTEXT_TOKENS,
-                "greedy loop overran decoder context: prefix.len() = {}, ceiling = {WHISPER_DECODER_CONTEXT_TOKENS}",
+                "greedy loop overran decoder context: prefix.len() = {}, initial_len = {prefix_initial_len}, ceiling = {WHISPER_DECODER_CONTEXT_TOKENS}",
                 prefix.len()
             );
 
@@ -1034,8 +1038,6 @@ mod with_ort {
                 .collect::<Vec<_>>()
                 .join(" ");
             let text = text.trim().to_string();
-
-            let _ = prefix_initial_len;
 
             Ok(TranscriptionResult {
                 text,
@@ -1513,6 +1515,18 @@ mod tests {
                 "base set must not suppress timestamp id {id}"
             );
         }
+    }
+
+    #[test]
+    fn with_language_rejects_invalid_code() {
+        // The synthetic vocab only has en/zh/de/es. A code like "zz"
+        // must be rejected by language_token lookup. This tests the
+        // pure resolution path that with_language relies on.
+        let timestamp_begin = 50_363;
+        let added = synthetic_added_tokens(timestamp_begin);
+        let s = WhisperSpecialTokens::resolve_from_added_tokens(&added).unwrap();
+        assert!(s.language_token("zz").is_none(), "zz must not be in the synthetic vocab");
+        assert!(s.language_token("en").is_some(), "en must be present");
     }
 
     // ---- Stub-only tests (feature off) ----
