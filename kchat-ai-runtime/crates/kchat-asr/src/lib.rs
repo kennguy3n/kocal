@@ -23,7 +23,6 @@
 pub mod audio;
 pub mod backend;
 
-#[cfg(feature = "onnx-runtime")]
 pub mod onnx_session;
 
 pub mod transcribe;

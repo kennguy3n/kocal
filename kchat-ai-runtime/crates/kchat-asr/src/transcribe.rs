@@ -5,8 +5,11 @@
 //! single call. Without `onnx-runtime`, falls back to
 //! [`crate::backend::SkipWhisperTranscriber`].
 
-use crate::backend::{MlxAppleSiliconProbe, SkipWhisperTranscriber, WhisperTranscriber};
+use crate::backend::MlxAppleSiliconProbe;
 use crate::AsrResult;
+
+#[cfg(not(feature = "onnx-runtime"))]
+use crate::backend::{SkipWhisperTranscriber, WhisperTranscriber};
 
 /// Transcribe raw audio bytes to text.
 ///
