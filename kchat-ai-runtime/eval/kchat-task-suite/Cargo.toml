@@ -13,6 +13,7 @@ kchat-context = { path = "../../crates/kchat-context" }
 kchat-generation = { path = "../../crates/kchat-generation" }
 kchat-action = { path = "../../crates/kchat-action" }
 kchat-bindings = { path = "../../crates/kchat-bindings" }
+kchat-image = { path = "../../crates/kchat-image" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_yaml = "0.9"
@@ -31,6 +32,7 @@ rusqlite = { version = "0.36", features = ["bundled-sqlcipher-vendored-openssl"]
 which = "7"
 num_cpus = "1"
 regex = "1"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "blocking"] }
 
 [features]
 skill-pack = ["kchat-safety/skill-pack"]

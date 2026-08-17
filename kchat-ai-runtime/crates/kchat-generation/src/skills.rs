@@ -26,6 +26,8 @@ pub enum SkillSurface {
     Edit,
     /// Create surface — generate new content from a brief.
     Create,
+    /// Slides surface — generate/edit presentation slides via smart templates.
+    Slides,
 }
 
 /// What part of the document a skill operates on.
@@ -66,6 +68,7 @@ pub enum SkillGroup {
     Extract,
     Generate,
     Document,
+    Slides,
 }
 
 /// Minimum device tier required for a skill.
@@ -425,6 +428,95 @@ impl SkillDef {
                     if input.context.is_empty() { "none" } else { input.context }),
             },
 
+            // --- Slides surface ------------------------------------------------
+            "slides_generate_deck" => {
+                let catalog = crate::slides_templates::TEMPLATE_CATALOG.as_str();
+                SkillPromptOutput {
+                    system: format!(
+                        "Generate a complete slide deck as JSON. Each slide has a template_id (from the catalog below) and slots (matching the template's slot schema).\n\
+                        Output JSON: {{\"slides\": [{{\"template_id\": \"string\", \"title\": \"string\", \"slots\": {{}}}}]}}\n\
+                        Use 5-12 slides. Pick template_ids from this catalog:\n{}", catalog),
+                    user: format!("Create a slide deck about: {}{}", input.input, keywords_line),
+                }
+            },
+            "slides_generate_slide" => {
+                let catalog = crate::slides_templates::TEMPLATE_CATALOG.as_str();
+                SkillPromptOutput {
+                    system: format!(
+                        "Generate a single slide as JSON. Pick a template_id from the catalog and fill its slots.\n\
+                        Output JSON: {{\"template_id\": \"string\", \"title\": \"string\", \"slots\": {{}}}}\n\
+                        Template catalog:\n{}", catalog),
+                    user: format!("Slide brief: {}{}", input.input, keywords_line),
+                }
+            },
+            "slides_suggest_template" => {
+                let catalog = crate::slides_templates::TEMPLATE_CATALOG.as_str();
+                SkillPromptOutput {
+                    system: format!(
+                        "Pick the best smart template for the content brief. Output JSON: {{\"template_id\": \"string\", \"rationale\": \"string\"}}\n\
+                        Available templates:\n{}", catalog),
+                    user: format!("Content brief: {}", input.input),
+                }
+            },
+            "slides_suggest_outline" => {
+                let catalog = crate::slides_templates::TEMPLATE_CATALOG.as_str();
+                SkillPromptOutput {
+                    system: format!(
+                        "Suggest a deck outline as JSON. Each entry has a title and template_id.\n\
+                        Output JSON: {{\"outline\": [{{\"title\": \"string\", \"template_id\": \"string\"}}]}}\n\
+                        Use 5-12 slides. Template catalog:\n{}", catalog),
+                    user: format!("Deck topic: {}{}", input.input, keywords_line),
+                }
+            },
+            "slides_rewrite_slide" => SkillPromptOutput {
+                system: "Rewrite the slide text for clarity and impact. Keep the meaning. Output JSON: {\"title\": \"string\", \"slots\": {}}".into(),
+                user: format!("Slide text to rewrite: {}\nInstruction: {}", input.input,
+                    if input.context.is_empty() { "improve clarity and impact" } else { input.context }),
+            },
+            "slides_improve_slide" => SkillPromptOutput {
+                system: "Improve the slide text for clarity and conciseness. Keep the meaning. Output JSON: {\"title\": \"string\", \"slots\": {}}".into(),
+                user: input.input.into(),
+            },
+            "slides_add_image" => SkillPromptOutput {
+                system: "Derive an image search query for the slide. Output JSON: {\"query\": \"string\", \"orientation\": \"landscape|portrait|square\", \"rationale\": \"string\"}".into(),
+                user: format!("Slide content: {}", input.input),
+            },
+            "slides_summarize_deck" => SkillPromptOutput {
+                system: "Summarize the slide deck in 3-5 bullet points (- ). Capture the key points. Output only the bullets.".into(),
+                user: format!("Deck content:\n{}", input.context),
+            },
+            "slides_extract_speaker_notes" => SkillPromptOutput {
+                system: "Generate speaker notes for each slide. Format: ## Slide N: <title>\\n<notes>. Output only the notes.".into(),
+                user: format!("Deck content:\n{}", input.context),
+            },
+            "slides_translate_deck" => {
+                // Validate that the variant_context is a recognized language.
+                // If empty or unrecognized, default to Spanish with a warning.
+                let target_lang = if variant.is_empty() {
+                    "Spanish".to_string()
+                } else {
+                    validate_language(variant).unwrap_or_else(|| {
+                        tracing::warn!(
+                            variant = variant,
+                            "unrecognized target language for slides_translate_deck, defaulting to Spanish"
+                        );
+                        "Spanish".to_string()
+                    })
+                };
+                SkillPromptOutput {
+                    system: format!("Translate all slide text to {}. Preserve slide structure. Output only the translated text.", target_lang),
+                    user: format!("Deck content:\n{}", input.context),
+                }
+            },
+            "slides_suggest_title" => SkillPromptOutput {
+                system: "Generate a single concise, engaging title for the slide deck. No quotes. Output only the title.".into(),
+                user: format!("Deck topic: {}", input.input),
+            },
+            "slides_key_takeaways" => SkillPromptOutput {
+                system: "Extract 3-5 key takeaways from the deck as a numbered list (1. 2. 3.). Be concise. Output only the list.".into(),
+                user: format!("Deck content:\n{}", input.context),
+            },
+
             _ => SkillPromptOutput {
                 system: "Process the following text.".into(),
                 user: input.input.into(),
@@ -497,7 +589,7 @@ pub struct SkillRegistry {
 }
 
 impl SkillRegistry {
-    /// Create a new registry with all 33 document skills pre-registered.
+    /// Create a new registry with all 45 skills pre-registered (33 document + 12 slides).
     pub fn new() -> Self {
         let skills = all_skills();
         let by_id = skills
@@ -583,6 +675,36 @@ pub fn estimate_tokens(text: &str) -> usize {
         return 0;
     }
     (text.len() + 2) / 3
+}
+
+/// Supported languages for translation skills. Used to validate that
+/// the variant_context is a recognized language name before injecting
+/// it into a prompt (prevents prompt injection via arbitrary variant text).
+const SUPPORTED_LANGUAGES: &[&str] = &[
+    "english", "spanish", "french", "german", "italian", "portuguese",
+    "dutch", "russian", "japanese", "chinese", "korean", "vietnamese",
+    "thai", "indonesian", "hindi", "arabic", "turkish", "polish",
+    "swedish", "norwegian", "danish", "finnish", "czech", "hungarian",
+    "romanian", "greek", "hebrew", "bengali", "malay", "filipino",
+    "tagalog", "urdu", "persian", "ukrainian",
+];
+
+/// Validate that a string is a recognized language name.
+/// Returns the canonical language name if recognized, None otherwise.
+/// Case-insensitive, trims whitespace.
+fn validate_language(s: &str) -> Option<String> {
+    let lower = s.trim().to_lowercase();
+    SUPPORTED_LANGUAGES
+        .iter()
+        .find(|lang| **lang == lower)
+        .map(|lang| {
+            // Capitalize first letter.
+            let mut c = lang.chars();
+            match c.next() {
+                Some(first) => first.to_uppercase().collect::<String>() + c.as_str(),
+                None => String::new(),
+            }
+        })
 }
 
 const EMPTY_STOP: [String; 0] = [];
@@ -1423,6 +1545,303 @@ fn all_skills() -> Vec<SkillDef> {
             min_tier: SkillTier::Low,
             deterministic: false,
         },
+
+        // === Slides Surface (12 skills) ======================================
+        SkillDef {
+            id: "slides_generate_deck".into(),
+            label: "Generate Deck".into(),
+            description: "Generate a full slide deck from a brief".into(),
+            icon: "Presentation".into(),
+            surface: SkillSurface::Slides,
+            group: SkillGroup::Slides,
+            scope: SkillScope::Topic,
+            mode: SkillMode::MultiStep,
+            max_tokens: 1024,
+            temperature: 0.4,
+            stop: vec!["<|im_end|>".into()],
+            response_prefix: Some("{\n".into()),
+            sub_variants: vec![],
+            needs_topic: true,
+            supports_keywords: true,
+            topic_label: Some("Deck topic".into()),
+            needs_full_document: false,
+            use_outline_context: false,
+            lora_task: "generate_slides".into(),
+            grammar_type: SkillGrammarType::JsonSchema,
+            min_tier: SkillTier::High,
+            deterministic: false,
+        },
+        SkillDef {
+            id: "slides_generate_slide".into(),
+            label: "Generate Slide".into(),
+            description: "Generate a single slide for a chosen template".into(),
+            icon: "SquareSquare".into(),
+            surface: SkillSurface::Slides,
+            group: SkillGroup::Slides,
+            scope: SkillScope::Topic,
+            mode: SkillMode::PromptInput,
+            max_tokens: 512,
+            temperature: 0.4,
+            stop: vec!["<|im_end|>".into()],
+            response_prefix: Some("{\n".into()),
+            sub_variants: vec![],
+            needs_topic: true,
+            supports_keywords: false,
+            topic_label: Some("Slide content brief".into()),
+            needs_full_document: false,
+            use_outline_context: false,
+            lora_task: "generate_slides".into(),
+            grammar_type: SkillGrammarType::JsonSchema,
+            min_tier: SkillTier::Medium,
+            deterministic: false,
+        },
+        SkillDef {
+            id: "slides_suggest_template".into(),
+            label: "Suggest Template".into(),
+            description: "Pick the best smart template for a content brief".into(),
+            icon: "LayoutTemplate".into(),
+            surface: SkillSurface::Slides,
+            group: SkillGroup::Slides,
+            scope: SkillScope::Topic,
+            mode: SkillMode::OneClick,
+            max_tokens: 150,
+            temperature: 0.2,
+            stop: vec!["<|im_end|>".into()],
+            response_prefix: Some("{\n".into()),
+            sub_variants: vec![],
+            needs_topic: true,
+            supports_keywords: false,
+            topic_label: Some("Content brief".into()),
+            needs_full_document: false,
+            use_outline_context: false,
+            lora_task: "".into(),
+            grammar_type: SkillGrammarType::JsonSchema,
+            min_tier: SkillTier::Low,
+            deterministic: true,
+        },
+        SkillDef {
+            id: "slides_suggest_outline".into(),
+            label: "Suggest Outline".into(),
+            description: "Suggest a deck structure with template picks".into(),
+            icon: "ListTree".into(),
+            surface: SkillSurface::Slides,
+            group: SkillGroup::Slides,
+            scope: SkillScope::Topic,
+            mode: SkillMode::PromptInput,
+            max_tokens: 600,
+            temperature: 0.3,
+            stop: vec!["<|im_end|>".into()],
+            response_prefix: Some("{\n".into()),
+            sub_variants: vec![],
+            needs_topic: true,
+            supports_keywords: true,
+            topic_label: Some("Deck topic".into()),
+            needs_full_document: false,
+            use_outline_context: false,
+            lora_task: "generate_slides".into(),
+            grammar_type: SkillGrammarType::JsonSchema,
+            min_tier: SkillTier::Medium,
+            deterministic: false,
+        },
+        SkillDef {
+            id: "slides_rewrite_slide".into(),
+            label: "Rewrite Slide".into(),
+            description: "Rewrite a slide's text for clarity and impact".into(),
+            icon: "PenLine".into(),
+            surface: SkillSurface::Slides,
+            group: SkillGroup::Slides,
+            scope: SkillScope::Selection,
+            mode: SkillMode::PromptInput,
+            max_tokens: 400,
+            temperature: 0.3,
+            stop: vec!["<|im_end|>".into()],
+            response_prefix: Some("{\n".into()),
+            sub_variants: vec![],
+            needs_topic: false,
+            supports_keywords: false,
+            topic_label: None,
+            needs_full_document: false,
+            use_outline_context: false,
+            lora_task: "edit_style".into(),
+            grammar_type: SkillGrammarType::JsonSchema,
+            min_tier: SkillTier::Medium,
+            deterministic: false,
+        },
+        SkillDef {
+            id: "slides_improve_slide".into(),
+            label: "Improve Slide".into(),
+            description: "Improve clarity and conciseness of slide text".into(),
+            icon: "Sparkles".into(),
+            surface: SkillSurface::Slides,
+            group: SkillGroup::Slides,
+            scope: SkillScope::Selection,
+            mode: SkillMode::OneClick,
+            max_tokens: 300,
+            temperature: 0.2,
+            stop: vec!["<|im_end|>".into()],
+            response_prefix: Some("{\n".into()),
+            sub_variants: vec![],
+            needs_topic: false,
+            supports_keywords: false,
+            topic_label: None,
+            needs_full_document: false,
+            use_outline_context: false,
+            lora_task: "edit_style".into(),
+            grammar_type: SkillGrammarType::JsonSchema,
+            min_tier: SkillTier::Low,
+            deterministic: false,
+        },
+        SkillDef {
+            id: "slides_add_image".into(),
+            label: "Add Image".into(),
+            description: "Derive an image search query for a slide".into(),
+            icon: "ImagePlus".into(),
+            surface: SkillSurface::Slides,
+            group: SkillGroup::Slides,
+            scope: SkillScope::Selection,
+            mode: SkillMode::PromptInput,
+            max_tokens: 150,
+            temperature: 0.3,
+            stop: vec!["<|im_end|>".into()],
+            response_prefix: Some("{\n".into()),
+            sub_variants: vec![],
+            needs_topic: false,
+            supports_keywords: false,
+            topic_label: None,
+            needs_full_document: false,
+            use_outline_context: false,
+            lora_task: "".into(),
+            grammar_type: SkillGrammarType::JsonSchema,
+            min_tier: SkillTier::Low,
+            deterministic: true,
+        },
+        SkillDef {
+            id: "slides_summarize_deck".into(),
+            label: "Summarize Deck".into(),
+            description: "Summarize a slide deck in bullet points".into(),
+            icon: "FileText".into(),
+            surface: SkillSurface::Slides,
+            group: SkillGroup::Slides,
+            scope: SkillScope::Document,
+            mode: SkillMode::OneClick,
+            max_tokens: 200,
+            temperature: 0.3,
+            stop: vec!["<|im_end|>".into()],
+            response_prefix: Some("- ".into()),
+            sub_variants: vec![],
+            needs_topic: false,
+            supports_keywords: false,
+            topic_label: None,
+            needs_full_document: true,
+            use_outline_context: false,
+            lora_task: "summarize".into(),
+            grammar_type: SkillGrammarType::FreeText,
+            min_tier: SkillTier::Medium,
+            deterministic: false,
+        },
+        SkillDef {
+            id: "slides_extract_speaker_notes".into(),
+            label: "Speaker Notes".into(),
+            description: "Generate speaker notes for each slide".into(),
+            icon: "Mic".into(),
+            surface: SkillSurface::Slides,
+            group: SkillGroup::Slides,
+            scope: SkillScope::Document,
+            mode: SkillMode::OneClick,
+            max_tokens: 400,
+            temperature: 0.3,
+            stop: vec!["<|im_end|>".into()],
+            response_prefix: None,
+            sub_variants: vec![],
+            needs_topic: false,
+            supports_keywords: false,
+            topic_label: None,
+            needs_full_document: true,
+            use_outline_context: false,
+            lora_task: "extract_info".into(),
+            grammar_type: SkillGrammarType::FreeText,
+            min_tier: SkillTier::Medium,
+            deterministic: false,
+        },
+        SkillDef {
+            id: "slides_translate_deck".into(),
+            label: "Translate Deck".into(),
+            description: "Translate all slide text to another language".into(),
+            icon: "Languages".into(),
+            surface: SkillSurface::Slides,
+            group: SkillGroup::Slides,
+            scope: SkillScope::Document,
+            mode: SkillMode::FormInput,
+            max_tokens: 600,
+            temperature: 0.3,
+            stop: vec!["<|im_end|>".into()],
+            response_prefix: None,
+            sub_variants: vec![
+                SkillSubVariant { id: "spanish".into(), label: "Spanish".into(), context: "Spanish".into() },
+                SkillSubVariant { id: "french".into(), label: "French".into(), context: "French".into() },
+                SkillSubVariant { id: "german".into(), label: "German".into(), context: "German".into() },
+                SkillSubVariant { id: "japanese".into(), label: "Japanese".into(), context: "Japanese".into() },
+                SkillSubVariant { id: "chinese".into(), label: "Chinese".into(), context: "Chinese".into() },
+                SkillSubVariant { id: "vietnamese".into(), label: "Vietnamese".into(), context: "Vietnamese".into() },
+            ],
+            needs_topic: false,
+            supports_keywords: false,
+            topic_label: None,
+            needs_full_document: true,
+            use_outline_context: false,
+            lora_task: "translate".into(),
+            grammar_type: SkillGrammarType::FreeText,
+            min_tier: SkillTier::Medium,
+            deterministic: false,
+        },
+        SkillDef {
+            id: "slides_suggest_title".into(),
+            label: "Suggest Title".into(),
+            description: "Generate a concise deck title".into(),
+            icon: "Heading".into(),
+            surface: SkillSurface::Slides,
+            group: SkillGroup::Slides,
+            scope: SkillScope::Topic,
+            mode: SkillMode::OneClick,
+            max_tokens: 50,
+            temperature: 0.4,
+            stop: vec!["<|im_end|>".into(), "\n".into()],
+            response_prefix: None,
+            sub_variants: vec![],
+            needs_topic: true,
+            supports_keywords: false,
+            topic_label: Some("Deck topic".into()),
+            needs_full_document: false,
+            use_outline_context: false,
+            lora_task: "".into(),
+            grammar_type: SkillGrammarType::Regex,
+            min_tier: SkillTier::Low,
+            deterministic: false,
+        },
+        SkillDef {
+            id: "slides_key_takeaways".into(),
+            label: "Key Takeaways".into(),
+            description: "Extract 3-5 key takeaways from a deck".into(),
+            icon: "KeyRound".into(),
+            surface: SkillSurface::Slides,
+            group: SkillGroup::Slides,
+            scope: SkillScope::Document,
+            mode: SkillMode::OneClick,
+            max_tokens: 200,
+            temperature: 0.3,
+            stop: vec!["<|im_end|>".into()],
+            response_prefix: Some("1. ".into()),
+            sub_variants: vec![],
+            needs_topic: false,
+            supports_keywords: false,
+            topic_label: None,
+            needs_full_document: true,
+            use_outline_context: false,
+            lora_task: "key_points".into(),
+            grammar_type: SkillGrammarType::FreeText,
+            min_tier: SkillTier::Low,
+            deterministic: false,
+        },
     ]
 }
 
@@ -1435,9 +1854,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_registry_has_33_skills() {
+    fn test_registry_has_45_skills() {
         let registry = SkillRegistry::new();
-        assert_eq!(registry.len(), 33);
+        assert_eq!(registry.len(), 45);
     }
 
     #[test]
@@ -1454,6 +1873,7 @@ mod tests {
         assert_eq!(registry.by_surface(SkillSurface::Read).len(), 7);
         assert_eq!(registry.by_surface(SkillSurface::Edit).len(), 13);
         assert_eq!(registry.by_surface(SkillSurface::Create).len(), 13);
+        assert_eq!(registry.by_surface(SkillSurface::Slides).len(), 12);
     }
 
     #[test]

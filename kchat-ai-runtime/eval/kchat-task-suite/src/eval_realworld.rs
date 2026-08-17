@@ -984,21 +984,37 @@ fn load_dataset<T: for<'de> Deserialize<'de>>(path: &str) -> Result<T, String> {
 }
 
 fn model_path() -> Option<String> {
+    // Check env var first (highest priority)
+    if let Ok(path) = std::env::var("KCHAT_MODEL_PATH") {
+        if Path::new(&path).exists() {
+            return Some(path);
+        }
+    }
     // Check for model in manifest/packs/
     let pack_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../manifest/packs");
     if let Ok(entries) = std::fs::read_dir(&pack_dir) {
-        for entry in entries.flatten() {
-            let name = entry.file_name().to_string_lossy().to_string();
-            if name.ends_with(".gguf") {
-                return Some(entry.path().to_string_lossy().to_string());
-            }
-        }
-    }
-    // Check env var
-    if let Ok(path) = std::env::var("KCHAT_MODEL_PATH") {
-        if Path::new(&path).exists() {
-            return Some(path);
+        // Collect all GGUF files, then prefer smaller / known-working models
+        let mut gguf_files: Vec<(String, std::path::PathBuf)> = entries
+            .flatten()
+            .filter_map(|e| {
+                let name = e.file_name().to_string_lossy().to_string();
+                if name.ends_with(".gguf") {
+                    Some((name.clone(), e.path()))
+                } else {
+                    None
+                }
+            })
+            .collect();
+        // Sort by preference: Qwen models first (known to load correctly),
+        // then by name (smaller models tend to have smaller numbers)
+        gguf_files.sort_by(|a, b| {
+            let a_pref = a.0.contains("Qwen") || a.0.contains("qwen");
+            let b_pref = b.0.contains("Qwen") || b.0.contains("qwen");
+            b_pref.cmp(&a_pref).then_with(|| a.0.cmp(&b.0))
+        });
+        if let Some((_, path)) = gguf_files.first() {
+            return Some(path.to_string_lossy().to_string());
         }
     }
     None
@@ -1009,7 +1025,9 @@ fn model_path() -> Option<String> {
 pub fn run_safety_realworld() -> SuiteReport {
     let mut suite = SuiteReport::new("Real-World Safety Eval", 0.90);
 
-    let dataset: SafetyDataset = match load_dataset("safety/safety_dataset_v1.json") {
+    let dataset: SafetyDataset = match load_dataset("safety/safety_dataset_v2.json")
+        .or_else(|_| load_dataset("safety/safety_dataset_v1.json"))
+    {
         Ok(d) => d,
         Err(e) => {
             suite.add(EvalResult::fail("dataset_load", e));
@@ -1298,6 +1316,8 @@ fn onnx_runtime_available() -> bool {
         "libonnxruntime.dylib",
         "/usr/local/lib/libonnxruntime.dylib",
         "/opt/homebrew/lib/libonnxruntime.dylib",
+        // Python venv locations (common during development)
+        "/Users/Ken/workspaces/models/venv/lib/python3.14/site-packages/onnxruntime/capi/libonnxruntime.1.28.0.dylib",
     ];
     for candidate in &candidates {
         if std::fs::metadata(candidate).is_ok() {
@@ -1308,6 +1328,39 @@ fn onnx_runtime_available() -> bool {
     if let Ok(path) = std::env::var("KCHAT_ONNX_LIB") {
         if std::fs::metadata(&path).is_ok() {
             return true;
+        }
+    }
+    // Search for any libonnxruntime*.dylib in common Python site-packages
+    let home_lib = std::env::var("HOME").unwrap_or_default() + "/.local/lib";
+    let search_dirs = [
+        "/Users/Ken/workspaces/models/venv/lib",
+        home_lib.as_str(),
+    ];
+    for dir in &search_dirs {
+        if let Ok(entries) = std::fs::read_dir(dir) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if let Some(name) = path.file_name() {
+                    let name = name.to_string_lossy();
+                    if name.starts_with("libonnxruntime") && name.ends_with(".dylib") {
+                        return true;
+                    }
+                }
+                // Recurse one level (e.g., python3.14/site-packages/onnxruntime/capi/)
+                if path.is_dir() {
+                    if let Ok(sub) = std::fs::read_dir(&path) {
+                        for se in sub.flatten() {
+                            let sp = se.path();
+                            if let Some(name) = sp.file_name() {
+                                let name = name.to_string_lossy();
+                                if name.starts_with("libonnxruntime") && name.ends_with(".dylib") {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
     false
@@ -1321,6 +1374,33 @@ fn load_encoder_session() -> Option<std::sync::Arc<kchat_encoder::EncoderSession
     if !onnx_runtime_available() {
         eprintln!("[guardrail] ONNX Runtime dylib not found, skipping encoder");
         return None;
+    }
+
+    // Set ORT_DYLIB_PATH so the ort crate can find the dylib.
+    // The ort crate's load-dynamic feature looks for this env var.
+    if std::env::var("ORT_DYLIB_PATH").is_err() {
+        // Try common locations
+        let dylib_candidates = [
+            "/opt/homebrew/lib/libonnxruntime.dylib",
+            "/usr/local/lib/libonnxruntime.dylib",
+            "/Users/Ken/workspaces/models/venv/lib/python3.14/site-packages/onnxruntime/capi/libonnxruntime.1.28.0.dylib",
+        ];
+        for path in &dylib_candidates {
+            if std::fs::metadata(path).is_ok() {
+                std::env::set_var("ORT_DYLIB_PATH", path);
+                eprintln!("[guardrail] Set ORT_DYLIB_PATH={}", path);
+                break;
+            }
+        }
+        // Also check KCHAT_ONNX_LIB
+        if std::env::var("ORT_DYLIB_PATH").is_err() {
+            if let Ok(path) = std::env::var("KCHAT_ONNX_LIB") {
+                if std::fs::metadata(&path).is_ok() {
+                    std::env::set_var("ORT_DYLIB_PATH", &path);
+                    eprintln!("[guardrail] Set ORT_DYLIB_PATH={} (from KCHAT_ONNX_LIB)", path);
+                }
+            }
+        }
     }
 
     let model_path = std::env::var("KCHAT_ENCODER_PATH").unwrap_or_else(|_| ENCODER_MODEL_PATH.to_string());
@@ -2127,7 +2207,9 @@ fn category_id_to_name(id: u32) -> &'static str {
 pub fn run_context_realworld() -> SuiteReport {
     let mut suite = SuiteReport::new("Real-World Context Eval", 0.75);
 
-    let dataset: ContextDataset = match load_dataset("context/context_dataset_v1.json") {
+    let dataset: ContextDataset = match load_dataset("context/context_dataset_v2.json")
+        .or_else(|_| load_dataset("context/context_dataset_v1.json"))
+    {
         Ok(d) => d,
         Err(e) => {
             suite.add(EvalResult::fail("dataset_load", e));
@@ -2416,7 +2498,9 @@ struct LlamaCompletionResponse {
 pub fn run_generation_realworld() -> SuiteReport {
     let mut suite = SuiteReport::new("Real-World Generation Eval", 0.80);
 
-    let dataset: GenerationDataset = match load_dataset("generation/generation_dataset_v1.json") {
+    let dataset: GenerationDataset = match load_dataset("generation/generation_dataset_v2.json")
+        .or_else(|_| load_dataset("generation/generation_dataset_v1.json"))
+    {
         Ok(d) => d,
         Err(e) => {
             suite.add(EvalResult::fail("dataset_load", e));
@@ -2451,7 +2535,8 @@ pub fn run_generation_realworld() -> SuiteReport {
             .unwrap_or_else(|_| "llama-server".into());
 
         if which::which(&llama_server).is_ok() {
-            // Start server in background
+            eprintln!("[generation] Auto-starting llama-server with model: {}", model_path_str);
+            // Start server in background — pipe stderr to a file for debugging
             let _child = std::process::Command::new(&llama_server)
                 .arg("-m").arg(&model_path_str)
                 .arg("--host").arg("127.0.0.1")
@@ -2460,7 +2545,7 @@ pub fn run_generation_realworld() -> SuiteReport {
                 .arg("-ngl").arg("99")
                 .arg("-t").arg("4")
                 .stdout(std::process::Stdio::null())
-                .stderr(std::process::Stdio::null())
+                .stderr(std::process::Stdio::inherit())
                 .spawn()
                 .ok();
 
@@ -2468,6 +2553,7 @@ pub fn run_generation_realworld() -> SuiteReport {
             for _ in 0..60 {
                 std::thread::sleep(std::time::Duration::from_millis(500));
                 if check_llama_server(&server_url) {
+                    eprintln!("[generation] llama-server is ready at {}", server_url);
                     break;
                 }
             }
@@ -2740,7 +2826,9 @@ fn extract_json(text: &str) -> String {
 pub fn run_action_realworld() -> SuiteReport {
     let mut suite = SuiteReport::new("Real-World Action Eval", 0.90);
 
-    let dataset: ActionDataset = match load_dataset("action/action_dataset_v1.json") {
+    let dataset: ActionDataset = match load_dataset("action/action_dataset_v2.json")
+        .or_else(|_| load_dataset("action/action_dataset_v1.json"))
+    {
         Ok(d) => d,
         Err(e) => {
             suite.add(EvalResult::fail("dataset_load", e));
@@ -2988,11 +3076,39 @@ fn build_plan_from_case(case: &ActionTestCase) -> kchat_action::toolplan::ToolPl
             arguments: json!({"query": "test"}),
             data_scope: "workspace_999".into(),
         }]
+    } else if case.description.contains("missing required field in send_message") {
+        vec![ToolPlanStep {
+            tool_id: "send_message".into(),
+            action: "send".into(),
+            arguments: json!({"recipient": "john@example.com"}), // missing body
+            data_scope: "workspace_1".into(),
+        }]
+    } else if case.description.contains("missing required field in delete_record") {
+        vec![ToolPlanStep {
+            tool_id: "delete_record".into(),
+            action: "delete".into(),
+            arguments: json!({"confirm": true}), // missing record_id
+            data_scope: "workspace_1".into(),
+        }]
     } else if case.description.contains("missing required field") {
         vec![ToolPlanStep {
             tool_id: "search_records".into(),
             action: "search".into(),
             arguments: json!({"limit": 10}),
+            data_scope: "workspace_1".into(),
+        }]
+    } else if case.description.contains("type mismatch in delete_record") {
+        vec![ToolPlanStep {
+            tool_id: "delete_record".into(),
+            action: "delete".into(),
+            arguments: json!({"record_id": 12345, "confirm": true}), // number instead of string for required field
+            data_scope: "workspace_1".into(),
+        }]
+    } else if case.description.contains("type mismatch in execute_formula") {
+        vec![ToolPlanStep {
+            tool_id: "execute_formula".into(),
+            action: "execute".into(),
+            arguments: json!({"formula": 123}), // number instead of string
             data_scope: "workspace_1".into(),
         }]
     } else if case.description.contains("type mismatch") {
@@ -3001,6 +3117,107 @@ fn build_plan_from_case(case: &ActionTestCase) -> kchat_action::toolplan::ToolPl
             action: "search".into(),
             arguments: json!({"query": "test", "limit": "ten"}),
             data_scope: "workspace_1".into(),
+        }]
+    } else if case.description.contains("search, send, then execute formula") {
+        vec![
+            ToolPlanStep {
+                tool_id: "search_records".into(),
+                action: "search".into(),
+                arguments: json!({"query": "contacts"}),
+                data_scope: "workspace_1".into(),
+            },
+            ToolPlanStep {
+                tool_id: "send_message".into(),
+                action: "send".into(),
+                arguments: json!({"recipient": "john@example.com", "body": "Hello"}),
+                data_scope: "workspace_1".into(),
+            },
+            ToolPlanStep {
+                tool_id: "execute_formula".into(),
+                action: "execute".into(),
+                arguments: json!({"formula": "=SUM(A1:A10)"}),
+                data_scope: "workspace_1".into(),
+            },
+        ]
+    } else if case.description.contains("search then delete") {
+        vec![
+            ToolPlanStep {
+                tool_id: "search_records".into(),
+                action: "search".into(),
+                arguments: json!({"query": "old records"}),
+                data_scope: "workspace_1".into(),
+            },
+            ToolPlanStep {
+                tool_id: "delete_record".into(),
+                action: "delete".into(),
+                arguments: json!({"record_id": "rec_001", "confirm": true}),
+                data_scope: "workspace_1".into(),
+            },
+        ]
+    } else if case.description.contains("three search operations") {
+        vec![
+            ToolPlanStep {
+                tool_id: "search_records".into(),
+                action: "search".into(),
+                arguments: json!({"query": "q1"}),
+                data_scope: "workspace_1".into(),
+            },
+            ToolPlanStep {
+                tool_id: "search_records".into(),
+                action: "search".into(),
+                arguments: json!({"query": "q2"}),
+                data_scope: "workspace_2".into(),
+            },
+            ToolPlanStep {
+                tool_id: "search_records".into(),
+                action: "search".into(),
+                arguments: json!({"query": "q3"}),
+                data_scope: "workspace_1".into(),
+            },
+        ]
+    } else if case.description.contains("search in workspace_2 then send") {
+        vec![
+            ToolPlanStep {
+                tool_id: "search_records".into(),
+                action: "search".into(),
+                arguments: json!({"query": "data"}),
+                data_scope: "workspace_2".into(),
+            },
+            ToolPlanStep {
+                tool_id: "send_message".into(),
+                action: "send".into(),
+                arguments: json!({"recipient": "jane@example.com", "body": "Results"}),
+                data_scope: "workspace_1".into(),
+            },
+        ]
+    } else if case.description.contains("two searches in different scopes") {
+        vec![
+            ToolPlanStep {
+                tool_id: "search_records".into(),
+                action: "search".into(),
+                arguments: json!({"query": "scope1"}),
+                data_scope: "workspace_1".into(),
+            },
+            ToolPlanStep {
+                tool_id: "search_records".into(),
+                action: "search".into(),
+                arguments: json!({"query": "scope2"}),
+                data_scope: "workspace_2".into(),
+            },
+        ]
+    } else if case.description.contains("search with filters") {
+        vec![ToolPlanStep {
+            tool_id: "search_records".into(),
+            action: "search".into(),
+            arguments: json!({"query": "report", "filters": {"status": "active"}}),
+            data_scope: "workspace_1".into(),
+        }]
+    } else if case.description.contains("search in workspace_2") {
+        vec![ToolPlanStep {
+            tool_id: "search_records".into(),
+            action: "search".into(),
+            arguments: json!({"query": "data", "limit": 5}),
+            data_scope: "workspace_2".into(),
         }]
     } else if case.description.contains("Multi-step") {
         vec![
@@ -3062,6 +3279,37 @@ fn test_commit_token(validator: &kchat_action::toolplan::ToolPlanValidator, case
         } else {
             Ok("expired_rejected".into())
         }
+    } else if case.description.contains("wrong user") {
+        let args = json!({"recipient": "test@example.com", "body": "Hello"});
+        let token = validator.generate_commit_token("user_1", "send_message", &args, 9999999999, 1)
+            .map_err(|e| format!("{:?}", e))?;
+        // Verify with wrong user
+        if validator.verify_commit_token(&token, "user_2", "send_message", &args, 9999999999, 1) {
+            Err("token with wrong user was accepted".into())
+        } else {
+            Ok("expired_rejected".into())
+        }
+    } else if case.description.contains("wrong tool") {
+        let args = json!({"recipient": "test@example.com", "body": "Hello"});
+        let token = validator.generate_commit_token("user_1", "send_message", &args, 9999999999, 1)
+            .map_err(|e| format!("{:?}", e))?;
+        // Verify with wrong tool
+        if validator.verify_commit_token(&token, "user_1", "delete_record", &args, 9999999999, 1) {
+            Err("token with wrong tool was accepted".into())
+        } else {
+            Ok("expired_rejected".into())
+        }
+    } else if case.description.contains("tampered arguments") {
+        let args = json!({"recipient": "test@example.com", "body": "Hello"});
+        let wrong_args = json!({"recipient": "evil@example.com", "body": "Hacked"});
+        let token = validator.generate_commit_token("user_1", "send_message", &args, 9999999999, 1)
+            .map_err(|e| format!("{:?}", e))?;
+        // Verify with tampered args
+        if validator.verify_commit_token(&token, "user_1", "send_message", &wrong_args, 9999999999, 1) {
+            Err("token with tampered args was accepted".into())
+        } else {
+            Ok("expired_rejected".into())
+        }
     } else {
         Ok("valid".into())
     }
@@ -3088,7 +3336,39 @@ fn test_artifact_op(case: &ActionTestCase) -> Result<String, String> {
     if case.description.contains("non-existent after_node") {
         let op = ArtifactOperation::InsertSlide {
             after_node: Some(ArtifactNodeId::new()), // random — won't exist
+            template_id: "title".into(),
             title: "Orphan".into(),
+            slots: serde_json::json!({"title": "Orphan"}),
+        };
+        ast.apply_operation(&op)
+            .map(|_| "valid".into())
+            .map_err(|e| format!("{:?}", e))
+    } else if case.description.contains("invalid template_id") {
+        let op = ArtifactOperation::InsertSlide {
+            after_node: Some(existing_node),
+            template_id: "nonexistent_template_xyz".into(),
+            title: "Bad Template".into(),
+            slots: serde_json::json!({"title": "Bad Template"}),
+        };
+        ast.apply_operation(&op)
+            .map(|_| "valid".into())
+            .map_err(|e| format!("{:?}", e))
+    } else if case.description.contains("valid template_id") {
+        let op = ArtifactOperation::InsertSlide {
+            after_node: Some(existing_node),
+            template_id: "title".into(),
+            title: "Valid Template".into(),
+            slots: serde_json::json!({"title": "Valid Template"}),
+        };
+        ast.apply_operation(&op)
+            .map(|_| "valid".into())
+            .map_err(|e| format!("{:?}", e))
+    } else if case.description.contains("after_node = root") {
+        let op = ArtifactOperation::InsertSlide {
+            after_node: None, // root level
+            template_id: "title".into(),
+            title: "Root Slide".into(),
+            slots: serde_json::json!({"title": "Root Slide"}),
         };
         ast.apply_operation(&op)
             .map(|_| "valid".into())
@@ -3096,15 +3376,26 @@ fn test_artifact_op(case: &ActionTestCase) -> Result<String, String> {
     } else if case.description.contains("valid after_node") {
         let op = ArtifactOperation::InsertSlide {
             after_node: Some(existing_node),
+            template_id: "title".into(),
             title: "Quarterly Results".into(),
+            slots: serde_json::json!({"title": "Quarterly Results"}),
         };
         ast.apply_operation(&op)
             .map(|_| "valid".into())
             .map_err(|e| format!("{:?}", e))
-    } else if case.description.contains("Stale version") {
+    } else if case.description.contains("Stale version") || case.description.contains("stale version") {
         let op = ArtifactOperation::UpdateRecord {
             node_id: existing_node,
             expected_version: 5, // actual is 3
+            fields: serde_json::json!({"status": "completed"}),
+        };
+        ast.apply_operation(&op)
+            .map(|_| "valid".into())
+            .map_err(|e| format!("{:?}", e))
+    } else if case.description.contains("valid version") {
+        let op = ArtifactOperation::UpdateRecord {
+            node_id: existing_node,
+            expected_version: 3, // matches actual
             fields: serde_json::json!({"status": "completed"}),
         };
         ast.apply_operation(&op)
@@ -3132,10 +3423,28 @@ fn test_formula(case: &ActionTestCase) -> Result<String, String> {
     });
     ast.root_nodes.push(cell_node);
 
-    let formula = if case.description.contains("case-variant") {
+    let formula = if case.description.contains("case-variant") || case.description.contains("mixed-case") {
         "=Macro(inject)"
     } else if case.description.contains("macro injection") {
         "=MACRO(bad_code)"
+    } else if case.description.contains("IMPORTXML injection") {
+        "=IMPORTXML(\"http://evil.com\",\"//a\")"
+    } else if case.description.contains("HYPERLINK injection") {
+        "=HYPERLINK(\"http://evil.com\",\"click\")"
+    } else if case.description.contains("IMAGE injection") {
+        "=IMAGE(\"http://evil.com/img.png\")"
+    } else if case.description.contains("QUERY injection") {
+        "=QUERY(A1:C10,\"SELECT * WHERE 1=1\")"
+    } else if case.description.contains("AVERAGE") {
+        "=AVERAGE(A1:A10)"
+    } else if case.description.contains("COUNT") {
+        "=COUNT(A1:A10)"
+    } else if case.description.contains("MAX") {
+        "=MAX(A1:A10)"
+    } else if case.description.contains("MIN") {
+        "=MIN(A1:A10)"
+    } else if case.description.contains("CONCATENATE") {
+        "=CONCATENATE(A1,B1,C1)"
     } else {
         "=SUM(A1:A10)"
     };

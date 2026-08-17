@@ -20,6 +20,7 @@ pub mod lora;
 pub mod pipeline;
 pub mod prompt;
 pub mod skills;
+pub mod slides_templates;
 pub mod stream;
 pub mod swarm;
 
@@ -40,6 +41,10 @@ pub use prompt::{PromptTemplate, PromptTemplateRegistry, TemplateId};
 pub use skills::{
     SkillDef, SkillGrammarType, SkillGroup, SkillMode, SkillPromptInput, SkillPromptOutput,
     SkillRegistry, SkillScope, SkillSubVariant, SkillSurface, SkillTier,
+};
+pub use slides_templates::{
+    SlotDef, SlotType, SlidesTemplate, SlidesTemplateFamily, SlidesTemplateRegistry,
+    TEMPLATE_CATALOG, TEMPLATE_REGISTRY,
 };
 pub use stream::{StreamEvent, StreamHandle, StreamId};
 pub use swarm::{Peer, Swarm, SwarmConfig, SwarmError, SwarmResult};

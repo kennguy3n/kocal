@@ -143,7 +143,7 @@ impl Default for PromptTemplateRegistry {
 }
 
 impl PromptTemplateRegistry {
-    /// Register prompt templates for all 33 document AI skills.
+    /// Register prompt templates for all 45 AI skills (33 document + 12 slides).
     ///
     /// Each skill gets a template with `{{slot}}` placeholders matching its
     /// `build_prompt` output. Templates are versioned and hashed for provenance.
@@ -276,7 +276,7 @@ mod tests {
     fn test_register_skill_templates() {
         let mut registry = PromptTemplateRegistry::new();
         let ids = registry.register_skill_templates();
-        assert_eq!(ids.len(), 33);
+        assert_eq!(ids.len(), 45);
 
         // Verify a few templates by name
         assert!(registry.get_by_name("skill_edit_fix_grammar").is_some());
@@ -302,7 +302,7 @@ mod tests {
 
         // get_by_name returns the last registered template for a name,
         // so if there were duplicates, we'd still get a template.
-        // Instead, verify all 33 names are unique by checking each skill.
+        // Instead, verify all 45 names are unique by checking each skill.
         let skills = crate::skills::SkillRegistry::new();
         for skill in skills.all() {
             let name = format!("skill_{}", skill.id);

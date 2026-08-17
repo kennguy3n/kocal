@@ -1460,6 +1460,7 @@ dependencies = [
  "hex",
  "hmac",
  "kchat-core",
+ "kchat-generation",
  "parking_lot",
  "serde",
  "serde_json",
@@ -1626,6 +1627,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "kchat-image"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "bytes",
+ "chrono",
+ "hex",
+ "kchat-core",
+ "once_cell",
+ "parking_lot",
+ "regex",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 1.0.69",
+ "tokio",
+ "tracing",
+ "uuid",
+ "zeroize",
+]
+
+[[package]]
 name = "kchat-safety"
 version = "0.1.0"
 dependencies = [
@@ -1672,10 +1696,12 @@ dependencies = [
  "kchat-core",
  "kchat-encoder",
  "kchat-generation",
+ "kchat-image",
  "kchat-safety",
  "num_cpus",
  "rand 0.8.7",
  "regex",
+ "reqwest",
  "rusqlite",
  "serde",
  "serde_json",

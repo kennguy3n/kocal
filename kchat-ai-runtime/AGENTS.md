@@ -15,6 +15,16 @@ cargo test --workspace
 # Run the standard eval harness (synthetic unit-level evals)
 cargo run -p kchat-task-suite
 
+# Run the slides AI skill eval (mock mode — 880 test cases, 12 skills × 210 templates)
+cargo run -p kchat-task-suite -- --slides
+
+# Run the slides AI skill eval (real model mode — requires llama-server)
+cargo run -p kchat-task-suite -- --slides --realworld
+
+# Run the image search eval (always real — requires PEXELS_API_KEY, PIXABAY_API_KEY,
+# UNSPLASH_ACCESS_KEY, and/or SHUTTERSTOCK_API_TOKEN env vars)
+cargo run -p kchat-task-suite -- --slides-images
+
 # Run the real-world eval harness (comprehensive datasets + real model inference)
 # Requires llama-server running with a GGUF model, or it will auto-start one
 cargo run -p kchat-task-suite -- --realworld
@@ -113,7 +123,7 @@ If the Swift binary is not available, the harness automatically falls back to
 
 ## Architecture
 
-The workspace is organized into 9 crates + 1 Go sidecar following the 4-plane architecture:
+The workspace is organized into 10 crates + 1 Go sidecar following the 4-plane architecture:
 
 - **kchat-core**: Capability probe (real OS APIs via sysctl/procfs/Win32),
   device tier selection, scheduler, signed manifest manager, telemetry,
@@ -146,7 +156,13 @@ The workspace is organized into 9 crates + 1 Go sidecar following the 4-plane ar
   (50 adapters: 5 tasks × 10 languages), swarm inference (multi-peer consensus).
 - **kchat-action**: Action plane — artifact AST (typed operations, no arbitrary
   code), ToolPlan validation against signed manifests, RBAC authorization
-  broker, commit tokens, audit log.
+  broker, commit tokens, audit log. Slide operations (InsertSlide, UpdateSlide,
+  ReorderSlide, SetSlideTemplate) validate template_id against the
+  SlidesTemplateRegistry and enforce image-slot query-only constraints.
+- **kchat-image**: Image search plane — unified image search across Pexels,
+  Pixabay, Unsplash, and Shutterstock. ImageSearchProvider trait with 4 adapter
+  implementations, ImageSearchRegistry with fallback/dedup/safety-filter/cache,
+  MockProvider for offline testing. 21 unit tests.
 - **kchat-bindings**: FFI surface — UniFFI for Swift/Kotlin (mobile), N-API
   for Node.js (desktop). High-level KChatAiRuntime facade with real
   capability probing and tier-based config selection.
@@ -170,6 +186,74 @@ The workspace is organized into 9 crates + 1 Go sidecar following the 4-plane ar
 5. **Grammar-constrained**: Model output is always constrained to JSON Schema/regex/Lark
 6. **No arbitrary code**: Artifact operations are typed (replace_range, insert_slide, etc.)
 7. **Three-step authorization**: Before search, during search, before prompt construction
+8. **Smart templates**: 210 declarative slide templates across 12 families (Title, Agenda,
+   Bullet, Quote, Comparison, Timeline, Image, Chart, Diagram, Team, Media, Section)
+   with JSON Schema slot validation, image orientation hints, and chart support
+9. **Image search**: Unified image search across 4 providers (Pexels, Pixabay, Unsplash,
+   Shutterstock) with fallback, dedup, safety filtering, and in-memory cache
+
+## Slides AI Skills (12 skills, 210 templates)
+
+The `SkillSurface::Slides` surface adds 12 slides-specific skills to the existing
+33 document skills (45 total):
+
+| Skill ID | Label | Mode | Grammar | Tier | Description |
+|----------|-------|------|---------|------|-------------|
+| slides_generate_deck | Generate Deck | MultiStep | JsonSchema | High | Full deck from brief |
+| slides_generate_slide | Generate Slide | PromptInput | JsonSchema | Medium | Single slide for template |
+| slides_suggest_template | Suggest Template | OneClick | JsonSchema | Low | Pick best template |
+| slides_suggest_outline | Suggest Outline | PromptInput | JsonSchema | Medium | Deck structure + template picks |
+| slides_rewrite_slide | Rewrite Slide | PromptInput | JsonSchema | Medium | Rewrite for clarity/impact |
+| slides_improve_slide | Improve Slide | OneClick | JsonSchema | Low | Improve conciseness |
+| slides_add_image | Add Image | PromptInput | JsonSchema | Low | Derive image search query |
+| slides_summarize_deck | Summarize Deck | OneClick | FreeText | Medium | Bullet-point summary |
+| slides_extract_speaker_notes | Speaker Notes | OneClick | FreeText | Medium | Per-slide speaker notes |
+| slides_translate_deck | Translate Deck | FormInput | FreeText | Medium | Translate all slide text |
+| slides_suggest_title | Suggest Title | OneClick | Regex | Low | Concise deck title |
+| slides_key_takeaways | Key Takeaways | OneClick | FreeText | Low | 3-5 key takeaways |
+
+### Smart Template Registry (210 templates)
+
+Templates are defined in `crates/kchat-generation/src/slides_templates.rs` and organized
+into 12 families:
+
+| Family | Count | Examples |
+|--------|-------|----------|
+| Title | 12 | title, title_subtitle, cover_hero, title_event |
+| Agenda | 16 | agenda, table_of_contents, roadmap_agenda, agenda_track |
+| Bullet | 20 | bullet, numbered_list, checklist, callout_box |
+| Quote | 10 | quote, pull_quote, testimonial_quote, quote_with_background |
+| Comparison | 18 | comparison_two_col, pros_cons, versus, pricing_comparison |
+| Timeline | 16 | timeline_horizontal, milestone, roadmap, gantt_summary |
+| Image | 24 | image_full_bleed, image_grid_2x2, hero_image, photo_collage |
+| Chart | 22 | bar_chart, line_chart, pie_chart, kpi_dashboard, funnel |
+| Diagram | 24 | flowchart, pyramid, venn_diagram, swot, cycle_4 |
+| Team | 14 | team_grid, org_chart, person_card, testimonial |
+| Media | 12 | video_embed, icon_list, word_cloud, map, qr_code |
+| Section | 22 | section_break, divider_quote, recap, thank_you, contact |
+
+Each template declares:
+- **Slots**: Typed placeholders (TitleText, BodyText, BulletList, ImageQuery, ChartSeries, etc.)
+- **Layout hint**: Renderer directive (centered, split_right, grid_2x2, etc.)
+- **Image orientation hint**: landscape/portrait/square (for image-bearing templates)
+- **JSON Schema**: Auto-generated slot-fill schema for grammar-constrained generation
+- **Icon**: Lucide icon name for UI display
+
+### Image Search Providers (kchat-image crate)
+
+| Provider | Endpoint | Auth | License | Rate Limit |
+|----------|----------|------|---------|------------|
+| Pexels | api.pexels.com/v1/search | Authorization header | Free, no attribution | 200/hr |
+| Pixabay | pixabay.com/api/ | key query param | Free, attribution required | 100/hr |
+| Unsplash | api.unsplash.com/search/photos | Client-ID header | Free, attribution required | 50/hr |
+| Shutterstock | api.shutterstock.com/v2/images/search | Bearer header | Commercial | 100/hr |
+
+The `ImageSearchRegistry` merges results across providers with:
+- **Fallback**: Tries providers in priority order, falls back on failure
+- **Deduplication**: By URL across providers
+- **Safety filtering**: HTTPS-only, alt-text blocklist, attribution check, zero-dimension check
+- **Re-ranking**: Orientation match first
+- **In-memory cache**: 256 entries, 10-minute TTL, SHA-256 cache keys
 
 ## Test Counts
 
@@ -178,18 +262,24 @@ The workspace is organized into 9 crates + 1 Go sidecar following the 4-plane ar
   - 927 tests with `--features skill-pack` (adds skillpack loader, overlay merge, verifier,
     policy interpreter, threshold policy, revocation, anti-misuse, canonical JSON,
     jurisdiction tests, community overlay tests, adversarial corpus tests)
-- kchat-action: 37 tests
+- kchat-action: 47 tests (artifact AST, ToolPlan, commit tokens, slide ops, image search tools)
 - kchat-context: 44 tests (FTS, embeddings, reranker, provenance, cache invalidation)
-- kchat-generation: 84 tests (llama.cpp backend, LoRA, swarm, Lark grammar, MLX)
+- kchat-image: 21 tests (cache, safety, mock provider, registry, dedup, orientation rerank)
+- kchat-generation: 171 tests (llama.cpp backend, LoRA, swarm, Lark grammar, MLX,
+  45 skills, 210 slide templates, prompt construction, grammar schemas)
 - kchat-bindings: 12 tests (FFI facade, capability probing, tier selection)
 - kchat-wasm: 10 tests (WASM safety classification)
 - kchat-encoder: 5 tests (mock safety, embed, rerank, session)
-- kchat-task-suite: 8 unit tests + 205 standard eval + 36 red-team cases
-  - Standard eval: 44 synthetic + 161 device profile = 205 cases
+- kchat-task-suite: 24 unit tests + 205 standard eval + 36 red-team cases
+  + 880 slides mock eval cases (12 skills × 210 templates) + 80 image search eval cases
+  - Standard eval: 160 synthetic (64 safety + 33 context + 46 generation + 11 action + 6 integration) + 209 device profile = 369 cases
+  - Safety eval: 64 cases covering all 6 PII types, 8 scam families, URL risk, obfuscation resistance, multilingual, false positive resistance, latency percentiles, per-category F1
+  - Context eval: 33 cases with multi-doc retrieval quality (MRR, recall@k, MAP, NDCG), cross-language, ACL enforcement, encryption integrity, scale performance
+  - Generation eval: 46 cases with grammar edge cases, prompt injection resistance, token budget, backend selection, model lifecycle
   - Device profile suite: 12 profiles × 15 test categories + 9 standalone tests = 189 cases
   - Device simulator: `--simulate` flag runs 12 profiles × full decision tree (138 checks)
-- **Unit total: 685 tests, all passing**
-- **Standard eval: 233 cases, all passing**
+- **Unit total: 902 tests, all passing**
+- **Standard eval: 369 cases, all passing**
 - **Red-team eval: 36/36 cases (100%) across 7 attack categories**
 - **Real-world eval: 2005 safety + 221 guardrail + 13 context + 11 generation + 17 action = 2267 cases**
   - Safety: 2005/2005 (100%), Guardrail: 220/220 (100%), Context: 13/13 (100%), Generation: 9/11 (82%), Action: 17/17 (100%)

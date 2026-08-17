@@ -23,6 +23,8 @@ mod eval_realworld;
 mod eval_device_profile;
 mod eval_perdevice;
 mod eval_skills;
+mod eval_slides;
+mod eval_common;
 mod device_simulator;
 mod redteam;
 mod report;
@@ -37,6 +39,8 @@ fn main() {
     let simulate_mode = args.iter().any(|a| a == "--simulate" || a == "--sim");
     let perdevice_mode = args.iter().any(|a| a == "--perdevice" || a == "--perdev");
     let skills_mode = args.iter().any(|a| a == "--skills");
+    let slides_mode = args.iter().any(|a| a == "--slides");
+    let slides_images_mode = args.iter().any(|a| a == "--slides-images");
 
     println!("kchat-task-suite: Evaluation harness for kchat-ai-runtime");
     if skills_mode {
@@ -61,6 +65,20 @@ fn main() {
 
     if skills_mode {
         eval_skills::run(realworld_mode);
+        return;
+    }
+
+    if slides_images_mode {
+        eval_slides::run_image_search();
+        return;
+    }
+
+    if slides_mode {
+        if realworld_mode {
+            eval_slides::run_realworld();
+        } else {
+            eval_slides::run_mock();
+        }
         return;
     }
 

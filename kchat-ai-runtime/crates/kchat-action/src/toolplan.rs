@@ -560,4 +560,103 @@ mod tests {
         // But not with a past expiry
         assert!(!validator.verify_commit_token(&token, "user1", "search_tool", &args, now - 10, 1));
     }
+
+    // --- Image search tool tests -------------------------------------------
+
+    /// Build a signed manifest with the image search tools.
+    fn make_image_manifest() -> ToolManifest {
+        let search_images_args = json!({
+            "type": "object",
+            "required": ["query"],
+            "properties": {
+                "query": {"type": "string"},
+                "orientation": {"type": "string", "enum": ["landscape", "portrait", "square"]},
+                "per_page": {"type": "integer", "minimum": 1, "maximum": 80},
+                "safesearch": {"type": "boolean"}
+            }
+        });
+
+        let get_curated_args = json!({
+            "type": "object",
+            "properties": {
+                "per_page": {"type": "integer", "minimum": 1, "maximum": 80},
+                "page": {"type": "integer", "minimum": 1}
+            }
+        });
+
+        ToolManifest {
+            publisher_id: "kchat.image".into(),
+            version: "1.0.0".into(),
+            public_key: "a".repeat(64),
+            signature: "b".repeat(128),
+            tools: vec![
+                ToolDefinition {
+                    tool_id: "search_images".into(),
+                    name: "Search Images".into(),
+                    description: "Search stock photo libraries (Pexels, Pixabay, Unsplash, Shutterstock)".into(),
+                    arguments_schema: search_images_args,
+                    side_effects: vec!["network".into()],
+                    confirmation_class: "network".into(),
+                    data_scopes: vec!["public_image_libraries".into()],
+                },
+                ToolDefinition {
+                    tool_id: "get_curated_images".into(),
+                    name: "Get Curated Images".into(),
+                    description: "Get curated photos from Pexels".into(),
+                    arguments_schema: get_curated_args,
+                    side_effects: vec!["network".into()],
+                    confirmation_class: "network".into(),
+                    data_scopes: vec!["public_image_libraries".into()],
+                },
+            ],
+            capabilities: vec!["network".into()],
+            network_destinations: vec![
+                "api.pexels.com".into(),
+                "pixabay.com".into(),
+                "api.unsplash.com".into(),
+                "api.shutterstock.com".into(),
+            ],
+        }
+    }
+
+    #[test]
+    fn test_image_search_tool_validates() {
+        let mut validator = make_validator_with_secret();
+        validator.register_manifest(make_image_manifest()).unwrap();
+
+        let plan = ToolPlan::new(vec![ToolPlanStep {
+            tool_id: "search_images".into(),
+            action: "search".into(),
+            arguments: json!({"query": "mountain landscape", "orientation": "landscape"}),
+            data_scope: "public_image_libraries".into(),
+        }]);
+
+        let results = validator.validate(&plan).unwrap();
+        assert!(results.iter().all(|r| r.valid));
+    }
+
+    #[test]
+    fn test_image_search_tool_rejects_missing_query() {
+        let mut validator = make_validator_with_secret();
+        validator.register_manifest(make_image_manifest()).unwrap();
+
+        let plan = ToolPlan::new(vec![ToolPlanStep {
+            tool_id: "search_images".into(),
+            action: "search".into(),
+            arguments: json!({"orientation": "landscape"}),
+            data_scope: "public_image_libraries".into(),
+        }]);
+
+        let result = validator.validate(&plan);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_image_search_tool_network_destinations_declared() {
+        let manifest = make_image_manifest();
+        assert!(manifest.network_destinations.contains(&"api.pexels.com".to_string()));
+        assert!(manifest.network_destinations.contains(&"pixabay.com".to_string()));
+        assert!(manifest.network_destinations.contains(&"api.unsplash.com".to_string()));
+        assert!(manifest.network_destinations.contains(&"api.shutterstock.com".to_string()));
+    }
 }

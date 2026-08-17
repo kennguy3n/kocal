@@ -189,6 +189,88 @@ impl Grammar {
                     "description": { "type": "string" }
                 }
             }),
+            "slides_generate_deck" => serde_json::json!({
+                "type": "object",
+                "required": ["slides"],
+                "properties": {
+                    "slides": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "required": ["template_id", "title", "slots"],
+                            "properties": {
+                                "template_id": { "type": "string" },
+                                "title": { "type": "string" },
+                                "slots": { "type": "object" }
+                            }
+                        }
+                    }
+                }
+            }),
+            "slides_generate_slide" => serde_json::json!({
+                "type": "object",
+                "required": ["template_id", "title", "slots"],
+                "properties": {
+                    "template_id": { "type": "string" },
+                    "title": { "type": "string" },
+                    "slots": { "type": "object" }
+                }
+            }),
+            "slides_suggest_template" => serde_json::json!({
+                "type": "object",
+                "required": ["template_id", "rationale"],
+                "properties": {
+                    "template_id": { "type": "string" },
+                    "rationale": { "type": "string" }
+                }
+            }),
+            "slides_suggest_outline" => serde_json::json!({
+                "type": "object",
+                "required": ["outline"],
+                "properties": {
+                    "outline": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "required": ["title", "template_id"],
+                            "properties": {
+                                "title": { "type": "string" },
+                                "template_id": { "type": "string" }
+                            }
+                        }
+                    }
+                }
+            }),
+            "slides_rewrite_slide" => serde_json::json!({
+                "type": "object",
+                "required": ["title", "slots"],
+                "properties": {
+                    "title": { "type": "string" },
+                    "slots": { "type": "object" }
+                }
+            }),
+            "slides_improve_slide" => serde_json::json!({
+                "type": "object",
+                "required": ["title", "slots"],
+                "properties": {
+                    "title": { "type": "string" },
+                    "slots": { "type": "object" }
+                }
+            }),
+            "slides_add_image" => serde_json::json!({
+                "type": "object",
+                "required": ["query", "orientation", "rationale"],
+                "properties": {
+                    "query": { "type": "string" },
+                    "orientation": { "type": "string", "enum": ["landscape", "portrait", "square"] },
+                    "rationale": { "type": "string" }
+                }
+            }),
+            // FreeText slides skills — output is plain text, not JSON.
+            "slides_summarize_deck" | "slides_extract_speaker_notes"
+            | "slides_translate_deck" | "slides_key_takeaways" => {
+                serde_json::json!({"type": "string"})
+            }
             _ => serde_json::json!({"type": "object"}),
         }
     }
@@ -198,6 +280,7 @@ impl Grammar {
         match skill_id {
             "create_suggest_title" => r"^.+$".to_string(),
             "create_suggest_heading" => r"^.+$".to_string(),
+            "slides_suggest_title" => r"^.+$".to_string(),
             _ => r".*".to_string(),
         }
     }

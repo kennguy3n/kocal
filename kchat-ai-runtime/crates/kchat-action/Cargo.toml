@@ -7,6 +7,7 @@ authors.workspace = true
 
 [dependencies]
 kchat-core = { path = "../kchat-core" }
+kchat-generation = { path = "../kchat-generation" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { workspace = true }

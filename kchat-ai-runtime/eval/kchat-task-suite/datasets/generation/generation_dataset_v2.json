@@ -1,0 +1,824 @@
+{
+  "name": "kchat-generation-eval-dataset",
+  "version": "2.0.0",
+  "description": "Comprehensive generation evaluation dataset with 40+ prompts across 8 categories (greeting, summarization, JSON schema, translation, code, creative, list, reasoning, instruction, regex) and 14 languages.",
+  "prompts": [
+    {
+      "id": "gen_001",
+      "prompt": "Write a short greeting message to welcome a new team member.",
+      "max_tokens": 128,
+      "grammar": null,
+      "expected_min_tokens": 10,
+      "description": "Simple greeting generation",
+      "language": "en",
+      "category": "greeting"
+    },
+    {
+      "id": "gen_002",
+      "prompt": "新しいチームメンバーを歓迎する短いメッセージを書いてください。",
+      "max_tokens": 128,
+      "grammar": null,
+      "expected_min_tokens": 10,
+      "description": "Japanese greeting",
+      "language": "ja",
+      "category": "greeting"
+    },
+    {
+      "id": "gen_003",
+      "prompt": "Escribe un mensaje de bienvenida corto para un nuevo miembro del equipo.",
+      "max_tokens": 128,
+      "grammar": null,
+      "expected_min_tokens": 10,
+      "description": "Spanish greeting",
+      "language": "es",
+      "category": "greeting"
+    },
+    {
+      "id": "gen_004",
+      "prompt": "Viết một tin nhắn chào mừng ngắn gọn cho thành viên mới của nhóm.",
+      "max_tokens": 128,
+      "grammar": null,
+      "expected_min_tokens": 10,
+      "description": "Vietnamese greeting",
+      "language": "vi",
+      "category": "greeting"
+    },
+    {
+      "id": "gen_005",
+      "prompt": "팀의 새 멤버를 환영하는 짧은 인사 메시지를 작성하세요.",
+      "max_tokens": 128,
+      "grammar": null,
+      "expected_min_tokens": 10,
+      "description": "Korean greeting",
+      "language": "ko",
+      "category": "greeting"
+    },
+    {
+      "id": "gen_006",
+      "prompt": "Summarize the following text in 2-3 sentences: 'The Rust programming language was originally designed by Graydon Hoare at Mozilla Research in 2010. It emphasizes memory safety without garbage collection, using a borrow checker to enforce ownership rules at compile time. Rust 1.0 was released in 2015 and has since been adopted by major companies including Google, Microsoft, and Amazon for systems programming.'",
+      "max_tokens": 256,
+      "grammar": null,
+      "expected_min_tokens": 30,
+      "description": "Summarization task",
+      "language": "en",
+      "category": "summarization"
+    },
+    {
+      "id": "gen_007",
+      "prompt": "次のテキストを2-3文で要約してください：'人工知能（AI）は、機械が人間のように学習し推論する能力を指します。機械学習はAIのサブセットで、データからパターンを学びます。深層学習はニューラルネットワークを使用する機械学習の一種です。近年のAIの進歩は主に深層学習によるものです。'",
+      "max_tokens": 256,
+      "grammar": null,
+      "expected_min_tokens": 30,
+      "description": "Japanese summarization",
+      "language": "ja",
+      "category": "summarization"
+    },
+    {
+      "id": "gen_008",
+      "prompt": "Resume el siguiente texto en 2-3 oraciones: 'La nube computacional permite el acceso bajo demanda a recursos informáticos a través de internet. Los principales proveedores incluyen AWS, Google Cloud y Microsoft Azure. La nube ofrece escalabilidad, pago por uso y eliminación de la gestión de infraestructura física.'",
+      "max_tokens": 256,
+      "grammar": null,
+      "expected_min_tokens": 30,
+      "description": "Spanish summarization",
+      "language": "es",
+      "category": "summarization"
+    },
+    {
+      "id": "gen_009",
+      "prompt": "Tóm tắt đoạn văn sau trong 2-3 câu: 'Trí tuệ nhân tạo (AI) là khả năng máy móc học tập và suy luận như con người. Học máy là tập con của AI, học mẫu từ dữ liệu. Học sâu sử dụng mạng nơ-ron. Tiến bộ AI gần đây chủ yếu nhờ học sâu.'",
+      "max_tokens": 256,
+      "grammar": null,
+      "expected_min_tokens": 30,
+      "description": "Vietnamese summarization",
+      "language": "vi",
+      "category": "summarization"
+    },
+    {
+      "id": "gen_010",
+      "prompt": "Generate a user profile with name, age, email, and active status.",
+      "max_tokens": 128,
+      "grammar": {
+        "type": "json_schema",
+        "schema": {
+          "type": "object",
+          "required": [
+            "name",
+            "age",
+            "email",
+            "active"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "age": {
+              "type": "number"
+            },
+            "email": {
+              "type": "string"
+            },
+            "active": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "expected_min_tokens": 20,
+      "description": "JSON Schema constrained generation",
+      "language": "en",
+      "category": "json_schema"
+    },
+    {
+      "id": "gen_011",
+      "prompt": "Create a todo list with 3 items, each having id, title, and completed status.",
+      "max_tokens": 256,
+      "grammar": {
+        "type": "json_schema",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "title",
+              "completed"
+            ],
+            "properties": {
+              "id": {
+                "type": "number"
+              },
+              "title": {
+                "type": "string"
+              },
+              "completed": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "expected_min_tokens": 30,
+      "description": "JSON array with schema constraint",
+      "language": "en",
+      "category": "json_schema"
+    },
+    {
+      "id": "gen_012",
+      "prompt": "Generate a meeting event with title, start_time, duration_minutes, and attendees list.",
+      "max_tokens": 256,
+      "grammar": {
+        "type": "json_schema",
+        "schema": {
+          "type": "object",
+          "required": [
+            "title",
+            "start_time",
+            "duration_minutes",
+            "attendees"
+          ],
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "start_time": {
+              "type": "string"
+            },
+            "duration_minutes": {
+              "type": "number"
+            },
+            "attendees": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "expected_min_tokens": 30,
+      "description": "Complex JSON Schema with nested array",
+      "language": "en",
+      "category": "json_schema"
+    },
+    {
+      "id": "gen_013",
+      "prompt": "Create a product listing with name, price, currency, in_stock, and tags array.",
+      "max_tokens": 256,
+      "grammar": {
+        "type": "json_schema",
+        "schema": {
+          "type": "object",
+          "required": [
+            "name",
+            "price",
+            "currency",
+            "in_stock",
+            "tags"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "price": {
+              "type": "number"
+            },
+            "currency": {
+              "type": "string"
+            },
+            "in_stock": {
+              "type": "boolean"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "expected_min_tokens": 30,
+      "description": "Product listing JSON Schema",
+      "language": "en",
+      "category": "json_schema"
+    },
+    {
+      "id": "gen_014",
+      "prompt": "Generate a weather report with location, temperature, unit, conditions, and humidity.",
+      "max_tokens": 256,
+      "grammar": {
+        "type": "json_schema",
+        "schema": {
+          "type": "object",
+          "required": [
+            "location",
+            "temperature",
+            "unit",
+            "conditions",
+            "humidity"
+          ],
+          "properties": {
+            "location": {
+              "type": "string"
+            },
+            "temperature": {
+              "type": "number"
+            },
+            "unit": {
+              "type": "string"
+            },
+            "conditions": {
+              "type": "string"
+            },
+            "humidity": {
+              "type": "number"
+            }
+          }
+        }
+      },
+      "expected_min_tokens": 30,
+      "description": "Weather report JSON Schema",
+      "language": "en",
+      "category": "json_schema"
+    },
+    {
+      "id": "gen_015",
+      "prompt": "Create a restaurant review with restaurant_name, rating, cuisine, review_text, and would_recommend.",
+      "max_tokens": 256,
+      "grammar": {
+        "type": "json_schema",
+        "schema": {
+          "type": "object",
+          "required": [
+            "restaurant_name",
+            "rating",
+            "cuisine",
+            "review_text",
+            "would_recommend"
+          ],
+          "properties": {
+            "restaurant_name": {
+              "type": "string"
+            },
+            "rating": {
+              "type": "number"
+            },
+            "cuisine": {
+              "type": "string"
+            },
+            "review_text": {
+              "type": "string"
+            },
+            "would_recommend": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "expected_min_tokens": 30,
+      "description": "Restaurant review JSON Schema",
+      "language": "en",
+      "category": "json_schema"
+    },
+    {
+      "id": "gen_016",
+      "prompt": "Generate a task plan with project, priority, assignee, due_date, and subtasks array.",
+      "max_tokens": 256,
+      "grammar": {
+        "type": "json_schema",
+        "schema": {
+          "type": "object",
+          "required": [
+            "project",
+            "priority",
+            "assignee",
+            "due_date",
+            "subtasks"
+          ],
+          "properties": {
+            "project": {
+              "type": "string"
+            },
+            "priority": {
+              "type": "string"
+            },
+            "assignee": {
+              "type": "string"
+            },
+            "due_date": {
+              "type": "string"
+            },
+            "subtasks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "done"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "done": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "expected_min_tokens": 40,
+      "description": "Nested JSON Schema with subtasks",
+      "language": "en",
+      "category": "json_schema"
+    },
+    {
+      "id": "gen_017",
+      "prompt": "Translate to Japanese: 'Hello, how are you today? I hope you're having a wonderful day.'",
+      "max_tokens": 128,
+      "grammar": null,
+      "expected_min_tokens": 15,
+      "description": "English to Japanese translation",
+      "language": "en",
+      "category": "translation"
+    },
+    {
+      "id": "gen_018",
+      "prompt": "Translate to Spanish: 'The weather is beautiful today. Let's go for a walk in the park.'",
+      "max_tokens": 128,
+      "grammar": null,
+      "expected_min_tokens": 15,
+      "description": "English to Spanish translation",
+      "language": "en",
+      "category": "translation"
+    },
+    {
+      "id": "gen_019",
+      "prompt": "Translate to Vietnamese: 'I love programming in Rust because it's safe and fast.'",
+      "max_tokens": 128,
+      "grammar": null,
+      "expected_min_tokens": 15,
+      "description": "English to Vietnamese translation",
+      "language": "en",
+      "category": "translation"
+    },
+    {
+      "id": "gen_020",
+      "prompt": "Translate to Korean: 'Thank you for your help. I really appreciate your support.'",
+      "max_tokens": 128,
+      "grammar": null,
+      "expected_min_tokens": 15,
+      "description": "English to Korean translation",
+      "language": "en",
+      "category": "translation"
+    },
+    {
+      "id": "gen_021",
+      "prompt": "Translate to Chinese: 'The meeting is scheduled for 3 PM tomorrow in the main conference room.'",
+      "max_tokens": 128,
+      "grammar": null,
+      "expected_min_tokens": 15,
+      "description": "English to Chinese translation",
+      "language": "en",
+      "category": "translation"
+    },
+    {
+      "id": "gen_022",
+      "prompt": "Translate to French: 'I'm working on a new project that uses artificial intelligence.'",
+      "max_tokens": 128,
+      "grammar": null,
+      "expected_min_tokens": 15,
+      "description": "English to French translation",
+      "language": "en",
+      "category": "translation"
+    },
+    {
+      "id": "gen_023",
+      "prompt": "Translate to German: 'Please send me the report by Friday afternoon.'",
+      "max_tokens": 128,
+      "grammar": null,
+      "expected_min_tokens": 15,
+      "description": "English to German translation",
+      "language": "en",
+      "category": "translation"
+    },
+    {
+      "id": "gen_024",
+      "prompt": "Translate to Arabic: 'Welcome to our website. How can we help you today?'",
+      "max_tokens": 128,
+      "grammar": null,
+      "expected_min_tokens": 15,
+      "description": "English to Arabic translation",
+      "language": "en",
+      "category": "translation"
+    },
+    {
+      "id": "gen_025",
+      "prompt": "Translate to Hindi: 'The train arrives at the station at 5:30 PM.'",
+      "max_tokens": 128,
+      "grammar": null,
+      "expected_min_tokens": 15,
+      "description": "English to Hindi translation",
+      "language": "en",
+      "category": "translation"
+    },
+    {
+      "id": "gen_026",
+      "prompt": "Translate to Thai: 'I would like to order pad thai and a glass of water please.'",
+      "max_tokens": 128,
+      "grammar": null,
+      "expected_min_tokens": 15,
+      "description": "English to Thai translation",
+      "language": "en",
+      "category": "translation"
+    },
+    {
+      "id": "gen_027",
+      "prompt": "Translate to Indonesian: 'The deadline for the project is next Monday.'",
+      "max_tokens": 128,
+      "grammar": null,
+      "expected_min_tokens": 15,
+      "description": "English to Indonesian translation",
+      "language": "en",
+      "category": "translation"
+    },
+    {
+      "id": "gen_028",
+      "prompt": "Translate to Portuguese: 'I'm learning to play the guitar in my free time.'",
+      "max_tokens": 128,
+      "grammar": null,
+      "expected_min_tokens": 15,
+      "description": "English to Portuguese translation",
+      "language": "en",
+      "category": "translation"
+    },
+    {
+      "id": "gen_029",
+      "prompt": "Translate to Tagalog: 'Where is the nearest hospital? I need to see a doctor.'",
+      "max_tokens": 128,
+      "grammar": null,
+      "expected_min_tokens": 15,
+      "description": "English to Tagalog translation",
+      "language": "en",
+      "category": "translation"
+    },
+    {
+      "id": "gen_030",
+      "prompt": "Write a Python function that reverses a string.",
+      "max_tokens": 256,
+      "grammar": null,
+      "expected_min_tokens": 30,
+      "description": "Python code generation",
+      "language": "en",
+      "category": "code"
+    },
+    {
+      "id": "gen_031",
+      "prompt": "Write a Rust function that checks if a number is prime.",
+      "max_tokens": 256,
+      "grammar": null,
+      "expected_min_tokens": 30,
+      "description": "Rust code generation",
+      "language": "en",
+      "category": "code"
+    },
+    {
+      "id": "gen_032",
+      "prompt": "Write a JavaScript function that debounces another function.",
+      "max_tokens": 256,
+      "grammar": null,
+      "expected_min_tokens": 30,
+      "description": "JavaScript debounce",
+      "language": "en",
+      "category": "code"
+    },
+    {
+      "id": "gen_033",
+      "prompt": "Write a SQL query to find the top 5 customers by total purchase amount.",
+      "max_tokens": 256,
+      "grammar": null,
+      "expected_min_tokens": 30,
+      "description": "SQL query generation",
+      "language": "en",
+      "category": "code"
+    },
+    {
+      "id": "gen_034",
+      "prompt": "Write a Python function to merge two sorted lists into one sorted list.",
+      "max_tokens": 256,
+      "grammar": null,
+      "expected_min_tokens": 30,
+      "description": "Python merge sorted lists",
+      "language": "en",
+      "category": "code"
+    },
+    {
+      "id": "gen_035",
+      "prompt": "Write a Rust struct for a 2D point with methods to calculate distance to another point.",
+      "max_tokens": 256,
+      "grammar": null,
+      "expected_min_tokens": 30,
+      "description": "Rust struct with methods",
+      "language": "en",
+      "category": "code"
+    },
+    {
+      "id": "gen_036",
+      "prompt": "Write a 4-line haiku about autumn leaves.",
+      "max_tokens": 64,
+      "grammar": null,
+      "expected_min_tokens": 15,
+      "description": "Creative writing, short output",
+      "language": "en",
+      "category": "creative"
+    },
+    {
+      "id": "gen_037",
+      "prompt": "Write a short poem about the ocean in 4 lines.",
+      "max_tokens": 64,
+      "grammar": null,
+      "expected_min_tokens": 15,
+      "description": "Short poem",
+      "language": "en",
+      "category": "creative"
+    },
+    {
+      "id": "gen_038",
+      "prompt": "Write a 3-sentence story about a robot learning to paint.",
+      "max_tokens": 128,
+      "grammar": null,
+      "expected_min_tokens": 20,
+      "description": "Flash fiction",
+      "language": "en",
+      "category": "creative"
+    },
+    {
+      "id": "gen_039",
+      "prompt": "Escribe un haiku de 4 líneas sobre la lluvia.",
+      "max_tokens": 64,
+      "grammar": null,
+      "expected_min_tokens": 15,
+      "description": "Spanish haiku",
+      "language": "es",
+      "category": "creative"
+    },
+    {
+      "id": "gen_040",
+      "prompt": "Write a 3-line haiku about cherry blossoms in Japanese.",
+      "max_tokens": 64,
+      "grammar": null,
+      "expected_min_tokens": 15,
+      "description": "Japanese haiku",
+      "language": "ja",
+      "category": "creative"
+    },
+    {
+      "id": "gen_041",
+      "prompt": "List 5 healthy breakfast ideas with brief descriptions.",
+      "max_tokens": 256,
+      "grammar": null,
+      "expected_min_tokens": 40,
+      "description": "List generation",
+      "language": "en",
+      "category": "list"
+    },
+    {
+      "id": "gen_042",
+      "prompt": "List 5 tips for improving productivity while working from home.",
+      "max_tokens": 256,
+      "grammar": null,
+      "expected_min_tokens": 40,
+      "description": "Productivity tips list",
+      "language": "en",
+      "category": "list"
+    },
+    {
+      "id": "gen_043",
+      "prompt": "Liste 5 idées de déjeuners sains avec de brèves descriptions.",
+      "max_tokens": 256,
+      "grammar": null,
+      "expected_min_tokens": 40,
+      "description": "French breakfast list",
+      "language": "fr",
+      "category": "list"
+    },
+    {
+      "id": "gen_044",
+      "prompt": "Liste 5 Tipps zur Verbesserung der Produktivität beim Arbeiten von zu Hause.",
+      "max_tokens": 256,
+      "grammar": null,
+      "expected_min_tokens": 40,
+      "description": "German productivity tips",
+      "language": "de",
+      "category": "list"
+    },
+    {
+      "id": "gen_045",
+      "prompt": "Explain the difference between TCP and UDP in 3-4 sentences.",
+      "max_tokens": 256,
+      "grammar": null,
+      "expected_min_tokens": 40,
+      "description": "Technical explanation",
+      "language": "en",
+      "category": "reasoning"
+    },
+    {
+      "id": "gen_046",
+      "prompt": "Why is encryption important for user privacy? Explain in 3 sentences.",
+      "max_tokens": 256,
+      "grammar": null,
+      "expected_min_tokens": 40,
+      "description": "Security explanation",
+      "language": "en",
+      "category": "reasoning"
+    },
+    {
+      "id": "gen_047",
+      "prompt": "What are the benefits of using containers for deployment? List 3 benefits.",
+      "max_tokens": 256,
+      "grammar": null,
+      "expected_min_tokens": 40,
+      "description": "DevOps reasoning",
+      "language": "en",
+      "category": "reasoning"
+    },
+    {
+      "id": "gen_048",
+      "prompt": "Explique la diferencia entre TCP y UDP en 3-4 oraciones.",
+      "max_tokens": 256,
+      "grammar": null,
+      "expected_min_tokens": 40,
+      "description": "Spanish technical explanation",
+      "language": "es",
+      "category": "reasoning"
+    },
+    {
+      "id": "gen_049",
+      "prompt": "TCPとUDPの違いを3-4文で説明してください。",
+      "max_tokens": 256,
+      "grammar": null,
+      "expected_min_tokens": 40,
+      "description": "Japanese technical explanation",
+      "language": "ja",
+      "category": "reasoning"
+    },
+    {
+      "id": "gen_050",
+      "prompt": "Write an email to your manager requesting time off next week. Include: subject line, greeting, reason, dates, and sign-off.",
+      "max_tokens": 512,
+      "grammar": null,
+      "expected_min_tokens": 60,
+      "description": "Email writing with structure",
+      "language": "en",
+      "category": "instruction"
+    },
+    {
+      "id": "gen_051",
+      "prompt": "Write a product description for a smart water bottle. Include: name, features (3), benefits (2), and call to action.",
+      "max_tokens": 512,
+      "grammar": null,
+      "expected_min_tokens": 60,
+      "description": "Product description with structure",
+      "language": "en",
+      "category": "instruction"
+    },
+    {
+      "id": "gen_052",
+      "prompt": "Create a weekly meal plan for a vegetarian diet. Include breakfast, lunch, and dinner for each day (Monday-Friday).",
+      "max_tokens": 512,
+      "grammar": null,
+      "expected_min_tokens": 80,
+      "description": "Structured meal plan",
+      "language": "en",
+      "category": "instruction"
+    },
+    {
+      "id": "gen_053",
+      "prompt": "Write a blog post outline about 'The Future of AI in Healthcare'. Include: title, 5 section headings, and 2 bullet points per section.",
+      "max_tokens": 512,
+      "grammar": null,
+      "expected_min_tokens": 80,
+      "description": "Blog post outline",
+      "language": "en",
+      "category": "instruction"
+    },
+    {
+      "id": "gen_054",
+      "prompt": "Generate a US phone number in the format XXX-XXX-XXXX.",
+      "max_tokens": 64,
+      "grammar": {
+        "type": "regex",
+        "pattern": "\\d{3}-\\d{3}-\\d{4}"
+      },
+      "expected_min_tokens": 12,
+      "description": "Regex constrained: phone number",
+      "language": "en",
+      "category": "regex"
+    },
+    {
+      "id": "gen_055",
+      "prompt": "Generate an email address for user 'john smith' at company 'example.com'.",
+      "max_tokens": 64,
+      "grammar": {
+        "type": "regex",
+        "pattern": "[a-z]+\\.[a-z]+@[a-z]+\\.[a-z]+"
+      },
+      "expected_min_tokens": 15,
+      "description": "Regex constrained: email",
+      "language": "en",
+      "category": "regex"
+    },
+    {
+      "id": "gen_056",
+      "prompt": "Generate a date in YYYY-MM-DD format for March 15, 2026.",
+      "max_tokens": 64,
+      "grammar": {
+        "type": "regex",
+        "pattern": "\\d{4}-\\d{2}-\\d{2}"
+      },
+      "expected_min_tokens": 10,
+      "description": "Regex constrained: date",
+      "language": "en",
+      "category": "regex"
+    },
+    {
+      "id": "gen_057",
+      "prompt": "次の要件を満たすメールを書いてください：件名、挨拶、来週の休暇申請、署名。",
+      "max_tokens": 512,
+      "grammar": null,
+      "expected_min_tokens": 60,
+      "description": "Japanese email writing",
+      "language": "ja",
+      "category": "instruction"
+    },
+    {
+      "id": "gen_058",
+      "prompt": "Escribe una descripción de producto para una botella de agua inteligente. Incluye: nombre, 3 características, 2 beneficios, y llamada a la acción.",
+      "max_tokens": 512,
+      "grammar": null,
+      "expected_min_tokens": 60,
+      "description": "Spanish product description",
+      "language": "es",
+      "category": "instruction"
+    }
+  ],
+  "performance_targets": {
+    "low_tier": {
+      "ttft_p95_ms": 2500,
+      "decode_p50_tps": 8,
+      "max_memory_gb": 0.75
+    },
+    "medium_tier": {
+      "ttft_p95_ms": 1500,
+      "decode_p50_tps": 15,
+      "max_memory_gb": 1.5
+    },
+    "high_tier": {
+      "ttft_p95_ms": 1000,
+      "decode_p50_tps": 25,
+      "max_memory_gb": 3.0
+    }
+  }
+}

@@ -577,12 +577,26 @@ fn clean_output(text: &str) -> String {
 // ---------------------------------------------------------------------------
 
 fn load_dataset() -> Result<SkillEvalDataset, String> {
-    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("datasets/skills/skill_eval_dataset_v1.json");
-    let content = std::fs::read_to_string(&path)
-        .map_err(|e| format!("failed to read dataset {}: {}", path.display(), e))?;
-    serde_json::from_str(&content)
-        .map_err(|e| format!("failed to parse dataset: {}", e))
+    let base = Path::new(env!("CARGO_MANIFEST_DIR"));
+    // Try v2 first, fall back to v1
+    let candidates = [
+        base.join("datasets/skills/skill_eval_dataset_v2.json"),
+        base.join("datasets/skills/skill_eval_dataset_v1.json"),
+    ];
+    let mut last_err = None;
+    for path in &candidates {
+        match std::fs::read_to_string(path) {
+            Ok(content) => {
+                return serde_json::from_str(&content)
+                    .map_err(|e| format!("failed to parse dataset {}: {}", path.display(), e));
+            }
+            Err(e) => last_err = Some(e),
+        }
+    }
+    Err(format!(
+        "failed to read dataset: {}",
+        last_err.map(|e| e.to_string()).unwrap_or_default()
+    ))
 }
 
 /// Build a SkillPromptInput from a test case's input fields.
@@ -1092,6 +1106,7 @@ pub fn run_mock() {
             "read" => SkillSurface::Read,
             "edit" => SkillSurface::Edit,
             "create" => SkillSurface::Create,
+            "slides" => SkillSurface::Slides,
             _ => skill.surface,
         };
         if skill.surface != expected_surface {
