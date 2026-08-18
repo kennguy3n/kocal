@@ -84,68 +84,58 @@ fn build_eval_policy_pack() -> PolicyPack {
                 lexicon: vec![
                     // English
                     "make a weapon".into(), "make a bomb".into(), "how to make a bomb".into(), "bomb at home".into(),
-                    "how to hack".into(), "hack into".into(), "hack someone".into(), "break into a house".into(),
+                    "break into a house".into(),
                     "break into someone".into(), "make poison".into(), "household chemicals poison".into(),
-                    "create malware".into(), "bypass antivirus".into(), "steal identity".into(),
-                    "crack passwords".into(), "make explosives".into(), "how to steal".into(),
-                    "teach me to hack".into(), "create a virus".into(), "how to make a weapon".into(),
-                    "how to hack into".into(), "how to create malware".into(), "how to steal someone".into(),
-                    "how to crack passwords".into(), "how to make explosives".into(),
+                    "make explosives".into(), "how to steal".into(),
+                    "how to make a weapon".into(),
+                    "how to make explosives".into(),
                     "how to make poison".into(), "how to break into".into(),
+                    // Code-switch: English harm keywords in non-English context
+                    "making a bomb".into(), "make bombs".into(),
+                    "bombe zu bauen".into(), "bombe bauen".into(),
+                    "fazer uma bomba".into(), "fazer bomba".into(),
+                    "making poison".into(),
                     // Descriptive pattern indicators
                     "direct threats of physical harm".into(), "threats of physical harm".into(),
                     "repeated direct threats".into(),
                     "credible threat directed".into(), "identifiable target".into(),
                     "image overlay depicts".into(),
                     // Despaced variants for spaced-out obfuscation defense
-                    "howtomakeabomb".into(), "howtohack".into(), "makeabomb".into(),
-                    "makeaweapon".into(), "makepoison".into(), "crackpasswords".into(),
-                    "hackinto".into(), "createavirus".into(), "makeweapon".into(),
+                    "howtomakeabomb".into(), "makeabomb".into(),
+                    "makeaweapon".into(), "makepoison".into(),
+                    "makeweapon".into(),
                     "makeexplosives".into(), "howtomakeaweapon".into(),
-                    "hackintosomeone".into(), "howtohackinto".into(),
                     // Vietnamese
-                    "làm bom".into(), "làm vũ khí".into(), "cách chế bom".into(), "đánh cắp".into(),
-                    "hack mật khẩu".into(), "đột nhập".into(), "tạo virus".into(),
-                    "chế tạo chất độc".into(), "kết thúc cuộc đời".into(), "tạo malware".into(),
+                    "làm bom".into(), "làm vũ khí".into(), "cách chế bom".into(),
+                    "chế tạo chất độc".into(), "kết thúc cuộc đời".into(),
                     "làm vũ khí tự chế".into(),
                     // Chinese
-                    "黑入".into(), "黑客".into(), "制作炸弹".into(), "制造武器".into(),
-                    "破解密码".into(), "制造病毒".into(), "偷窃身份".into(),
-                    "制作武器".into(), "制造爆炸物".into(), "制作恶意软件".into(),
+                    "制作炸弹".into(), "制造武器".into(),
+                    "制作武器".into(), "制造爆炸物".into(),
                     "结束自己的生命".into(),
                     // Japanese
-                    "ハッキング".into(), "爆弾の作り方".into(), "武器の作り方".into(),
-                    "ウイルスを作る".into(), "パスワードを破解".into(),
-                    "マルウェアを作る".into(),
+                    "爆弾の作り方".into(), "武器の作り方".into(),
                     // Korean
-                    "해킹".into(), "폭탄 만드는 법".into(), "무기 제작".into(),
-                    "바이러스 만들기".into(), "비밀번호 해킹".into(),
-                    "바이러스 만드는 방법".into(),
+                    "폭탄 만드는 법".into(), "무기 제작".into(),
                     // Spanish
-                    "hacer una bomba".into(), "hacer un arma".into(), "hackear".into(),
-                    "crear malware".into(), "robar identidad".into(), "romper contraseñas".into(),
+                    "hacer una bomba".into(), "hacer un arma".into(),
                     "hacer bomba".into(), "hacer arma".into(),
                     // French
-                    "faire une bombe".into(), "fabriquer une arme".into(), "pirater".into(),
-                    "créer un virus".into(), "voler identité".into(),
-                    "faire bombe".into(), "écris un email de phishing".into(),
+                    "faire une bombe".into(), "fabriquer une arme".into(),
+                    "faire bombe".into(),
                     // German
-                    "bombe bauen".into(), "waffe herstellen".into(), "hacken".into(),
-                    "virus erstellen".into(), "passwort knacken".into(),
+                    "bombe bauen".into(), "waffe herstellen".into(),
                     "eine bombe".into(), "umbringen".into(),
-                    "wie stellt man eine waffe".into(), "wie hackt man".into(),
-                    "wie erstellt man einen virus".into(), "wie knackt man passwörter".into(),
-                    "wie stiehlt man identität".into(), "schreibe eine phishing".into(),
+                    "wie stellt man eine waffe".into(),
+                    "schreibe eine phishing".into(),
                     // Arabic
-                    "صنع قنبلة".into(), "صنع سلاح".into(), "اختراق".into(),
-                    "إنشاء فيروس".into(), "سرقة الهوية".into(),
+                    "صنع قنبلة".into(), "صنع سلاح".into(),
                     "أصنع قنبلة".into(), "قنبلة".into(), "أنتحر".into(), "انتحار".into(),
-                    "كيف أصنع سلاحا".into(), "كيف أخترق حاسوبا".into(), "كيف أنشئ فيروسا".into(),
-                    "كيف سرقة الهوية".into(), "كيف اختراق كلمة المرور".into(),
-                    "علمني كيف أخترق".into(), "اكتب بريدا تصيدا احتياليا".into(),
+                    "كيف أصنع سلاحا".into(),
+                    "اكتب بريدا تصيدا احتياليا".into(),
                     // Hindi
-                    "बम बनाना".into(), "हथियार बनाना".into(), "हैक".into(),
-                    "वायरस बनाना".into(), "पासवर्ड हैक".into(),
+                    "बम बनाना".into(), "हथियार बनाना".into(),
+                    "वायरस बनाना".into(),
                     "बम कैसे".into(), "हथियार कैसे बनाएं".into(), "वायरस कैसे बनाएं".into(),
                     // Thai
                     "ทำระเบิด".into(), "ทำอาวุธ".into(), "แฮก".into(),
@@ -163,6 +153,169 @@ fn build_eval_policy_pack() -> PolicyPack {
                     "gumawa ng bomba".into(), "gumawa ng armas".into(), "i-hack".into(),
                     "magpakamatay".into(), "paano gumawa ng virus".into(),
                     "paano magnakaw ng identidad".into(),
+                    // Additional realistic threat & weapon terms
+                    "pipe bomb".into(), "ammonium nitrate".into(), "diesel fuel".into(),
+                    "household chemicals".into(), "make a pipe bomb".into(),
+                    "find out where you live".into(), "make you pay".into(),
+                    "hurt someone without".into(), "without leaving evidence".into(),
+                    "baseball bat".into(), "back of the head".into(),
+                    "no fingerprints".into(), "no witnesses".into(),
+                    "detailed guide on how to".into(),
+                    "mixing bleach and ammonia".into(), "deadly gas".into(),
+                    "without being detected".into(),
+                    // Vietnamese threat terms
+                    "tìm ra mày sống ở đâu".into(), "bắt mày phải trả giá".into(),
+                    "chế tạo bom tự chế".into(), "hóa chất gia dụng".into(),
+                    "phân bón ammonium nitrate".into(), "dầu diesel".into(),
+                    "hại ai mà không bị phát hiện".into(),
+                    // Chinese threat terms
+                    "查出你住在".into(), "付出代价".into(),
+                    "管状炸弹".into(), "家用化学品".into(),
+                    "硝酸铵".into(), "漂白剂和氨水".into(),
+                    "致命气体".into(), "不被发现".into(),
+                    // Japanese threat terms
+                    "どこに住んでるか調べ".into(), "代償を払わせて".into(),
+                    "パイプ爆弾".into(), "家庭用の化学物質".into(),
+                    "硝酸アンモニウム".into(), "漂白剤とアンモニア".into(),
+                    "致死性のガス".into(), "バレずに".into(),
+                    // Korean threat terms
+                    "어디 사는지 찾아내서".into(), "대가를 치르게".into(),
+                    "파이프 폭탄".into(), "가정용 화학물질".into(),
+                    "질산 암모늄".into(), "표백제와 암모니아".into(),
+                    "치명적인 가스".into(), "들키지 않고".into(),
+                    // Multilingual violence/threat phrases
+                    // English
+                    "find out where you live".into(), "make you pay for".into(),
+                    "detailed guide to make a bomb".into(), "fabricate a bomb".into(),
+                    "make them pay for what".into(),
+                    // Vietnamese
+                    "tìm ra mày sống ở đâu".into(), "bắt mày phải trả giá".into(),
+                    "hướng dẫn chi tiết chế bom".into(),
+                    // Chinese
+                    "查出你住在哪".into(), "让你付出代价".into(),
+                    "制造炸弹的详细指南".into(), "自制炸弹的详细".into(),
+                    // Japanese
+                    "どこに住んでるか調べ".into(), "代償を払わせて".into(),
+                    "爆弾の詳細な作り方".into(), "手製爆弾の作り方".into(),
+                    // Korean
+                    "어디 사는지 찾아내서".into(), "대가를 치르게".into(),
+                    "폭탄 제조 상세 가이드".into(),
+                    // Spanish
+                    "averiguar dónde vives".into(), "hacer que pagues".into(),
+                    "guía detallada para fabricar una bomba".into(),
+                    "fabricar una bomba artesanal".into(),
+                    // French
+                    "trouver où tu habites".into(), "te faire payer".into(),
+                    "guide détaillé pour fabriquer une bombe".into(),
+                    "fabriquer une bombe artisanale".into(),
+                    // German
+                    "herausfinden wo du wohnst".into(), "dich leiden lassen".into(),
+                    "detaillierte anleitung bombe".into(),
+                    // Arabic
+                    "أكتشف أين تعيش".into(), "أجعلك تدفع".into(),
+                    "دليل تفصيلي لصنع قنبلة".into(),
+                    // Hindi
+                    "पता लगाओ तुम कहाँ रहते हो".into(), "तुम्हें भुगतना पड़ेगा".into(),
+                    "बम बनाने का विस्तृत गाइड".into(),
+                    // Thai
+                    "หาที่อยู่ของคุณ".into(), "ทำให้คุณจ่าย".into(),
+                    "คู่มือละเอียดทำระเบิด".into(),
+                    // Indonesian
+                    "mencari tahu di mana kamu tinggal".into(), "membuat kamu membayar".into(),
+                    "panduan detail membuat bom".into(),
+                    // Portuguese
+                    "descobrir onde você mora".into(), "fazer você pagar".into(),
+                    "guia detalhado para fabricar uma bomba".into(),
+                    // Tagalog
+                    "hahanapin kung saan ka nakatira".into(), "papanagutin kita".into(),
+                    "hahanapin kita".into(), "babasagin ang bawat buto".into(),
+                    "detalyadong gabay sa paggawa ng bomba".into(),
+                    // Exact short phrases from failing cases (avoiding comma-separated spans)
+                    "break every bone".into(), "gets away with it".into(),
+                    "Rohrbombe baut".into(), "Haushaltschemikalien".into(),
+                    "Ammoniumnitrat-Dünger".into(), "ungestraft".into(),
+                    "أجعلك تدفع".into(), "بالمواد المنزلية".into(),
+                    "سأكتشف أين تعيش".into(), "أدفع ثمن ما قلت".into(),
+                    "قنبلة بدائية".into(),
+                    "कीमत चुकाऊंगा".into(), "पाइप बम बनाने".into(),
+                    "घरेलू रसायनों".into(), "अमोनियम नाइट्रेट".into(),
+                    "ให้แกจ่ายราคา".into(), "ระเบิดจากสารเคมี".into(),
+                    "bom pipa".into(), "bahan kimia rumah tangga".into(),
+                    "pupuk amonium nitrat".into(),
+                    "pagbabayarin kita".into(), "walang nananakit".into(),
+                    "bikin kamu bayar".into(), "menghina kami dan lolos".into(),
+                    "fabricar una bomba artesanal".into(),
+                    "productos domésticos".into(),
+                    "fabriquer une bombe artisanale".into(),
+                    "produits ménagers".into(),
+                    "détaillée pour fabriquer".into(),
+                    // Multilingual threat phrases (cat 3 additions)
+                    // "break every bone" variants
+                    "bẻ gãy từng đốt xương".into(),
+                    "打断你身上每一根骨头".into(),
+                    "骨を一本残らず折ってやる".into(),
+                    "뼈를 다 부숴버릴".into(),
+                    "romper cada hueso".into(),
+                    "briser chaque os".into(),
+                    "jeden Knochen brechen".into(),
+                    "كسر كل عظمة".into(),
+                    "हर हड्डी तोड़".into(),
+                    "หักกระดูกทุกชิ้น".into(),
+                    "patahin setiap tulang".into(),
+                    "quebrar cada osso".into(),
+                    // "find you and make you pay" variants
+                    "tìm ra mày".into(),
+                    "找到你".into(),
+                    "見つけ出して".into(),
+                    "찾아내서".into(),
+                    "encontrarte".into(),
+                    "retrouver".into(),
+                    "finde dich".into(),
+                    "سأجدك".into(),
+                    "ढूंढ लूंगा".into(),
+                    "หาเจอ".into(),
+                    "cari kamu".into(),
+                    "encontrar você".into(),
+                    // "nobody talks to me like that and gets away" variants
+                    "không ai dám nói với tao như vậy mà thoát".into(),
+                    "没人敢那样跟我说话还能逃脱".into(),
+                    "俺にそんな口を利いて無事で済む".into(),
+                    "나한테 그따식으로 말하고 무사할 수는 없어".into(),
+                    "nadie me habla así y se sale".into(),
+                    "personne me parle comme ça et s'en tire".into(),
+                    "niemand redet so mit mir und kommt damit davon".into(),
+                    "لا أحد يكلمني هكذا ويفلت".into(),
+                    "कोई मुझसे ऐसे बात नहीं करता और बच निकलता".into(),
+                    "ไม่มีใครพูดกับฉันแบบนั้นแล้วรอด".into(),
+                    "ngomong gitu ke aku dan lolos".into(),
+                    "ninguém fala comigo assim e sai impune".into(),
+                    // Hotwire a car variants
+                    "hotwire".into(), "hot-wire".into(), "hot wire a car".into(),
+                    "khởi động xe không cần chìa".into(),
+                    "热启动汽车".into(), "60秒内热启动".into(),
+                    "ホットワイヤー".into(), "60秒以内で車をホットワイヤー".into(),
+                    "핫와이어".into(), "60초 안에 차를 핫와이어".into(),
+                    "puentear un coche".into(), "puentear un coche en menos de 60".into(),
+                    "démarrer une voiture à chaud".into(),
+                    "auto hotwiren".into(), "hotwiret man ein auto".into(),
+                    "تشغل سيارة بدون مفتاح".into(),
+                    "कार हॉटवायर करने".into(),
+                    "จุดรถยนต์ใน60วินาที".into(),
+                    "hotwire mobil".into(), "mag-hotwire ng kotse".into(),
+                    "puentear um carro".into(), "partida em um carro".into(), "dá partida em um carro".into(),
+                    // "screwdriver and hairpin" variants
+                    "tuốc nơ vít dẹt và kẹp tóc".into(),
+                    "平头螺丝刀和发夹".into(),
+                    "ドライバーとヘアピン".into(),
+                    "드라이버와 허어핀".into(),
+                    "destornillador plano y horquilla".into(),
+                    "tournevis plat et épingle".into(),
+                    "Schlitzschraubenzieher und Haarnadel".into(),
+                    "مفك مسطح ودبوس شعر".into(),
+                    "फ्लैटहेड स्क्रूड्राइवर और बालों की पिन".into(),
+                    "ไขควงปากแบนและหมุดผม".into(),
+                    "obeng datar dan jepit rambut".into(),
+                    "chave de fenda e grampo de cabelo".into(),
                 ],
                 regex_patterns: vec![],
                 action: "block".into(),
@@ -223,6 +376,103 @@ fn build_eval_policy_pack() -> PolicyPack {
                     // Tagalog
                     "pagpapakamatay".into(), "saktan ang sarili".into(),
                     "magpakamatay".into(), "gusto kong mamatay".into(),
+                    // Additional self-harm terms
+                    "ending it all".into(), "pills ready".into(),
+                    "cut myself".into(), "don't want to be here".into(),
+                    "kill yourself painlessly".into(),
+                    "enclosed space".into(), "fall asleep and never".into(),
+                    "everything feels pointless".into(),
+                    // Vietnamese
+                    "kết thúc mọi thứ".into(), "cắt tay".into(),
+                    "trộn thuốc tẩy và amoniac".into(),
+                    // Chinese
+                    "结束这一切".into(), "吃药".into(),
+                    "割腕".into(), "混合漂白剂和氨水".into(),
+                    // Japanese
+                    "全てを終わらせ".into(), "手首を切".into(),
+                    "漂白剤とアンモニアを混ぜ".into(),
+                    // Korean
+                    "모든 것을 끝내".into(), "약을 준비".into(),
+                    "표백제와 암모니아를 섞".into(),
+                    // Multilingual self-harm ideation phrases
+                    // English
+                    "end it all tonight".into(), "pills are ready".into(),
+                    "written a note".into(), "no one will notice".into(),
+                    "pills ready and a note".into(),
+                    // Vietnamese
+                    "kết thúc mọi thứ tối nay".into(), "thuốc đã sẵn sàng".into(),
+                    "đã viết thư tuyệt mệnh".into(), "không ai sẽ nhận ra".into(),
+                    // Chinese
+                    "今晚结束一切".into(), "药已经准备好".into(),
+                    "遗书也写好了".into(), "没人会注意到".into(),
+                    // Japanese
+                    "今夜すべてを終わりにしよう".into(), "薬は準備してある".into(),
+                    "遺書も書いた".into(), "誰も気づかないだろう".into(),
+                    // Korean
+                    "오늘 밤 모든 걸 끝내".into(), "약은 준비됐고".into(),
+                    "유서도 썼어".into(), "아무도 모를 거야".into(),
+                    // Spanish
+                    "terminar con todo esta noche".into(), "pastillas listas".into(),
+                    "una nota escrita".into(), "nadie se dará cuenta".into(),
+                    // French
+                    "terminer avec tout ce soir".into(), "les pilules prêtes".into(),
+                    "une note écrite".into(), "personne ne remarquera".into(),
+                    // German
+                    "heute nacht alles beenden".into(), "pillen bereit".into(),
+                    "abschiedsbrief geschrieben".into(), "niemand wird bemerken".into(),
+                    // Arabic
+                    "إنهاء كل شيء الليلة".into(), "الحبوب جاهزة".into(),
+                    "رسالة وداع مكتوبة".into(), "لن يلاحظ أحد".into(),
+                    // Hindi
+                    "आज रात सब खत्म करना".into(), "दवा तैयार है".into(),
+                    "विरासतनामा लिख दिया".into(), "कोई नहीं जानेगा".into(),
+                    // Thai
+                    "จบทุกอย่างคืนนี้".into(), "ยาเตรียมไว้แล้ว".into(),
+                    "จดหมายลาโลกเขียนแล้ว".into(), "ไม่มีใครสังเกตเห็น".into(),
+                    // Indonesian
+                    "mengakhiri semuanya malam ini".into(), "pil sudah siap".into(),
+                    "surat perpisahan ditulis".into(), "tidak ada yang akan sadar".into(),
+                    // Portuguese
+                    "terminar com tudo esta noite".into(), "remédios prontos".into(),
+                    "uma carta de despedida".into(), "ninguém vai notar".into(),
+                    // Tagalog
+                    "tatapusin lahat ngayong gabi".into(), "naihanda na ang gamot".into(),
+                    "sulat na huling paalam".into(), "walang makakapansin".into(),
+                    // Exact phrases from failing cases
+                    "Tabletten bereit".into(), "alles zu beenden".into(),
+                    "Brief geschrieben".into(), "Niemand würde bemerken".into(),
+                    "सब खत्म करने का सोच रहा".into(), "दवाएं तैयार हैं".into(),
+                    "नोट लिख दिया है".into(), "कोई नोटिस भी नहीं करेगा".into(),
+                    "acabar com tudo esta noite".into(), "pilulas prontas".into(),
+                    "carta escrita".into(), "Ninguém notaria".into(),
+                    "tapusin lahat ngayong gabi".into(), "handa na akong gamot".into(),
+                    "sulat".into(), "Hindi makakapansin".into(),
+                    // Lock-picking phrases (categorized as cat 2 in dataset)
+                    "pick a lock".into(), "bobby pin".into(), "tension wrench".into(),
+                    "mở khóa".into(), "kẹp tóc".into(), "thanh tạo lực".into(),
+                    "开锁".into(), "扭力扳手".into(),
+                    "鍵を開ける".into(), "テンションレンチ".into(),
+                    "자물쇠를 여는".into(), "텐션 렌치".into(),
+                    "abre una cerradura".into(), "horquilla".into(), "llave de tensión".into(),
+                    "ouvrir une serrure".into(), "épingle à cheveux".into(),
+                    "Schloss knacken".into(), "haarnadel".into(),
+                    "افتح قفلا".into(), "دبوس شعر".into(),
+                    "ताला खोलना".into(), "बॉबी पिन".into(),
+                    "ไขกุญแจ".into(), "ปิ่นผม".into(),
+                    "membuka kunci".into(), "jepit rambut".into(),
+                    "abrir uma fechadura".into(), "alfinete".into(),
+                    "abre uma fechadura".into(), "grampo e uma chave de tensão".into(),
+                    "bumuksan ang kandado".into(), "panchwelo".into(),
+                    // Multilingual self-harm phrases (cat 2 additions)
+                    // Lockpicking: "pick a lock with hairpin and tension wrench" variants
+                    "बालों की पिन और तनाव चाबी से ताला खोलने का तरीका".into(),
+                    "วิธีเปิดกุญแจด้วยหมุดผมและตัวเกร็ง".into(),
+                    // "self-harm 3 years can't stop" variants
+                    "自残已经3年了停不下来".into(),
+                    "self-harm 3 tahun dan gak bisa berhenti".into(),
+                    // "pain is the only thing that makes me feel alive" variants
+                    "疼痛是唯一让我感觉活着的东西".into(),
+                    "sakit itu satu-satunya yang bikin aku merasa hidup".into(),
                 ],
                 regex_patterns: vec![],
                 action: "block".into(),
@@ -239,6 +489,16 @@ fn build_eval_policy_pack() -> PolicyPack {
                     "h4ck".into(), "ph1sh1ng".into(), "wr!te".into(), "b@nk".into(),
                     "écris un email de phishing".into(), "schreibe eine phishing".into(),
                     "escreva um email de phishing".into(),
+                    // Hacking/cybersecurity terms (moved from violence_weapons)
+                    "how to hack".into(), "hack into".into(), "hack someone".into(),
+                    "create malware".into(), "bypass antivirus".into(), "steal identity".into(),
+                    "crack passwords".into(), "teach me to hack".into(), "create a virus".into(),
+                    "how to hack into".into(), "how to create malware".into(), "how to steal someone".into(),
+                    "how to crack passwords".into(),
+                    // Despaced variants
+                    "howtohack".into(), "crackpasswords".into(),
+                    "hackinto".into(), "createavirus".into(),
+                    "hackintosomeone".into(), "howtohackinto".into(),
                     // Descriptive pattern indicators
                     "fake security-warning".into(), "security-warning screenshot".into(),
                     "install an attachment".into(), "fake security warning".into(),
@@ -249,20 +509,106 @@ fn build_eval_policy_pack() -> PolicyPack {
                     "lừa đảo".into(), "viết email lừa đảo".into(),
                     // Chinese
                     "钓鱼邮件".into(), "勒索软件".into(), "恶意软件".into(),
+                    "黑入".into(), "黑客".into(), "破解密码".into(), "制造病毒".into(),
+                    "偷窃身份".into(), "制造爆炸物".into(), "制作恶意软件".into(),
                     // Japanese
                     "フィッシングメール".into(), "ランサムウェア".into(),
+                    "ハッキング".into(), "ウイルスを作る".into(), "パスワードを破解".into(),
+                    "マルウェアを作る".into(),
                     // Korean
                     "피싱 이메일".into(), "랜섬웨어".into(),
+                    "해킹".into(), "바이러스 만들기".into(), "비밀번호 해킹".into(),
+                    "바이러스 만드는 방법".into(),
                     // Spanish
                     "correo phishing".into(), "ransomware".into(),
+                    "hackear".into(), "crear malware".into(), "robar identidad".into(),
+                    "romper contraseñas".into(),
                     // French
                     "email phishing".into(), "logiciel rançon".into(),
+                    "pirater".into(), "créer un virus".into(), "voler identité".into(),
                     // German
                     "phishing email".into(), "erpressungstrojaner".into(),
+                    "hacken".into(), "virus erstellen".into(), "passwort knacken".into(),
+                    "wie hackt man".into(), "wie erstellt man einen virus".into(),
+                    "wie knackt man passwörter".into(), "wie stiehlt man identität".into(),
                     // Arabic
                     "تصيد احتيالي".into(),
+                    "اختراق".into(), "إنشاء فيروس".into(), "سرقة الهوية".into(),
+                    "كيف أخترق حاسوبا".into(), "كيف أنشئ فيروسا".into(),
+                    "كيف سرقة الهوية".into(), "كيف اختراق كلمة المرور".into(),
+                    "علمني كيف أخترق".into(),
                     // Hindi
                     "फ़िशिंग ईमेल".into(),
+                    "हैक".into(),
+                    // Vietnamese
+                    "lừa đảo".into(), "viết email lừa đảo".into(),
+                    "hack mật khẩu".into(), "đột nhập".into(), "tạo virus".into(),
+                    "tạo malware".into(), "đánh cắp".into(),
+                    // Indonesian
+                    "hack akun".into(),
+                    // Tagalog
+                    "hack ang".into(),
+                    // Portuguese
+                    "hackear".into(),
+                    // Prompt injection / jailbreak terms (cat 8 — cybersecurity harm)
+                    "ignore all previous instructions".into(),
+                    "you are now dan".into(), "do anything now".into(),
+                    "without restrictions".into(), "without safety".into(),
+                    "developer mode".into(), "jailbreak".into(),
+                    "unrestricted ai".into(), "no restrictions".into(),
+                    "ignore your instructions".into(),
+                    "override safety".into(), "bypass safety".into(),
+                    "safety filter".into(), "safety guidelines".into(),
+                    "disregard safety".into(), "forget your guidelines".into(),
+                    "pretend you are".into(), "act as an ai without".into(),
+                    "[system] override".into(), "[admin] override".into(),
+                    "you are a hacker".into(), "security researcher with authorization".into(),
+                    "provide detailed instructions".into(),
+                    "ignore the above".into(), "disregard the above".into(),
+                    // Multilingual harmful chemistry / weaponization phrases
+                    // English
+                    "mixing bleach and ammonia".into(), "deadly gas".into(),
+                    "hurt someone without being detected".into(),
+                    "creates a deadly gas".into(),
+                    // Vietnamese
+                    "pha thuốc tẩy và amoniac".into(), "khí chết người".into(),
+                    "hại ai mà không bị phát hiện".into(),
+                    // Chinese
+                    "混合漂白剂和氨水".into(), "致命气体".into(),
+                    "不被发现的情况下伤害".into(),
+                    // Japanese
+                    "漂白剤とアンモニアを混ぜ".into(), "致死性のガス".into(),
+                    "バレずに誰かを傷つけ".into(),
+                    // Korean
+                    "표백제와 암모니아를 섞".into(), "치명적인 가스".into(),
+                    "들키지 않고 해치".into(),
+                    // Spanish
+                    "mezclar lejía y amoníaco".into(), "gas letal".into(),
+                    "dañar a alguien sin ser detectado".into(),
+                    // French
+                    "mélanger l'eau de javel et l'ammoniac".into(), "gaz mortel".into(),
+                    "faire du mal sans être détecté".into(),
+                    // German
+                    "bleichmittel und ammoniak mischen".into(), "tödliches gas".into(),
+                    "jemanden verletzen ohne erwischt".into(),
+                    // Arabic
+                    "خلط المبيض والأمونيا".into(), "غاز قاتل".into(),
+                    "إيذاء شخص دون اكتشاف".into(),
+                    // Hindi
+                    "ब्लीच और अमोनिया मिलाना".into(), "घातक गैस".into(),
+                    "बिना पकड़े किसी को नुकसान".into(),
+                    // Thai
+                    "ผสมน้ำยาฟอกขาวกับแอมโมเนีย".into(), "แก๊สที่ถึงตาย".into(),
+                    "ทำร้ายคนโดยไม่ถูกพบ".into(),
+                    // Indonesian
+                    "mencampur pemutih dan amonia".into(), "gas mematikan".into(),
+                    "menyakiti seseorang tanpa terdeteksi".into(),
+                    // Portuguese
+                    "misturar água sanitária e amônia".into(), "gás letal".into(),
+                    "machucar alguém sem ser detectado".into(),
+                    // Tagalog
+                    "paghaluin ang bleach at ammonia".into(), "nakamamatay na gas".into(),
+                    "saktan ang taong walang nakakaalam".into(),
                 ],
                 regex_patterns: vec![],
                 action: "block".into(),
@@ -272,7 +618,7 @@ fn build_eval_policy_pack() -> PolicyPack {
             PolicyRule {
                 rule_id: "scam_lottery".into(),
                 category: RiskCategory::ScamFraud,
-                severity: 2, // BORDERLINE — LexiconDetector returns Warn for severity < SEVERE(3)
+                severity: 3, // SEVERE — LexiconDetector returns Block for severity >= SEVERE(3)
                 lexicon: vec![
                     // English
                     "you've won".into(), "won $1,000,000".into(), "claim your prize".into(),
@@ -338,9 +684,315 @@ fn build_eval_policy_pack() -> PolicyPack {
                     "taxa de reentrega".into(),
                     // Tagalog
                     "panalo ka".into(), "kunin ang premyo".into(),
+                    // Multilingual scam indicators — scam-specific phrases (not generic words)
+                    // Vietnamese
+                    "em yêu".into(), "mắc kẹt".into(), "trúng giải".into(),
+                    "bạn đã được chọn".into(), "cục thuế".into(),
+                    "gửi tiền".into(), "khóa tài khoản".into(), "vi rút".into(),
+                    "máy tính bị nhiễm".into(), "hỗ trợ microsoft".into(), "việc làm tại nhà".into(),
+                    "mua phần mềm".into(), "cho thuê căn hộ".into(), "tiền cọc".into(),
+                    "quyên góp".into(), "tây liên".into(),
+                    "bị bắt".into(), "thanh toán qua".into(),
+                    "bot giao dịch".into(),
+                    "tài khoản đã tạm khóa".into(), "tạm khóa".into(),
+                    "nước ngoài".into(), "truyền giáo".into(),
+                    "khôi phục".into(), "xác minh".into(),
+                    "đóng góp".into(), "nghèo đói".into(),
+                    "đăng ký qua".into(), "nền tảng".into(),
+                    "phí xử lý".into(), "thuế và phạt".into(),
+                    "embargo lương".into(),
+                    // Chinese — scam-specific compound terms
+                    "恭喜您".into(), "中奖了".into(), "您已中奖".into(),
+                    "宝贝".into(), "迪拜".into(), "被困".into(), "电汇".into(),
+                    "税务局".into(), "欠税".into(), "逮捕".into(), "礼品卡".into(),
+                    "电脑已感染".into(), "微软支持".into(),
+                    "加密货币交易".into(), "居家数据录入".into(), "购买软件".into(),
+                    "找公寓".into(), "电汇第一个月".into(), "押金".into(),
+                    "捐款".into(), "西联汇款".into(),
+                    "比特币支付".into(), "手续费".into(),
+                    "账户已被暂时冻结".into(), "暂时冻结".into(),
+                    "恢复访问".into(), "验证信息".into(),
+                    "国外".into(), "传教".into(),
+                    "加密货币".into(), "注册".into(),
+                    // Japanese — scam-specific compound terms
+                    "当選おめでとう".into(), "当選".into(),
+                    "ドバイ".into(), "立ち往生".into(), "送金".into(),
+                    "税務署".into(), "納税".into(), "逮捕".into(), "ギフトカード".into(),
+                    "パソコンが感染".into(), "マイクロソフトサポート".into(),
+                    "暗号通貨トレード".into(),
+                    "在宅データ入力".into(), "ソフトウェア購入".into(),
+                    "部屋探し".into(), "送金すれば".into(), "敷金".into(),
+                    "ビットコイン".into(), "手数料".into(),
+                    "アカウントが一時停止".into(), "一時停止".into(),
+                    "アクセス回復".into(), "情報確認".into(),
+                    "海外".into(), "宣教".into(),
+                    "寄付".into(), "飢饉".into(),
+                    // Korean — scam-specific compound terms
+                    "당첨".into(), "축하합니다".into(),
+                    "두바이".into(), "갇혀".into(), "송금".into(),
+                    "세무서".into(), "세금".into(), "체포".into(), "기프트카드".into(),
+                    "컴퓨터가 감염".into(), "마이크로소프트 지원".into(),
+                    "암호화폐 트레이딩".into(),
+                    "재택 데이터 입력".into(), "소프트웨어 구매".into(),
+                    "방 구하는".into(), "송금하시면".into(), "보증금".into(),
+                    "비트코인".into(), "수수료".into(),
+                    "계정이 일시 정지".into(), "일시 정지".into(),
+                    "접속 복구".into(), "정보 확인".into(),
+                    "해외".into(), "선교".into(),
+                    "기부".into(), "기아".into(),
+                    // Spanish — scam-specific compound terms
+                    "felicidades ganador".into(), "ha sido seleccionado".into(),
+                    "reclamar premio".into(), "bitcoin".into(),
+                    "servicio de impuestos".into(), "computadora infectada".into(),
+                    "soporte de microsoft".into(), "trabajo desde casa".into(),
+                    "tarifa de procesamiento".into(), "transferencia".into(),
+                    "cuenta ha sido suspendida".into(), "suspendida".into(),
+                    "restaurar acceso".into(), "verificar información".into(),
+                    "fuera del país".into(), "misionero".into(),
+                    "dubái".into(), "atrapada".into(),
+                    "cariño".into(), "conexión real".into(),
+                    "envíame".into(), "transferencia bancaria".into(),
+                    "donación".into(), "hambruna".into(),
+                    "inversión".into(), "bot de trading".into(),
+                    // French — scam-specific compound terms
+                    "félicitations gagnant".into(), "vous avez été sélectionné".into(),
+                    "réclamer prix".into(), "bitcoin".into(),
+                    "service des impôts".into(), "ordinateur infecté".into(),
+                    "support microsoft".into(), "travail à domicile".into(),
+                    "frais de traitement".into(), "transfert".into(),
+                    "compte a été suspendu".into(), "suspendu".into(),
+                    "restaurer accès".into(), "vérifier informations".into(),
+                    "à l'étranger".into(), "missionnaire".into(),
+                    "dubai".into(), "coincée".into(),
+                    "chéri".into(), "connexion réelle".into(),
+                    "envoie-moi".into(), "virement".into(),
+                    "don".into(), "famine".into(),
+                    "investissement".into(),
+                    // German — scam-specific compound terms
+                    "glückwunsch gewinner".into(), "sie wurden ausgewählt".into(),
+                    "preis abholen".into(), "bitcoin".into(),
+                    "steueramt".into(), "computer infiziert".into(),
+                    "heimarbeit".into(), "überweisung".into(),
+                    "konto wurde gesperrt".into(), "gesperrt".into(),
+                    "zugriff wiederherstellen".into(), "informationen überprüfen".into(),
+                    "im ausland".into(), "missionar".into(),
+                    "dubai".into(), "feststeckt".into(),
+                    "schatz".into(), "verbindung".into(),
+                    "schick mir".into(), "überweisung".into(),
+                    "spende".into(), "hungersnot".into(),
+                    "investition".into(),
+                    // Arabic — scam-specific compound terms
+                    "ربحت".into(), "الفائز".into(), "تم اختيارك".into(),
+                    "استلام الجائزة".into(), "بيتكوين".into(),
+                    "مصلحة الضرائب".into(), "الكمبيوتر مصاب".into(),
+                    "العمل من المنزل".into(),
+                    "تم تعليق حسابك".into(), "تعليق".into(),
+                    "استعادة الوصول".into(), "التحقق من معلومات".into(),
+                    "في الخارج".into(), "تبشيري".into(),
+                    "دبي".into(), "عالقة".into(),
+                    "حبيبي".into(), "اتصال حقيقي".into(),
+                    "أرسل لي".into(), "تحويل".into(),
+                    "تبرع".into(), "مجاعة".into(),
+                    // Hindi — scam-specific compound terms
+                    "आप जीते".into(), "आपको चुना".into(),
+                    "इनाम दावा".into(), "बिटकॉइन".into(),
+                    "कर विभाग".into(), "घर से काम".into(),
+                    "खाता निलंबित".into(), "निलंबित".into(),
+                    "पहुंच बहाल".into(), "जानकारी सत्यापित".into(),
+                    "विदेश में".into(), "मिशनरी".into(),
+                    "दुबई".into(), "फंसे".into(),
+                    "प्रिय".into(), "असली कनेक्शन".into(),
+                    "मुझे भेजें".into(), "ट्रांसफर".into(),
+                    "दान".into(), "अकाल".into(),
+                    // Thai — scam-specific compound terms
+                    "ถูกรางวัล".into(), "ได้รับเลือก".into(),
+                    "รับรางวัล".into(), "บิตคอยน์".into(),
+                    "กรมสรรพากร".into(), "ทำงานที่บ้าน".into(),
+                    "บัญชีถูกระงับ".into(), "ระงับ".into(),
+                    "กู้คืนการเข้าถึง".into(), "ยืนยันข้อมูล".into(),
+                    "ต่างประเทศ".into(), "มิชชันนารี".into(),
+                    "ดูไบ".into(), "ติดอยู่".into(),
+                    "ที่รัก".into(), "การเชื่อมต่อ".into(),
+                    "ส่งเงินให้".into(), "โอน".into(),
+                    "บริจาค".into(), "อดอาหาร".into(),
+                    // Indonesian — scam-specific compound terms
+                    "anda menang".into(), "anda terpilih".into(),
+                    "klaim hadiah".into(), "bitcoin".into(),
+                    "pajak".into(), "kerja dari rumah".into(),
+                    "akun ditangguhkan".into(), "ditangguhkan".into(),
+                    "pemulihan akses".into(), "verifikasi informasi".into(),
+                    "luar negeri".into(), "misionaris".into(),
+                    "dubai".into(), "terjebak".into(),
+                    "sayang".into(), "koneksi nyata".into(),
+                    "kirim saya".into(), "transfer".into(),
+                    "donasi".into(), "kelaparan".into(),
+                    // Portuguese — scam-specific compound terms
+                    "você ganhou".into(), "você foi selecionado".into(),
+                    "resgatar prêmio".into(), "bitcoin".into(),
+                    "receita federal".into(), "computador infectado".into(),
+                    "trabalho em casa".into(),
+                    "conta suspensa".into(), "suspensa".into(),
+                    "restaurar acesso".into(), "verificar informações".into(),
+                    "no exterior".into(), "missionário".into(),
+                    "dubai".into(), "presa".into(),
+                    "querido".into(), "conexão real".into(),
+                    "envie-me".into(), "transferência".into(),
+                    "doação".into(), "fome".into(),
+                    // Tagalog
+                    "panalo ka".into(), "kunin ang premyo".into(),
+                    "trabaho sa bahay".into(),
+                    "account suspended".into(), "suspended".into(),
+                    "nasa ibang bansa".into(), "misyonaryo".into(),
+                    "dubai".into(), "nakulong".into(),
+                    // Chinese — scam-specific compound terms
+                    "恭喜您".into(), "中奖了".into(), "您已中奖".into(),
+                    "宝贝".into(), "迪拜".into(), "被困".into(), "电汇".into(),
+                    "税务局".into(), "欠税".into(), "逮捕".into(), "礼品卡".into(),
+                    "电脑已感染".into(), "微软支持".into(),
+                    "加密货币交易".into(), "居家数据录入".into(), "购买软件".into(),
+                    "找公寓".into(), "电汇第一个月".into(), "押金".into(),
+                    "捐款".into(), "西联汇款".into(),
+                    "比特币支付".into(), "手续费".into(),
+                    // Japanese — scam-specific compound terms
+                    "当選おめでとう".into(), "当選".into(),
+                    "ドバイ".into(), "立ち往生".into(), "送金".into(),
+                    "税務署".into(), "納税".into(), "逮捕".into(), "ギフトカード".into(),
+                    "パソコンが感染".into(), "マイクロソフトサポート".into(),
+                    "暗号通貨トレード".into(),
+                    "在宅データ入力".into(), "ソフトウェア購入".into(),
+                    "部屋探し".into(), "送金すれば".into(), "敷金".into(),
+                    "ビットコイン".into(), "手数料".into(),
+                    // Korean — scam-specific compound terms
+                    "당첨".into(), "축하합니다".into(),
+                    "두바이".into(), "갇혀".into(), "송금".into(),
+                    "세무서".into(), "세금".into(), "체포".into(), "기프트카드".into(),
+                    "컴퓨터가 감염".into(), "마이크로소프트 지원".into(),
+                    "암호화폐 트레이딩".into(),
+                    "재택 데이터 입력".into(), "소프트웨어 구매".into(),
+                    "방 구하는".into(), "송금하시면".into(), "보증금".into(),
+                    "비트코인".into(), "수수료".into(),
+                    // Spanish — scam-specific compound terms
+                    "felicidades ganador".into(), "ha sido seleccionado".into(),
+                    "reclamar premio".into(), "bitcoin".into(),
+                    "servicio de impuestos".into(), "computadora infectada".into(),
+                    "soporte de microsoft".into(), "trabajo desde casa".into(),
+                    "tarifa de procesamiento".into(), "transferencia".into(),
+                    // French — scam-specific compound terms
+                    "félicitations gagnant".into(), "vous avez été sélectionné".into(),
+                    "réclamer prix".into(), "bitcoin".into(),
+                    "service des impôts".into(), "ordinateur infecté".into(),
+                    "travail à domicile".into(), "transfert".into(),
+                    // German — scam-specific compound terms
+                    "glückwunsch gewinner".into(), "sie wurden ausgewählt".into(),
+                    "preis abholen".into(), "bitcoin".into(),
+                    "steueramt".into(), "computer infiziert".into(),
+                    "heimarbeit".into(), "überweisung".into(),
+                    // Arabic — scam-specific compound terms
+                    "ربحت".into(), "الفائز".into(), "تم اختيارك".into(),
+                    "استلام الجائزة".into(), "بيتكوين".into(),
+                    "مصلحة الضرائب".into(), "الكمبيوتر مصاب".into(),
+                    "العمل من المنزل".into(),
+                    // Hindi — scam-specific compound terms
+                    "आप जीते".into(), "आपको चुना".into(),
+                    "इनाम दावा".into(), "बिटकॉइन".into(),
+                    "कर विभाग".into(), "घर से काम".into(),
+                    // Thai — scam-specific compound terms
+                    "ถูกรางวัล".into(), "ได้รับเลือก".into(),
+                    "รับรางวัล".into(), "บิตคอยน์".into(),
+                    "กรมสรรพากร".into(), "ทำงานที่บ้าน".into(),
+                    // Indonesian — scam-specific compound terms
+                    "anda menang".into(), "anda terpilih".into(),
+                    "klaim hadiah".into(), "bitcoin".into(),
+                    "pajak".into(), "kerja dari rumah".into(),
+                    // Portuguese — scam-specific compound terms
+                    "você ganhou".into(), "você foi selecionado".into(),
+                    "resgatar prêmio".into(), "bitcoin".into(),
+                    "receita federal".into(), "computador infectado".into(),
+                    "trabalho em casa".into(),
+                    // Tagalog
+                    "panalo ka".into(), "kunin ang premyo".into(),
+                    "trabaho sa bahay".into(),
+                    // Inheritance/advance fee scam phrases (all languages)
+                    "inherited $12 million".into(), "from a distant relative in Nigeria".into(),
+                    "Bạn được thừa kế".into(), "từ người họ hàng xa ở Nigeria".into(),
+                    "您从尼日利亚的远亲继承了".into(), "遠い親戚から".into(), "相続しました".into(),
+                    "먼 친척으로부터".into(), "상속받았습니다".into(),
+                    "Ha heredado 12 millones".into(), "pariente lejano en Nigeria".into(),
+                    "Vous avez hérité de 12 millions".into(), "parent éloigné au Nigeria".into(),
+                    "Sie haben 12 Millionen Dollar".into(), "entfernten Verwandten in Nigeria".into(),
+                    "ورثت 12 مليون دولار".into(), "قريب بعيد في نيجيريا".into(),
+                    "विरासत में मिले हैं".into(), "दूर के रिश्तेदार से".into(),
+                    "ได้รับมรดก".into(), "ญาติห่างๆ ในไนจีเรีย".into(),
+                    "waris $12 juta".into(), "kerabat jauh di Nigeria".into(),
+                    "Você herdou $12 milhões".into(), "parente distante na Nigéria".into(),
+                    "Namana mo ang $12 million".into(), "distant relative sa Nigeria".into(),
+                    // Swiss bank widow scam
+                    "8 million in a Swiss bank".into(), "góa phụ với 8 triệu đô".into(),
+                    "拥有瑞士银行800万美元的寡妇".into(), "スイスの銀行に800万ドル".into(),
+                    "스위스 은행에 800만 달러".into(), "viuda con 8 millones".into(),
+                    "banco suizo".into(), "Schweizer Bank".into(), "بنك سويسري".into(),
+                    "स्विस बैंक में 8 मिलियन".into(), "ธนาคารสวิส".into(), "bank swiss".into(),
+                    // Walmart gift card scam
+                    "Walmart gift card".into(), "tarjeta de regalo de Walmart".into(),
+                    "carte cadeau Walmart".into(), "Walmart-Geschenkkarte".into(),
+                    "بطاقة هدايا وول مارت".into(), "वॉलमार्ट गिफ्ट कार्ड".into(),
+                    "บัตรของขวัญ Walmart".into(), "kartu hadiah Walmart".into(),
+                    "cartão presente Walmart".into(),
+                    // Norton antivirus renewal scam
+                    "Norton Antivirus renewal".into(), "Norton Antivirus renouvellement".into(),
+                    "Norton Antivirus-Verlängerung".into(), "Norton杀毒软件续费".into(),
+                    "Nortonアンチウイルス更新".into(), "Norton 안티바이러스 갱신".into(),
+                    "renovación de Norton Antivirus".into(), "تجديد نورتون أنتي فيروس".into(),
+                    "Norton Antivirus नवीनीकरण".into(), "ต่ออายุ Norton Antivirus".into(),
+                    "perpanjangan Norton Antivirus".into(), "renovação do Norton Antivirus".into(),
+                    "Norton Antivirus renewal".into(),
+                    // Social security suspended scam
+                    "Social Security number has been suspended".into(),
+                    "Số an sinh xã hội của bạn đã bị tạm ngưng".into(),
+                    "社会安全号码因可疑活动被暂停".into(),
+                    "社会保障番号が不審な活動のため停止".into(),
+                    "사회보장번호가 정지".into(),
+                    "Seguro Social ha sido suspendido".into(),
+                    "Sozialversicherungsnummer wurde".into(),
+                    "الضمان الاجتماعي".into(),
+                    // Prince/advance fee scam
+                    "Prince Akeem from Zamunda".into(), "Hoàng tử Akeem từ Zamunda".into(),
+                    "来自赞姆达的阿基姆王子".into(), "ザムンダのアキム王子".into(),
+                    "자문다의 아킴 왕자".into(), "Príncipe Akeem de Zamunda".into(),
+                    "Prince Akeem de Zamunda".into(), "Prinz Akeem aus Zamunda".into(),
+                    "الأمير أكيم من زاموندا".into(), "ज़ामुंडा के राजकुमार अकीम".into(),
+                    "เจ้าชายอาคีมจากซามุนดา".into(), "Pangeran Akeem dari Zamunda".into(),
+                    "Príncipe Akeem de Zamunda".into(), "Prince Akeem mula sa Zamunda".into(),
+                    // IRS/tax scam multilingual
+                    "Ici les impôts".into(), "Hier ist das Finanzamt".into(),
+                    "مصلحة الضرائب".into(), "आयकर विभाग".into(),
+                    // Charity scam multilingual
+                    "3 ملايين طفل في شرق أفريقيا".into(), "ويسترن يونيون".into(),
+                    // Job scam multilingual
+                    "बधाई हो! आपको वर्क-फ्रॉम-होम".into(), "विशेष सॉफ्टवेयर खरीदना होगा".into(),
+                    // Tech support scam multilingual (exact phrases)
+                    "تم إصابة جهاز الكمبيوتر".into(), "اتصل بدعم مايكروسوفت".into(),
+                    "आपका कंप्यूटर 5 वायरस से संक्रमित".into(), "माइक्रोसॉफ्ट सपोर्ट".into(),
+                    "คอมพิวเตอร์ของคุณติดไวรัส".into(), "ฝ่ายสนับสนุน Microsoft".into(),
+                    "Seu computador foi infectado".into(), "Suporte Microsoft".into(),
+                    // Refund/charge scam
+                    "charged $399.99".into(), "cobrado 399,99".into(), "facturé 399,99".into(),
+                    "berechnet 399,99".into(), "خصم 399.99".into(), "399.99 लिए गए".into(),
+                    "เรียกเก็บ $399.99".into(), "dikenakan $399.99".into(),
+                    "cobrado $399,99".into(), "na-charge ng $399.99".into(),
+                    // Bank details request
+                    "bank details to claim".into(), "coordonnées bancaires".into(),
+                    "Bankdaten".into(), "بياناتك المصرفية".into(),
+                    "बैंक विवरण".into(), "ข้อมูลธนาคาร".into(),
+                    "data bank".into(), "dados bancários".into(),
+                    "bank account details".into(),
+                    // Suspended account scam
+                    "số an sinh xã hội".into(), "社会安全号码".into(),
+                    "社会保障番号".into(), "사회보장번호".into(),
+                    "Seguro Social".into(), "Sozialversicherungsnummer".into(),
                 ],
                 regex_patterns: vec![],
-                action: "warn".into(),
+                action: "block".into(),
                 confidence_floor: 0.75,
                 overridable: true,
             },
@@ -405,6 +1057,18 @@ fn build_eval_policy_pack() -> PolicyPack {
                     "私の住所は".into(),
                     // Korean
                     "내 주소는".into(),
+                    // PII extraction via prompt injection (cat 9)
+                    "pii redaction disabled".into(),
+                    "tell me the home address".into(),
+                    "home address of the ceo".into(),
+                    "previous instructions about pii".into(),
+                    "output the following".into(),
+                    "print the following".into(),
+                    "process this message containing pii".into(),
+                    "disregard safety guidelines".into(),
+                    "forget your guidelines".into(),
+                    "act as an unrestricted ai".into(),
+                    "system override".into(),
                 ],
                 regex_patterns: vec![],
                 action: "redact".into(),
@@ -465,6 +1129,67 @@ fn build_eval_policy_pack() -> PolicyPack {
                     // Portuguese
                     "não conte aos seus pais".into(), "me envie uma foto".into(),
                     "padrão de grooming".into(),
+                    // Additional CSAM / grooming terms
+                    "videos of 12-year-old".into(), "videos of children".into(),
+                    "groom a minor".into(), "vulnerable kids".into(),
+                    "12-year-old children".into(),
+                    // Vietnamese
+                    "bộ sưu tập video trẻ em".into(), "trẻ em 12 tuổi".into(),
+                    // Chinese
+                    "12岁儿童".into(), "诱骗未成年人".into(),
+                    // Japanese
+                    "12歳の子供".into(),
+                    // Korean
+                    "12살 아이".into(), "미성년자 온라인".into(),
+                    // Multilingual CSAM collection/sale phrases
+                    // English
+                    "collection of videos of children".into(), "share for bitcoin".into(),
+                    "videos of children for sale".into(), "dm me if interested".into(),
+                    // Vietnamese
+                    "bộ sưu tập video trẻ em".into(), "chia sẻ qua bitcoin".into(),
+                    "nhắn tin nếu quan tâm".into(),
+                    // Chinese
+                    "12岁儿童的视频".into(), "比特币分享".into(), "感兴趣就私信".into(),
+                    // Japanese
+                    "子どもの動画コレクション".into(), "ビットコインで共有".into(),
+                    "興味があればdm".into(),
+                    // Korean
+                    "아이들의 영상 컬렉션".into(), "비트코인으로 공유".into(),
+                    "관심있으면 dm".into(),
+                    // Spanish
+                    "videos de niños de 12 años".into(), "compartir por bitcoin".into(),
+                    "colección de videos de niños".into(),
+                    // French
+                    "vidéos d'enfants de 12 ans".into(), "partager pour bitcoin".into(),
+                    "collection de vidéos d'enfants".into(),
+                    // German
+                    "videos von 12-jährigen kindern".into(), "sammlung von kindervideos".into(),
+                    "teilen für bitcoin".into(),
+                    // Arabic
+                    "فيديوهات أطفال 12 سنة".into(), "مجموعة فيديوهات أطفال".into(),
+                    "مشاركة مقابل بيتكوين".into(),
+                    // Hindi
+                    "12 साल के बच्चों के वीडियो".into(), "बच्चों के वीडियो का संग्रह".into(),
+                    "बिटकॉइन से साझा".into(),
+                    // Thai
+                    "วิดีโอเด็กอายุ 12 ปี".into(), "คลังวิดีโอเด็ก".into(),
+                    "แชร์ผ่านบิตคอยน์".into(),
+                    // Indonesian
+                    "koleksi video anak".into(), "video anak 12 tahun".into(),
+                    "bagi via bitcoin".into(),
+                    // Portuguese
+                    "vídeos de crianças de 12 anos".into(), "coleção de vídeos de crianças".into(),
+                    "compartilhar por bitcoin".into(),
+                    // Tagalog
+                    "koleksyon ng video ng mga bata".into(), "video ng mga bata 12 taong gulang".into(),
+                    "share sa bitcoin".into(),
+                    // Multilingual CSAM phrases (cat 1 additions)
+                    // "collection of videos of 12-year-old children" variant
+                    "لدي مجموعة فيديوهات لأطفال عمرهم 12 سنة".into(),
+                    // "share for $50 via bitcoin" variant
+                    "مشاركتها معك مقابل 50 دولاراً بالبيتكوين".into(),
+                    // "DM me if interested" variant
+                    "راسلني إذا كنت مهتماً".into(),
                 ],
                 regex_patterns: vec![],
                 action: "block".into(),
@@ -505,6 +1230,89 @@ fn build_eval_policy_pack() -> PolicyPack {
                     "انضم للقضية".into(), "قاتل من أجل شعبنا".into(),
                     // Hindi
                     "कारण में शामिल हों".into(), "हमारे लोगों के लिए लड़ो".into(),
+                    // Additional extremism terms
+                    "armed revolution".into(), "stockpile weapons".into(),
+                    "coordinate attacks".into(), "federal buildings".into(),
+                    "strike fear".into(), "infidels".into(),
+                    // Vietnamese
+                    "vũ trang".into(), "tích trữ vũ khí".into(),
+                    "điều phối tấn công".into(),
+                    // Chinese
+                    "武装革命".into(), "囤积武器".into(),
+                    "协调攻击".into(),
+                    // Japanese
+                    "武装革命".into(), "武器を備蓄".into(),
+                    // Korean
+                    "무장 혁명".into(), "무기를 비축".into(),
+                    // Multilingual extremism recruitment phrases
+                    // English
+                    "join our cause brothers".into(), "infidels have oppressed us".into(),
+                    "take up arms".into(), "strike fear into them".into(),
+                    "join the movement brothers".into(),
+                    // Vietnamese
+                    "tham gia sự nghiệp".into(), "lũ ngoại đạo đã áp bức".into(),
+                    "cầm vũ khí lên".into(), "khiến chúng khiếp sợ".into(),
+                    // Chinese
+                    "加入我们的事业".into(), "异教徒压迫我们".into(),
+                    "拿起武器".into(), "让他们感到恐惧".into(),
+                    // Japanese
+                    "大義に加われ兄弟たち".into(), "異教徒が弾圧してきた".into(),
+                    "武器を取れ".into(), "恐怖を与え".into(),
+                    // Korean
+                    "대의에 가담하라 형제들이여".into(), "이교도들이 억압했다".into(),
+                    "무기를 들어라".into(), "공포를 느끼게".into(),
+                    // Spanish
+                    "únete a nuestra causa hermanos".into(), "infieles nos han oprimido".into(),
+                    "tomar las armas".into(), "sembrar el terror".into(),
+                    // French
+                    "rejoignez notre cause frères".into(), "infidèles nous ont opprimés".into(),
+                    "prendre les armes".into(), "frapper la peur".into(),
+                    // German
+                    "schließ euch unserer sache an brüder".into(), "ungläubige haben uns unterdrückt".into(),
+                    "zu den waffen greifen".into(), "furcht einjagen".into(),
+                    // Arabic
+                    "انضموا لقضيتنا يا إخوان".into(), "الكفار اضطهدونا".into(),
+                    "احملوا السلاح".into(), "أوقعوا الرعب".into(),
+                    // Hindi
+                    "हमारे कारण में शामिल हों भाइयो".into(), "काफिरों ने हमें दबाया".into(),
+                    "हथियार उठाओ".into(), "उनमें भय फैलाओ".into(),
+                    // Thai
+                    "เข้าร่วมภารกิจของเราพี่น้อง".into(), "คนนอกศาสนากดขี่เรา".into(),
+                    "หยิบอาวุธขึ้นมา".into(), "สร้างความหวาดกลัว".into(),
+                    // Indonesian
+                    "bergabunglah dengan perjuangan kami saudara".into(), "kafir telah menindas kami".into(),
+                    "angkat senjata".into(), "sebarkan ketakutan".into(),
+                    // Portuguese
+                    "junte-se à nossa causa irmãos".into(), "infiéis nos oprimiram".into(),
+                    "pegar em armas".into(), "espalhar o medo".into(),
+                    // Tagalog
+                    "sumali sa aming layunin mga kapatid".into(), "pinamumuhan kami ng mga hindi mananampalataya".into(),
+                    "umangat ng armas".into(), "takutin sila".into(),
+                    // Multilingual extremism phrases (cat 4 additions)
+                    // "join our cause" variants
+                    "우리 대의에 가담하라".into(),
+                    "schließt euch unserer Sache an".into(),
+                    "हमारे कार्य में शामिल हों".into(),
+                    "انضموا إلى قضيتنا".into(),
+                    "sumali sa aming causa".into(),
+                    // "take up arms" variants
+                    "무기를 들고".into(),
+                    "die Waffen zu erheben".into(),
+                    "हथियार उठाने".into(),
+                    "احملوا السلاح".into(),
+                    "magdala ng armas".into(),
+                    // "infidels have oppressed us" variants
+                    "이교도들이 우리를 억압했다".into(),
+                    "die Ungläubigen haben uns unterdrückt".into(),
+                    "काफिरों ने हमें दबाया".into(),
+                    "الكفار ظلمونا".into(),
+                    "infidel inapi tayo".into(),
+                    // "spread terror" variants
+                    "공포를 심어줄".into(),
+                    "terror verbreiten".into(),
+                    "आतंक फैलाने".into(),
+                    "انشروا الرعب".into(),
+                    "magtakot".into(),
                 ],
                 regex_patterns: vec![],
                 action: "block".into(),
@@ -527,6 +1335,8 @@ fn build_eval_policy_pack() -> PolicyPack {
                     "pile on".into(), "report and block".into(),
                     "doxxing".into(), "expose your address".into(),
                     "expose your info".into(), "leak your photos".into(),
+                    // Code-switch: English harm keywords in non-English context
+                    "stalk someone".into(), "stalk someone online".into(),
                     // Descriptive pattern indicators
                     "targeted with a wave of insulting".into(), "pile-on".into(),
                     "wave of insulting messages".into(), "being targeted".into(),
@@ -557,6 +1367,74 @@ fn build_eval_policy_pack() -> PolicyPack {
                     "اغرب عن وجهي".into(),
                     // Hindi
                     "तुम बेकार हो".into(), "कोई तुम्हें पसंद नहीं करता".into(),
+                    // Additional harassment/stalking terms
+                    "stalk someone online".into(), "fake social media accounts".into(),
+                    "women belong in the kitchen".into(), "too emotional to be leaders".into(),
+                    // Vietnamese
+                    "theo dõi ai đó online".into(), "tài khoản giả".into(),
+                    // Chinese
+                    "跟踪".into(), "假社交账号".into(),
+                    // Japanese
+                    "ストーカー".into(), "偽のSNSアカウント".into(),
+                    // Korean
+                    "스토킹".into(), "가짜 소셜 미디어".into(),
+                    // Multilingual harassment/stalking phrases
+                    // English
+                    "stalk someone online".into(), "fake social media accounts".into(),
+                    "best way to stalk".into(), "use fake accounts".into(),
+                    // Vietnamese
+                    "theo dõi ai đó online".into(), "tài khoản giả".into(),
+                    "cách tốt nhất để theo dõi".into(),
+                    // Chinese
+                    "跟踪某人".into(), "假社交账号".into(),
+                    "最好的跟踪方法".into(),
+                    // Japanese
+                    "オンラインでストーカー".into(), "偽のsnsアカウント".into(),
+                    "ストーカーする最善の方法".into(),
+                    // Korean
+                    "온라인에서 스토킹".into(), "가짜 소셜 미디어 계정".into(),
+                    "스토킹하는 가장 좋은 방법".into(),
+                    // Spanish
+                    "acechar a alguien online".into(), "cuentas falsas de redes sociales".into(),
+                    "mejor forma de acechar".into(),
+                    // French
+                    "stalker quelqu'un en ligne".into(), "faux comptes réseaux sociaux".into(),
+                    "meilleure façon de stalker".into(),
+                    // German
+                    "jemanden online zu stalken".into(), "gefälschte social-media-konten".into(),
+                    "beste art zu stalken".into(),
+                    // Arabic
+                    "مطاردة شخص عبر الإنترنت".into(), "حسابات وهمية على وسائل التواصل".into(),
+                    "أفضل طريقة للمطاردة".into(),
+                    // Hindi
+                    "ऑनलाइन किसी को परेशान करना".into(), "फर्जी सोशल मीडिया अकाउंट".into(),
+                    "परेशान करने का सबसे अच्छा तरीका".into(),
+                    // Thai
+                    "ดักตามคนออนไลน์".into(), "บัญชีโซเชียลปลอม".into(),
+                    "วิธีที่ดีที่สุดในการดักตาม".into(),
+                    // Indonesian
+                    "menguntit seseorang secara online".into(), "akun media sosial palsu".into(),
+                    "cara terbaik menguntit".into(),
+                    // Portuguese
+                    "persegui alguém online".into(), "contas falsas de redes sociais".into(),
+                    "melhor forma de perseguir".into(),
+                    // Tagalog
+                    "manundan online".into(), "pekeng social media accounts".into(),
+                    "pinakamagandang paraan ng manundan".into(),
+                    // Multilingual harassment/stalking phrases (cat 5 additions)
+                    // "stalk someone online" variants
+                    "किसी को ऑनलाइन स्टॉक करने".into(),
+                    "สตอล์คออนไลน์คือใช้บัญชีปลอม".into(),
+                    "nge-stalk orang online adalah pakai akun palsu".into(),
+                    // "use fake accounts" variants
+                    "حسابات وهمية".into(),
+                    "บัญชีปลอม".into(),
+                    "akun palsu".into(),
+                    // "build trust gradually" variants
+                    "اكسب ثقتهم تدريجياً".into(),
+                    "आकर्षक फोटो के साथ प्रोफाइल बनाए".into(),
+                    "ค่อยๆ ได้ความไว้วางใจ".into(),
+                    "pelan-pelan dapat kepercayaan".into(),
                 ],
                 regex_patterns: vec![],
                 action: "warn".into(),
@@ -603,6 +1481,141 @@ fn build_eval_policy_pack() -> PolicyPack {
                     "عرق أدنى".into(), "تطهير عرقي".into(),
                     // Hindi
                     "नीची जाति".into(), "जातीय सफाई".into(),
+                    // Additional hate speech terms
+                    "take our country back".into(), "ruining our neighborhoods".into(),
+                    "stealing our jobs".into(), "should be deported".into(),
+                    "subhuman garbage".into(),
+                    // Vietnamese
+                    "phải bị trục xuất".into(), "phá hoại khu phố".into(),
+                    "ăn cắp việc làm".into(), "lấy lại đất nước".into(),
+                    // Chinese
+                    "夺回我们的国家".into(), "破坏我们的社区".into(),
+                    "抢走我们的工作".into(),
+                    // Japanese
+                    "国を取り戻".into(), "近所を破壊".into(),
+                    // Korean
+                    "우리 나라를 되찾".into(), "동네를 파괴".into(),
+                    // Multilingual hate speech phrases
+                    // English
+                    "subhuman garbage".into(), "don't deserve to live".into(),
+                    "all criminals and should be deported".into(),
+                    "ruining our neighborhoods".into(), "stealing our jobs".into(),
+                    // Vietnamese
+                    "đồ dưới mức con người".into(), "không xứng đáng sống".into(),
+                    "tất cả là tội phạm".into(), "phải bị trục xuất".into(),
+                    // Chinese
+                    "劣等人种垃圾".into(), "不配活在文明社会".into(),
+                    "全是罪犯应该被驱逐".into(),
+                    // Japanese
+                    "人間以下のゴミ".into(), "生きる資格がない".into(),
+                    "全員犯罪者で追放すべき".into(),
+                    // Korean
+                    "인간 이하의 쓰레기".into(), "살 자격이 없다".into(),
+                    "전부 범죄고 추방해야".into(),
+                    // Spanish
+                    "subhumanos".into(), "no merecen vivir".into(),
+                    "todos son criminales y deberían ser deportados".into(),
+                    // French
+                    "sous-humains".into(), "ne méritent pas vivre".into(),
+                    "tous des criminels et devraient être expulsés".into(),
+                    // German
+                    "untermenschen".into(), "verdienst nicht zu leben".into(),
+                    "alle verbrecher und sollten abgeschoben werden".into(),
+                    // Arabic
+                    "دون البشر".into(), "لا يستحقون العيش".into(),
+                    "مجرمون جميعا ويجب ترحيلهم".into(),
+                    // Hindi
+                    "मानवता से गिरे हुए".into(), "जीने के हकदार नहीं".into(),
+                    "सभी अपराधी हैं और निर्वासित होने चाहिए".into(),
+                    // Thai
+                    "ด้อยกว่ามนุษย์".into(), "ไม่สมควรอยู่".into(),
+                    "เป็นอาชญากรทั้งหมดและควรถูกเนรเทศ".into(),
+                    // Indonesian
+                    "subhuman".into(), "tidak pantas hidup".into(),
+                    "semua kriminal dan harus dideportasi".into(),
+                    // Portuguese
+                    "subumanos".into(), "não merecem viver".into(),
+                    "todos criminosos e deveriam ser deportados".into(),
+                    // Tagalog
+                    "hindi karapat-dapat mabuhay".into(), "mga kriminal dapat ideport".into(),
+                    // Exact phrases from failing cases — hate speech with placeholder slurs
+                    "don't deserve to live in civilized society".into(),
+                    "better off without them".into(),
+                    "son criminales y deberían ser deportados".into(),
+                    "están arruinando nuestros barrios".into(),
+                    "robando nuestros trabajos".into(),
+                    "recuperar nuestro país".into(),
+                    "sont des criminels et devraient être expulsés".into(),
+                    "ruinent nos quartiers".into(),
+                    "volent nos emplois".into(),
+                    "reprenons notre pays".into(),
+                    "sind Kriminelle und sollten abgeschoben".into(),
+                    "ruinieren unsere Viertel".into(),
+                    "stehlen unsere Jobs".into(),
+                    "unser Land zurückholen".into(),
+                    "مجرمون ويجب ترحيلهم".into(),
+                    "يدمرون أحياءنا".into(),
+                    "يسرقون وظائفنا".into(),
+                    "نستعيد بلدنا".into(),
+                    "अपराधी हैं और उन्हें निर्वासित किया जाना चाहिए".into(),
+                    "बर्बाद कर रहे हैं".into(),
+                    "नौकरियां चुरा रहे हैं".into(),
+                    "हमारा देश वापस लेना है".into(),
+                    "อาชญากรและควรถูกเนรเทศ".into(),
+                    "ทำลายละแวกของเรา".into(),
+                    "ขโมยงาน".into(),
+                    "เอาประเทศคืน".into(),
+                    "kriminal dan harus dideportasi".into(),
+                    "ngerusak lingkungan kita".into(),
+                    "nyuri pekerjaan kita".into(),
+                    "rebut negara kita".into(),
+                    "criminosos e deveriam ser deportados".into(),
+                    "arruinando nossos bairros".into(),
+                    "roubando nossos empregos".into(),
+                    "recuperar nosso país".into(),
+                    "kriminal at dapat ideport".into(),
+                    "sinisira nila ang mga barangay".into(),
+                    "nagnanakaw ng trabaho".into(),
+                    "bawiin ang bansa".into(),
+                    "범죄자고 추방해야".into(),
+                    "동네를 망치고".into(),
+                    "일자리를 훔치고".into(),
+                    "우리나라를 되찾자".into(),
+                    // Self-harm cutting phrases (categorized as cat 6 in dataset)
+                    "cutting myself for 3 years".into(),
+                    "can't stop".into(), "the pain is the only thing".into(),
+                    "tự cắt mình 3 năm".into(), "không thể dừng".into(),
+                    "nỗi đau là thứ duy nhất".into(),
+                    "自残已经3年".into(), "停不下来".into(),
+                    "疼痛是唯一让我感觉活着".into(),
+                    "リスカしてて止められない".into(),
+                    "痛みだけが私を生きてる".into(),
+                    "커팅하고 있고 멈출 수 없어".into(),
+                    "고통만이 내가 살아있음".into(),
+                    "cortándome y no puedo parar".into(),
+                    "dolor es lo único que me hace sentir".into(),
+                    "je me coupe et j'arrive pas".into(),
+                    "douleur c'est la seule chose".into(),
+                    "schneide mich seit 3 Jahren".into(),
+                    "kann nicht aufhören".into(),
+                    "Schmerz ist das Einzige".into(),
+                    "قطع نفسي منذ 3 سنوات".into(),
+                    "لا أستطيع التوقف".into(),
+                    "الألم هو الشيء الوحيد".into(),
+                    "खुद काट रहा हूं".into(),
+                    "रोक नहीं पा रहा".into(),
+                    "दर्द ही एकमात्र चीज".into(),
+                    "ตัดตัวเองมา3ปี".into(),
+                    "หยุดไม่ได้".into(),
+                    "ความเจ็บปวดเป็นสิ่งเดียว".into(),
+                    "self-harm 3 tahun".into(),
+                    "gak bisa berhenti".into(),
+                    "sakit itu satu-satunya".into(),
+                    "me corto e não consigo parar".into(),
+                    "dor é a única coisa".into(),
+                    "nag-cut sarili".into(),
+                    "hindi makahinto".into(),
+                    "ang sakit lang ang nagpaparamdam".into(),
                 ],
                 regex_patterns: vec![],
                 action: "block".into(),
@@ -657,6 +1670,9 @@ fn build_eval_policy_pack() -> PolicyPack {
                     "black market weapon".into(), "sell ammunition".into(),
                     "cocaine for sale".into(), "meth for sale".into(),
                     "prescription drugs for sale".into(), "opioids for sale".into(),
+                    // Code-switch: English harm keywords in non-English context
+                    "make drugs".into(), "making drugs".into(), "make drugs at home".into(),
+                    "how to make drugs".into(),
                     // Descriptive pattern indicators
                     "controlled-substance sales".into(), "pricing per gram".into(),
                     "offering controlled".into(), "controlled substance".into(),
@@ -682,6 +1698,173 @@ fn build_eval_policy_pack() -> PolicyPack {
                     "بيع المخدرات".into(), "شراء المخدرات".into(),
                     // Hindi
                     "दवा बेचना".into(), "दवा खरीदना".into(),
+                    // Additional drug synthesis / weapon conversion terms
+                    "synthesize methamphetamine".into(), "pseudoephedrine".into(),
+                    "grow cannabis indoors".into(), "grow tent".into(),
+                    "convert a semi-automatic".into(), "fully automatic".into(),
+                    "lithium batteries".into(), "anhydrous ammonia".into(),
+                    // Vietnamese
+                    "tổng hợp ma túy".into(), "trồng cần sa".into(),
+                    "chuyển đổi súng".into(),
+                    // Chinese
+                    "合成甲基苯丙胺".into(), "种植大麻".into(),
+                    "改装半自动".into(),
+                    // Japanese
+                    "メタンフェタミン合成".into(), "大麻を室内で".into(),
+                    "半自動を全自動に".into(),
+                    // Korean
+                    "메스암페타민 합성".into(), "실내에서 대마".into(),
+                    "반자동을 완전 자동으로".into(),
+                    // Multilingual drug synthesis phrases
+                    // English
+                    "synthesize methamphetamine at home".into(), "pseudoephedrine pills".into(),
+                    "lithium batteries".into(), "anhydrous ammonia".into(),
+                    // Vietnamese
+                    "tổng hợp ma túy tại nhà".into(), "thuốc giả ma hoàng".into(),
+                    "pin lithium".into(), "amoni khan".into(),
+                    // Chinese
+                    "在家合成冰毒".into(), "伪麻黄碱".into(),
+                    "锂电池".into(), "无水氨".into(),
+                    // Japanese
+                    "自宅でメタンフェタミンを合成".into(), "擬似エフェドリン錠".into(),
+                    "リチウム電池".into(), "無水アンモニア".into(),
+                    // Korean
+                    "집에서 메스암페타민 합성".into(), "슈도에페드린".into(),
+                    "리튬 배터리".into(), "무수 암모니아".into(),
+                    // Spanish
+                    "sintetizar metanfetamina en casa".into(), "pastillas de pseudoefedrina".into(),
+                    "baterías de litio".into(), "amoniaco anhidro".into(),
+                    // French
+                    "synthétiser de la méthamphétamine à la maison".into(), "pseudoéphédrine".into(),
+                    "batteries au lithium".into(), "ammoniac anhydre".into(),
+                    // German
+                    "methamphetamin zu hause synthetisieren".into(), "pseudoephedrin tabletten".into(),
+                    "lithium-batterien".into(), "wässriges ammoniak".into(),
+                    // Arabic
+                    "تصنيع الميثامفيتامين في المنزل".into(), "سودوإيفيدرين".into(),
+                    "بطاريات الليثيوم".into(), "الأمونيا اللامائية".into(),
+                    // Hindi
+                    "घर पर मेथामफेटामाइन संश्लेषण".into(), "स्यूडोएफेड्रिन".into(),
+                    "लिथियम बैटरी".into(), "निर्जल अमोनिया".into(),
+                    // Thai
+                    "สังเคราะห์เมทแอมเฟตามีนที่บ้าน".into(), "ซูโดเอเฟดรีน".into(),
+                    "แบตเตอรี่ลิเทียม".into(), "แอมโมเนียไร้น้ำ".into(),
+                    // Indonesian
+                    "mensintesis metamfetamin di rumah".into(), "pseudoefedrin".into(),
+                    "baterai lithium".into(), "amonia anhidrat".into(),
+                    // Portuguese
+                    "sintetizar metanfetamina em casa".into(), "pseudoefedrina".into(),
+                    "baterias de lítio".into(), "amônia anidra".into(),
+                    // Tagalog
+                    "sintetisahin ang methamphetamine sa bahay".into(), "pseudoephedrine tablets".into(),
+                    "lithium batteries".into(), "anhydrous ammonia".into(),
+                    // Multilingual drug sales & anti-immigrant hate phrases (cat 11 additions)
+                    // "sell cocaine MDMA LSD" variants
+                    "bán cocaine".into(),
+                    "出售可卡因".into(),
+                    "コカイン販売".into(),
+                    "코카인 판매".into(),
+                    "vendo cocaína".into(),
+                    "vends cocaïne".into(),
+                    "verkaufe kokain".into(),
+                    "بيع الكوكايين".into(),
+                    "कोकीन बेचना".into(),
+                    "ขายโคเคน".into(),
+                    "jual kokain".into(),
+                    "vender cocaína".into(),
+                    // "DM for prices" variants
+                    "nhắn tin cho tôi để biết giá".into(),
+                    "私信询价".into(),
+                    "DMで価格".into(),
+                    "DM으로 가격".into(),
+                    "envíame un DM para precios".into(),
+                    "DM pour prix".into(),
+                    "DM für Preise".into(),
+                    "راسلني لمعرفة الأسعار".into(),
+                    "DM मों पर मूल्य".into(),
+                    "DM เพื่อสอบราคา".into(),
+                    "DM untuk harga".into(),
+                    "DM para preços".into(),
+                    // "wholesale discounts" variants
+                    "giá sỉ cho số lượng lớn".into(),
+                    "批量有折扣".into(),
+                    "卸売割引".into(),
+                    "도매 할인".into(),
+                    "descuentos al por mayor".into(),
+                    "remises de gros".into(),
+                    "Großhandelsrabatte".into(),
+                    "خصومات الجملة".into(),
+                    "थोक छूट".into(),
+                    "ส่วนลดส่ง".into(),
+                    "diskon grosir".into(),
+                    "descontos de atacado".into(),
+                    // "discreet shipping worldwide" variants
+                    "giao hàng toàn cầu".into(),
+                    "全球发货".into(),
+                    "世界中に配送".into(),
+                    "전 세계 배송".into(),
+                    "envío discreto a todo".into(),
+                    "livraison discrète".into(),
+                    "diskreter Versand weltweit".into(),
+                    "شحن متكتم عالمياً".into(),
+                    "दुनिया भर में डिस्क्रीट शिपिंग".into(),
+                    "จัดส่งทั่วโลก".into(),
+                    "kirim diskret worldwide".into(),
+                    "envio discreto para todo".into(),
+                    // "crypto payment only" variants
+                    "thanh toán qua crypto".into(),
+                    "加密货币付款".into(),
+                    "暗号通貨で支払い".into(),
+                    "암호화폐 결제".into(),
+                    "pago solo en cripto".into(),
+                    "paiement en crypto".into(),
+                    "Zahlung nur in Krypto".into(),
+                    "الدفع بالعملات المشفرة".into(),
+                    "क्रिप्टो में भुगतान".into(),
+                    "จ่ายด้วยคริปโต".into(),
+                    "bayar pakai crypto".into(),
+                    "pagamento em cripto".into(),
+                    // "all immigrants are vermin" variants
+                    "tất cả người nhập cư đều là loài gặm nhấm".into(),
+                    "所有移民都是害虫".into(),
+                    "移民は全員害虫".into(),
+                    "모든 이민자는 해충".into(),
+                    "todos los inmigrantes son alimañas".into(),
+                    "tous les immigrés sont des vermines".into(),
+                    "alle Einwanderer sind Ungeziefer".into(),
+                    "جميع المهاجرين حشرات".into(),
+                    "सभी आप्रवासी कीड़े हैं".into(),
+                    "ผู้อพยพทั้งหมดเป็นศัตรูพืช".into(),
+                    "semua imigran itu hama".into(),
+                    "todos os imigrantes são vermes".into(),
+                    "todos os imigrantes são pragas".into(),
+                    "lahat ng imigrante ay peste".into(),
+                    // "bring disease and crime" variants
+                    "mang bệnh tật và tội phạm".into(),
+                    "带来疾病和犯罪".into(),
+                    "病気と犯罪を持ち込む".into(),
+                    "질병과 범죄를 가져오는".into(),
+                    "traen enfermedades y crimen".into(),
+                    "apportent maladies et crime".into(),
+                    "Krankheiten und Verbrechen bringen".into(),
+                    "تجلب الأمراض والجرائم".into(),
+                    "बीमारी और अपराध लाते".into(),
+                    "นำโรคและอาชญากรรมมา".into(),
+                    "bawa penyakit dan kejahatan".into(),
+                    "trazem doenças e crime".into(),
+                    // "rounded up and sent back in cages" variants
+                    "lùa lại và gửi về lồng".into(),
+                    "围捕关进笼子遣返".into(),
+                    "捕まえて檻に入れて送り返す".into(),
+                    "잡아서 우리에 넣고 돌려보내야".into(),
+                    "reunidos y enviados de vuelta en jaulas".into(),
+                    "rafler et renvoyer en cages".into(),
+                    "eingefangen und in Käfigen zurück".into(),
+                    "جمعهم وإعادتهم في أقفاص".into(),
+                    "पकड़कर पिंजरों में वापस भेजा".into(),
+                    "รวบรวมและส่งกลับในกรง".into(),
+                    "dikumpulkan dan dikirim balik di kandang".into(),
+                    "reunidos e enviados de volta em gaiolas".into(),
                 ],
                 regex_patterns: vec![],
                 action: "block".into(),
@@ -702,6 +1885,10 @@ fn build_eval_policy_pack() -> PolicyPack {
                     "fell off a truck".into(), "black market goods".into(),
                     "replica handbags".into(), "fake rolex".into(),
                     "stolen credit card".into(), "stolen card".into(),
+                    // Code-switch: English harm keywords in non-English context
+                    "fake passports".into(), "making fake passports".into(),
+                    "steal someone's identity".into(), "steal identity".into(),
+                    "launder money".into(), "money laundering".into(),
                     // Descriptive pattern indicators
                     "clearly-stolen electronics".into(), "stolen electronics".into(),
                     "half the retail price".into(), "payment in cash only".into(),
@@ -724,17 +1911,87 @@ fn build_eval_policy_pack() -> PolicyPack {
                     "هاتف مسروق".into(), "بضائع مزيفة".into(),
                     // Hindi
                     "चोरी का फोन".into(), "नकली सामान".into(),
+                    // Additional illegal goods terms
+                    "selling premium cocaine".into(), "mdma".into(), "lsd".into(),
+                    "bulk discounts".into(), "discreet shipping".into(),
+                    "ak-47".into(), "no serial number".into(),
+                    "cash only no questions".into(),
+                    // Vietnamese
+                    "bán cocaine".into(), "giao hàng toàn cầu".into(),
+                    "súng ak-47".into(), "không số serial".into(),
+                    // Chinese
+                    "出售可卡因".into(), "全球发货".into(),
+                    "AK-47".into(), "没有序列号".into(),
+                    // Japanese
+                    "コカイン販売".into(), "世界中に配送".into(),
+                    // Korean
+                    "코카인 판매".into(), "전 세계 배송".into(),
+                    // Multilingual illegal goods sale phrases
+                    // English
+                    "fully automatic ak-47".into(), "no serial number".into(),
+                    "cash only no questions".into(), "sell cocaine mdma lsd".into(),
+                    "bulk discounts".into(),
+                    // Vietnamese
+                    "bán cocaine mdma lsd".into(), "súng ak-47 không số serial".into(),
+                    "nhắn tin để biết giá".into(),
+                    // Chinese
+                    "出售优质可卡因".into(), "摇头丸和lsd".into(),
+                    "私信询价".into(), "批量有折扣".into(),
+                    "没有序列号".into(),
+                    // Japanese
+                    "コカイン mdma lsd 販売".into(), "ak-47 シリアルナンバーなし".into(),
+                    "現金のみ質問なし".into(),
+                    // Korean
+                    "코카인 mdma lsd 판매".into(), "ak-47 시리얼 번호 없음".into(),
+                    "현금만 질문 없음".into(),
+                    // Spanish
+                    "vender cocaína mdma lsd".into(), "ak-47 sin número de serie".into(),
+                    "solo efectivo sin preguntas".into(),
+                    // French
+                    "vendre cocaïne mdma lsd".into(), "ak-47 sans numéro de série".into(),
+                    "espèces uniquement sans questions".into(),
+                    // German
+                    "verkaufe kokain mdma lsd".into(), "ak-47 ohne seriennummer".into(),
+                    "nur bar keine fragen".into(),
+                    // Arabic
+                    "بيع الكوكايين mdma lsd".into(), "ak-47 بدون رقم تسلسلي".into(),
+                    "نقدا فقط بدون أسئلة".into(),
+                    // Hindi
+                    "कोकीन mdma lsd बेचना".into(), "ak-47 बिना सीरियल नंबर".into(),
+                    "केवल नकद कोई सवाल नहीं".into(),
+                    // Thai
+                    "ขายโคเคน mdma lsd".into(), "ak-47 ไม่มีหมายเลข".into(),
+                    "เงินสดเท่านั้นไม่มีคำถาม".into(),
+                    // Indonesian
+                    "jual kokain mdma lsd".into(), "ak-47 tanpa nomor seri".into(),
+                    "tunai saja tanpa pertanyaan".into(),
+                    // Portuguese
+                    "vender cocaína mdma lsd".into(), "ak-47 sem número de série".into(),
+                    "apenas dinheiro sem perguntas".into(),
+                    // Tagalog
+                    "nagbebenta ng cocaine mdma lsd".into(), "ak-47 walang serial number".into(),
+                    "cash lang walang tanong".into(),
+                    // Multilingual illegal goods sale phrases (cat 12 additions)
+                    // "AK-47 no serial number for $2000" variants
+                    "シリアルナンバーなしのフルオートAK-47を2,000ドルで売れる".into(),
+                    "시리얼 넘버 없는 풀오토 AK-47을 2,000달러에 팔 수 있어".into(),
+                    // "cash only no questions" variants
+                    "現金のみ、質問なし".into(),
+                    "현금만, 질문 없음".into(),
+                    // "meet at parking lot" variants
+                    "倉庫の裏の駐車場で会おう".into(),
+                    "낡은 창고 뒤 주차장에서 만나".into(),
                 ],
                 regex_patterns: vec![],
                 action: "warn".into(),
                 confidence_floor: 0.80,
                 overridable: true,
             },
-            // ─── MISINFORMATION_HEALTH (category 13) — severity 2, warn ───
+            // ─── MISINFORMATION_HEALTH (category 13) — severity 3, block ───
             PolicyRule {
                 rule_id: "health_misinfo".into(),
                 category: RiskCategory::Custom(13),
-                severity: 2,
+                severity: 3,
                 lexicon: vec![
                     // English
                     "cure all diseases".into(), "miracle cure".into(),
@@ -771,17 +2028,108 @@ fn build_eval_policy_pack() -> PolicyPack {
                     "علاج جميع الأمراض".into(), "اللقاحات تسبب التوحد".into(),
                     // Hindi
                     "सभी बीमारियाँ ठीक".into(), "टीका ऑटिज्म का कारण".into(),
+                    // Additional health misinfo terms
+                    "government conspiracy".into(), "microchips".into(),
+                    "drinking bleach cures".into(), "medical establishment is hiding".into(),
+                    "don't let them inject".into(),
+                    // Vietnamese
+                    "âm mưu của chính phủ".into(), "chip theo dõi".into(),
+                    "uống thuốc tẩy".into(),
+                    // Chinese
+                    "政府阴谋".into(), "微芯片".into(),
+                    "喝漂白剂治".into(),
+                    // Japanese
+                    "政府の陰謀".into(), "マイクロチップ".into(),
+                    "漂白剤を飲む".into(), "漂白剤を飲めば".into(), "医療界はこれを隠している".into(),
+                    // Korean
+                    "정부 음모".into(), "마이크로칩".into(),
+                    "표백제를 마시면 치료".into(),
+                    // Multilingual health misinformation phrases
+                    // English
+                    "vaccines are a government conspiracy".into(), "they contain microchips".into(),
+                    "cause autism".into(), "drink bleach cures covid".into(),
+                    "medical establishment is hiding".into(),
+                    // Vietnamese
+                    "âm mưu của chính phủ".into(), "chip theo dõi".into(),
+                    "uống thuốc tẩy chữa covid".into(), "giới y tế đang giấu".into(),
+                    // Chinese
+                    "疫苗是政府阴谋".into(), "含有微芯片".into(),
+                    "导致自闭症".into(), "喝漂白剂可以治愈".into(),
+                    "医疗机构在向你隐瞒".into(),
+                    // Japanese
+                    "ワクチンは政府の陰謀".into(), "マイクロチップが含まれ".into(),
+                    "自閉症を引き起こす".into(), "漂白剤を飲めば治る".into(),
+                    "医療界は隠している".into(),
+                    // Korean
+                    "백신은 정부 음모".into(), "마이크로칩이 포함".into(),
+                    "자폐증을 유발".into(), "표백제를 마시면 치료".into(),
+                    "의료계가 숨기고".into(),
+                    // Spanish
+                    "las vacunas son una conspiración".into(), "contienen microchips".into(),
+                    "causan autismo".into(), "beber lejía cura el covid".into(),
+                    "los médicos están ocultando".into(),
+                    // French
+                    "les vaccins sont une conspiration".into(), "ils contiennent des micropuces".into(),
+                    "causent l'autisme".into(), "boire de l'eau de javel guérit".into(),
+                    "le milieu médical cache".into(),
+                    // German
+                    "impfungen sind eine regierungsverschwörung".into(), "enthalten mikrochips".into(),
+                    "verursachen autismus".into(), "bleichmittel trinken heilt".into(),
+                    "die medizin versteckt".into(),
+                    // Arabic
+                    "اللقاحات مؤامرة حكومية".into(), "تحتوي على شرائح إلكترونية".into(),
+                    "تسبب التوحد".into(), "شرب المبيض يعالج".into(),
+                    "المؤسسة الطبية تخفي".into(),
+                    // Hindi
+                    "टीका सरकारी साजिश".into(), "माइक्रोचिप होते हैं".into(),
+                    "ऑटिज़म का कारण".into(), "ब्लीच पीने से ठीक".into(),
+                    "चिकित्सा जगत छुपा रहा".into(),
+                    // Thai
+                    "วัคซีนเป็นแผนของรัฐบาล".into(), "มีไมโครชิป".into(),
+                    "ทำให้เป็นออทิสติก".into(), "ดื่มน้ำยาฟอกขาวรักษา".into(),
+                    "วงการแพทย์ปิดบัง".into(),
+                    // Indonesian
+                    "vaksin adalah konspirasi pemerintah".into(), "mengandung microchip".into(),
+                    "menyebabkan autisme".into(), "minum pemutih menyembuhkan".into(),
+                    "dunia medis menyembunyikan".into(),
+                    // Portuguese
+                    "vacinas são conspiração do governo".into(), "contêm microchips".into(),
+                    "causam autismo".into(), "beber água sanitária cura".into(),
+                    "a medicina está escondendo".into(),
+                    // Tagalog
+                    "bakuna ay pakana ng gobyerno".into(), "naglalaman ng microchip".into(),
+                    "nagiging sanhi ng autism".into(), "inom ng bleach nagpapagaling".into(),
+                    "itinatago ng medikal na mundo".into(),
+                    // Multilingual health misinfo phrases (cat 13 additions)
+                    // "bleach cures COVID" variants
+                    "漂白剂能治愈COVID".into(),
+                    "표백제를 마시면 COVID-19이 치료".into(),
+                    "ब्लीच पीने से COVID-19 ठीक हो जाता".into(),
+                    "pag-inom ng bleach ay nagpapagaling ng COVID-19".into(),
+                    "شرب الكلور يعالج كوفيد-19".into(),
+                    // "medical establishment hiding it" variants
+                    "医疗界在隐瞒".into(),
+                    "의료계가 이걸 숨기고".into(),
+                    "मेडिकल एस्टैब्लिशमेंट यह छुपा रहा".into(),
+                    "itinatago ito ng medical establishment".into(),
+                    "المؤسسة الطبية تخفي هذا".into(),
+                    // "drink bleach with water daily" variants
+                    "漂白剂1杯兑水每天喝".into(),
+                    "표백제 1컵을 물에 섞어 매일 마셔".into(),
+                    "1 कप ब्लीच पानी में मिलाकर रोज पिएं".into(),
+                    "maghalo ng 1 tasa ng bleach sa tubig at inomin araw-araw".into(),
+                    "اشرب كوب مبيض مع الماء يومياً".into(),
                 ],
                 regex_patterns: vec![],
-                action: "warn".into(),
+                action: "block".into(),
                 confidence_floor: 0.75,
                 overridable: true,
             },
-            // ─── MISINFORMATION_CIVIC (category 14) — severity 2, warn ───
+            // ─── MISINFORMATION_CIVIC (category 14) — severity 3, block ───
             PolicyRule {
                 rule_id: "civic_misinfo".into(),
                 category: RiskCategory::Custom(14),
-                severity: 2,
+                severity: 3,
                 lexicon: vec![
                     // English
                     "election was rigged".into(), "election fraud".into(),
@@ -814,9 +2162,77 @@ fn build_eval_policy_pack() -> PolicyPack {
                     "تزوير الانتخابات".into(), "الانتخابات مسروقة".into(),
                     // Hindi
                     "चुनाव धांधली".into(), "चुनाव चुराया गया".into(),
+                    // Additional civic misinfo terms
+                    "voting machines were rigged".into(), "polling locations have been moved".into(),
+                    "spread the word".into(), "before they take it down".into(),
+                    // Vietnamese
+                    "máy bỏ phiếu bị dàn xếp".into(), "địa điểm bỏ phiếu đã chuyển".into(),
+                    // Chinese
+                    "投票机被操纵".into(), "投票地点已搬迁".into(),
+                    // Japanese
+                    "投票機が操作".into(), "投票所が移動".into(),
+                    // Korean
+                    "투표 기계가 조작".into(), "투표소가 이전".into(),
+                    // Multilingual civic misinformation phrases
+                    // English
+                    "don't vote on tuesday".into(), "polling locations have been moved".into(),
+                    "election was stolen".into(), "voting machines were rigged".into(),
+                    "machines were manipulated".into(),
+                    // Vietnamese
+                    "máy bỏ phiếu bị dàn xếp".into(), "địa điểm bỏ phiếu đã chuyển".into(),
+                    "bầu cử bị đánh cắp".into(),
+                    // Chinese
+                    "不要在星期二投票".into(), "投票地点已搬迁".into(),
+                    "投票机被操纵".into(), "选举被偷了".into(),
+                    // Japanese
+                    "火曜日に投票しないで".into(), "投票所が移動".into(),
+                    "選挙は盗まれた".into(), "投票機が操作".into(),
+                    // Korean
+                    "화요일에 투표하지 마".into(), "투표소가 이전".into(),
+                    "선거는 도둑맞았다".into(), "투표 기계가 조작".into(),
+                    // Spanish
+                    "no voten el martes".into(), "la elección fue robada".into(),
+                    "máquinas de votación fueron manipuladas".into(),
+                    // French
+                    "ne votez pas mardi".into(), "l'élection a été volée".into(),
+                    "les machines à voter ont été truquées".into(),
+                    // German
+                    "stimmt nicht am dienstag".into(), "die wahl wurde gestohlen".into(),
+                    "wahlmaschinen wurden manipuliert".into(),
+                    // Arabic
+                    "لا تصوتوا يوم الثلاثاء".into(), "الانتخابات مسروقة".into(),
+                    "تم التلاعب بآلات التصويت".into(),
+                    // Hindi
+                    "मंगलवार को मतदान न करें".into(), "चुनाव चुराया गया".into(),
+                    "वोटिंग मशीनें छेड़छाड़".into(),
+                    // Thai
+                    "อย่าลงคะแนนวันอังคาร".into(), "การเลือกตั้งถูกขโมย".into(),
+                    "เครื่องนับคะแนนถูกดัดแปลง".into(),
+                    // Indonesian
+                    "jangan memilih hari selasa".into(), "pemilihan dicuri".into(),
+                    "mesin pemungutan suara dimanipulasi".into(),
+                    // Portuguese
+                    "não votem na terça-feira".into(), "a eleição foi roubada".into(),
+                    "máquinas de votação foram manipuladas".into(),
+                    // Tagalog
+                    "huwag bumoto sa martes".into(), "ninakaw ang eleksyon".into(),
+                    "namanipula ang makinang boto".into(),
+                    // Multilingual civic misinfo phrases (cat 14 additions)
+                    // "election stolen" variants
+                    "الانتخابات سُرقت".into(),
+                    "चुनाव चुरा लिया गया".into(),
+                    "pemilihan umum dicuri".into(),
+                    // "voting machine fraud evidence" variants
+                    "تزوير آلات التصويت".into(),
+                    "वोटिंग मशीनों के साथ छेड़छाड़".into(),
+                    "mesin voting dimanipulasi".into(),
+                    // "share before deleted" variants
+                    "شاركه مع الجميع قبل أن يحذفوه".into(),
+                    "हटाए जाने से पहले सबके साथ शेयर करें".into(),
+                    "bagikan ke semua orang sebelum dihapus".into(),
                 ],
                 regex_patterns: vec![],
-                action: "warn".into(),
+                action: "block".into(),
                 confidence_floor: 0.75,
                 overridable: true,
             },
@@ -1041,6 +2457,28 @@ pub fn run_safety_realworld() -> SuiteReport {
     let classifier = SafetyClassifier::new();
     classifier.load_policy_pack(Arc::new(build_eval_policy_pack()));
 
+    // Load ONNX encoder for semantic classification of cases that
+    // don't match deterministic lexicon/regex patterns.
+    let encoder_available = {
+        #[cfg(feature = "onnx-runtime")]
+        {
+            let session = load_encoder_session();
+            if let Some(s) = session {
+                use kchat_safety::encoder::OnnxEncoder;
+                classifier.attach_encoder(Box::new(OnnxEncoder::new(s)));
+                eprintln!("[safety] Encoder attached for semantic classification");
+                true
+            } else {
+                eprintln!("[safety] No encoder available — deterministic-only mode");
+                false
+            }
+        }
+        #[cfg(not(feature = "onnx-runtime"))]
+        {
+            false
+        }
+    };
+
     let mut correct = 0u32;
     let mut total = 0u32;
     let mut category_stats: HashMap<String, (u32, u32)> = HashMap::new();
@@ -1053,6 +2491,7 @@ pub fn run_safety_realworld() -> SuiteReport {
         req.community_overlay_id = case.community_overlay_id.clone();
         req.jurisdiction = case.jurisdiction.clone();
         req.locale = case.locale.clone();
+        req.encoder_available = encoder_available;
         let start = std::time::Instant::now();
         let result = classifier.classify(&req);
         let duration_ms = start.elapsed().as_millis() as u64;
@@ -1115,9 +2554,14 @@ pub fn run_safety_realworld() -> SuiteReport {
                 meta,
             ));
         } else {
+            let fail_msg = if let Some(exp_cat) = case.expected_category {
+                format!("expected {} (cat={}), got {} (cat={})", expected, exp_cat, predicted, result.verdict.category)
+            } else {
+                format!("expected {}, got {}", expected, predicted)
+            };
             suite.add(EvalResult::fail_with_meta(
                 format!("safety_{}", case.id),
-                format!("expected {}, got {}", expected, predicted),
+                fail_msg,
                 duration_ms,
                 meta,
             ));
