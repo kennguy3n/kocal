@@ -109,6 +109,22 @@ struct ErrorResponse: Codable {
     let error: String
 }
 
+// MARK: - LoRA Request/Response Types
+
+struct LoraLoadRequest: Codable {
+    let adapter_path: String
+}
+
+struct LoraLoadResponse: Codable {
+    let status: String
+    let adapter: String?
+}
+
+struct LoraDetachResponse: Codable {
+    let status: String
+    let adapter: String?
+}
+
 // MARK: - Generate Result
 
 struct GenerateResult {

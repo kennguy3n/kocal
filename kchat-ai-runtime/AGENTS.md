@@ -134,6 +134,14 @@ The Swift server supports 1-bit (`bonsai-1.7b-mlx-1bit`) and 2-bit
 (`Ternary-Bonsai-1.7B-mlx-2bit`) MLX models. The 1-bit model runs at ~22 tok/s
 and the 2-bit at ~11 tok/s on M5.
 
+The Swift server also supports LoRA adapters — both at startup (`--lora <path>`)
+and at runtime via HTTP endpoints (`POST /lora/load`, `POST /lora/detach`,
+`GET /lora/status`). This uses the `LoRAContainer` API from `MLXLMCommon.Adapters`
+in mlx-swift-lm. The Qwen3 model conforms to `LoRAModel`, so adapters can be
+loaded, hot-swapped, and detached without restarting the server. This is the
+only server that supports both 1-bit quantization AND LoRA — the Python fallback
+servers support LoRA but not 1-bit.
+
 If the Swift binary is not available, the harness automatically falls back to
 `swift/kchat-mlx-server/kchat_mlx_server.py` (requires `pip install mlx-lm`).
 Note: the Python fallback uses official Apple MLX which does NOT support 1-bit
@@ -171,7 +179,8 @@ The workspace is organized into 10 crates + 1 Go sidecar following the 4-plane a
   JSON Schema/regex/Lark grammar validation (real Lark parser), backend
   adapters (llama.cpp via llama-cpp-2 with Metal/Vulkan/Cuda), model lifecycle
   with idle unload, token streaming with safety cancellation, LoRA hot-swap
-  (50 adapters: 5 tasks × 10 languages), swarm inference (multi-peer consensus).
+  (75 adapters: 5 task-families × 15 language slots, via Swift server /lora/load
+  endpoint or MlxBackend::load_lora/detach_lora), swarm inference (multi-peer consensus).
 - **kchat-action**: Action plane — artifact AST (typed operations, no arbitrary
   code), ToolPlan validation against signed manifests, RBAC authorization
   broker, commit tokens, audit log. Slide operations (InsertSlide, UpdateSlide,

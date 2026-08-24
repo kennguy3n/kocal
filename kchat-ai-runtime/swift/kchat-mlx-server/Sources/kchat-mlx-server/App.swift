@@ -4,6 +4,7 @@ import Foundation
 
 struct CliArgs {
     var modelPath: String?
+    var loraPath: String?
     var port: UInt16 = 18888
     var host: String = "127.0.0.1"
 }
@@ -21,6 +22,11 @@ func parseArgs() -> CliArgs {
             if i < argv.count {
                 args.modelPath = argv[i]
             }
+        case "--lora", "--adapter":
+            i += 1
+            if i < argv.count {
+                args.loraPath = argv[i]
+            }
         case "--port", "-p":
             i += 1
             if i < argv.count, let port = UInt16(argv[i]) {
@@ -35,10 +41,11 @@ func parseArgs() -> CliArgs {
             print("""
             kchat-mlx-server — MLX inference server for kchat eval
 
-            Usage: kchat-mlx-server --model <path> [--port <port>] [--host <host>]
+            Usage: kchat-mlx-server --model <path> [--lora <path>] [--port <port>] [--host <host>]
 
             Options:
               --model <path>   Path to MLX model directory (containing config.json, safetensors)
+              --lora <path>    Path to LoRA adapter directory (containing adapter_config.json, adapters.safetensors)
               --port <port>    Port to listen on (default: 18888)
               --host <host>    Host to bind to (default: 127.0.0.1)
               --help           Show this help message
@@ -47,6 +54,8 @@ func parseArgs() -> CliArgs {
               GET  /health              — Health check
               POST /completion          — llama-server compatible completion API
               POST /v1/chat/completions — OpenAI-compatible chat completion API
+              POST /lora/load           — Load/swap LoRA adapter at runtime
+              POST /lora/detach         — Detach LoRA adapter (revert to base model)
             """)
             exit(0)
         default:
@@ -67,7 +76,7 @@ struct Main {
 
         guard let modelPath = args.modelPath else {
             fputs("error: --model is required\n", stderr)
-            fputs("usage: kchat-mlx-server --model <path> [--port <port>] [--host <host>]\n", stderr)
+            fputs("usage: kchat-mlx-server --model <path> [--lora <path>] [--port <port>] [--host <host>]\n", stderr)
             exit(1)
         }
 
@@ -95,9 +104,12 @@ struct Main {
         // NWListener from accepting connections during model loading.
         Task.detached {
             do {
-                let inference = try await MlxInference(modelPath: modelPath)
+                let inference = try await MlxInference(modelPath: modelPath, loraPath: args.loraPath)
                 server.setInference(inference)
                 fputs("  model loaded — ready\n", stderr)
+                if args.loraPath != nil {
+                    fputs("  LoRA adapter loaded at startup\n", stderr)
+                }
             } catch {
                 fputs("error: failed to load model: \(error)\n", stderr)
                 exit(1)
@@ -107,6 +119,8 @@ struct Main {
         fputs("  GET  /health              — health check\n", stderr)
         fputs("  POST /completion          — completion API\n", stderr)
         fputs("  POST /v1/chat/completions — chat completion API\n", stderr)
+        fputs("  POST /lora/load           — load/swap LoRA adapter\n", stderr)
+        fputs("  POST /lora/detach         — detach LoRA adapter\n", stderr)
 
         // Keep running until interrupted
         signal(SIGINT) { _ in

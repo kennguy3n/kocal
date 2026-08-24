@@ -28,6 +28,8 @@ pub use backend::{BackendAdapter, BackendConfig, BackendType, GenerationConfig, 
 pub use backends::{select_backend, MockBackend};
 #[cfg(feature = "llamacpp")]
 pub use backends::LlamaCppBackend;
+#[cfg(feature = "mlx")]
+pub use backends::MlxBackend;
 pub use budget::{
     adaptive_max_output, budget_for_context, chunk_document, estimate_tokens_text,
     extract_outline_context, get_local_context, truncate_context, truncate_head,

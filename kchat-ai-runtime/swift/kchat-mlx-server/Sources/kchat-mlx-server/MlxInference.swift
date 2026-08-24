@@ -51,12 +51,92 @@ struct TokenizerBridge: MLXLMCommon.Tokenizer {
 class MlxInference {
     let modelContainer: ModelContainer
 
-    init(modelPath: String) async throws {
+    /// Lock protecting `_currentAdapter` and `_currentAdapterPath`.
+    /// These are accessed from HTTP handler threads (via Task.detached) and
+    /// must be synchronized to prevent data races.
+    private let adapterLock = NSLock()
+    /// Currently loaded LoRA adapter (nil = base model only).
+    private var _currentAdapter: LoRAContainer?
+    /// Path of the currently loaded adapter (for logging + status).
+    private var _currentAdapterPath: String?
+
+    /// Thread-safe accessor for the current adapter path.
+    var currentAdapterPath: String? {
+        adapterLock.lock()
+        defer { adapterLock.unlock() }
+        return _currentAdapterPath
+    }
+
+    init(modelPath: String, loraPath: String? = nil) async throws {
         let url = URL(fileURLWithPath: modelPath)
         self.modelContainer = try await LLMModelFactory.shared.loadContainer(
             from: url,
             using: LocalTokenizerLoader()
         )
+
+        if let loraPath = loraPath {
+            try await loadAdapter(loraPath)
+        }
+    }
+
+    // MARK: - LoRA Adapter Management
+
+    /// Load a LoRA adapter from a directory and apply it to the model.
+    /// If an adapter is already loaded, it is unloaded first.
+    func loadAdapter(_ adapterPath: String) async throws {
+        let adapterURL = URL(fileURLWithPath: adapterPath)
+
+        // Verify the directory exists and contains the expected files
+        let configURL = adapterURL.appending(component: "adapter_config.json")
+        guard FileManager.default.fileExists(atPath: configURL.path) else {
+            throw NSError(
+                domain: "MlxInference", code: 1,
+                userInfo: [NSLocalizedDescriptionKey: "adapter_config.json not found in \(adapterPath)"])
+        }
+
+        // Unload existing adapter before loading the new one
+        if currentAdapterPath != nil {
+            try await detachAdapter()
+        }
+
+        // Load the adapter container from the directory
+        let adapter = try LoRAContainer.from(directory: adapterURL)
+
+        // Apply the adapter to the model — replaces target layers + loads weights
+        try await modelContainer.perform { context in
+            try adapter.load(into: context.model)
+        }
+
+        adapterLock.lock()
+        _currentAdapter = adapter
+        _currentAdapterPath = adapterPath
+        adapterLock.unlock()
+        fputs("  LoRA adapter loaded: \(adapterPath)\n", stderr)
+    }
+
+    /// Detach the current LoRA adapter, reverting the model to its base form.
+    func detachAdapter() async throws {
+        adapterLock.lock()
+        guard let adapter = _currentAdapter else {
+            adapterLock.unlock()
+            return
+        }
+        adapterLock.unlock()
+
+        await modelContainer.perform { context in
+            adapter.unload(from: context.model)
+        }
+
+        adapterLock.lock()
+        _currentAdapter = nil
+        _currentAdapterPath = nil
+        adapterLock.unlock()
+        fputs("  LoRA adapter detached\n", stderr)
+    }
+
+    /// Swap to a new LoRA adapter (convenience: unload + load in one call).
+    func swapAdapter(_ adapterPath: String) async throws {
+        try await loadAdapter(adapterPath)
     }
 
     func generate(

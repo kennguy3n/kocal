@@ -177,6 +177,23 @@ class ModelServer {
             }
             handleChatCompletion(request, fd: fd)
 
+        case ("POST", "/lora/load"):
+            if !modelReady {
+                sendJsonResponse(fd, status: 503, body: ErrorResponse(error: "model still loading"))
+                return
+            }
+            handleLoraLoad(request, fd: fd)
+
+        case ("POST", "/lora/detach"):
+            if !modelReady {
+                sendJsonResponse(fd, status: 503, body: ErrorResponse(error: "model still loading"))
+                return
+            }
+            handleLoraDetach(request, fd: fd)
+
+        case ("GET", "/lora/status"):
+            handleLoraStatus(request, fd: fd)
+
         default:
             sendJsonResponse(fd, status: 404, body: ErrorResponse(error: "not found"))
         }
@@ -344,6 +361,92 @@ class ModelServer {
         } catch {
             sendJsonResponse(fd, status: 400, body: ErrorResponse(error: "invalid JSON: \(error)"))
         }
+    }
+
+    // MARK: - LoRA Endpoints
+
+    private func handleLoraLoad(_ request: HTTPRequest, fd: Int32) {
+        guard !request.body.isEmpty else {
+            sendJsonResponse(fd, status: 400, body: ErrorResponse(error: "empty body"))
+            return
+        }
+
+        do {
+            let req = try JSONDecoder().decode(LoraLoadRequest.self, from: request.body)
+            let adapterPath = req.adapter_path
+
+            guard !adapterPath.isEmpty else {
+                sendJsonResponse(fd, status: 400, body: ErrorResponse(error: "adapter_path required"))
+                return
+            }
+
+            guard FileManager.default.fileExists(atPath: adapterPath) else {
+                sendJsonResponse(fd, status: 404, body: ErrorResponse(error: "adapter directory not found: \(adapterPath)"))
+                return
+            }
+
+            // Bridge async swapAdapter() to sync using a semaphore.
+            let sem = DispatchSemaphore(value: 0)
+            var loadError: Error?
+
+            Task.detached {
+                do {
+                    try await self.inference!.swapAdapter(adapterPath)
+                } catch {
+                    loadError = error
+                }
+                sem.signal()
+            }
+
+            let waitResult = sem.wait(timeout: .now() + .seconds(60))
+            if waitResult == .timedOut {
+                sendJsonResponse(fd, status: 504, body: ErrorResponse(error: "LoRA load timed out (60s)"))
+                return
+            }
+
+            if let error = loadError {
+                sendJsonResponse(fd, status: 500, body: ErrorResponse(error: "failed to load adapter: \(error)"))
+                return
+            }
+
+            sendJsonResponse(fd, status: 200, body: LoraLoadResponse(status: "ok", adapter: adapterPath))
+
+        } catch {
+            sendJsonResponse(fd, status: 400, body: ErrorResponse(error: "invalid JSON: \(error)"))
+        }
+    }
+
+    private func handleLoraDetach(_ request: HTTPRequest, fd: Int32) {
+        let sem = DispatchSemaphore(value: 0)
+        var detachError: Error?
+
+        Task.detached {
+            do {
+                try await self.inference!.detachAdapter()
+            } catch {
+                detachError = error
+            }
+            sem.signal()
+        }
+
+        let waitResult = sem.wait(timeout: .now() + .seconds(30))
+        if waitResult == .timedOut {
+            sendJsonResponse(fd, status: 504, body: ErrorResponse(error: "LoRA detach timed out (30s)"))
+            return
+        }
+
+        if let error = detachError {
+            sendJsonResponse(fd, status: 500, body: ErrorResponse(error: "failed to detach adapter: \(error)"))
+            return
+        }
+
+        sendJsonResponse(fd, status: 200, body: LoraDetachResponse(status: "ok", adapter: nil))
+    }
+
+    private func handleLoraStatus(_ request: HTTPRequest, fd: Int32) {
+        let adapterPath = inference?.currentAdapterPath
+        let response = LoraLoadResponse(status: adapterPath != nil ? "loaded" : "none", adapter: adapterPath)
+        sendJsonResponse(fd, status: 200, body: response)
     }
 
     // MARK: - Response Helpers

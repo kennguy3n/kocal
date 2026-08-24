@@ -11,7 +11,7 @@ llamacpp = ["dep:llama-cpp-2"]
 llamacpp-metal = ["llamacpp", "llama-cpp-2/metal", "llama-cpp-2/common"]
 llamacpp-vulkan = ["llamacpp", "llama-cpp-2/vulkan", "llama-cpp-2/common"]
 llamacpp-cuda = ["llamacpp", "llama-cpp-2/cuda", "llama-cpp-2/common"]
-mlx = []
+mlx = ["dep:reqwest", "dep:which"]
 litert = []
 
 [dependencies]
@@ -33,6 +33,12 @@ regex = "1"
 # (metal on macOS/iOS, vulkan on Android/Windows, cuda on Linux, or plain CPU)
 # The `common` feature enables grammar-constrained sampling (GBNF).
 llama-cpp-2 = { version = "0.1", default-features = false, optional = true }
+
+# Optional MLX backend — spawns the Swift kchat-mlx-server subprocess and
+# proxies its HTTP API. Uses a local reqwest dep with the `blocking` feature
+# (the workspace reqwest is async-only).
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"], optional = true }
+which = { version = "7", optional = true }
 
 [dev-dependencies]
 tempfile = "3"
