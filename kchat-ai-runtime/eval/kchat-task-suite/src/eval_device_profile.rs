@@ -120,11 +120,11 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             app_state: AppState::Foreground,
             unmetered_network: true,
             expected_tier: DeviceTier::High,
-            expected_model_pack: Some("ternary-bonsai-8b-mlx-2bit"),
+            expected_model_pack: Some("bonsai-1.7b-mlx-1bit"),
             expected_backend: Some("mlx"),
             expected_vision_pack: Some("mobileclip-s2-int8"),
             expected_asr_pack: Some("whisper-base"),
-            expected_safety_pack: "kchat-encoder-int4",
+            expected_safety_pack: "mmbert-safety-q4_k_m",
             expected_video_pack: Some("mobileclip-s2-int8"),
         },
         DeviceProfile {
@@ -145,11 +145,11 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             app_state: AppState::Foreground,
             unmetered_network: true,
             expected_tier: DeviceTier::Medium,
-            expected_model_pack: Some("ternary-bonsai-4b-mlx-2bit"),
+            expected_model_pack: Some("bonsai-1.7b-mlx-1bit"),
             expected_backend: Some("mlx"),
             expected_vision_pack: Some("mobileclip-s2-int8"),
             expected_asr_pack: Some("whisper-base"),
-            expected_safety_pack: "kchat-encoder-int4",
+            expected_safety_pack: "mmbert-safety-q4_k_m",
             expected_video_pack: Some("mobileclip-s2-int8"),
         },
         DeviceProfile {
@@ -170,11 +170,11 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             app_state: AppState::Foreground,
             unmetered_network: true,
             expected_tier: DeviceTier::Low,
-            expected_model_pack: Some("ternary-bonsai-1.7b-mlx-2bit"),
+            expected_model_pack: Some("bonsai-1.7b-mlx-1bit"),
             expected_backend: Some("mlx"),
             expected_vision_pack: Some("mobileclip-s2-int8"),
             expected_asr_pack: Some("whisper-tiny"),
-            expected_safety_pack: "kchat-encoder-int4",
+            expected_safety_pack: "mmbert-safety-q4_k_m",
             expected_video_pack: Some("mobileclip-s2-int8"),
         },
         // === Mobile: Android ===
@@ -196,11 +196,11 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             app_state: AppState::Foreground,
             unmetered_network: true,
             expected_tier: DeviceTier::High,
-            expected_model_pack: Some("ternary-bonsai-8b-q2_0"),
+            expected_model_pack: Some("bonsai-1.7b-q1_0"),
             expected_backend: Some("llama.cpp_vulkan"),
             expected_vision_pack: Some("mobileclip-s2-int8"),
             expected_asr_pack: Some("whisper-base"),
-            expected_safety_pack: "kchat-encoder-int4",
+            expected_safety_pack: "mmbert-safety-q4_k_m",
             expected_video_pack: Some("mobileclip-s2-int8"),
         },
         DeviceProfile {
@@ -221,11 +221,11 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             app_state: AppState::Foreground,
             unmetered_network: true,
             expected_tier: DeviceTier::Medium,
-            expected_model_pack: Some("ternary-bonsai-4b-q2_0"),
+            expected_model_pack: Some("bonsai-1.7b-q1_0"),
             expected_backend: Some("llama.cpp_vulkan"),
             expected_vision_pack: Some("mobileclip-s2-int8"),
             expected_asr_pack: Some("whisper-base"),
-            expected_safety_pack: "kchat-encoder-int4",
+            expected_safety_pack: "mmbert-safety-q4_k_m",
             expected_video_pack: Some("mobileclip-s2-int8"),
         },
         DeviceProfile {
@@ -246,11 +246,11 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             app_state: AppState::Foreground,
             unmetered_network: false,
             expected_tier: DeviceTier::Low,
-            expected_model_pack: Some("ternary-bonsai-1.7b-q2_0"),
+            expected_model_pack: Some("bonsai-1.7b-q1_0"),
             expected_backend: Some("llama.cpp_vulkan"),
             expected_vision_pack: Some("mobileclip-s2-int8"),
             expected_asr_pack: Some("whisper-tiny"),
-            expected_safety_pack: "kchat-encoder-int4",
+            expected_safety_pack: "mmbert-safety-q4_k_m",
             expected_video_pack: Some("mobileclip-s2-int8"),
         },
         // === Desktop: macOS ===
@@ -272,11 +272,11 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             app_state: AppState::Foreground,
             unmetered_network: true,
             expected_tier: DeviceTier::High,
-            expected_model_pack: Some("ternary-bonsai-8b-mlx-2bit"),
+            expected_model_pack: Some("bonsai-1.7b-mlx-1bit"),
             expected_backend: Some("mlx"),
             expected_vision_pack: Some("mobileclip-s2-int8"),
             expected_asr_pack: Some("whisper-base"),
-            expected_safety_pack: "kchat-encoder-int4",
+            expected_safety_pack: "mmbert-safety-q4_k_m",
             expected_video_pack: Some("mobileclip-s2-int8"),
         },
         DeviceProfile {
@@ -297,11 +297,11 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             app_state: AppState::Foreground,
             unmetered_network: true,
             expected_tier: DeviceTier::Low,
-            expected_model_pack: Some("ternary-bonsai-1.7b-mlx-2bit"),
+            expected_model_pack: Some("bonsai-1.7b-mlx-1bit"),
             expected_backend: Some("mlx"),
             expected_vision_pack: Some("mobileclip-s2-int8"),
             expected_asr_pack: Some("whisper-tiny"),
-            expected_safety_pack: "kchat-encoder-int4",
+            expected_safety_pack: "mmbert-safety-q4_k_m",
             expected_video_pack: Some("mobileclip-s2-int8"),
         },
         DeviceProfile {
@@ -322,11 +322,11 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             app_state: AppState::Foreground,
             unmetered_network: true,
             expected_tier: DeviceTier::Low,
-            expected_model_pack: Some("ternary-bonsai-1.7b-q2_0"),
+            expected_model_pack: Some("bonsai-1.7b-q1_0"),
             expected_backend: Some("llama.cpp_cpu"),
             expected_vision_pack: Some("mobileclip-s2-int8"),
             expected_asr_pack: Some("whisper-tiny"),
-            expected_safety_pack: "kchat-encoder-int4",
+            expected_safety_pack: "mmbert-safety-q4_k_m",
             expected_video_pack: Some("mobileclip-s2-int8"),
         },
         // === Desktop: Windows ===
@@ -348,11 +348,11 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             app_state: AppState::Foreground,
             unmetered_network: true,
             expected_tier: DeviceTier::High,
-            expected_model_pack: Some("ternary-bonsai-8b-q2_0"),
+            expected_model_pack: Some("bonsai-1.7b-q1_0"),
             expected_backend: Some("llama.cpp_vulkan"),
             expected_vision_pack: Some("mobileclip-s2-int8"),
             expected_asr_pack: Some("whisper-base"),
-            expected_safety_pack: "kchat-encoder-int4",
+            expected_safety_pack: "mmbert-safety-q4_k_m",
             expected_video_pack: Some("mobileclip-s2-int8"),
         },
         DeviceProfile {
@@ -373,11 +373,11 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             app_state: AppState::Foreground,
             unmetered_network: true,
             expected_tier: DeviceTier::Low,
-            expected_model_pack: Some("ternary-bonsai-1.7b-q2_0"),
+            expected_model_pack: Some("bonsai-1.7b-q1_0"),
             expected_backend: Some("llama.cpp_vulkan"),
             expected_vision_pack: Some("mobileclip-s2-int8"),
             expected_asr_pack: Some("whisper-tiny"),
-            expected_safety_pack: "kchat-encoder-int4",
+            expected_safety_pack: "mmbert-safety-q4_k_m",
             expected_video_pack: Some("mobileclip-s2-int8"),
         },
         DeviceProfile {
@@ -398,11 +398,11 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
             app_state: AppState::Foreground,
             unmetered_network: true,
             expected_tier: DeviceTier::Low,
-            expected_model_pack: Some("ternary-bonsai-1.7b-q2_0"),
+            expected_model_pack: Some("bonsai-1.7b-q1_0"),
             expected_backend: Some("llama.cpp_vulkan"),
             expected_vision_pack: Some("mobileclip-s2-int8"),
             expected_asr_pack: Some("whisper-tiny"),
-            expected_safety_pack: "kchat-encoder-int4",
+            expected_safety_pack: "mmbert-safety-q4_k_m",
             expected_video_pack: Some("mobileclip-s2-int8"),
         },
     ]
@@ -414,40 +414,22 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
 
 /// Select the appropriate generative model for a tier and platform.
 ///
-/// - High tier on Apple Silicon (iOS/macOS aarch64): Ternary-Bonsai-8B MLX 2-bit (~2.3GB)
-/// - High tier on Android/Windows: Ternary-Bonsai-8B Q2_0 GGUF (~2.1GB)
-/// - Medium tier on Apple Silicon (iOS/macOS aarch64): Ternary-Bonsai-4B MLX 2-bit (~1.13GB)
-/// - Medium tier on other platforms (including Intel Macs): Ternary-Bonsai-4B Q2_0 GGUF (~1.0GB)
-/// - Low tier on Apple Silicon (iOS/macOS aarch64): Ternary-Bonsai-1.7B MLX 2-bit (~472MB)
-/// - Low tier on other platforms (including Intel Macs): Ternary-Bonsai-1.7B Q2_0 GGUF (~442MB)
+/// Unified small-model + LoRA architecture:
+/// - Apple Silicon (iOS/macOS aarch64): Bonsai-1.7B MLX 1-bit (~269MB) + 75 LoRA adapters
+/// - All other platforms (Android/Windows/Intel Mac): Bonsai-1.7B Q1_0 GGUF (~248MB) + 75 LoRA adapters
+///
+/// Previously, non-Apple-Silicon used different models per tier (1.7B/4B/8B Q2_0).
+/// Now all tiers use the same 248MB base model with task-specialized LoRA adapters.
 pub fn select_model_for_tier(tier: DeviceTier) -> Option<&'static str> {
     select_model_for_tier_platform(tier, "", "aarch64")
 }
 /// Platform- and arch-aware model selection.
-pub fn select_model_for_tier_platform(tier: DeviceTier, platform: &str, cpu_arch: &str) -> Option<&'static str> {
+pub fn select_model_for_tier_platform(_tier: DeviceTier, platform: &str, cpu_arch: &str) -> Option<&'static str> {
     let is_apple_silicon = (platform == "ios" || platform == "macos") && cpu_arch == "aarch64";
-    match tier {
-        DeviceTier::Low => {
-            if is_apple_silicon {
-                Some("ternary-bonsai-1.7b-mlx-2bit")  // Bonsai 1.7B MLX 2-bit, ~472MB
-            } else {
-                Some("ternary-bonsai-1.7b-q2_0")       // Bonsai 1.7B Q2_0 GGUF, ~442MB
-            }
-        }
-        DeviceTier::Medium => {
-            if is_apple_silicon {
-                Some("ternary-bonsai-4b-mlx-2bit")    // Bonsai 4B MLX 2-bit, ~1.13GB
-            } else {
-                Some("ternary-bonsai-4b-q2_0")         // Bonsai 4B Q2_0 GGUF, ~1.0GB
-            }
-        }
-        DeviceTier::High => {
-            if is_apple_silicon {
-                Some("ternary-bonsai-8b-mlx-2bit")    // Bonsai 8B MLX 2-bit, ~2.3GB
-            } else {
-                Some("ternary-bonsai-8b-q2_0")         // Bonsai 8B Q2_0 GGUF, ~2.1GB
-            }
-        }
+    if is_apple_silicon {
+        Some("bonsai-1.7b-mlx-1bit")      // Bonsai 1.7B MLX 1-bit, ~269MB + LoRA
+    } else {
+        Some("bonsai-1.7b-q1_0")          // Bonsai 1.7B Q1_0 GGUF, ~248MB + LoRA (all tiers)
     }
 }
 
@@ -485,12 +467,12 @@ pub fn select_asr_model_for_tier(tier: DeviceTier) -> Option<&'static str> {
 
 /// Select the appropriate safety encoder model for a tier.
 ///
-/// - All tiers: kchat-encoder-int4 (143MB, INT4)
+/// - All tiers: mmbert-safety-q4_k_m (145MB, Q4_K_M GGUF)
 /// - INT4 encoder is used everywhere for memory efficiency.
 ///   The encoder is lazy-loaded for safety checks and unloaded before generation.
 pub fn select_safety_model_for_tier(tier: DeviceTier) -> &'static str {
     match tier {
-        DeviceTier::Low | DeviceTier::Medium | DeviceTier::High => "kchat-encoder-int4",
+        DeviceTier::Low | DeviceTier::Medium | DeviceTier::High => "mmbert-safety-q4_k_m",
     }
 }
 
@@ -841,15 +823,12 @@ fn test_memory_budget(p: &DeviceProfile) -> EvalResult {
     }
 
     // Check that the tier-appropriate model pack fits within the budget
+    // Unified architecture: all tiers use the same base model
+    // - Apple Silicon: bonsai-1.7b-mlx-1bit (~269MB)
+    // - Other platforms: bonsai-1.7b-q1_0 (~248MB)
     let model_size = match (tier, &p.platform[..], &p.cpu_arch[..]) {
-        (DeviceTier::Low, "ios" | "macos", "aarch64") => 472_000_000,              // Bonsai 1.7B MLX ~472MB
-        (DeviceTier::Low, _, _) => 463_290_464,                                     // Bonsai 1.7B Q2_0 GGUF ~442MB (exact)
-        (DeviceTier::Medium, "ios" | "macos", "aarch64") => 1_131_565_944,         // Bonsai 4B MLX ~1.08GB (exact from HF LFS)
-        (DeviceTier::Medium, _, _) => 1_074_969_344,                               // Bonsai 4B Q2_0 GGUF ~1.0GB (exact)
-        (DeviceTier::High, "ios" | "macos", "aarch64") => 2_303_661_704,           // Bonsai 8B MLX ~2.15GB (exact from HF LFS)
-        (DeviceTier::High, "android", _) => 2_182_184_672,                         // Bonsai 8B Q2_0 GGUF ~2.1GB (exact)
-        (DeviceTier::High, "windows", _) => 2_182_184_672,                         // Bonsai 8B Q2_0 GGUF ~2.1GB (exact)
-        (DeviceTier::High, _, _) => 2_182_184_672,                             // Bonsai 8B Q2_0 fallback ~2.1GB
+        (_, "ios" | "macos", "aarch64") => 269_060_904,   // Bonsai 1.7B MLX 1-bit ~269MB
+        (_, _, _) => 248_302_272,                          // Bonsai 1.7B Q1_0 GGUF ~248MB
     };
     if model_size > peak_budget {
         errors.push(format!(
@@ -860,7 +839,7 @@ fn test_memory_budget(p: &DeviceProfile) -> EvalResult {
     }
 
     // Check total model footprint (generative + vision + encoder + ASR + video) fits within budget
-    let encoder_size: u64 = 150_420_811;  // kchat-encoder-int4 (143MB, used on all tiers)
+    let encoder_size: u64 = 151_698_944;  // mmbert-safety-q4_k_m (145MB, used on all tiers)
     let vision_size: u64 = 37_561_169;                            // mobileclip-s2-int8 visual encoder (runtime, all tiers)
     let asr_size: u64 = match tier {
         DeviceTier::Low => 32_904_983,                         // whisper-tiny (encoder ONNX, ~33MB)
@@ -1345,13 +1324,12 @@ fn test_registry_finds_model_for_high_tier(registry: &ModelRegistry) -> EvalResu
         let mut meta = HashMap::new();
         meta.insert("count".into(), format!("{}", results.len()));
         meta.insert("first".into(), results[0].pack_id.clone());
-        // High tier should find all 6 generative models
-        // (Bonsai-1.7B-MLX, Bonsai-1.7B-GGUF, Bonsai-4B-GGUF, Bonsai-4B-MLX,
-        //  Bonsai-8B-MLX, Bonsai-8B-GGUF)
-        if results.len() != 6 {
+        // High tier should find all 2 generative models
+        // (Bonsai-1.7B-MLX-1bit, Bonsai-1.7B-Q1_0)
+        if results.len() != 2 {
             EvalResult::fail(
                 "registry_high_tier_model",
-                format!("expected 6 generative models for High tier, got {}", results.len()),
+                format!("expected 2 generative models for High tier, got {}", results.len()),
             )
         } else {
             EvalResult::pass_with_meta("registry_high_tier_model", 0, meta)
@@ -1385,14 +1363,14 @@ fn test_registry_finds_no_model_for_low_tier(registry: &ModelRegistry) -> EvalRe
         }
     }
 
-    // Reranker is available on all tiers via kchat-encoder-int4
+    // Reranker is available on all tiers via mmbert-safety-q4_k_m
     let high_only = registry.find_for_task("rerank", MinTier::High);
     let medium_only = registry.find_for_task("rerank", MinTier::Medium);
     if high_only.is_empty() {
         errors.push("no rerank models for High tier".into());
     }
     if medium_only.is_empty() {
-        errors.push("no rerank models for Medium tier (expected kchat-encoder-int4)".into());
+        errors.push("no rerank models for Medium tier (expected mmbert-safety-q4_k_m)".into());
     }
 
     if errors.is_empty() {
@@ -1422,7 +1400,8 @@ fn test_registry_finds_safety_for_medium(registry: &ModelRegistry) -> EvalResult
         let mut meta = HashMap::new();
         meta.insert("count".into(), format!("{}", results.len()));
         meta.insert("pack_ids".into(), results.iter().map(|e| e.pack_id.as_str()).collect::<Vec<_>>().join(", "));
-        // Medium tier should find kchat-encoder-int4 only (INT8 is high-tier now)
+        // Medium tier finds 1 safety model:
+        // mmbert-safety-q4_k_m (Low tier, qualifies for Medium)
         if results.len() != 1 {
             EvalResult::fail(
                 "registry_safety_medium",

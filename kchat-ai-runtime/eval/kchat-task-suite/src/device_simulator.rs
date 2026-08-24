@@ -329,17 +329,11 @@ fn simulate_profile(
         reset
     );
 
-    // Model fit check — use tier-appropriate and platform-appropriate model size
+    // Model fit check — unified architecture: all tiers use the same base model
     if model.is_some() {
         let model_size = match (tier, &profile.platform[..], &profile.cpu_arch[..]) {
-            (DeviceTier::Low, "ios" | "macos", "aarch64") => 472_000_000,              // Bonsai 1.7B MLX ~472MB
-            (DeviceTier::Low, _, _) => 463_290_464,                                     // Bonsai 1.7B Q2_0 GGUF ~442MB (exact)
-            (DeviceTier::Medium, "ios" | "macos", "aarch64") => 1_131_565_944,         // Bonsai 4B MLX ~1.08GB (exact from HF LFS)
-            (DeviceTier::Medium, _, _) => 1_074_969_344,                               // Bonsai 4B Q2_0 GGUF ~1.0GB (exact)
-            (DeviceTier::High, "ios" | "macos", "aarch64") => 2_303_661_704,           // Bonsai 8B MLX ~2.15GB (exact from HF LFS)
-            (DeviceTier::High, "android", _) => 2_182_184_672,                         // Bonsai 8B Q2_0 GGUF ~2.1GB (exact)
-            (DeviceTier::High, "windows", _) => 2_182_184_672,                         // Bonsai 8B Q2_0 GGUF ~2.1GB (exact)
-            (DeviceTier::High, _, _) => 2_182_184_672,                             // Bonsai 8B Q2_0 fallback ~2.1GB
+            (_, "ios" | "macos", "aarch64") => 269_060_904,   // Bonsai 1.7B MLX 1-bit ~269MB
+            (_, _, _) => 248_302_272,                          // Bonsai 1.7B Q1_0 GGUF ~248MB
         };
         let fits = model_size <= peak;
         checks += 1;

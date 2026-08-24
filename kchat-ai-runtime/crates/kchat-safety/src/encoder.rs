@@ -171,7 +171,7 @@ mod tests {
 
     #[test]
     fn test_num_categories() {
-        assert_eq!(categories::NUM_CATEGORIES, 10);
+        assert_eq!(categories::NUM_CATEGORIES, 17);
     }
 
     #[test]

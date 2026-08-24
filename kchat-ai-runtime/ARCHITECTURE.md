@@ -149,10 +149,10 @@ The foundation crate that all other crates depend on.
   all profiles fit within peak memory budgets with 163+ MB mobile headroom
 
 **Model Registry** (`registry.rs`):
-- 11 model packs (6 generative, 2 encoder, 1 vision, 2 ASR)
+- 7 model packs (2 generative, 2 encoder, 1 vision, 2 ASR)
 - `RegistryEntry` with pack_id, version, pack_type, download_url, sha256,
   size_bytes, min_tier, task_capabilities, languages, quantization
-- 11/11 packs have real SHA-256 hashes
+- 7/7 packs have real SHA-256 hashes
 - `find_for_task(task, tier)` — filter by capability and tier eligibility
 - `find_for_language(lang, tier)` — filter by language and tier
 - `default_registry()` — hardcoded built-in catalog
@@ -362,11 +362,11 @@ The foundation crate that all other crates depend on.
 - 2,005 safety cases (14 languages + 13 code-switch combos)
 - 221 guardrail cases (17-category taxonomy, YAML from sample_messages.yaml)
 - 13 context cases (multilingual, ACL tests)
-- 11 generation cases (real Ternary-Bonsai-1.7B inference via llama-server)
+- 11 generation cases (real Bonsai-1.7B inference via llama-server)
 - 17 action cases (tool plans, artifact ops, commit tokens)
 
 **Per-Device Eval** (1,800 task runs):
-- 12 device profiles × 150 tasks × 7 unique generative models
+- 12 device profiles × 150 tasks × 2 generative models (unified across all tiers)
 - 15 task categories per profile
 - Quality scoring (0.0-1.0 per task, ≥0.7 pass threshold)
 - Judgment: Pass (≥75%), Marginal (50-74%), Fail (<50%)

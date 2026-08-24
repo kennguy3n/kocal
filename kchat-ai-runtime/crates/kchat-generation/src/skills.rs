@@ -28,6 +28,8 @@ pub enum SkillSurface {
     Create,
     /// Slides surface — generate/edit presentation slides via smart templates.
     Slides,
+    /// Chat surface — chat-driven tasks (catch up, tasks, reply, QA, notes).
+    Chat,
 }
 
 /// What part of the document a skill operates on.
@@ -69,6 +71,7 @@ pub enum SkillGroup {
     Generate,
     Document,
     Slides,
+    Chat,
 }
 
 /// Minimum device tier required for a skill.
@@ -515,6 +518,31 @@ impl SkillDef {
             "slides_key_takeaways" => SkillPromptOutput {
                 system: "Extract 3-5 key takeaways from the deck as a numbered list (1. 2. 3.). Be concise. Output only the list.".into(),
                 user: format!("Deck content:\n{}", input.context),
+            },
+
+            "chat_catch_up" => SkillPromptOutput {
+                system: "You are a helpful chat assistant. Summarize what the user missed while they were away. Be concise and highlight key decisions and action items.".into(),
+                user: format!("You were away. Here is the conversation:\n\n{}\n\nSummarize what I missed:", input.context),
+            },
+            "chat_create_tasks" => SkillPromptOutput {
+                system: "You are a helpful chat assistant. Extract action items from the conversation as a JSON array. Each item: {\"task\": string, \"assignee\": string, \"due_date\": string, \"priority\": \"high\"|\"medium\"|\"low\"}".into(),
+                user: format!("Extract action items from this conversation:\n\n{}", input.context),
+            },
+            "chat_summarize" => SkillPromptOutput {
+                system: "You are a helpful chat assistant. Summarize the conversation concisely, capturing key points and decisions.".into(),
+                user: format!("Summarize this conversation:\n\n{}", input.context),
+            },
+            "chat_draft_reply" => SkillPromptOutput {
+                system: "You are a helpful chat assistant. Draft a professional reply that fits the conversation context.".into(),
+                user: format!("Draft a reply to this conversation:\n\n{}\n\nReply instructions: {}", input.context, input.input),
+            },
+            "chat_context_qa" => SkillPromptOutput {
+                system: "You are a helpful chat assistant. Answer questions about the conversation accurately.".into(),
+                user: format!("Based on this conversation:\n\n{}\n\nQuestion: {}", input.context, input.input),
+            },
+            "chat_meeting_notes" => SkillPromptOutput {
+                system: "You are a helpful chat assistant. Extract structured meeting notes as JSON with: {\"attendees\": [string], \"decisions\": [string], \"action_items\": [{\"task\": string, \"assignee\": string}], \"next_steps\": [string]}".into(),
+                user: format!("Extract meeting notes from this discussion:\n\n{}", input.context),
             },
 
             _ => SkillPromptOutput {
@@ -1842,6 +1870,151 @@ fn all_skills() -> Vec<SkillDef> {
             min_tier: SkillTier::Low,
             deterministic: false,
         },
+        // ── Chat-driven skills (6) ────────────────────────────────────
+        SkillDef {
+            id: "chat_catch_up".into(),
+            label: "Catch Up".into(),
+            description: "Summarize what you missed while away".into(),
+            icon: "MessageSquareMore".into(),
+            surface: SkillSurface::Chat,
+            group: SkillGroup::Chat,
+            scope: SkillScope::Document,
+            mode: SkillMode::OneClick,
+            max_tokens: 300,
+            temperature: 0.3,
+            stop: vec!["<|im_end|>".into()],
+            response_prefix: None,
+            sub_variants: vec![],
+            needs_topic: false,
+            supports_keywords: false,
+            topic_label: None,
+            needs_full_document: true,
+            use_outline_context: false,
+            lora_task: "chat_catch_up".into(),
+            grammar_type: SkillGrammarType::FreeText,
+            min_tier: SkillTier::Low,
+            deterministic: false,
+        },
+        SkillDef {
+            id: "chat_create_tasks".into(),
+            label: "Extract Tasks".into(),
+            description: "Extract action items from a conversation".into(),
+            icon: "ListTodo".into(),
+            surface: SkillSurface::Chat,
+            group: SkillGroup::Chat,
+            scope: SkillScope::Document,
+            mode: SkillMode::OneClick,
+            max_tokens: 400,
+            temperature: 0.2,
+            stop: vec!["<|im_end|>".into()],
+            response_prefix: Some("{\n".into()),
+            sub_variants: vec![],
+            needs_topic: false,
+            supports_keywords: false,
+            topic_label: None,
+            needs_full_document: true,
+            use_outline_context: false,
+            lora_task: "chat_create_tasks".into(),
+            grammar_type: SkillGrammarType::JsonSchema,
+            min_tier: SkillTier::Low,
+            deterministic: false,
+        },
+        SkillDef {
+            id: "chat_summarize".into(),
+            label: "Summarize Chat".into(),
+            description: "Summarize a conversation thread".into(),
+            icon: "MessageSquareText".into(),
+            surface: SkillSurface::Chat,
+            group: SkillGroup::Chat,
+            scope: SkillScope::Document,
+            mode: SkillMode::OneClick,
+            max_tokens: 200,
+            temperature: 0.3,
+            stop: vec!["<|im_end|>".into()],
+            response_prefix: None,
+            sub_variants: vec![],
+            needs_topic: false,
+            supports_keywords: false,
+            topic_label: None,
+            needs_full_document: true,
+            use_outline_context: false,
+            lora_task: "chat_summarize".into(),
+            grammar_type: SkillGrammarType::FreeText,
+            min_tier: SkillTier::Low,
+            deterministic: false,
+        },
+        SkillDef {
+            id: "chat_draft_reply".into(),
+            label: "Draft Reply".into(),
+            description: "Draft a reply in conversation context".into(),
+            icon: "Reply".into(),
+            surface: SkillSurface::Chat,
+            group: SkillGroup::Chat,
+            scope: SkillScope::Document,
+            mode: SkillMode::PromptInput,
+            max_tokens: 200,
+            temperature: 0.4,
+            stop: vec!["<|im_end|>".into()],
+            response_prefix: None,
+            sub_variants: vec![],
+            needs_topic: true,
+            supports_keywords: false,
+            topic_label: Some("Reply instructions (optional)".into()),
+            needs_full_document: true,
+            use_outline_context: false,
+            lora_task: "chat_draft_reply".into(),
+            grammar_type: SkillGrammarType::FreeText,
+            min_tier: SkillTier::Low,
+            deterministic: false,
+        },
+        SkillDef {
+            id: "chat_context_qa".into(),
+            label: "Ask About Chat".into(),
+            description: "Answer questions about a conversation".into(),
+            icon: "HelpCircle".into(),
+            surface: SkillSurface::Chat,
+            group: SkillGroup::Chat,
+            scope: SkillScope::Document,
+            mode: SkillMode::PromptInput,
+            max_tokens: 200,
+            temperature: 0.3,
+            stop: vec!["<|im_end|>".into()],
+            response_prefix: None,
+            sub_variants: vec![],
+            needs_topic: true,
+            supports_keywords: false,
+            topic_label: Some("Question about the conversation".into()),
+            needs_full_document: true,
+            use_outline_context: false,
+            lora_task: "chat_context_qa".into(),
+            grammar_type: SkillGrammarType::FreeText,
+            min_tier: SkillTier::Low,
+            deterministic: false,
+        },
+        SkillDef {
+            id: "chat_meeting_notes".into(),
+            label: "Meeting Notes".into(),
+            description: "Extract structured meeting notes from a chat discussion".into(),
+            icon: "NotebookPen".into(),
+            surface: SkillSurface::Chat,
+            group: SkillGroup::Chat,
+            scope: SkillScope::Document,
+            mode: SkillMode::OneClick,
+            max_tokens: 500,
+            temperature: 0.2,
+            stop: vec!["<|im_end|>".into()],
+            response_prefix: Some("{\n".into()),
+            sub_variants: vec![],
+            needs_topic: false,
+            supports_keywords: false,
+            topic_label: None,
+            needs_full_document: true,
+            use_outline_context: false,
+            lora_task: "chat_meeting_notes".into(),
+            grammar_type: SkillGrammarType::JsonSchema,
+            min_tier: SkillTier::Low,
+            deterministic: false,
+        },
     ]
 }
 
@@ -1854,9 +2027,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_registry_has_45_skills() {
+    fn test_registry_has_51_skills() {
         let registry = SkillRegistry::new();
-        assert_eq!(registry.len(), 45);
+        assert_eq!(registry.len(), 51);
     }
 
     #[test]

@@ -38,6 +38,7 @@ fn main() {
     let redteam_encoder_mode = args.iter().any(|a| a == "--redteam-encoder" || a == "--red-enc");
     let simulate_mode = args.iter().any(|a| a == "--simulate" || a == "--sim");
     let perdevice_mode = args.iter().any(|a| a == "--perdevice" || a == "--perdev");
+    let compare_old = args.iter().any(|a| a == "--compare-old");
     let skills_mode = args.iter().any(|a| a == "--skills");
     let slides_mode = args.iter().any(|a| a == "--slides");
     let slides_images_mode = args.iter().any(|a| a == "--slides-images");
@@ -83,7 +84,7 @@ fn main() {
     }
 
     if perdevice_mode {
-        eval_perdevice::run();
+        eval_perdevice::run_with_options(compare_old);
         return;
     }
 

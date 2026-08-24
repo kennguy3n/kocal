@@ -21,8 +21,9 @@ The system is built around four core principles:
    a generative model. NFKC normalization, PII detection, scam/URL detectors,
    and signed policy packs operate even on 4GB low-tier phones and WASM.
 2. **Tier-aware** — Devices are classified into Low/Medium/High tiers at runtime
-   based on safe allocatable memory and thermal state. Each tier gets
-   appropriately sized models, context windows, and performance budgets.
+   based on safe allocatable memory and thermal state. All tiers use the same
+   1.7B base generative model with LoRA adapters; tiers differ in context window
+   size, output budget, and performance targets.
 3. **Privacy-first** — Per-scope XChaCha20-Poly1305 encryption, append-only
    evidence chains, no raw content in telemetry. All inference is local.
 4. **Signed distribution** — Ed25519-signed manifests and policy packs with
@@ -94,18 +95,18 @@ kchat-ai-runtime/
 
 Thermal downgrade: Serious → drop one tier; Critical → force Low.
 
-## Model Registry (11 packs)
+## Model Registry (7 packs)
 
 ### Generative Models
 
+All tiers use the same 1.7B base model with LoRA adapters (50 adapters:
+5 tasks × 10 languages). Tier differences are handled via context window
+size, output budget, and performance targets — not different model sizes.
+
 | Pack ID | Min Tier | Size | Quant | Backend | Platform |
 |---------|----------|------|-------|---------|----------|
-| `ternary-bonsai-1.7b-mlx-2bit` | Low | 472 MB | 2bit-MLX | MLX | iOS/macOS (Apple Silicon) |
-| `ternary-bonsai-1.7b-q2_0` | Low | 442 MB | Q2_0 | llama.cpp Vulkan/CPU | Android/Windows/Intel Mac |
-| `ternary-bonsai-4b-mlx-2bit` | Medium | 1,132 MB | 2bit-MLX | MLX | iOS/macOS (Apple Silicon) |
-| `ternary-bonsai-4b-q2_0` | Medium | 1,075 MB | Q2_0 | llama.cpp Vulkan | Android |
-| `ternary-bonsai-8b-mlx-2bit` | High | 2,304 MB | 2bit-MLX | MLX | iOS/macOS (Apple Silicon) |
-| `ternary-bonsai-8b-q2_0` | High | 2,182 MB | Q2_0 | llama.cpp Vulkan | Android/Windows |
+| `bonsai-1.7b-mlx-1bit` | Low | 269 MB | 1bit-MLX | MLX | iOS/macOS (Apple Silicon) |
+| `bonsai-1.7b-q1_0` | Low | 248 MB | Q1_0 | llama.cpp Vulkan/CPU | Android/Windows/Intel Mac |
 
 ### Non-Generative Models
 
@@ -117,7 +118,7 @@ Thermal downgrade: Serious → drop one tier; Critical → force Low.
 | `whisper-tiny` | asr | Low | 33 MB | ONNX (FP32) | transcribe (multilingual) | ✅ real |
 | `whisper-base` | asr | Medium | 82 MB | ONNX (FP32) | transcribe (multilingual) | ✅ real |
 
-11/11 packs have real SHA-256 hashes.
+7/7 packs have real SHA-256 hashes.
 
 > **Note**: Whisper ONNX files are FP32 (not INT8-quantized). Base models are `nb-whisper-tiny` and
 > `nb-whisper-base` from NbAiLab (Norwegian fine-tunes of OpenAI Whisper). Despite the
@@ -146,7 +147,7 @@ Thermal downgrade: Serious → drop one tier; Critical → force Low.
 | Standard eval | 233 | All passing |
 | Red-team eval | 36 | 100% (7 attack categories) |
 | Real-world eval | 2,267 | Safety 100%, Context 100%, Generation 82%, Action 100% |
-| Per-device eval | 1,800 | 12 profiles × 150 tasks × 7 unique models |
+| Per-device eval | 1,800 | 12 profiles × 150 tasks × 2 generative models (unified across all tiers) |
 | Device simulator | 138 checks × 12 profiles | All passing |
 
 ## Platform Support

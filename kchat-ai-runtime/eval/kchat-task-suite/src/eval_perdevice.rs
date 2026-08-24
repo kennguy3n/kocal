@@ -130,6 +130,8 @@ struct ModelConfig {
     server_port: u16,
     context_size: usize,
     display_name: String,
+    /// Optional LoRA adapter path (GGUF format) to load with the model
+    lora_path: Option<PathBuf>,
 }
 
 #[derive(Debug, Clone)]
@@ -249,14 +251,15 @@ impl ServerHandle {
 
 fn start_llama_server(config: &ModelConfig) -> Result<ServerHandle, String> {
     // Ternary-Bonsai GGUF models use Q2_0 g128 ternary format requiring the PrismML fork
-    let is_ternary = config
+    // Bonsai Q1_0 GGUF models also use the PrismML fork (Q1_0 is a PrismML custom format)
+    let needs_prismml = config
         .model_path
         .file_name()
         .and_then(|n| n.to_str())
-        .map(|n| n.contains("Ternary-Bonsai"))
+        .map(|n| n.contains("Ternary-Bonsai") || n.contains("Q1_0"))
         .unwrap_or(false);
 
-    let llama_server = if is_ternary {
+    let llama_server = if needs_prismml {
         // Try PrismML fork first, then env override, then PATH
         let prismml_path = "/tmp/prism-llama.cpp/build/bin/llama-server";
         if std::path::Path::new(prismml_path).exists() {
@@ -264,7 +267,7 @@ fn start_llama_server(config: &ModelConfig) -> Result<ServerHandle, String> {
         } else {
             std::env::var("PRISM_LLAMA_SERVER_PATH")
                 .unwrap_or_else(|_| {
-                    eprintln!("│  WARNING: Ternary-Bonsai model requires PrismML llama-server fork.");
+                    eprintln!("│  WARNING: Bonsai Q1_0/Ternary-Bonsai model requires PrismML llama-server fork.");
                     eprintln!("│  Build it: git clone --branch prism https://github.com/PrismML-Eng/llama.cpp /tmp/prism-llama.cpp && cd /tmp/prism-llama.cpp && cmake -B build -DGGML_METAL=ON && cmake --build build -j");
                     "llama-server".into()
                 })
@@ -281,8 +284,8 @@ fn start_llama_server(config: &ModelConfig) -> Result<ServerHandle, String> {
     let port_str = config.server_port.to_string();
     let ctx_str = config.context_size.to_string();
 
-    let child = Command::new(&llama_server)
-        .arg("-m")
+    let mut cmd = Command::new(&llama_server);
+    cmd.arg("-m")
         .arg(&config.model_path)
         .arg("--host")
         .arg("127.0.0.1")
@@ -294,7 +297,18 @@ fn start_llama_server(config: &ModelConfig) -> Result<ServerHandle, String> {
         .arg("99")
         .arg("-t")
         .arg("4")
-        .arg("--no-webui")
+        .arg("--no-webui");
+
+    // Pass LoRA adapter if configured
+    if let Some(ref lora) = config.lora_path {
+        if lora.exists() {
+            cmd.arg("--lora").arg(lora);
+        } else {
+            eprintln!("│  WARNING: LoRA adapter not found: {}", lora.display());
+        }
+    }
+
+    let child = cmd
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .spawn()
@@ -315,69 +329,24 @@ fn start_llama_server(config: &ModelConfig) -> Result<ServerHandle, String> {
 }
 
 fn start_mlx_server(config: &ModelConfig) -> Result<ServerHandle, String> {
-    // Find Swift binary — check env override, then xcodebuild DerivedData, then SwiftPM .build
-    let (swift_binary, framework_path) = if let Ok(path) = std::env::var("MLX_SERVER_PATH") {
-        (path, None)
-    } else {
-        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let swift_pkg_dir = manifest_dir.join("../../swift/kchat-mlx-server");
+    // The Swift MLX server doesn't support LoRA and crashes on 1-bit models.
+    // Use the Python MLX server (mlx_server_with_lora.py) which supports LoRA
+    // and can load 2-bit quantized models.
+    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let python_server = manifest_dir.join("../../swift/kchat-mlx-server/mlx_server_with_lora.py");
 
-        // xcodebuild output: ~/Library/Developer/Xcode/DerivedData/kchat-mlx-server-*/Build/Products/Release
-        let mut xcode_binary = None;
-        let mut xcode_framework = None;
-        if let Ok(home) = std::env::var("HOME") {
-            let dd_root = PathBuf::from(&home)
-                .join("Library/Developer/Xcode/DerivedData");
-            if let Ok(entries) = std::fs::read_dir(&dd_root) {
-                for entry in entries.flatten() {
-                    let name = entry.file_name();
-                    let name_str = name.to_string_lossy();
-                    if name_str.starts_with("kchat-mlx-server-") {
-                        let release_dir = entry.path()
-                            .join("Build/Products/Release");
-                        let bin = release_dir.join("kchat-mlx-server");
-                        if bin.exists() {
-                            xcode_binary = Some(bin.to_string_lossy().to_string());
-                            xcode_framework = Some(release_dir.to_string_lossy().to_string());
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        if let (Some(bin), Some(fw)) = (xcode_binary, xcode_framework) {
-            (bin, Some(fw))
-        } else {
-            // SwiftPM .build paths
-            let candidates = [
-                swift_pkg_dir.join(".build/release/kchat-mlx-server"),
-                swift_pkg_dir.join(".build/debug/kchat-mlx-server"),
-            ];
-            for c in &candidates {
-                if c.exists() {
-                    return Err(format!(
-                        "Swift binary found at {} but was built with `swift build` — \
-                         Metal shaders are missing. Build with `xcodebuild` instead:\n  \
-                         cd swift/kchat-mlx-server && xcodebuild build -scheme kchat-mlx-server \
-                         -destination 'platform=OS X' -configuration Release -skipPackagePluginValidation",
-                        c.display()
-                    ));
-                }
-            }
-            return Err(
-                "kchat-mlx-server binary not found. Build with:\n  \
-                 cd swift/kchat-mlx-server && xcodebuild build -scheme kchat-mlx-server \
-                 -destination 'platform=OS X' -configuration Release -skipPackagePluginValidation"
-                    .to_string(),
-            );
-        }
-    };
+    if !python_server.exists() {
+        return Err(format!(
+            "Python MLX server not found: {}. Please ensure the file exists.",
+            python_server.display()
+        ));
+    }
 
     let port_str = config.server_port.to_string();
 
-    let mut cmd = Command::new(&swift_binary);
-    cmd.arg("--model")
+    let mut cmd = Command::new("python3");
+    cmd.arg(&python_server)
+        .arg("--model")
         .arg(&config.model_path)
         .arg("--port")
         .arg(&port_str)
@@ -386,14 +355,18 @@ fn start_mlx_server(config: &ModelConfig) -> Result<ServerHandle, String> {
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
 
-    // Set DYLD_FRAMEWORK_PATH so the metallib bundle is found
-    if let Some(ref fw) = framework_path {
-        cmd.env("DYLD_FRAMEWORK_PATH", fw);
+    // Pass LoRA adapter if configured
+    if let Some(ref lora) = config.lora_path {
+        if lora.exists() {
+            cmd.arg("--lora").arg(lora);
+        } else {
+            eprintln!("│  WARNING: LoRA adapter not found: {}", lora.display());
+        }
     }
 
     let child = cmd
         .spawn()
-        .map_err(|e| format!("failed to start kchat-mlx-server: {}", e))?;
+        .map_err(|e| format!("failed to start python MLX server: {}", e))?;
 
     let url = format!("http://127.0.0.1:{}", config.server_port);
     if !ServerHandle::wait_until_ready(&url, 120) {
@@ -1128,48 +1101,16 @@ fn find_model_path(pack_id: &str) -> Option<PathBuf> {
         .join("../../manifest/packs");
 
     match pack_id {
-        "ternary-bonsai-1.7b-mlx-2bit" => {
-            let dir = pack_dir.join("ternary-bonsai-1.7b-mlx-2bit");
+        "bonsai-1.7b-mlx-1bit" => {
+            let dir = pack_dir.join("bonsai-1.7b-mlx-1bit");
             if dir.exists() {
                 Some(dir)
             } else {
                 None
             }
         }
-        "ternary-bonsai-4b-mlx-2bit" => {
-            let dir = pack_dir.join("ternary-bonsai-4b-mlx-2bit");
-            if dir.exists() {
-                Some(dir)
-            } else {
-                None
-            }
-        }
-        "ternary-bonsai-8b-mlx-2bit" => {
-            let dir = pack_dir.join("ternary-bonsai-8b-mlx-2bit");
-            if dir.exists() {
-                Some(dir)
-            } else {
-                None
-            }
-        }
-        "ternary-bonsai-1.7b-q2_0" => {
-            let path = pack_dir.join("Ternary-Bonsai-1.7B-Q2_0.gguf");
-            if path.exists() {
-                Some(path)
-            } else {
-                None
-            }
-        }
-        "ternary-bonsai-4b-q2_0" => {
-            let path = pack_dir.join("Ternary-Bonsai-4B-Q2_0.gguf");
-            if path.exists() {
-                Some(path)
-            } else {
-                None
-            }
-        }
-        "ternary-bonsai-8b-q2_0" => {
-            let path = pack_dir.join("Ternary-Bonsai-8B-Q2_0.gguf");
+        "bonsai-1.7b-q1_0" => {
+            let path = pack_dir.join("bonsai-1.7b-q1_0").join("Bonsai-1.7B-Q1_0.gguf");
             if path.exists() {
                 Some(path)
             } else {
@@ -1181,26 +1122,18 @@ fn find_model_path(pack_id: &str) -> Option<PathBuf> {
 }
 
 fn get_model_config(pack_id: &str, port: u16) -> Option<ModelConfig> {
+    get_model_config_with_lora(pack_id, port, None)
+}
+
+fn get_model_config_with_lora(pack_id: &str, port: u16, lora_path: Option<PathBuf>) -> Option<ModelConfig> {
     let model_path = find_model_path(pack_id)?;
 
     let (server_type, display_name, context_size) = match pack_id {
-        "ternary-bonsai-1.7b-mlx-2bit" => {
-            (ServerType::MlxServer, "Ternary-Bonsai-1.7B-MLX-2bit".into(), 2048)
+        "bonsai-1.7b-mlx-1bit" => {
+            (ServerType::MlxServer, "Bonsai-1.7B-MLX-1bit".into(), 2048)
         }
-        "ternary-bonsai-4b-mlx-2bit" => {
-            (ServerType::MlxServer, "Ternary-Bonsai-4B-MLX-2bit".into(), 4096)
-        }
-        "ternary-bonsai-8b-mlx-2bit" => {
-            (ServerType::MlxServer, "Ternary-Bonsai-8B-MLX-2bit".into(), 8192)
-        }
-        "ternary-bonsai-1.7b-q2_0" => {
-            (ServerType::LlamaServer, "Ternary-Bonsai-1.7B-Q2_0".into(), 2048)
-        }
-        "ternary-bonsai-4b-q2_0" => {
-            (ServerType::LlamaServer, "Ternary-Bonsai-4B-Q2_0".into(), 8192)
-        }
-        "ternary-bonsai-8b-q2_0" => {
-            (ServerType::LlamaServer, "Ternary-Bonsai-8B-Q2_0".into(), 8192)
+        "bonsai-1.7b-q1_0" => {
+            (ServerType::LlamaServer, "Bonsai-1.7B-Q1_0".into(), 2048)
         }
         _ => return None,
     };
@@ -1212,6 +1145,7 @@ fn get_model_config(pack_id: &str, port: u16) -> Option<ModelConfig> {
         server_port: port,
         context_size,
         display_name,
+        lora_path,
     })
 }
 
@@ -1225,9 +1159,9 @@ fn get_device_profiles() -> Vec<DeviceProfileInfo> {
             name: "iPhone 15 Pro (8GB, A17 Pro)".into(),
             tier: "High".into(),
             platform: "ios".into(),
-            model_pack_id: "ternary-bonsai-8b-mlx-2bit".into(),
+            model_pack_id: "bonsai-1.7b-mlx-1bit".into(),
             vision_pack_id: Some("mobileclip-s2-int8".into()),
-            safety_pack_id: "kchat-encoder-int8".into(),
+            safety_pack_id: "mmbert-safety-q4_k_m".into(),
             asr_pack_id: Some("whisper-base".into()),
             video_pack_id: Some("mobileclip-s2-int8".into()),
         },
@@ -1235,9 +1169,9 @@ fn get_device_profiles() -> Vec<DeviceProfileInfo> {
             name: "iPhone 14 (6GB, A15)".into(),
             tier: "Medium".into(),
             platform: "ios".into(),
-            model_pack_id: "ternary-bonsai-4b-mlx-2bit".into(),
+            model_pack_id: "bonsai-1.7b-mlx-1bit".into(),
             vision_pack_id: Some("mobileclip-s2-int8".into()),
-            safety_pack_id: "kchat-encoder-int4".into(),
+            safety_pack_id: "mmbert-safety-q4_k_m".into(),
             asr_pack_id: Some("whisper-base".into()),
             video_pack_id: Some("mobileclip-s2-int8".into()),
         },
@@ -1245,9 +1179,9 @@ fn get_device_profiles() -> Vec<DeviceProfileInfo> {
             name: "iPhone SE 2022 (4GB, A15)".into(),
             tier: "Low".into(),
             platform: "ios".into(),
-            model_pack_id: "ternary-bonsai-1.7b-mlx-2bit".into(),
+            model_pack_id: "bonsai-1.7b-mlx-1bit".into(),
             vision_pack_id: Some("mobileclip-s2-int8".into()),
-            safety_pack_id: "kchat-encoder-int4".into(),
+            safety_pack_id: "mmbert-safety-q4_k_m".into(),
             asr_pack_id: Some("whisper-tiny".into()),
             video_pack_id: Some("mobileclip-s2-int8".into()),
         },
@@ -1255,9 +1189,9 @@ fn get_device_profiles() -> Vec<DeviceProfileInfo> {
             name: "Pixel 8 Pro (12GB, Tensor G3)".into(),
             tier: "High".into(),
             platform: "android".into(),
-            model_pack_id: "ternary-bonsai-8b-q2_0".into(),
+            model_pack_id: "bonsai-1.7b-q1_0".into(),
             vision_pack_id: Some("mobileclip-s2-int8".into()),
-            safety_pack_id: "kchat-encoder-int8".into(),
+            safety_pack_id: "mmbert-safety-q4_k_m".into(),
             asr_pack_id: Some("whisper-base".into()),
             video_pack_id: Some("mobileclip-s2-int8".into()),
         },
@@ -1265,9 +1199,9 @@ fn get_device_profiles() -> Vec<DeviceProfileInfo> {
             name: "Pixel 7a (8GB, Tensor G2)".into(),
             tier: "Medium".into(),
             platform: "android".into(),
-            model_pack_id: "ternary-bonsai-4b-q2_0".into(),
+            model_pack_id: "bonsai-1.7b-q1_0".into(),
             vision_pack_id: Some("mobileclip-s2-int8".into()),
-            safety_pack_id: "kchat-encoder-int4".into(),
+            safety_pack_id: "mmbert-safety-q4_k_m".into(),
             asr_pack_id: Some("whisper-base".into()),
             video_pack_id: Some("mobileclip-s2-int8".into()),
         },
@@ -1275,9 +1209,9 @@ fn get_device_profiles() -> Vec<DeviceProfileInfo> {
             name: "Galaxy A14 (4GB, Helio G80)".into(),
             tier: "Low".into(),
             platform: "android".into(),
-            model_pack_id: "ternary-bonsai-1.7b-q2_0".into(),
+            model_pack_id: "bonsai-1.7b-q1_0".into(),
             vision_pack_id: Some("mobileclip-s2-int8".into()),
-            safety_pack_id: "kchat-encoder-int4".into(),
+            safety_pack_id: "mmbert-safety-q4_k_m".into(),
             asr_pack_id: Some("whisper-tiny".into()),
             video_pack_id: Some("mobileclip-s2-int8".into()),
         },
@@ -1285,9 +1219,9 @@ fn get_device_profiles() -> Vec<DeviceProfileInfo> {
             name: "MacBook Pro M3 Max (36GB)".into(),
             tier: "High".into(),
             platform: "macos".into(),
-            model_pack_id: "ternary-bonsai-8b-mlx-2bit".into(),
+            model_pack_id: "bonsai-1.7b-mlx-1bit".into(),
             vision_pack_id: Some("mobileclip-s2-int8".into()),
-            safety_pack_id: "kchat-encoder-int8".into(),
+            safety_pack_id: "mmbert-safety-q4_k_m".into(),
             asr_pack_id: Some("whisper-base".into()),
             video_pack_id: Some("mobileclip-s2-int8".into()),
         },
@@ -1295,9 +1229,9 @@ fn get_device_profiles() -> Vec<DeviceProfileInfo> {
             name: "MacBook Air M2 (8GB)".into(),
             tier: "Low".into(),
             platform: "macos".into(),
-            model_pack_id: "ternary-bonsai-1.7b-mlx-2bit".into(),
+            model_pack_id: "bonsai-1.7b-mlx-1bit".into(),
             vision_pack_id: Some("mobileclip-s2-int8".into()),
-            safety_pack_id: "kchat-encoder-int4".into(),
+            safety_pack_id: "mmbert-safety-q4_k_m".into(),
             asr_pack_id: Some("whisper-tiny".into()),
             video_pack_id: Some("mobileclip-s2-int8".into()),
         },
@@ -1305,9 +1239,9 @@ fn get_device_profiles() -> Vec<DeviceProfileInfo> {
             name: "Intel NUC (8GB, i3)".into(),
             tier: "Low".into(),
             platform: "macos".into(),
-            model_pack_id: "ternary-bonsai-1.7b-q2_0".into(),
+            model_pack_id: "bonsai-1.7b-q1_0".into(),
             vision_pack_id: Some("mobileclip-s2-int8".into()),
-            safety_pack_id: "kchat-encoder-int4".into(),
+            safety_pack_id: "mmbert-safety-q4_k_m".into(),
             asr_pack_id: Some("whisper-tiny".into()),
             video_pack_id: Some("mobileclip-s2-int8".into()),
         },
@@ -1315,9 +1249,9 @@ fn get_device_profiles() -> Vec<DeviceProfileInfo> {
             name: "Windows RTX 4090 (32GB)".into(),
             tier: "High".into(),
             platform: "windows".into(),
-            model_pack_id: "ternary-bonsai-8b-q2_0".into(),
+            model_pack_id: "bonsai-1.7b-q1_0".into(),
             vision_pack_id: Some("mobileclip-s2-int8".into()),
-            safety_pack_id: "kchat-encoder-int8".into(),
+            safety_pack_id: "mmbert-safety-q4_k_m".into(),
             asr_pack_id: Some("whisper-base".into()),
             video_pack_id: Some("mobileclip-s2-int8".into()),
         },
@@ -1325,9 +1259,9 @@ fn get_device_profiles() -> Vec<DeviceProfileInfo> {
             name: "Windows Surface 8 (16GB)".into(),
             tier: "Low".into(),
             platform: "windows".into(),
-            model_pack_id: "ternary-bonsai-1.7b-q2_0".into(),
+            model_pack_id: "bonsai-1.7b-q1_0".into(),
             vision_pack_id: Some("mobileclip-s2-int8".into()),
-            safety_pack_id: "kchat-encoder-int4".into(),
+            safety_pack_id: "mmbert-safety-q4_k_m".into(),
             asr_pack_id: Some("whisper-tiny".into()),
             video_pack_id: Some("mobileclip-s2-int8".into()),
         },
@@ -1335,9 +1269,9 @@ fn get_device_profiles() -> Vec<DeviceProfileInfo> {
             name: "Windows Legacy (8GB, i5)".into(),
             tier: "Low".into(),
             platform: "windows".into(),
-            model_pack_id: "ternary-bonsai-1.7b-q2_0".into(),
+            model_pack_id: "bonsai-1.7b-q1_0".into(),
             vision_pack_id: Some("mobileclip-s2-int8".into()),
-            safety_pack_id: "kchat-encoder-int4".into(),
+            safety_pack_id: "mmbert-safety-q4_k_m".into(),
             asr_pack_id: Some("whisper-tiny".into()),
             video_pack_id: Some("mobileclip-s2-int8".into()),
         },
@@ -1345,15 +1279,95 @@ fn get_device_profiles() -> Vec<DeviceProfileInfo> {
 }
 
 // ---------------------------------------------------------------------------
+// LoRA adapter selection
+// ---------------------------------------------------------------------------
+
+/// Map a task category to the closest LoRA adapter family.
+/// All 15 categories are mapped (best-match approach).
+fn category_to_lora_family(category: &str) -> &'static str {
+    match category {
+        // Direct matches
+        "summarization" => "summarize_catchup",
+        "structured_output" => "extract_json",
+        "translation" => "rewrite_grammar",
+        "generation" => "doc_creative",
+
+        // Best-match mappings
+        "instruction_following" => "doc_creative",    // writing/instruction tasks
+        "multi_turn" => "summarize_catchup",           // conversation comprehension
+        "reasoning" => "summarize_catchup",            // text understanding
+        "code_generation" => "extract_json",           // structured output
+        "tool_use" => "extract_json",                  // structured output/JSON
+        "action" => "extract_json",                    // structured operations
+        "safety" => "rewrite_grammar",                 // text classification/editing
+        "context_retrieval" => "summarize_catchup",    // text understanding
+        "core" => "summarize_catchup",                 // general text tasks
+        "bindings" => "summarize_catchup",             // general text tasks
+        "wasm" => "rewrite_grammar",                   // text classification
+        _ => "summarize_catchup",                      // default fallback
+    }
+}
+
+/// Find the GGUF LoRA adapter path for a given family and language.
+fn find_lora_adapter(family: &str, lang: &str) -> Option<PathBuf> {
+    let pack_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../manifest/packs/bonsai-1.7b-q1_0/lora");
+    let adapter_path = pack_dir.join(format!("{}.{}", family, lang)).join("adapters.gguf");
+    if adapter_path.exists() {
+        Some(adapter_path)
+    } else {
+        None
+    }
+}
+
+/// Find the MLX LoRA adapter path for a given family and language.
+fn find_mlx_lora_adapter(family: &str, lang: &str) -> Option<PathBuf> {
+    let pack_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../manifest/packs/bonsai-1.7b-mlx-1bit/lora");
+    let adapter_path = pack_dir.join(format!("{}.{}", family, lang));
+    if adapter_path.join("adapters.safetensors").exists() {
+        Some(adapter_path)
+    } else {
+        None
+    }
+}
+
+/// Group task indices by their LoRA family (to minimize server restarts).
+fn group_tasks_by_lora(tasks: &[TaskSpec]) -> Vec<(String, Vec<usize>)> {
+    let mut groups: HashMap<String, Vec<usize>> = HashMap::new();
+    for (idx, task) in tasks.iter().enumerate() {
+        let family = category_to_lora_family(&task.category);
+        groups.entry(family.to_string()).or_default().push(idx);
+    }
+    let mut result: Vec<(String, Vec<usize>)> = groups.into_iter().collect();
+    result.sort_by_key(|(family, _)| family.clone());
+    result
+}
+
+// ---------------------------------------------------------------------------
 // Eval runner
 // ---------------------------------------------------------------------------
 
 pub fn run() {
+    run_with_options(false);
+}
+
+/// Run per-device eval with optional old-approach comparison.
+/// When compare_old is true, runs both the old tier-based models (no LoRA)
+/// and the new unified Q1_0+LoRA approach, then prints a side-by-side comparison.
+pub fn run_with_options(compare_old: bool) {
     println!();
-    println!("╔══════════════════════════════════════════════════════════════════════════════╗");
-    println!("║  PER-DEVICE REAL-WORLD EVAL                                                  ║");
-    println!("║  12 Profiles × 150 Tasks × Real Model Inference                             ║");
-    println!("╚══════════════════════════════════════════════════════════════════════════════╝");
+    if compare_old {
+        println!("╔══════════════════════════════════════════════════════════════════════════════╗");
+        println!("║  PER-DEVICE EVAL: OLD vs NEW COMPARISON                                      ║");
+        println!("║  Old: Per-tier models (no LoRA)            vs  New: Unified 1bit + LoRA      ║");
+        println!("╚══════════════════════════════════════════════════════════════════════════════╝");
+    } else {
+        println!("╔══════════════════════════════════════════════════════════════════════════════╗");
+        println!("║  PER-DEVICE REAL-WORLD EVAL                                                  ║");
+        println!("║  12 Profiles × 251 Tasks × Real Model Inference (Q1_0 + LoRA)                ║");
+        println!("╚══════════════════════════════════════════════════════════════════════════════╝");
+    }
     println!();
 
     // Load dataset
@@ -1377,12 +1391,37 @@ pub fn run() {
     println!("Dataset: {} v{} ({} tasks)", dataset.name, dataset.version, dataset.tasks.len());
     println!();
 
-    // Get device profiles
-    let profiles = get_device_profiles();
+    // Run new approach (unified Q1_0 + LoRA)
+    let new_profiles = get_device_profiles();
+    let (new_judgments, new_results) = run_eval_pass(&dataset, &new_profiles, "NEW", 18890);
+
+    if compare_old {
+        // Run old approach (tier-based models, no LoRA)
+        let old_profiles = get_old_device_profiles();
+        let (old_judgments, old_results) = run_eval_pass(&dataset, &old_profiles, "OLD", 19000);
+
+        // Print comparison
+        print_comparison_report(&old_judgments, &new_judgments, &dataset, &old_results, &new_results);
+    } else {
+        print_report(&new_judgments, &dataset);
+    }
+}
+
+/// Run a single eval pass with the given profiles.
+fn run_eval_pass(
+    dataset: &MultitaskDataset,
+    profiles: &[DeviceProfileInfo],
+    label: &str,
+    base_port: u16,
+) -> (Vec<DeviceJudgment>, HashMap<String, Vec<TaskResult>>) {
+    println!("═══════════════════════════════════════════════════════════════════════════════");
+    println!("  {} APPROACH", label);
+    println!("═══════════════════════════════════════════════════════════════════════════════");
+    println!();
 
     // Group profiles by unique model
     let mut model_groups: HashMap<String, Vec<DeviceProfileInfo>> = HashMap::new();
-    for p in &profiles {
+    for p in profiles {
         model_groups
             .entry(p.model_pack_id.clone())
             .or_default()
@@ -1393,91 +1432,94 @@ pub fn run() {
     let mut sorted_models: Vec<(String, Vec<DeviceProfileInfo>)> = model_groups.into_iter().collect();
     sorted_models.sort_by_key(|(pack_id, _)| pack_id.clone());
 
-    // Run eval for each unique model
     let mut all_results: HashMap<String, Vec<TaskResult>> = HashMap::new();
     let mut model_errors: HashMap<String, String> = HashMap::new();
-    let base_port: u16 = 18890;
 
-    for (idx, (pack_id, group_profiles)) in sorted_models.iter().enumerate() {
+    for (idx, (pack_id, _group_profiles)) in sorted_models.iter().enumerate() {
         let port = base_port + idx as u16;
-        let config = match get_model_config(pack_id, port) {
-            Some(c) => c,
-            None => {
-                let err = format!("model file not found for {}", pack_id);
-                eprintln!("  SKIP: {}", err);
-                model_errors.insert(pack_id.clone(), err);
-                continue;
-            }
-        };
 
-        let server_type_name = match config.server_type {
-            ServerType::LlamaServer => "llama-server",
-            ServerType::MlxServer => "kchat-mlx-server",
-        };
+        // Check if this pack supports LoRA
+        let use_lora = pack_id == "bonsai-1.7b-q1_0" || pack_id == "bonsai-1.7b-mlx-1bit";
 
-        println!("┌──────────────────────────────────────────────────────────────────────────────┐");
-        println!("│ Model: {} ({})", config.display_name, server_type_name);
-        println!("│  Pack: {}  Port: {}", pack_id, port);
-        println!("│  Path: {}", config.model_path.display());
-        println!("├──────────────────────────────────────────────────────────────────────────────┤");
+        if use_lora {
+            // Run with LoRA: group tasks by LoRA family, restart server per family
+            run_model_with_lora(pack_id, port, dataset, &mut all_results, &mut model_errors);
+        } else {
+            // Run without LoRA (old approach or MLX)
+            let config = match get_model_config(pack_id, port) {
+                Some(c) => c,
+                None => {
+                    let err = format!("model file not found for {}", pack_id);
+                    eprintln!("  SKIP: {}", err);
+                    model_errors.insert(pack_id.clone(), err);
+                    continue;
+                }
+            };
 
-        // Start server
-        print!("│  Starting server... ");
-        std::io::stdout().flush().ok();
+            let server_type_name = match config.server_type {
+                ServerType::LlamaServer => "llama-server",
+                ServerType::MlxServer => "kchat-mlx-server",
+            };
 
-        let mut server = match config.server_type {
-            ServerType::LlamaServer => start_llama_server(&config),
-            ServerType::MlxServer => start_mlx_server(&config),
-        };
+            println!("┌──────────────────────────────────────────────────────────────────────────────┐");
+            println!("│ Model: {} ({})", config.display_name, server_type_name);
+            println!("│  Pack: {}  Port: {}", pack_id, port);
+            println!("│  Path: {}", config.model_path.display());
+            println!("├──────────────────────────────────────────────────────────────────────────────┤");
 
-        match &server {
-            Ok(s) => {
-                println!("OK (port {})", s.port);
-            }
-            Err(e) => {
-                println!("FAILED");
-                eprintln!("│  ERROR: {}", e);
-                model_errors.insert(pack_id.clone(), e.clone());
-                println!("└──────────────────────────────────────────────────────────────────────────────┘");
-                println!();
-                continue;
-            }
-        }
-
-        // Run tasks
-        let server_url = format!("http://127.0.0.1:{}", port);
-        let mut results = Vec::new();
-
-        for (task_idx, task) in dataset.tasks.iter().enumerate() {
-            print!(
-                "\r│  Task {:>2}/{} [{}] {:<30} ",
-                task_idx + 1,
-                dataset.tasks.len(),
-                task.category,
-                &task.id[..task.id.len().min(20)]
-            );
+            print!("│  Starting server... ");
             std::io::stdout().flush().ok();
 
-            let result = run_task(&server_url, task, &config.server_type);
-            results.push(result);
-        }
+            let mut server = match config.server_type {
+                ServerType::LlamaServer => start_llama_server(&config),
+                ServerType::MlxServer => start_mlx_server(&config),
+            };
 
-        println!();
-        println!("│  {} tasks completed", results.len());
-        println!("└──────────────────────────────────────────────────────────────────────────────┘");
-        println!();
+            match &server {
+                Ok(s) => println!("OK (port {})", s.port),
+                Err(e) => {
+                    println!("FAILED");
+                    eprintln!("│  ERROR: {}", e);
+                    model_errors.insert(pack_id.clone(), e.clone());
+                    println!("└──────────────────────────────────────────────────────────────────────────────┘");
+                    println!();
+                    continue;
+                }
+            }
 
-        all_results.insert(pack_id.clone(), results);
+            let server_url = format!("http://127.0.0.1:{}", port);
+            let mut results = Vec::new();
 
-        // Stop server
-        if let Ok(mut s) = server.as_mut() {
-            s.stop();
+            for (task_idx, task) in dataset.tasks.iter().enumerate() {
+                print!(
+                    "\r│  Task {:>3}/{} [{}] {:<30} ",
+                    task_idx + 1,
+                    dataset.tasks.len(),
+                    task.category,
+                    &task.id[..task.id.len().min(20)]
+                );
+                std::io::stdout().flush().ok();
+
+                let result = run_task(&server_url, task, &config.server_type);
+                results.push(result);
+            }
+
+            println!();
+            println!("│  {} tasks completed", results.len());
+            println!("└──────────────────────────────────────────────────────────────────────────────┘");
+            println!();
+
+            all_results.insert(pack_id.clone(), results);
+
+            if let Ok(mut s) = server.as_mut() {
+                s.stop();
+            }
         }
     }
 
     // Produce judgments for each profile
     let mut judgments = Vec::new();
-    for profile in &profiles {
+    for profile in profiles {
         let results = match all_results.get(&profile.model_pack_id) {
             Some(r) => r,
             None => {
@@ -1507,12 +1549,387 @@ pub fn run() {
             }
         };
 
-        let judgment = compute_judgment(profile, results, &dataset);
+        let judgment = compute_judgment(profile, results, dataset);
         judgments.push(judgment);
     }
 
-    // Print report
-    print_report(&judgments, &dataset);
+    (judgments, all_results)
+}
+
+/// Run a model with LoRA adapters: group tasks by LoRA family, restart server per family.
+fn run_model_with_lora(
+    pack_id: &str,
+    base_port: u16,
+    dataset: &MultitaskDataset,
+    all_results: &mut HashMap<String, Vec<TaskResult>>,
+    model_errors: &mut HashMap<String, String>,
+) {
+    let lora_groups = group_tasks_by_lora(&dataset.tasks);
+
+    // Determine server type and LoRA adapter finder based on pack
+    let is_mlx = pack_id == "bonsai-1.7b-mlx-1bit";
+    let (server_label, server_type) = if is_mlx {
+        ("Bonsai-1.7B-MLX-1bit + LoRA (Swift mlx-server)", ServerType::MlxServer)
+    } else {
+        ("Bonsai-1.7B-Q1_0 + LoRA (llama-server)", ServerType::LlamaServer)
+    };
+
+    println!("┌──────────────────────────────────────────────────────────────────────────────┐");
+    println!("│ Model: {}", server_label);
+    println!("│  Pack: {}  Port: {}+", pack_id, base_port);
+    println!("│  LoRA groups: {}", lora_groups.len());
+    println!("├──────────────────────────────────────────────────────────────────────────────┤");
+
+    // Initialize results array in original task order
+    let mut results: Vec<Option<TaskResult>> = vec![None; dataset.tasks.len()];
+
+    for (group_idx, (family, task_indices)) in lora_groups.iter().enumerate() {
+        let port = base_port + group_idx as u16;
+        let lora_path = if is_mlx {
+            find_mlx_lora_adapter(family, "en")
+        } else {
+            find_lora_adapter(family, "en")
+        };
+
+        println!("│  LoRA group {}/{}: {} ({} tasks)", group_idx + 1, lora_groups.len(), family, task_indices.len());
+
+        let config = match get_model_config_with_lora(pack_id, port, lora_path.clone()) {
+            Some(c) => c,
+            None => {
+                let err = format!("model file not found for {}", pack_id);
+                eprintln!("│  SKIP: {}", err);
+                model_errors.insert(pack_id.to_string(), err);
+                continue;
+            }
+        };
+
+        let lora_label = match &lora_path {
+            Some(p) => format!("LoRA: {}", p.file_name().unwrap_or_default().to_string_lossy()),
+            None => "LoRA: none (base model)".to_string(),
+        };
+        println!("│  {}", lora_label);
+
+        print!("│  Starting server... ");
+        std::io::stdout().flush().ok();
+
+        let server_result = if is_mlx {
+            start_mlx_server(&config)
+        } else {
+            start_llama_server(&config)
+        };
+
+        let mut server = match server_result {
+            Ok(s) => {
+                println!("OK (port {})", s.port);
+                s
+            }
+            Err(e) => {
+                println!("FAILED");
+                eprintln!("│  ERROR: {}", e);
+                model_errors.insert(pack_id.to_string(), e);
+                continue;
+            }
+        };
+
+        let server_url = format!("http://127.0.0.1:{}", port);
+
+        for (i, &task_idx) in task_indices.iter().enumerate() {
+            let task = &dataset.tasks[task_idx];
+            print!(
+                "\r│  Task {}/{} [{}] {:<30} ",
+                i + 1,
+                task_indices.len(),
+                task.category,
+                &task.id[..task.id.len().min(20)]
+            );
+            std::io::stdout().flush().ok();
+
+            let result = run_task(&server_url, task, &server_type);
+            results[task_idx] = Some(result);
+        }
+
+        println!();
+        server.stop();
+        std::thread::sleep(std::time::Duration::from_secs(1));
+    }
+
+    println!("├──────────────────────────────────────────────────────────────────────────────┤");
+
+    // Collect results in order
+    let mut final_results = Vec::new();
+    for r in results {
+        if let Some(result) = r {
+            final_results.push(result);
+        } else {
+            // Task wasn't run (shouldn't happen) — add a failed result
+            final_results.push(TaskResult {
+                task_id: "missing".into(),
+                category: "unknown".into(),
+                success: false,
+                quality_score: 0.0,
+                quality_pass: false,
+                ttft_ms: 0,
+                decode_rate_tps: 0.0,
+                output_tokens: 0,
+                output_text: String::new(),
+                error: Some("task not run".into()),
+            });
+        }
+    }
+
+    println!("│  {} tasks completed", final_results.len());
+    println!("└──────────────────────────────────────────────────────────────────────────────┘");
+    println!();
+
+    all_results.insert(pack_id.to_string(), final_results);
+}
+
+/// Old device profiles (tier-based model assignment, no LoRA) for comparison.
+fn get_old_device_profiles() -> Vec<DeviceProfileInfo> {
+    vec![
+        // Apple Silicon — same as new (bonsai-1.7b-mlx-1bit)
+        DeviceProfileInfo {
+            name: "iPhone 15 Pro (8GB, A17 Pro)".into(),
+            tier: "High".into(),
+            platform: "ios".into(),
+            model_pack_id: "bonsai-1.7b-mlx-1bit".into(),
+            vision_pack_id: Some("mobileclip-s2-int8".into()),
+            safety_pack_id: "mmbert-safety-q4_k_m".into(),
+            asr_pack_id: Some("whisper-base".into()),
+            video_pack_id: Some("mobileclip-s2-int8".into()),
+        },
+        DeviceProfileInfo {
+            name: "iPhone 14 (6GB, A15)".into(),
+            tier: "Medium".into(),
+            platform: "ios".into(),
+            model_pack_id: "bonsai-1.7b-mlx-1bit".into(),
+            vision_pack_id: Some("mobileclip-s2-int8".into()),
+            safety_pack_id: "mmbert-safety-q4_k_m".into(),
+            asr_pack_id: Some("whisper-base".into()),
+            video_pack_id: Some("mobileclip-s2-int8".into()),
+        },
+        DeviceProfileInfo {
+            name: "iPhone SE 2022 (4GB, A15)".into(),
+            tier: "Low".into(),
+            platform: "ios".into(),
+            model_pack_id: "bonsai-1.7b-mlx-1bit".into(),
+            vision_pack_id: Some("mobileclip-s2-int8".into()),
+            safety_pack_id: "mmbert-safety-q4_k_m".into(),
+            asr_pack_id: Some("whisper-tiny".into()),
+            video_pack_id: Some("mobileclip-s2-int8".into()),
+        },
+        // Non-Apple-Silicon — unified model (same as new architecture)
+        DeviceProfileInfo {
+            name: "Pixel 8 Pro (12GB, Tensor G3)".into(),
+            tier: "High".into(),
+            platform: "android".into(),
+            model_pack_id: "bonsai-1.7b-q1_0".into(),
+            vision_pack_id: Some("mobileclip-s2-int8".into()),
+            safety_pack_id: "mmbert-safety-q4_k_m".into(),
+            asr_pack_id: Some("whisper-base".into()),
+            video_pack_id: Some("mobileclip-s2-int8".into()),
+        },
+        DeviceProfileInfo {
+            name: "Pixel 7a (8GB, Tensor G2)".into(),
+            tier: "Medium".into(),
+            platform: "android".into(),
+            model_pack_id: "bonsai-1.7b-q1_0".into(),
+            vision_pack_id: Some("mobileclip-s2-int8".into()),
+            safety_pack_id: "mmbert-safety-q4_k_m".into(),
+            asr_pack_id: Some("whisper-base".into()),
+            video_pack_id: Some("mobileclip-s2-int8".into()),
+        },
+        DeviceProfileInfo {
+            name: "Galaxy A14 (4GB, Helio G80)".into(),
+            tier: "Low".into(),
+            platform: "android".into(),
+            model_pack_id: "bonsai-1.7b-q1_0".into(),
+            vision_pack_id: Some("mobileclip-s2-int8".into()),
+            safety_pack_id: "mmbert-safety-q4_k_m".into(),
+            asr_pack_id: Some("whisper-tiny".into()),
+            video_pack_id: Some("mobileclip-s2-int8".into()),
+        },
+        DeviceProfileInfo {
+            name: "MacBook Pro M3 Max (36GB)".into(),
+            tier: "High".into(),
+            platform: "macos".into(),
+            model_pack_id: "bonsai-1.7b-mlx-1bit".into(),
+            vision_pack_id: Some("mobileclip-s2-int8".into()),
+            safety_pack_id: "mmbert-safety-q4_k_m".into(),
+            asr_pack_id: Some("whisper-base".into()),
+            video_pack_id: Some("mobileclip-s2-int8".into()),
+        },
+        DeviceProfileInfo {
+            name: "MacBook Air M2 (8GB)".into(),
+            tier: "Low".into(),
+            platform: "macos".into(),
+            model_pack_id: "bonsai-1.7b-mlx-1bit".into(),
+            vision_pack_id: Some("mobileclip-s2-int8".into()),
+            safety_pack_id: "mmbert-safety-q4_k_m".into(),
+            asr_pack_id: Some("whisper-tiny".into()),
+            video_pack_id: Some("mobileclip-s2-int8".into()),
+        },
+        DeviceProfileInfo {
+            name: "Intel NUC (8GB, i3)".into(),
+            tier: "Low".into(),
+            platform: "macos".into(),
+            model_pack_id: "bonsai-1.7b-q1_0".into(),
+            vision_pack_id: Some("mobileclip-s2-int8".into()),
+            safety_pack_id: "mmbert-safety-q4_k_m".into(),
+            asr_pack_id: Some("whisper-tiny".into()),
+            video_pack_id: Some("mobileclip-s2-int8".into()),
+        },
+        DeviceProfileInfo {
+            name: "Windows RTX 4090 (32GB)".into(),
+            tier: "High".into(),
+            platform: "windows".into(),
+            model_pack_id: "bonsai-1.7b-q1_0".into(),
+            vision_pack_id: Some("mobileclip-s2-int8".into()),
+            safety_pack_id: "mmbert-safety-q4_k_m".into(),
+            asr_pack_id: Some("whisper-base".into()),
+            video_pack_id: Some("mobileclip-s2-int8".into()),
+        },
+        DeviceProfileInfo {
+            name: "Windows Surface 8 (16GB)".into(),
+            tier: "Low".into(),
+            platform: "windows".into(),
+            model_pack_id: "bonsai-1.7b-q1_0".into(),
+            vision_pack_id: Some("mobileclip-s2-int8".into()),
+            safety_pack_id: "mmbert-safety-q4_k_m".into(),
+            asr_pack_id: Some("whisper-tiny".into()),
+            video_pack_id: Some("mobileclip-s2-int8".into()),
+        },
+        DeviceProfileInfo {
+            name: "Windows Legacy (8GB, i5)".into(),
+            tier: "Low".into(),
+            platform: "windows".into(),
+            model_pack_id: "bonsai-1.7b-q1_0".into(),
+            vision_pack_id: Some("mobileclip-s2-int8".into()),
+            safety_pack_id: "mmbert-safety-q4_k_m".into(),
+            asr_pack_id: Some("whisper-tiny".into()),
+            video_pack_id: Some("mobileclip-s2-int8".into()),
+        },
+    ]
+}
+
+/// Print a side-by-side comparison report of old vs new approach.
+fn print_comparison_report(
+    old_judgments: &[DeviceJudgment],
+    new_judgments: &[DeviceJudgment],
+    dataset: &MultitaskDataset,
+    _old_results: &HashMap<String, Vec<TaskResult>>,
+    _new_results: &HashMap<String, Vec<TaskResult>>,
+) {
+    println!();
+    println!("╔══════════════════════════════════════════════════════════════════════════════╗");
+    println!("║  COMPARISON: OLD (tier-based) vs NEW (Q1_0 + LoRA)                          ║");
+    println!("╚══════════════════════════════════════════════════════════════════════════════╝");
+    println!();
+
+    // Build a lookup from old judgments by profile name
+    let old_by_name: HashMap<&str, &DeviceJudgment> = old_judgments
+        .iter()
+        .map(|j| (j.profile_name.as_str(), j))
+        .collect();
+
+    // Summary table
+    println!("┌──────────────────────────────────────────────────────────────────────────────┐");
+    println!("│ {:<30} │ {:<6} │ {:<8} │ {:<8} │ {:<8} │", "Profile", "Tier", "Old Q", "New Q", "Delta");
+    println!("├──────────────────────────────────────────────────────────────────────────────┤");
+
+    let mut old_total_q = 0.0;
+    let mut new_total_q = 0.0;
+    let mut count = 0;
+
+    for new_j in new_judgments {
+        let old_j = old_by_name.get(new_j.profile_name.as_str());
+        let old_q = old_j.map(|j| j.quality_score_avg).unwrap_or(0.0);
+        let new_q = new_j.quality_score_avg;
+        let delta = new_q - old_q;
+        let delta_str = if delta >= 0.0 {
+            format!("+{:.3}", delta)
+        } else {
+            format!("{:.3}", delta)
+        };
+
+        println!("│ {:<30} │ {:<6} │ {:>8.3} │ {:>8.3} │ {:>8} │",
+            &new_j.profile_name[..new_j.profile_name.len().min(30)],
+            new_j.tier, old_q, new_q, delta_str);
+
+        old_total_q += old_q;
+        new_total_q += new_q;
+        count += 1;
+    }
+
+    println!("├──────────────────────────────────────────────────────────────────────────────┤");
+    let avg_old = if count > 0 { old_total_q / count as f64 } else { 0.0 };
+    let avg_new = if count > 0 { new_total_q / count as f64 } else { 0.0 };
+    let avg_delta = avg_new - avg_old;
+    let delta_str = if avg_delta >= 0.0 {
+        format!("+{:.3}", avg_delta)
+    } else {
+        format!("{:.3}", avg_delta)
+    };
+    println!("│ {:<30} │ {:<6} │ {:>8.3} │ {:>8.3} │ {:>8} │", "AVERAGE", "", avg_old, avg_new, delta_str);
+    println!("└──────────────────────────────────────────────────────────────────────────────┘");
+    println!();
+
+    // Per-category comparison
+    println!("┌──────────────────────────────────────────────────────────────────────────────┐");
+    println!("│ Per-category quality comparison (non-Apple-Silicon profiles only)            │");
+    println!("├──────────────────────────────────────────────────────────────────────────────┤");
+
+    // Get non-Apple-Silicon profiles from new judgments
+    let non_apple_profiles: Vec<&DeviceJudgment> = new_judgments
+        .iter()
+        .filter(|j| j.model.contains("q1_0") || j.model.contains("q2_0"))
+        .collect();
+
+    // Collect all categories
+    let mut categories: Vec<String> = non_apple_profiles
+        .iter()
+        .flat_map(|j| j.per_category.keys())
+        .map(|s| s.clone())
+        .collect();
+    categories.sort();
+    categories.dedup();
+
+    println!("│ {:<25} │ {:>10} │ {:>10} │ {:>10} │", "Category", "Old Pass", "New Pass", "Delta");
+    println!("├──────────────────────────────────────────────────────────────────────────────┤");
+
+    for cat in &categories {
+        let old_pass: usize = old_judgments
+            .iter()
+            .filter(|j| j.model.contains("q2_0"))
+            .filter_map(|j| j.per_category.get(cat))
+            .map(|(p, _)| p)
+            .sum();
+        let new_pass: usize = non_apple_profiles
+            .iter()
+            .filter_map(|j| j.per_category.get(cat))
+            .map(|(p, _)| p)
+            .sum();
+        let delta = new_pass as i64 - old_pass as i64;
+        let delta_str = if delta >= 0 { format!("+{}", delta) } else { format!("{}", delta) };
+        println!("│ {:<25} │ {:>10} │ {:>10} │ {:>10} │", cat, old_pass, new_pass, delta_str);
+    }
+    println!("└──────────────────────────────────────────────────────────────────────────────┘");
+    println!();
+
+    // Overall judgment
+    let winner = if avg_delta > 0.01 {
+        "NEW (Q1_0 + LoRA) WINS"
+    } else if avg_delta < -0.01 {
+        "OLD (tier-based) WINS"
+    } else {
+        "TIE (within 1%)"
+    };
+
+    println!("╔══════════════════════════════════════════════════════════════════════════════╗");
+    println!("║  RESULT: {}  (avg delta: {:+.4})", winner, avg_delta);
+    println!("║  Old avg quality: {:.4}  |  New avg quality: {:.4}", avg_old, avg_new);
+    println!("║  Tasks per profile: {}  |  Profiles: {}", dataset.tasks.len(), count);
+    println!("╚══════════════════════════════════════════════════════════════════════════════╝");
 }
 
 fn run_task(server_url: &str, task: &TaskSpec, server_type: &ServerType) -> TaskResult {

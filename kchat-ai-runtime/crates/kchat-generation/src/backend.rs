@@ -254,17 +254,17 @@ mod tests {
 
     #[test]
     fn test_backend_selection_ios() {
-        // Low tier on iOS: MLX (for Bonsai-1.7B-MLX)
+        // Low tier on iOS: MLX (for Bonsai-1.7B-MLX-1bit)
         assert_eq!(
             BackendType::select("ios", DeviceTier::Low, "aarch64"),
             Some(BackendType::Mlx)
         );
-        // Medium tier on iOS: MLX (for Bonsai-4B-MLX)
+        // Medium tier on iOS: MLX (for Bonsai-1.7B-MLX-1bit, unified)
         assert_eq!(
             BackendType::select("ios", DeviceTier::Medium, "aarch64"),
             Some(BackendType::Mlx)
         );
-        // High tier on iOS: MLX (for Bonsai-8B-MLX)
+        // High tier on iOS: MLX (for Bonsai-1.7B-MLX-1bit, unified)
         assert_eq!(
             BackendType::select("ios", DeviceTier::High, "aarch64"),
             Some(BackendType::Mlx)
@@ -273,17 +273,17 @@ mod tests {
 
     #[test]
     fn test_backend_selection_macos() {
-        // Low tier on macOS Apple Silicon: MLX (for Bonsai-1.7B-MLX)
+        // Low tier on macOS Apple Silicon: MLX (for Bonsai-1.7B-MLX-1bit)
         assert_eq!(
             BackendType::select("macos", DeviceTier::Low, "aarch64"),
             Some(BackendType::Mlx)
         );
-        // Medium tier on macOS Apple Silicon: MLX (for Bonsai-4B-MLX)
+        // Medium tier on macOS Apple Silicon: MLX (for Bonsai-1.7B-MLX-1bit, unified)
         assert_eq!(
             BackendType::select("macos", DeviceTier::Medium, "aarch64"),
             Some(BackendType::Mlx)
         );
-        // High tier on macOS Apple Silicon: MLX (for Bonsai-8B-MLX)
+        // High tier on macOS Apple Silicon: MLX (for Bonsai-1.7B-MLX-1bit, unified)
         assert_eq!(
             BackendType::select("macos", DeviceTier::High, "aarch64"),
             Some(BackendType::Mlx)
@@ -314,7 +314,7 @@ mod tests {
 
     #[test]
     fn test_backend_selection_high_tier_apple_uses_mlx() {
-        // High tier on Apple platforms should use MLX for Bonsai-8B-MLX
+        // High tier on Apple platforms should use MLX for Bonsai-1.7B-MLX-1bit
         assert_eq!(
             BackendType::select("ios", DeviceTier::High, "aarch64"),
             Some(BackendType::Mlx)

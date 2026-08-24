@@ -8,6 +8,7 @@ authors.workspace = true
 [features]
 default = []
 onnx-runtime = ["dep:ort", "dep:tokenizers", "dep:ndarray"]
+gguf-runtime = ["dep:reqwest", "dep:serde_json"]
 domain-adapters = ["dep:rusqlite"]
 
 [dependencies]
@@ -21,6 +22,10 @@ parking_lot = { workspace = true }
 ort = { version = "=2.0.0-rc.10", default-features = false, features = ["load-dynamic", "ndarray"], optional = true }
 tokenizers = { version = "0.21", default-features = false, features = ["fancy-regex"], optional = true }
 ndarray = { version = "0.16", optional = true }
+
+# Optional GGUF deps (for llama-server embedding backend)
+reqwest = { version = "0.12", default-features = false, features = ["json", "blocking"], optional = true }
+serde_json = { workspace = true, optional = true }
 
 # Optional domain-adapter persistence
 rusqlite = { version = "0.36", features = ["bundled-sqlcipher-vendored-openssl"], optional = true }

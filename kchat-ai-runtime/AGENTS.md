@@ -88,14 +88,13 @@ To run generation tests, either:
 ### Per-Device Eval Setup
 
 The `--perdevice` mode tests each of the 12 device profiles against its assigned
-real model (6 unique generative models), running 150 tasks across 15 categories:
+real model (2 generative models, unified across all tiers), running 150 tasks across 15 categories:
 
 - **15 task categories**: summarization, translation, structured output, tool use,
   multi-turn conversation, code generation, reasoning, instruction following,
   safety, context retrieval, action, core, generation, WASM, bindings
-- **6 unique generative models**: ternary-bonsai-1.7b-mlx-2bit, ternary-bonsai-1.7b-q2_0,
-  ternary-bonsai-4b-mlx-2bit, ternary-bonsai-4b-q2_0, ternary-bonsai-8b-mlx-2bit,
-  ternary-bonsai-8b-q2_0
+- **2 generative models**: bonsai-1.7b-mlx-1bit (Apple Silicon, 269MB),
+  bonsai-1.7b-q1_0 (Android/Windows/Intel, 248MB)
 - **Non-generative models per profile**: vision (mobileclip-s2-int8),
   safety encoder (kchat-encoder-int4), ASR (whisper-tiny/base),
   video (mobileclip-s2-int8, same model as vision)
@@ -118,8 +117,27 @@ To build the Swift MLX server:
 cd swift/kchat-mlx-server && swift build -c release
 ```
 
+The Swift MLX server uses the PrismML mlx-swift fork (branch: `v0.31.6_prism`)
+which adds 1-bit quantization Metal kernels for Bonsai models. The metallib
+(Metal shader library) must be built separately with CMake and copied next to
+the binary:
+```bash
+# Build metallib (one-time, after swift package resolve)
+cd .build/checkouts/mlx-swift/Source/Cmlx/mlx
+mkdir -p build && cd build
+cmake .. -DMLX_METAL_JIT=ON -DMACOS_VERSION=14.0
+make -j10 mlx-metallib
+cp mlx/backend/metal/kernels/mlx.metallib ../../../../../../.build/release/
+```
+
+The Swift server supports 1-bit (`bonsai-1.7b-mlx-1bit`) and 2-bit
+(`Ternary-Bonsai-1.7B-mlx-2bit`) MLX models. The 1-bit model runs at ~22 tok/s
+and the 2-bit at ~11 tok/s on M5.
+
 If the Swift binary is not available, the harness automatically falls back to
 `swift/kchat-mlx-server/kchat_mlx_server.py` (requires `pip install mlx-lm`).
+Note: the Python fallback uses official Apple MLX which does NOT support 1-bit
+quantization — only the Swift server with the PrismML fork can run 1-bit models.
 
 ## Architecture
 
@@ -129,11 +147,12 @@ The workspace is organized into 10 crates + 1 Go sidecar following the 4-plane a
   device tier selection, scheduler, signed manifest manager, telemetry,
   model manager (CDN download, LRU cache, mmap), resource governor,
   model registry (registry.toml). Foundation for all other crates.
-- **kchat-encoder**: Unified multi-task ONNX encoder — XLM-RoBERTa-base model
-  shared across safety classification (10 classes), text embedding (768-dim),
-  and cross-encoder reranking. Single model replaces separate safety-classifier,
-  e5-small embedding, and MiniLM reranker packs. Feature-gated behind
-  `onnx-runtime`; includes mock implementations for testing without ONNX.
+- **kchat-encoder**: Unified multi-task encoder — supports both ONNX (XLM-RoBERTa-base)
+  and GGUF (mmBERT-small) backends. Shared across safety classification (17 classes
+  with GGUF, 10 with ONNX), text embedding (384-dim GGUF, 768-dim ONNX), and
+  cross-encoder reranking. GGUF backend uses llama-server --embedding HTTP API.
+  Feature-gated behind `onnx-runtime` and `gguf-runtime`; includes mock
+  implementations for testing without either backend.
 - **kchat-safety**: Deterministic safety plane — NFKC normalization, PII/scam/
   URL detectors, signed policy packs (Ed25519), encoder/SLM escalation,
   unified kchat-encoder for safety classification (INT8/INT4), media descriptor
@@ -145,10 +164,10 @@ The workspace is organized into 10 crates + 1 Go sidecar following the 4-plane a
   SLM rate limiting, canonical JSON, revocation lists, anti-misuse validation.
   Embedded skill-pack data (include_str!): global baselines, 38 communities,
   62 jurisdictions, prompts, transliteration maps, vision prototypes, adversarial corpus.
-  Works on ALL devices including low-tier (no generative model) and WASM (deterministic only).
+  Works on ALL devices including low-tier and WASM (deterministic only).
 - **kchat-context**: Private context plane — SQLCipher encrypted store, FTS5
   BM25 retrieval, per-scope XChaCha20-Poly1305 encryption, provenance bundles,
-  dense embeddings (kchat-encoder 768-dim ONNX + fallback), cross-encoder reranker (kchat-encoder).
+  dense embeddings (kchat-encoder 384-dim GGUF or 768-dim ONNX + fallback), cross-encoder reranker (kchat-encoder).
 - **kchat-generation**: Grammar-constrained generative plane — prompt templates,
   JSON Schema/regex/Lark grammar validation (real Lark parser), backend
   adapters (llama.cpp via llama-cpp-2 with Metal/Vulkan/Cuda), model lifecycle
@@ -289,35 +308,47 @@ The `ImageSearchRegistry` merges results across providers with:
   - Guardrail eval reports per-category breakdown, per-path latency (det vs enc), and applies jurisdiction severity floors (skill-pack overlay)
   - Real model: Ternary-Bonsai-1.7B Q2_0 via llama-server (Metal), ~130 tok/s, 30ms TTFT
 - **Go server offload: 7 tests, all passing**
-- **Per-device eval: 12 profiles × 150 tasks = 1800 task runs (6 unique generative models)**
+- **Per-device eval: 12 profiles × 150 tasks = 1800 task runs (2 generative models, unified)**
   - 15 task categories: summarization, translation, structured output, tool use,
     multi-turn, code generation, reasoning, instruction following, safety,
     context retrieval, action, core, generation, WASM, bindings
   - Multilingual: EN, VI, JA, KO, ZH, ES, AR, DE, HI, FR + mixed-language
   - Judgment: Pass (≥75%), Marginal (50-74%), Fail (<50%)
-  - 6 unique generative models: ternary-bonsai-1.7b-mlx-2bit, ternary-bonsai-1.7b-q2_0,
-    ternary-bonsai-4b-mlx-2bit, ternary-bonsai-4b-q2_0, ternary-bonsai-8b-mlx-2bit,
-    ternary-bonsai-8b-q2_0
+  - 2 generative models: bonsai-1.7b-mlx-1bit (Apple Silicon, 269MB),
+    bonsai-1.7b-q1_0 (Android/Windows/Intel, 248MB)
   - Also tracks per-profile: vision (mobileclip-s2-int8), safety encoder (INT4),
     ASR (whisper-tiny/base), and video (mobileclip-s2-int8, same as vision) model assignments
 
-## Model Registry (11 packs)
+## Model Registry (13 packs)
 
 | Pack ID | Type | Min Tier | Size | Quant | Backend | Platform | SHA-256 |
 |---------|------|----------|------|-------|---------|----------|---------|
-| ternary-bonsai-1.7b-mlx-2bit | generative | Low | 472 MB | 2bit-MLX | MLX | ios/macos | ✅ real |
-| ternary-bonsai-1.7b-q2_0 | generative | Low | 442 MB | Q2_0 | llama.cpp Vulkan | android/windows | ✅ real |
-| ternary-bonsai-4b-q2_0 | generative | Medium | 1,075 MB | Q2_0 | llama.cpp Vulkan | android | ✅ real |
-| ternary-bonsai-4b-mlx-2bit | generative | Medium | 1,132 MB | 2bit-MLX | MLX | ios/macos | ✅ real |
-| ternary-bonsai-8b-mlx-2bit | generative | High | 2,304 MB | 2bit-MLX | MLX | ios/macos | ✅ real |
-| ternary-bonsai-8b-q2_0 | generative | High | 2,182 MB | Q2_0 | llama.cpp Vulkan | windows | ✅ real |
+| bonsai-1.7b-mlx-1bit | generative | Low | 269 MB | 1bit-MLX | MLX | ios/macos (Apple Silicon) | placeholder |
+| bonsai-1.7b-q1_0 | generative | Low | 248 MB | Q1_0 | llama.cpp Vulkan/CPU | android/windows/intel | placeholder |
+| qwen35-2b-mlx-4bit | generative | Low | 1,060 MB | 4bit-MLX | MLX | ios/macos (Apple Silicon) | placeholder |
 | kchat-encoder-int8 | encoder | High | 266 MB | INT8 | ONNX | all | ✅ real |
 | kchat-encoder-int4 | encoder | Low | 143 MB | INT4 | ONNX | all | ✅ real |
+| mmbert-safety-q4_k_m | encoder | Low | 145 MB | Q4_K_M | GGUF (llama.cpp) | all | ✅ trained |
+| mmbert-safety-q5_k_m | encoder | Medium | ~170 MB | Q5_K_M | GGUF (llama.cpp) | all | ⏳ pending export |
 | mobileclip-s2-int8 | vision | Low | 97 MB | INT8 | ONNX | all | ✅ real |
 | whisper-tiny | asr | Low | 33 MB | ONNX (FP32) | ONNX | all | ✅ real |
 | whisper-base | asr | Medium | 82 MB | ONNX (FP32) | ONNX | all | ✅ real |
 
-11/11 packs have real SHA-256 hashes.
+11/13 packs have real SHA-256 hashes. 2 new mmBERT GGUF encoders are pending training.
+
+### mmBERT-small GGUF Encoder (v2.0)
+
+The new `mmbert-safety-q4_k_m` and `mmbert-safety-q5_k_m` packs replace the
+legacy XLM-RoBERTa ONNX encoder with a smaller, faster, more multilingual model:
+
+- **Base**: mmBERT-small (140M params, 384-dim, 22 layers, 256K vocab, 1800+ languages)
+- **Taxonomy**: 17 categories (kchat.guardrail.taxonomy.v1) vs legacy 10
+- **Embedding dim**: 384 (vs legacy 768)
+- **Backend**: GGUF via llama-server `--embedding` endpoint
+- **Task heads**: Loaded separately from `classifier_weights.safetensors`
+- **Size**: ~90MB (Q4_K_M) vs 143MB (INT4) / 266MB (INT8)
+- **Feature flag**: `gguf-runtime` in kchat-encoder crate
+- **Training**: `/Users/Ken/workspaces/mmbert-safety/` workspace
 
 > **Note**: Whisper ONNX files are FP32 (not INT8-quantized). Base models: `nb-whisper-tiny` and `nb-whisper-base` from NbAiLab
 > (Norwegian fine-tunes of OpenAI Whisper). Both retain full multilingual capability
@@ -326,39 +357,41 @@ The `ImageSearchRegistry` merges results across providers with:
 ### Model selection by tier and platform
 
 - **Low tier**:
-  - Generative: iOS/macOS: `ternary-bonsai-1.7b-mlx-2bit` via **MLX** (472MB) / Android/Windows: `ternary-bonsai-1.7b-q2_0` via **llama.cpp Vulkan** (442MB)
+  - Generative: iOS/macOS: `bonsai-1.7b-mlx-1bit` via **MLX** (269MB) / Android/Windows: `bonsai-1.7b-q1_0` via **llama.cpp Vulkan** (248MB)
   - Vision: `mobileclip-s2-int8` (37MB runtime, INT8, 17 categories, image + video)
   - Encoder: `kchat-encoder-int4` (143MB, INT4) — safety + embedding + reranking
   - ASR: `whisper-tiny` (33MB, ONNX FP32, nb-whisper-tiny, multilingual)
   - Video: `mobileclip-s2-int8` (same model as vision)
-  - **Total footprint**: ~685MB all loaded / ~472MB effective (Apple Silicon) / ~442MB effective (GGUF)
+  - **Total footprint**: ~482MB all loaded (Apple Silicon) / ~461MB all loaded (GGUF)
   - Context cap: 1,024 tokens (iOS) / 2,048 (Android) / 2,048 (desktop)
 - **Medium tier**:
-  - Generative: iOS/macOS: `ternary-bonsai-4b-mlx-2bit` via **MLX** (1,132MB) / Android: `ternary-bonsai-4b-q2_0` via **llama.cpp Vulkan** (1,075MB)
+  - Generative: iOS/macOS: `bonsai-1.7b-mlx-1bit` via **MLX** (269MB) / Android: `bonsai-1.7b-q1_0` via **llama.cpp Vulkan** (248MB)
   - Vision: `mobileclip-s2-int8` (37MB runtime, INT8, image + video)
   - Encoder: `kchat-encoder-int4` (143MB, INT4) — safety + embedding + reranking
   - ASR: `whisper-base` (82MB, ONNX FP32, nb-whisper-base, multilingual)
   - Video: `mobileclip-s2-int8` (same model as vision)
-  - **Total footprint**: ~1,394MB all loaded / ~1,132MB effective (Apple Silicon) / ~1,075MB effective (Android)
+  - **Total footprint**: ~531MB all loaded (Apple Silicon) / ~510MB all loaded (GGUF)
   - Context cap: 2,048 tokens (iOS) / 4,096 (Android) / 4,096 (desktop)
 - **High tier**:
-  - Generative: iOS/macOS: `ternary-bonsai-8b-mlx-2bit` via **MLX** (2,304MB) / Android: `ternary-bonsai-8b-q2_0` via **llama.cpp Vulkan** (2,182MB) / Windows: `ternary-bonsai-8b-q2_0` via **llama.cpp Vulkan** (2,182MB)
+  - Generative: iOS/macOS: `bonsai-1.7b-mlx-1bit` via **MLX** (269MB) / Android/Windows: `bonsai-1.7b-q1_0` via **llama.cpp Vulkan** (248MB)
   - Vision: `mobileclip-s2-int8` (37MB runtime, INT8, image + video)
   - Encoder: `kchat-encoder-int4` (143MB, INT4) — safety + embedding + reranking
   - ASR: `whisper-base` (82MB, ONNX FP32, nb-whisper-base, multilingual)
   - Video: `mobileclip-s2-int8` (same model as vision)
-  - **Total footprint**: ~2,566MB all loaded (Apple Silicon) / ~2,444MB all loaded (Android/Windows) / ~2,304MB effective (Apple Silicon) / ~2,182MB effective (Android/Windows)
+  - **Total footprint**: ~531MB all loaded (Apple Silicon) / ~510MB all loaded (Android/Windows)
   - Context cap: 4,096 tokens (iOS) / 8,192 (Android) / 16,384 (desktop)
 
+All tiers use the same 1.7B base generative model (bonsai-1.7b-mlx-1bit or bonsai-1.7b-q1_0)
+with task-specialized LoRA adapters. Tier differences are handled via context window size,
+output budget, and performance targets — not different model sizes.
 All generative models support `tool_use`. The "deterministic-first" principle is preserved —
 safety works on ALL devices without a generative model. Vision and ASR run on ALL tiers.
-Low-tier devices use INT4 quantized encoder to fit within memory budget.
 All tiers use INT4 encoder for consistency and efficiency.
 Vision, ASR, and safety encoder models are lazy-loaded on-demand (not co-resident with generative model).
 During generation, only the generative model is resident. All tiers use kchat-encoder-int4 (143MB) for efficiency.
 KV cache: Q8_0 quantized for llama.cpp (Android/Windows/Intel Mac), FP16 for MLX (Apple Silicon).
 Context caps: iOS 1K/2K/4K (FP16 KV cache), Android 2K/4K/8K (Q8 KV cache), desktop 2K/4K/16K.
-No budget increases needed — all profiles fit with 163+ MB headroom on mobile.
+No budget increases needed — all profiles fit with 268+ MB headroom on mobile.
 The unified kchat-encoder replaces 4 separate model packs (e5-small, safety-int8,
 safety-int4, cross-encoder-miniLM) with 2 multi-task packs (INT8 + INT4).
 The unified mobileclip-s2-int8 replaces 3 separate vision packs (image-int8,

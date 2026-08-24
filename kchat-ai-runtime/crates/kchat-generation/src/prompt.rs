@@ -276,7 +276,7 @@ mod tests {
     fn test_register_skill_templates() {
         let mut registry = PromptTemplateRegistry::new();
         let ids = registry.register_skill_templates();
-        assert_eq!(ids.len(), 45);
+        assert_eq!(ids.len(), 51);
 
         // Verify a few templates by name
         assert!(registry.get_by_name("skill_edit_fix_grammar").is_some());
