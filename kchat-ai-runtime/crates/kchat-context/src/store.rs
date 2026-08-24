@@ -450,6 +450,82 @@ impl ContextStore {
         )?;
         Ok(count > 0)
     }
+
+    /// List all evidence IDs and their FTS content in the given scopes.
+    ///
+    /// This is used by the dense vector search path in the retriever to
+    /// scan all documents when FTS/BM25 returns insufficient results
+    /// (e.g., cross-language queries with no keyword overlap).
+    pub fn list_evidence_in_scopes(
+        &self,
+        filter: &ScopeFilter,
+        limit: usize,
+    ) -> Result<Vec<(EvidenceId, ScopeId, String, i64)>, StoreError> {
+        let conn = self.conn.lock();
+
+        let scope_ids: Vec<Vec<u8>> = filter
+            .allowed_scopes
+            .iter()
+            .filter(|s| !filter.denied_scopes.contains(s))
+            .map(|s| s.0.as_bytes().to_vec())
+            .collect();
+        if scope_ids.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let placeholders: Vec<String> = (0..scope_ids.len()).map(|_| "?".to_string()).collect();
+        // Query the evidence table for IDs, scopes, and created_at.
+        // We don't get the plaintext content here (it's encrypted in the body
+        // column); the caller can use get_evidence() to decrypt individual
+        // documents as needed. This avoids slow FTS5 virtual table scans.
+        let sql = format!(
+            "SELECT id, scope_id, created_at
+             FROM evidence
+             WHERE scope_id IN ({})
+             LIMIT ?{}",
+            placeholders.join(", "),
+            scope_ids.len() + 1
+        );
+
+        let mut params_vec: Vec<Box<dyn rusqlite::ToSql>> = Vec::new();
+        for s in &scope_ids {
+            params_vec.push(Box::new(s.clone()));
+        }
+        params_vec.push(Box::new(limit as i64));
+
+        let params_refs: Vec<&dyn rusqlite::ToSql> = params_vec.iter().map(|p| p.as_ref()).collect();
+
+        let mut stmt = conn.prepare(&sql)?;
+        let results = stmt.query_map(params_refs.as_slice(), |row| {
+            let id_bytes: Vec<u8> = row.get(0)?;
+            let scope_bytes: Vec<u8> = row.get(1)?;
+            let evidence_id = Uuid::from_slice(&id_bytes)
+                .map_err(|e| rusqlite::Error::FromSqlConversionFailure(16, rusqlite::types::Type::Blob, Box::new(e)))?;
+            let scope_id = ScopeId(Uuid::from_slice(&scope_bytes)
+                .map_err(|e| rusqlite::Error::FromSqlConversionFailure(16, rusqlite::types::Type::Blob, Box::new(e)))?);
+            let created_at: i64 = row.get(2)?;
+            Ok((EvidenceId(evidence_id), scope_id, String::new(), created_at))
+        })?;
+
+        // Collect all results first (the conn lock is still held).
+        // We check forgotten scopes after releasing the lock to avoid
+        // a deadlock (is_scope_forgotten also locks self.conn).
+        let mut all_results = Vec::new();
+        for r in results {
+            all_results.push(r?);
+        }
+        drop(stmt);
+        drop(conn);
+
+        // Now filter out forgotten scopes (lock is released, safe to re-lock)
+        let mut collected = Vec::new();
+        for r in all_results {
+            if !self.is_scope_forgotten(r.1).unwrap_or(false) {
+                collected.push(r);
+            }
+        }
+        Ok(collected)
+    }
 }
 
 /// Sanitize a user-provided query string for FTS5 MATCH.

@@ -10,7 +10,7 @@
 //! content.
 
 use crate::embeddings::{cosine_similarity, EmbeddingManager};
-use crate::scope::ScopeFilter;
+use crate::scope::{ScopeFilter, ScopeId};
 use crate::store::{ContextStore, EvidenceId};
 use serde::{Deserialize, Serialize};
 
@@ -124,9 +124,37 @@ impl<'a> Retriever<'a> {
             _ => None,
         };
 
-        // Step 3: Fuse scores
+        // Step 3: Dense vector search — scan all documents in allowed scopes.
+        // This finds documents that FTS misses (e.g., cross-language queries
+        // with no keyword overlap, or semantic paraphrases).
+        // Always run when embeddings are available — the results are merged
+        // with FTS results and sorted by fused score, so extra candidates
+        // from dense search only help. Passage embeddings are cached.
+        let mut dense_results: Vec<(EvidenceId, ScopeId, f64, i64)> = Vec::new();
+        if let Some(qe) = &query_embedding {
+            let candidates = self.store.list_evidence_in_scopes(filter, limit * 4)?;
+            for (eid, sid, _content, created_at) in candidates {
+                // Skip if already in FTS results
+                if fts_results.iter().any(|f| f.evidence_id == eid) {
+                    continue;
+                }
+                // Get the plaintext content via get_evidence (decrypts body)
+                let content = match self.store.get_evidence(eid) {
+                    Ok(Some(ev)) => ev.fts_content,
+                    _ => continue,
+                };
+                if let Ok(doc_emb) = self.embeddings.unwrap().embed_passage(&content) {
+                    let sim = cosine_similarity(qe, &doc_emb) as f64;
+                    if sim > 0.0 {
+                        dense_results.push((eid, sid, sim, created_at));
+                    }
+                }
+            }
+        }
+
+        // Step 4: Fuse scores
         let now = chrono::Utc::now().timestamp() as f64;
-        let mut results = Vec::with_capacity(fts_results.len());
+        let mut results = Vec::with_capacity(fts_results.len() + dense_results.len());
 
         for fts in fts_results {
             // Skip evidence from forgotten scopes (cryptographic forgetting)
@@ -169,6 +197,22 @@ impl<'a> Retriever<'a> {
                 fts_score,
                 recency_score,
                 vector_score,
+            });
+        }
+
+        // Add dense-only results (documents found by vector search but not FTS)
+        for (eid, sid, vec_score, created_at) in dense_results {
+            let age_secs = (now - created_at as f64).max(0.0);
+            let recency_score = (-age_secs * (2.0_f64.ln()) / self.recency_half_life_secs).exp();
+            // Dense-only results get fts_score=0 (no BM25 match)
+            let total = self.weights.recency * recency_score
+                + self.weights.vector * vec_score;
+            results.push(RetrievalResult {
+                evidence_id: eid,
+                score: total,
+                fts_score: 0.0,
+                recency_score,
+                vector_score: vec_score,
             });
         }
 

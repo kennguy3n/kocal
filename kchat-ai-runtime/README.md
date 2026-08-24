@@ -95,7 +95,7 @@ kchat-ai-runtime/
 
 Thermal downgrade: Serious → drop one tier; Critical → force Low.
 
-## Model Registry (7 packs)
+## Model Registry (6 packs)
 
 ### Generative Models
 
@@ -112,13 +112,12 @@ size, output budget, and performance targets — not different model sizes.
 
 | Pack ID | Type | Min Tier | Size | Quant | Tasks | SHA-256 |
 |---------|------|----------|------|-------|-------|---------|
-| `kchat-encoder-int8` | encoder | High | 266 MB | INT8 | safety, embed, rerank | ✅ real |
-| `kchat-encoder-int4` | encoder | Low | 143 MB | INT4 | safety, embed, rerank | ✅ real |
-| `mobileclip-s2-int8` | vision | Low | 97 MB | INT8 | image_classify, image_embed, video_classify | ✅ real |
+| `mmbert-safety-q4_k_m` | encoder | Low | 145 MB | Q4_K_M GGUF | safety, embed, rerank | ✅ real |
+| `mobileclip-s2-int8` | vision | Low | 102 MB | INT8 | image_classify, image_embed, video_classify | ✅ real |
 | `whisper-tiny` | asr | Low | 33 MB | ONNX (FP32) | transcribe (multilingual) | ✅ real |
 | `whisper-base` | asr | Medium | 82 MB | ONNX (FP32) | transcribe (multilingual) | ✅ real |
 
-7/7 packs have real SHA-256 hashes.
+6/6 packs have real SHA-256 hashes.
 
 > **Note**: Whisper ONNX files are FP32 (not INT8-quantized). Base models are `nb-whisper-tiny` and
 > `nb-whisper-base` from NbAiLab (Norwegian fine-tunes of OpenAI Whisper). Despite the
@@ -154,11 +153,11 @@ size, output budget, and performance targets — not different model sizes.
 
 | Platform | Backend | Generative | Safety | Vision | ASR |
 |----------|---------|-----------|--------|--------|-----|
-| iOS (Apple Silicon) | MLX | Bonsai MLX | ONNX INT4/INT8 | ONNX INT8 | ONNX |
-| macOS (Apple Silicon) | MLX | Bonsai MLX | ONNX INT4/INT8 | ONNX INT8 | ONNX |
-| macOS (Intel) | llama.cpp CPU | Bonsai GGUF | ONNX INT4/INT8 | ONNX INT8 | ONNX |
-| Android | llama.cpp Vulkan | Bonsai GGUF | ONNX INT4/INT8 | ONNX INT8 | ONNX |
-| Windows | llama.cpp Vulkan | Bonsai GGUF | ONNX INT4/INT8 | ONNX INT8 | ONNX |
+| iOS (Apple Silicon) | MLX | Bonsai MLX | GGUF Q4_K_M | ONNX INT8 | ONNX |
+| macOS (Apple Silicon) | MLX | Bonsai MLX | GGUF Q4_K_M | ONNX INT8 | ONNX |
+| macOS (Intel) | llama.cpp CPU | Bonsai GGUF | GGUF Q4_K_M | ONNX INT8 | ONNX |
+| Android | llama.cpp Vulkan | Bonsai GGUF | GGUF Q4_K_M | ONNX INT8 | ONNX |
+| Windows | llama.cpp Vulkan | Bonsai GGUF | GGUF Q4_K_M | ONNX INT8 | ONNX |
 | Web (WASM) | — | — | Deterministic only | — | — |
 
 ## Documentation

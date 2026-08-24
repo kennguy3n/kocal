@@ -65,9 +65,13 @@ impl EmbeddingPrefix {
 }
 
 /// Embedding manager — tries primary provider, falls back to secondary.
+/// Includes a passage embedding cache to avoid re-embedding the same
+/// documents across multiple queries.
 pub struct EmbeddingManager {
     primary: Option<Box<dyn EmbeddingProvider>>,
     fallback: Option<Box<dyn EmbeddingProvider>>,
+    /// Cache of passage embeddings (content hash → embedding)
+    passage_cache: parking_lot::Mutex<std::collections::HashMap<u64, Vec<f32>>>,
 }
 
 impl EmbeddingManager {
@@ -76,6 +80,7 @@ impl EmbeddingManager {
         Self {
             primary: None,
             fallback: None,
+            passage_cache: parking_lot::Mutex::new(std::collections::HashMap::new()),
         }
     }
 
@@ -133,8 +138,24 @@ impl EmbeddingManager {
     ///
     /// XLM-RoBERTa (kchat-encoder) does not use e5-style "passage: " prefixes.
     /// The text is embedded directly.
+    /// Uses an internal cache so repeated passages (same document across
+    /// multiple queries) are only embedded once.
     pub fn embed_passage(&self, passage: &str) -> EmbeddingResult<Vec<f32>> {
-        self.embed(passage)
+        use std::hash::{Hash, Hasher};
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        passage.hash(&mut hasher);
+        let key = hasher.finish();
+
+        {
+            let cache = self.passage_cache.lock();
+            if let Some(emb) = cache.get(&key) {
+                return Ok(emb.clone());
+            }
+        }
+
+        let emb = self.embed(passage)?;
+        self.passage_cache.lock().insert(key, emb.clone());
+        Ok(emb)
     }
 }
 
@@ -249,6 +270,159 @@ impl EmbeddingProvider for MockEmbedder {
     }
 }
 
+/// GGUF embedding provider using llama-server's `/embedding` endpoint.
+///
+/// This provider calls a llama-server instance (started with `--embedding`)
+/// to get hidden state vectors from any GGUF model. The raw token-level
+/// embeddings are mean-pooled and L2-normalized to produce a single
+/// fixed-dimensional vector per text.
+///
+/// Unlike the ONNX embedder, this works with any GGUF model (including
+/// Bonsai-1.7B) and doesn't require a separate ONNX export with embedding
+/// heads. The embedding dimension is the model's hidden size (e.g. 2048
+/// for Bonsai-1.7B).
+#[cfg(feature = "embeddings")]
+pub struct LlamaServerEmbedder {
+    /// llama-server URL (e.g., "http://127.0.0.1:18888")
+    server_url: String,
+    /// Embedding dimension (model hidden size, e.g. 2048 for Bonsai-1.7B)
+    dim: usize,
+    /// Model name for reporting
+    model_name: String,
+    /// Reusable HTTP client (avoids creating a new client per call)
+    client: reqwest::blocking::Client,
+}
+
+#[cfg(feature = "embeddings")]
+impl LlamaServerEmbedder {
+    /// Create a new GGUF embedder pointing to a llama-server instance.
+    ///
+    /// The server must be started with `--embedding` flag.
+    /// `dim` should match the model's hidden size.
+    pub fn new(server_url: impl Into<String>, dim: usize, model_name: impl Into<String>) -> Self {
+        let client = reqwest::blocking::Client::builder()
+            .timeout(std::time::Duration::from_secs(30))
+            .pool_max_idle_per_host(4)
+            .build()
+            .unwrap_or_else(|_| reqwest::blocking::Client::new());
+        Self {
+            server_url: server_url.into(),
+            dim,
+            model_name: model_name.into(),
+            client,
+        }
+    }
+
+    /// L2-normalize a vector in-place.
+    fn l2_normalize(v: &mut [f32]) {
+        let norm: f32 = v.iter().map(|x| x * x).sum::<f32>().sqrt();
+        if norm > 1e-10 {
+            for x in v.iter_mut() {
+                *x /= norm;
+            }
+        }
+    }
+}
+
+#[cfg(feature = "embeddings")]
+impl EmbeddingProvider for LlamaServerEmbedder {
+    fn embed(&self, text: &str) -> EmbeddingResult<Vec<f32>> {
+        if text.trim().is_empty() {
+            return Err(EmbeddingError::InferenceFailed("empty input text".into()));
+        }
+
+        let url = format!("{}/embedding", self.server_url);
+        let body = serde_json::json!({ "content": text });
+
+        let resp = self.client
+            .post(&url)
+            .json(&body)
+            .send()
+            .map_err(|e| EmbeddingError::InferenceFailed(format!("embedding request: {e}")))?;
+
+        if !resp.status().is_success() {
+            let status = resp.status();
+            let body = resp.text().unwrap_or_default();
+            return Err(EmbeddingError::InferenceFailed(format!(
+                "embedding request failed: {status} - {body}"
+            )));
+        }
+
+        let resp_json: serde_json::Value = resp
+            .json()
+            .map_err(|e| EmbeddingError::InferenceFailed(format!("parse response: {e}")))?;
+
+        // llama-server embedding response format:
+        // [{"index": 0, "embedding": [[tok0_2048], [tok1_2048], ...]}]
+        // We mean-pool across tokens to get a single vector.
+        let items = resp_json
+            .as_array()
+            .ok_or_else(|| EmbeddingError::InferenceFailed("expected array response".into()))?;
+
+        let first = items
+            .first()
+            .ok_or_else(|| EmbeddingError::InferenceFailed("empty embedding array".into()))?;
+
+        let embedding_field = first
+            .get("embedding")
+            .ok_or_else(|| EmbeddingError::InferenceFailed("missing embedding field".into()))?;
+
+        // The embedding can be either a flat array (1 token) or nested (multiple tokens)
+        let pooled: Vec<f32> = if let Some(nested) = embedding_field.as_array() {
+            if nested.is_empty() {
+                return Err(EmbeddingError::InferenceFailed("empty embedding".into()));
+            }
+            // Nested: [[tok0_dim, ...], [tok1_dim, ...], ...]
+            // Mean-pool across tokens
+            if let Some(first_token) = nested[0].as_array() {
+                let token_dim = first_token.len();
+                let num_tokens = nested.len();
+                let mut sum = vec![0.0f32; token_dim];
+                for token_emb in nested {
+                    if let Some(emb) = token_emb.as_array() {
+                        for (i, v) in emb.iter().enumerate() {
+                            if let Some(f) = v.as_f64() {
+                                sum[i] += f as f32;
+                            }
+                        }
+                    }
+                }
+                // Mean pool
+                for x in &mut sum {
+                    *x /= num_tokens as f32;
+                }
+                sum
+            } else {
+                // Flat array of floats
+                nested
+                    .iter()
+                    .filter_map(|v| v.as_f64().map(|x| x as f32))
+                    .collect()
+            }
+        } else {
+            return Err(EmbeddingError::InferenceFailed(
+                "embedding field is not an array".into(),
+            ));
+        };
+
+        if pooled.is_empty() {
+            return Err(EmbeddingError::InferenceFailed("empty pooled embedding".into()));
+        }
+
+        let mut result = pooled;
+        Self::l2_normalize(&mut result);
+        Ok(result)
+    }
+
+    fn dimension(&self) -> usize {
+        self.dim
+    }
+
+    fn model_name(&self) -> &str {
+        &self.model_name
+    }
+}
+
 /// Cached embedding with metadata.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CachedEmbedding {
@@ -258,7 +432,7 @@ pub struct CachedEmbedding {
     pub model: String,
     /// Dimension
     pub dimension: usize,
-    /// Model version hash (e.g. "kchat-encoder-int8-v1.0.0") for cache invalidation.
+    /// Model version hash (e.g. "mmbert-safety-q4_k_m-v1.0.0") for cache invalidation.
     /// If empty, the cache entry is from a legacy version and should be invalidated.
     #[serde(default)]
     pub model_version: String,
@@ -504,7 +678,7 @@ mod tests {
     fn test_cached_embedding_serialization() {
         let cached = CachedEmbedding {
             vector: vec![0.1, 0.2, 0.3, 0.4],
-            model: "kchat-encoder-int8".into(),
+            model: "mmbert-safety-q4_k_m".into(),
             dimension: 4,
             model_version: "kchat-encoder-v1.0.0".into(),
         };
@@ -514,7 +688,7 @@ mod tests {
 
         assert_eq!(restored.dimension, 4);
         assert_eq!(restored.vector.len(), 4);
-        assert_eq!(restored.model, "kchat-encoder-int8");
+        assert_eq!(restored.model, "mmbert-safety-q4_k_m");
         assert_eq!(restored.model_version, "kchat-encoder-v1.0.0");
         for (a, b) in cached.vector.iter().zip(restored.vector.iter()) {
             assert!((a - b).abs() < 0.001);
@@ -548,7 +722,7 @@ mod tests {
     fn test_cached_embedding_compatibility() {
         let compatible = CachedEmbedding {
             vector: vec![0.1; 768],
-            model: "kchat-encoder-int8".into(),
+            model: "mmbert-safety-q4_k_m".into(),
             dimension: 768,
             model_version: ENCODER_MODEL_VERSION.into(),
         };

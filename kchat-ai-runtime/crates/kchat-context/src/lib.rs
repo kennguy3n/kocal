@@ -21,6 +21,8 @@ pub mod provenance;
 
 pub use embeddings::{EmbeddingManager, EmbeddingProvider, EmbeddingError, cosine_similarity, MockEmbedder};
 #[cfg(feature = "embeddings")]
+pub use embeddings::LlamaServerEmbedder;
+#[cfg(feature = "embeddings")]
 pub use embeddings::OnnxEmbedder;
 pub use encryption::{AeadKey, AeadNonce, decrypt_aead, encrypt_aead};
 pub use reranker::{MockReranker, Reranker, RerankerError};

@@ -2406,32 +2406,40 @@ fn model_path() -> Option<String> {
             return Some(path);
         }
     }
-    // Check for model in manifest/packs/
+    // Check for model in manifest/packs/ (including subdirectories)
     let pack_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../manifest/packs");
+    // Collect GGUF files from top-level and subdirectories
+    let mut gguf_files: Vec<(String, std::path::PathBuf)> = Vec::new();
     if let Ok(entries) = std::fs::read_dir(&pack_dir) {
-        // Collect all GGUF files, then prefer smaller / known-working models
-        let mut gguf_files: Vec<(String, std::path::PathBuf)> = entries
-            .flatten()
-            .filter_map(|e| {
-                let name = e.file_name().to_string_lossy().to_string();
-                if name.ends_with(".gguf") {
-                    Some((name.clone(), e.path()))
-                } else {
-                    None
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                // Scan subdirectories (e.g. bonsai-1.7b-q1_0/Bonsai-1.7B-Q1_0.gguf)
+                if let Ok(sub_entries) = std::fs::read_dir(&path) {
+                    for sub_entry in sub_entries.flatten() {
+                        let sub_path = sub_entry.path();
+                        if sub_path.extension().map(|e| e == "gguf").unwrap_or(false) {
+                            let name = sub_path.file_name().unwrap_or_default().to_string_lossy().to_string();
+                            gguf_files.push((name, sub_path));
+                        }
+                    }
                 }
-            })
-            .collect();
-        // Sort by preference: Qwen models first (known to load correctly),
-        // then by name (smaller models tend to have smaller numbers)
-        gguf_files.sort_by(|a, b| {
-            let a_pref = a.0.contains("Qwen") || a.0.contains("qwen");
-            let b_pref = b.0.contains("Qwen") || b.0.contains("qwen");
-            b_pref.cmp(&a_pref).then_with(|| a.0.cmp(&b.0))
-        });
-        if let Some((_, path)) = gguf_files.first() {
-            return Some(path.to_string_lossy().to_string());
+            } else if path.extension().map(|e| e == "gguf").unwrap_or(false) {
+                let name = path.file_name().unwrap_or_default().to_string_lossy().to_string();
+                gguf_files.push((name, path));
+            }
         }
+    }
+    // Sort by preference: Bonsai models first (our unified generative model),
+    // then by name
+    gguf_files.sort_by(|a, b| {
+        let a_pref = a.0.contains("Bonsai") || a.0.contains("bonsai");
+        let b_pref = b.0.contains("Bonsai") || b.0.contains("bonsai");
+        b_pref.cmp(&a_pref).then_with(|| a.0.cmp(&b.0))
+    });
+    if let Some((_, path)) = gguf_files.first() {
+        return Some(path.to_string_lossy().to_string());
     }
     None
 }
@@ -2479,6 +2487,28 @@ pub fn run_safety_realworld() -> SuiteReport {
         }
     };
 
+    // Attach SLM adjudicator (step 4 of guardrail) if llama-server is available.
+    // The SLM provides final adjudication for ambiguous cases where the encoder's
+    // confidence is below the warn threshold. It uses grammar-constrained JSON
+    // output to ensure structured decisions.
+    let slm_available = {
+        let slm_server_url = std::env::var("LLAMA_SERVER_URL")
+            .unwrap_or_else(|_| "http://127.0.0.1:18888".into());
+        if check_llama_server(&slm_server_url) {
+            use kchat_safety::classify::LlamaServerSlmAdjudicator;
+            classifier.attach_slm(Box::new(
+                LlamaServerSlmAdjudicator::new(&slm_server_url)
+                    .with_max_tokens(128)
+                    .with_timeout(10),
+            ));
+            eprintln!("[safety] SLM adjudicator attached (llama-server at {})", slm_server_url);
+            true
+        } else {
+            eprintln!("[safety] No SLM available — llama-server not running at {}", slm_server_url);
+            false
+        }
+    };
+
     let mut correct = 0u32;
     let mut total = 0u32;
     let mut category_stats: HashMap<String, (u32, u32)> = HashMap::new();
@@ -2492,6 +2522,7 @@ pub fn run_safety_realworld() -> SuiteReport {
         req.jurisdiction = case.jurisdiction.clone();
         req.locale = case.locale.clone();
         req.encoder_available = encoder_available;
+        req.slm_available = slm_available;
         let start = std::time::Instant::now();
         let result = classifier.classify(&req);
         let duration_ms = start.elapsed().as_millis() as u64;
@@ -2610,6 +2641,8 @@ pub fn run_safety_realworld() -> SuiteReport {
     summary_meta.insert("latency_p50_ms".into(), p50.to_string());
     summary_meta.insert("latency_p95_ms".into(), p95.to_string());
     summary_meta.insert("latency_p99_ms".into(), p99.to_string());
+    summary_meta.insert("encoder_available".into(), encoder_available.to_string());
+    summary_meta.insert("slm_available".into(), slm_available.to_string());
 
     for (cat, (c, t)) in &category_stats {
         let rate = if *t > 0 { *c as f64 / *t as f64 * 100.0 } else { 0.0 };
@@ -3718,7 +3751,99 @@ pub fn run_context_realworld() -> SuiteReport {
     }
 
     // Run queries
-    let retriever = Retriever::new(&store, RetrievalTier::Medium);
+    // Create retriever with hybrid FTS5 + dense embeddings.
+    // The embeddings enable cross-language and semantic query matching that
+    // FTS5/BM25 alone cannot handle (e.g., English query → Japanese doc).
+
+    // Ensure llama-server is running with --embedding for dense vector search.
+    // The context eval runs before the generation eval, so we start the server
+    // here with both --embedding and --lora-init-without-apply so the
+    // generation eval can reuse it for dynamic LoRA hot-swap.
+    // If an external server is already running, we use it as-is.
+    let ctx_server_url = std::env::var("LLAMA_SERVER_URL")
+        .unwrap_or_else(|_| "http://127.0.0.1:18888".into());
+    let mut ctx_auto_server: Option<std::process::Child> = None;
+    if !check_llama_server(&ctx_server_url) {
+        let llama_server_bin = std::env::var("LLAMA_SERVER_PATH")
+            .unwrap_or_else(|_| "llama-server".into());
+        if which::which(&llama_server_bin).is_ok() {
+            if let Some(model) = model_path() {
+                eprintln!("[context] Auto-starting llama-server with --embedding + LoRA adapters");
+
+                // Collect LoRA adapters for all families (same logic as generation eval)
+                let lora_base = Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join("../../manifest/packs/bonsai-1.7b-q1_0/lora");
+                let mut adapter_paths: Vec<String> = Vec::new();
+                for family in &["extract_json", "summarize_catchup", "rewrite_grammar", "doc_creative"] {
+                    let adapter = lora_base.join(format!("{}.en", family)).join("adapters.gguf");
+                    if adapter.exists() {
+                        adapter_paths.push(adapter.display().to_string());
+                    }
+                }
+
+                let mut cmd = std::process::Command::new(&llama_server_bin);
+                cmd.arg("-m").arg(&model)
+                    .arg("--host").arg("127.0.0.1")
+                    .arg("--port").arg("18888")
+                    .arg("-c").arg("4096")
+                    .arg("-ngl").arg("99")
+                    .arg("-t").arg("4")
+                    .arg("--embedding")
+                    .stdout(std::process::Stdio::null())
+                    .stderr(std::process::Stdio::inherit());
+
+                if !adapter_paths.is_empty() {
+                    cmd.arg("--lora-init-without-apply");
+                    cmd.arg("--lora").arg(adapter_paths.join(","));
+                }
+
+                ctx_auto_server = cmd.spawn().ok();
+                // Wait for server to be ready (up to 30 seconds)
+                for _ in 0..60 {
+                    std::thread::sleep(std::time::Duration::from_millis(500));
+                    if check_llama_server(&ctx_server_url) {
+                        eprintln!("[context] llama-server is ready at {}", ctx_server_url);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // The embedding manager must outlive the retriever, so we create it
+    // before the retriever and keep it in scope for the entire query loop.
+    #[cfg(feature = "onnx-runtime")]
+    let embedding_manager: Option<kchat_context::embeddings::EmbeddingManager> = {
+        use kchat_context::embeddings::{EmbeddingManager, LlamaServerEmbedder};
+
+        if check_llama_server(&ctx_server_url) {
+            // Bonsai-1.7B has hidden_size=2048
+            let embedder = LlamaServerEmbedder::new(&ctx_server_url, 2048, "bonsai-1.7b-q1_0");
+            eprintln!("[context] LlamaServer embeddings attached for hybrid retrieval (2048 dim)");
+            Some(EmbeddingManager::new().with_primary(Box::new(embedder)))
+        } else {
+            eprintln!("[context] llama-server not available, using FTS5-only retrieval");
+            None
+        }
+    };
+
+    let mut retriever = Retriever::new(&store, RetrievalTier::Medium);
+
+    // Attach embeddings to the retriever if available
+    #[cfg(feature = "onnx-runtime")]
+    {
+        if let Some(ref mgr) = embedding_manager {
+            retriever = retriever.with_embeddings(mgr);
+
+            // Pre-warm the passage embedding cache by embedding all documents.
+            // This avoids 80 embedding calls per query during dense search.
+            eprintln!("[context] Pre-warming embedding cache for {} documents...", dataset.documents.len());
+            for doc in &dataset.documents {
+                let _ = mgr.embed_passage(&doc.content);
+            }
+            eprintln!("[context] Embedding cache pre-warmed");
+        }
+    }
     let mut total_recall = 0.0;
     let mut total_queries = 0u32;
     let mut correct_queries = 0u32;
@@ -3838,6 +3963,13 @@ pub fn run_context_realworld() -> SuiteReport {
     summary.insert("documents_indexed".into(), dataset.documents.len().to_string());
     suite.add(EvalResult::pass_with_meta("context_summary", 0, summary));
 
+    // Kill the auto-started server so the generation eval can start its own
+    // with the right LoRA configuration.
+    if let Some(ref mut child) = ctx_auto_server {
+        let _ = child.kill();
+        let _ = child.wait();
+    }
+
     suite
 }
 
@@ -3863,8 +3995,9 @@ fn llama_server_completion(
     prompt: &str,
     max_tokens: u32,
     temperature: f32,
+    json_schema: Option<&serde_json::Value>,
 ) -> Result<LlamaCompletionResponse, String> {
-    let body = serde_json::json!({
+    let mut body = serde_json::json!({
         "prompt": prompt,
         "n_predict": max_tokens,
         "temperature": temperature,
@@ -3873,6 +4006,12 @@ fn llama_server_completion(
         "repeat_penalty": 1.1,
         "seed": 42,
     });
+    // Pass JSON schema to llama-server for grammar-constrained generation.
+    // llama-server natively supports the "json_schema" field in the completion
+    // request body and will constrain output to the schema.
+    if let Some(schema) = json_schema {
+        body["json_schema"] = schema.clone();
+    }
     let output = std::process::Command::new("curl")
         .arg("-s")
         .arg("-X").arg("POST")
@@ -3954,6 +4093,70 @@ pub fn run_generation_realworld() -> SuiteReport {
 
     let model = model_path();
 
+    // --- LoRA adapter integration ---
+    // Map each prompt to its LoRA family. All family adapters are loaded
+    // at server startup with --lora-init-without-apply, then dynamically
+    // activated per-prompt via POST /lora-adapters (no server restarts).
+    let lora_base = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../manifest/packs/bonsai-1.7b-q1_0/lora");
+
+    /// Detect the LoRA family for a generation prompt.
+    fn detect_lora_family(prompt: &GenerationPrompt) -> &'static str {
+        if prompt.grammar.is_some() {
+            return "extract_json";
+        }
+        let text = prompt.prompt.to_lowercase();
+        if text.contains("summar") || text.contains("要約") || text.contains("resume")
+            || text.contains("tóm tắt") || text.contains("요약")
+        {
+            return "summarize_catchup";
+        }
+        if text.contains("translat") {
+            return "rewrite_grammar";
+        }
+        // Default: creative writing / generation tasks
+        "doc_creative"
+    }
+
+    /// Detect the language code for a generation prompt.
+    #[allow(dead_code)]
+    fn detect_lang(prompt: &GenerationPrompt) -> &'static str {
+        let text = &prompt.prompt;
+        if text.chars().any(|c| c as u32 > 0x3000) { "ja" }
+        else if text.chars().any(|c| '\u{ac00}' <= c && c <= '\u{d7a3}') { "ko" }
+        else if text.chars().any(|c| '\u{4e00}' <= c && c <= '\u{9fff}')
+            && !text.contains("Translate to Chinese") { "zh" }
+        else if ["Viết","Tóm","đoạn","văn"].iter().any(|s| text.contains(s)) { "vi" }
+        else if ["Escribe","Resume","oraciones"].iter().any(|s| text.contains(s)) { "es" }
+        else if text.contains("Translate to") {
+            let tl = text.split("Translate to ").nth(1)
+                .and_then(|s| s.split(':').next())
+                .unwrap_or("").trim();
+            match tl {
+                "Japanese" => "ja", "Spanish" => "es", "Vietnamese" => "vi",
+                "Korean" => "ko", "Chinese" => "zh", "French" => "fr",
+                "German" => "de", "Arabic" => "ar", "Hindi" => "hi",
+                _ => "en",
+            }
+        } else { "en" }
+    }
+
+    /// Find the LoRA adapter GGUF path for a (family, lang) pair.
+    /// Falls back to English if the native language adapter doesn't exist.
+    fn find_lora_adapter(lora_base: &Path, family: &str, lang: &str) -> Option<std::path::PathBuf> {
+        // Try native language first
+        let native = lora_base.join(format!("{}.{}", family, lang)).join("adapters.gguf");
+        if native.exists() {
+            return Some(native);
+        }
+        // Fall back to English
+        let en = lora_base.join(format!("{}.en", family)).join("adapters.gguf");
+        if en.exists() {
+            return Some(en);
+        }
+        None
+    }
+
     if model.is_none() {
         for prompt in &dataset.prompts {
             suite.add(EvalResult::skip(
@@ -3971,52 +4174,39 @@ pub fn run_generation_realworld() -> SuiteReport {
     let server_url = std::env::var("LLAMA_SERVER_URL")
         .unwrap_or_else(|_| "http://127.0.0.1:18888".into());
 
-    let server_available = check_llama_server(&server_url);
-
-    if !server_available {
-        // Try to start llama-server automatically
-        let llama_server = std::env::var("LLAMA_SERVER_PATH")
-            .unwrap_or_else(|_| "llama-server".into());
-
-        if which::which(&llama_server).is_ok() {
-            eprintln!("[generation] Auto-starting llama-server with model: {}", model_path_str);
-            // Start server in background — pipe stderr to a file for debugging
-            let _child = std::process::Command::new(&llama_server)
-                .arg("-m").arg(&model_path_str)
-                .arg("--host").arg("127.0.0.1")
-                .arg("--port").arg("18888")
-                .arg("-c").arg("4096")
-                .arg("-ngl").arg("99")
-                .arg("-t").arg("4")
-                .stdout(std::process::Stdio::null())
-                .stderr(std::process::Stdio::inherit())
-                .spawn()
-                .ok();
-
-            // Wait for server to be ready (up to 30 seconds)
-            for _ in 0..60 {
-                std::thread::sleep(std::time::Duration::from_millis(500));
-                if check_llama_server(&server_url) {
-                    eprintln!("[generation] llama-server is ready at {}", server_url);
-                    break;
-                }
+    // Collect unique LoRA families from prompts.
+    let mut family_adapters: Vec<(String, std::path::PathBuf)> = Vec::new();
+    let mut seen_families: std::collections::HashSet<String> = std::collections::HashSet::new();
+    for prompt in &dataset.prompts {
+        let family = detect_lora_family(prompt);
+        if seen_families.insert(family.to_string()) {
+            if let Some(adapter) = find_lora_adapter(&lora_base, family, "en") {
+                family_adapters.push((family.to_string(), adapter));
             }
         }
+    }
 
-        if !check_llama_server(&server_url) {
-            for prompt in &dataset.prompts {
-                suite.add(EvalResult::skip(
-                    format!("gen_{}", prompt.id),
-                    format!("llama-server not reachable at {} — start it or set LLAMA_SERVER_URL", server_url),
-                ));
-            }
-            let mut meta: HashMap<String, String> = HashMap::new();
-            meta.insert("model".into(), model_path_str);
-            meta.insert("server_url".into(), server_url.clone());
-            meta.insert("status".into(), "skipped — llama-server not available".into());
-            suite.add(EvalResult::skip("generation_summary", "llama-server not available"));
-            return suite;
+    // Check if an external server is already running (LLAMA_SERVER_URL set).
+    // If so, we use it as-is (no LoRA hot-swap — the external server manages its own config).
+    let external_server = check_llama_server(&server_url);
+
+    let llama_server = std::env::var("LLAMA_SERVER_PATH")
+        .unwrap_or_else(|_| "llama-server".into());
+    let can_autostart = which::which(&llama_server).is_ok();
+
+    if !external_server && !can_autostart {
+        for prompt in &dataset.prompts {
+            suite.add(EvalResult::skip(
+                format!("gen_{}", prompt.id),
+                format!("llama-server not reachable at {} — start it or set LLAMA_SERVER_URL", server_url),
+            ));
         }
+        let mut meta: HashMap<String, String> = HashMap::new();
+        meta.insert("model".into(), model_path_str);
+        meta.insert("server_url".into(), server_url.clone());
+        meta.insert("status".into(), "skipped — llama-server not available".into());
+        suite.add(EvalResult::skip("generation_summary", "llama-server not available"));
+        return suite;
     }
 
     use kchat_generation::grammar::{Grammar, GrammarValidator};
@@ -4027,15 +4217,129 @@ pub fn run_generation_realworld() -> SuiteReport {
     let mut total_outputs = 0u32;
     let mut grammar_passes = 0u32;
     let mut grammar_total = 0u32;
+    let mut lora_adapters_used: Vec<String> = Vec::new();
 
-    for prompt in &dataset.prompts {
+    // Track the auto-started server child process so we can kill it at the end.
+    let mut auto_child: Option<std::process::Child> = None;
+
+    // If auto-starting, start llama-server ONCE with all LoRA adapters loaded
+    // via --lora-init-without-apply. Adapters are dynamically activated per-prompt
+    // via POST /lora-adapters, avoiding costly server restarts.
+    if !external_server {
+        let mut cmd = std::process::Command::new(&llama_server);
+        cmd.arg("-m").arg(&model_path_str)
+            .arg("--host").arg("127.0.0.1")
+            .arg("--port").arg("18888")
+            .arg("-c").arg("4096")
+            .arg("-ngl").arg("99")
+            .arg("-t").arg("4")
+            .arg("--embedding")
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::inherit());
+
+        // Load all family adapters with --lora-init-without-apply so they're
+        // available for dynamic activation via /lora-adapters.
+        if !family_adapters.is_empty() {
+            cmd.arg("--lora-init-without-apply");
+            // llama-server accepts comma-separated --lora values
+            let adapter_paths: Vec<String> = family_adapters
+                .iter()
+                .map(|(_, p)| p.display().to_string())
+                .collect();
+            cmd.arg("--lora").arg(adapter_paths.join(","));
+            for (family, _) in &family_adapters {
+                lora_adapters_used.push(format!("{}.en", family));
+            }
+        }
+
+        eprintln!(
+            "[generation] Starting llama-server with {} LoRA adapters (dynamic hot-swap)",
+            family_adapters.len()
+        );
+
+        auto_child = cmd.spawn().ok();
+
+        // Wait for server to be ready (up to 30 seconds).
+        for _ in 0..60 {
+            std::thread::sleep(std::time::Duration::from_millis(500));
+            if check_llama_server(&server_url) {
+                eprintln!("[generation] llama-server is ready at {}", server_url);
+                break;
+            }
+        }
+
+        if !check_llama_server(&server_url) {
+            for prompt in &dataset.prompts {
+                suite.add(EvalResult::skip(
+                    format!("gen_{}", prompt.id),
+                    "llama-server failed to start",
+                ));
+            }
+            if let Some(ref mut child) = auto_child {
+                let _ = child.kill();
+                let _ = child.wait();
+            }
+            let mut meta: HashMap<String, String> = HashMap::new();
+            meta.insert("model".into(), model_path_str);
+            meta.insert("status".into(), "llama-server failed to start".into());
+            suite.add(EvalResult::skip("generation_summary", "llama-server failed to start"));
+            return suite;
+        }
+    }
+
+    // Build a map from family name to adapter index (as loaded by the server).
+    // The server assigns indices in the order adapters are passed to --lora.
+    let family_to_idx: HashMap<String, usize> = family_adapters
+        .iter()
+        .enumerate()
+        .map(|(i, (family, _))| (family.clone(), i))
+        .collect();
+    let num_adapters = family_adapters.len();
+
+    // Helper: activate a specific LoRA adapter by family name via /lora-adapters.
+    let activate_lora = |family: &str| {
+        if num_adapters == 0 {
+            return;
+        }
+        let target_idx = family_to_idx.get(family).copied().unwrap_or(0);
+        let payload: Vec<serde_json::Value> = (0..num_adapters)
+            .map(|i| serde_json::json!({
+                "id": i,
+                "scale": if i == target_idx { 1.0 } else { 0.0 },
+            }))
+            .collect();
+        let url = format!("{}/lora-adapters", server_url);
+        let client = reqwest::blocking::Client::builder()
+            .timeout(std::time::Duration::from_secs(5))
+            .build()
+            .unwrap_or_default();
+        let _ = client.post(&url).json(&payload).send();
+    };
+
+    // Process all prompts sequentially, dynamically swapping LoRA per prompt.
+    for (idx, prompt) in dataset.prompts.iter().enumerate() {
+        let family = detect_lora_family(prompt);
+
+        // Dynamically activate the LoRA adapter for this prompt's family.
+        if !external_server && num_adapters > 0 {
+            activate_lora(family);
+        }
+
         let start = std::time::Instant::now();
 
         // For JSON schema prompts, add instruction to output only JSON
-        let full_prompt = if prompt.grammar.is_some() {
-            format!("{}\n\nRespond with ONLY valid JSON, no other text.", prompt.prompt)
+        // and pass the schema to llama-server for grammar-constrained generation.
+        let (full_prompt, json_schema) = if let Some(grammar) = &prompt.grammar {
+            if grammar.grammar_type == "json_schema" {
+                (
+                    format!("{}\n\nRespond with ONLY valid JSON, no other text.", prompt.prompt),
+                    Some(&grammar.schema),
+                )
+            } else {
+                (prompt.prompt.clone(), None)
+            }
         } else {
-            prompt.prompt.clone()
+            (prompt.prompt.clone(), None)
         };
 
         let result = llama_server_completion(
@@ -4043,6 +4347,7 @@ pub fn run_generation_realworld() -> SuiteReport {
             &full_prompt,
             prompt.max_tokens,
             0.7,
+            json_schema,
         );
 
         let elapsed_ms = start.elapsed().as_millis() as u64;
@@ -4148,6 +4453,12 @@ pub fn run_generation_realworld() -> SuiteReport {
                 ));
             }
         }
+    } // end prompt loop
+
+    // Kill the auto-started server if still running.
+    if let Some(ref mut child) = auto_child {
+        let _ = child.kill();
+        let _ = child.wait();
     }
 
     // Summary with P50/P95 metrics
@@ -4171,6 +4482,9 @@ pub fn run_generation_realworld() -> SuiteReport {
         }
         summary.insert("model".into(), model_path_str);
         summary.insert("backend".into(), format!("llama-server @ {}", server_url));
+        if !lora_adapters_used.is_empty() {
+            summary.insert("lora_adapters".into(), lora_adapters_used.join(","));
+        }
 
         suite.add(EvalResult::pass_with_meta("generation_summary", 0, summary));
     }

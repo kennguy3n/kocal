@@ -36,7 +36,7 @@ reqwest = { version = "0.12", default-features = false, features = ["json", "rus
 
 [features]
 skill-pack = ["kchat-safety/skill-pack"]
-onnx-runtime = ["kchat-safety/onnx-runtime", "kchat-encoder/onnx-runtime"]
+onnx-runtime = ["kchat-safety/onnx-runtime", "kchat-encoder/onnx-runtime", "kchat-context/embeddings"]
 onnx-runtime-vision = ["onnx-runtime", "kchat-safety/onnx-runtime-vision"]
 full-pipeline = ["skill-pack", "onnx-runtime", "onnx-runtime-vision"]
 

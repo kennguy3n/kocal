@@ -20,11 +20,11 @@ impl MockEncoderSession {
     }
 
     pub fn int8() -> Self {
-        Self::new("kchat-encoder-int8", crate::EMBEDDING_DIM)
+        Self::new("mmbert-safety-q4_k_m", crate::EMBEDDING_DIM)
     }
 
     pub fn int4() -> Self {
-        Self::new("kchat-encoder-int4", crate::EMBEDDING_DIM)
+        Self::new("mmbert-safety-q4_k_m", crate::EMBEDDING_DIM)
     }
 
     pub fn model_name(&self) -> &str {
@@ -194,7 +194,7 @@ mod tests {
     #[test]
     fn test_mock_encoder_session() {
         let session = MockEncoderSession::int8();
-        assert_eq!(session.model_name(), "kchat-encoder-int8");
+        assert_eq!(session.model_name(), "mmbert-safety-q4_k_m");
         assert_eq!(session.dimension(), crate::EMBEDDING_DIM);
     }
 }

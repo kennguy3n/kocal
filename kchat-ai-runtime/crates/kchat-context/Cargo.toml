@@ -9,7 +9,7 @@ authors.workspace = true
 default = ["lexical"]
 lexical = []
 embeddings = ["dep:ort", "dep:tokenizers", "dep:ndarray"]
-connectors = ["dep:reqwest", "dep:async-trait"]
+connectors = ["dep:async-trait"]
 reranker = ["embeddings"]
 
 [dependencies]
@@ -36,22 +36,22 @@ chacha20poly1305 = "0.10"
 zeroize = { version = "1", features = ["derive"] }
 blake3 = "1"
 
-# Cross-platform CSPRNG (Windows target only)
-[target.'cfg(target_os = "windows")'.dependencies]
-getrandom = "0.2"
-
 # Language detection
 whatlang = "0.18"
 unicode-normalization = "0.1"
+
+# HTTP client (used by LlamaServerEmbedder and connectors)
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "blocking"] }
+async-trait = { version = "0.1", optional = true }
 
 # Optional embedding deps
 ort = { version = "=2.0.0-rc.10", default-features = false, features = ["load-dynamic", "ndarray"], optional = true }
 tokenizers = { version = "0.21", default-features = false, features = ["fancy-regex"], optional = true }
 ndarray = { version = "0.16", optional = true }
 
-# Optional connector deps
-reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"], optional = true }
-async-trait = { version = "0.1", optional = true }
+# Cross-platform CSPRNG (Windows target only)
+[target.'cfg(target_os = "windows")'.dependencies]
+getrandom = "0.2"
 
 [dev-dependencies]
 tempfile = "3"

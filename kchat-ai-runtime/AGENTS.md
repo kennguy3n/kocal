@@ -54,14 +54,14 @@ cd sidecars/kchat-server-offload && go build && ./kchat-server-offload
 cargo build -p kchat-safety --features skill-pack
 cargo test -p kchat-safety --features skill-pack
 
-# Build/run with full pipeline (skill-pack + ONNX encoder + vision)
-# Requires libonnxruntime.dylib on system path or KCHAT_ONNX_LIB env var
+# Build/run with full pipeline (skill-pack + GGUF encoder + vision)
+# Requires libonnxruntime.dylib on system path or KCHAT_ONNX_LIB env var (for vision)
 cargo run -p kchat-task-suite --features full-pipeline -- --realworld
 
-# Build/run with ONNX encoder only (no vision)
-cargo run -p kchat-task-suite --features onnx-runtime -- --realworld
+# Build/run with GGUF encoder only (no vision)
+cargo run -p kchat-task-suite --features gguf-runtime -- --realworld
 
-# Build/run with skill-pack overlays only (no ONNX)
+# Build/run with skill-pack overlays only (no encoder)
 cargo run -p kchat-task-suite --features skill-pack -- --realworld
 ```
 
@@ -96,7 +96,7 @@ real model (2 generative models, unified across all tiers), running 150 tasks ac
 - **2 generative models**: bonsai-1.7b-mlx-1bit (Apple Silicon, 269MB),
   bonsai-1.7b-q1_0 (Android/Windows/Intel, 248MB)
 - **Non-generative models per profile**: vision (mobileclip-s2-int8),
-  safety encoder (kchat-encoder-int4), ASR (whisper-tiny/base),
+  safety encoder (mmbert-safety-q4_k_m), ASR (whisper-tiny/base),
   video (mobileclip-s2-int8, same model as vision)
 - **Multilingual coverage**: English, Vietnamese, Japanese, Korean, Chinese, Spanish,
   Arabic, German, Hindi, French + mixed-language code-switching scenarios
@@ -147,15 +147,14 @@ The workspace is organized into 10 crates + 1 Go sidecar following the 4-plane a
   device tier selection, scheduler, signed manifest manager, telemetry,
   model manager (CDN download, LRU cache, mmap), resource governor,
   model registry (registry.toml). Foundation for all other crates.
-- **kchat-encoder**: Unified multi-task encoder — supports both ONNX (XLM-RoBERTa-base)
-  and GGUF (mmBERT-small) backends. Shared across safety classification (17 classes
-  with GGUF, 10 with ONNX), text embedding (384-dim GGUF, 768-dim ONNX), and
-  cross-encoder reranking. GGUF backend uses llama-server --embedding HTTP API.
-  Feature-gated behind `onnx-runtime` and `gguf-runtime`; includes mock
-  implementations for testing without either backend.
+- **kchat-encoder**: Unified multi-task encoder — GGUF (mmBERT-small) backend.
+  Shared across safety classification (17 classes), text embedding (384-dim),
+  and cross-encoder reranking. GGUF backend uses llama-server --embedding HTTP API.
+  Feature-gated behind `gguf-runtime`; includes mock implementations for testing
+  without the backend. Uses the `mmbert-safety-q4_k_m` model pack.
 - **kchat-safety**: Deterministic safety plane — NFKC normalization, PII/scam/
   URL detectors, signed policy packs (Ed25519), encoder/SLM escalation,
-  unified kchat-encoder for safety classification (INT8/INT4), media descriptor
+  unified kchat-encoder for safety classification (GGUF mmbert-safety-q4_k_m), media descriptor
   pipeline (10 score fields), MobileCLIP-S2 vision encoder (ONNX, feature-gated
   behind `onnx-runtime-vision`), video frame aggregation, vision bridge.
   Skill-pack system (feature-gated behind `skill-pack`): overlay-aware policy
@@ -167,7 +166,7 @@ The workspace is organized into 10 crates + 1 Go sidecar following the 4-plane a
   Works on ALL devices including low-tier and WASM (deterministic only).
 - **kchat-context**: Private context plane — SQLCipher encrypted store, FTS5
   BM25 retrieval, per-scope XChaCha20-Poly1305 encryption, provenance bundles,
-  dense embeddings (kchat-encoder 384-dim GGUF or 768-dim ONNX + fallback), cross-encoder reranker (kchat-encoder).
+  dense embeddings (kchat-encoder 384-dim GGUF + fallback), cross-encoder reranker (kchat-encoder).
 - **kchat-generation**: Grammar-constrained generative plane — prompt templates,
   JSON Schema/regex/Lark grammar validation (real Lark parser), backend
   adapters (llama.cpp via llama-cpp-2 with Metal/Vulkan/Cuda), model lifecycle
@@ -304,7 +303,7 @@ The `ImageSearchRegistry` merges results across providers with:
   - Safety: 2005/2005 (100%), Guardrail: 220/220 (100%), Context: 13/13 (100%), Generation: 9/11 (82%), Action: 17/17 (100%)
   - Safety dataset v2: 14 languages (en, vi, zh, ja, ko, es, fr, de, ar, hi, th, id, pt, tl) + 13 mixed-lingual code-switch combos
   - Guardrail corpus: 221 YAML cases from `sample_messages.yaml` with 17-category taxonomy (0-16), severity rubric (0-5), jurisdiction codes, community overlays, locale tags
-  - Guardrail eval supports tier-aware execution: Deterministic (default), WithEncoder (ONNX INT4), FullPipeline (encoder + MobileCLIP-S2 vision)
+  - Guardrail eval supports tier-aware execution: Deterministic (default), WithEncoder (GGUF mmbert-safety-q4_k_m), FullPipeline (encoder + MobileCLIP-S2 vision)
   - Guardrail eval reports per-category breakdown, per-path latency (det vs enc), and applies jurisdiction severity floors (skill-pack overlay)
   - Real model: Ternary-Bonsai-1.7B Q2_0 via llama-server (Metal), ~130 tok/s, 30ms TTFT
 - **Go server offload: 7 tests, all passing**
@@ -316,37 +315,33 @@ The `ImageSearchRegistry` merges results across providers with:
   - Judgment: Pass (≥75%), Marginal (50-74%), Fail (<50%)
   - 2 generative models: bonsai-1.7b-mlx-1bit (Apple Silicon, 269MB),
     bonsai-1.7b-q1_0 (Android/Windows/Intel, 248MB)
-  - Also tracks per-profile: vision (mobileclip-s2-int8), safety encoder (INT4),
+  - Also tracks per-profile: vision (mobileclip-s2-int8), safety encoder (mmbert-safety-q4_k_m),
     ASR (whisper-tiny/base), and video (mobileclip-s2-int8, same as vision) model assignments
 
-## Model Registry (13 packs)
+## Model Registry (6 packs)
 
 | Pack ID | Type | Min Tier | Size | Quant | Backend | Platform | SHA-256 |
 |---------|------|----------|------|-------|---------|----------|---------|
 | bonsai-1.7b-mlx-1bit | generative | Low | 269 MB | 1bit-MLX | MLX | ios/macos (Apple Silicon) | placeholder |
 | bonsai-1.7b-q1_0 | generative | Low | 248 MB | Q1_0 | llama.cpp Vulkan/CPU | android/windows/intel | placeholder |
-| qwen35-2b-mlx-4bit | generative | Low | 1,060 MB | 4bit-MLX | MLX | ios/macos (Apple Silicon) | placeholder |
-| kchat-encoder-int8 | encoder | High | 266 MB | INT8 | ONNX | all | ✅ real |
-| kchat-encoder-int4 | encoder | Low | 143 MB | INT4 | ONNX | all | ✅ real |
 | mmbert-safety-q4_k_m | encoder | Low | 145 MB | Q4_K_M | GGUF (llama.cpp) | all | ✅ trained |
-| mmbert-safety-q5_k_m | encoder | Medium | ~170 MB | Q5_K_M | GGUF (llama.cpp) | all | ⏳ pending export |
-| mobileclip-s2-int8 | vision | Low | 97 MB | INT8 | ONNX | all | ✅ real |
+| mobileclip-s2-int8 | vision | Low | 102 MB | INT8 | ONNX | all | ✅ real |
 | whisper-tiny | asr | Low | 33 MB | ONNX (FP32) | ONNX | all | ✅ real |
 | whisper-base | asr | Medium | 82 MB | ONNX (FP32) | ONNX | all | ✅ real |
 
-11/13 packs have real SHA-256 hashes. 2 new mmBERT GGUF encoders are pending training.
+4/6 packs have real SHA-256 hashes. 2 generative Bonsai packs are pending final export.
 
 ### mmBERT-small GGUF Encoder (v2.0)
 
-The new `mmbert-safety-q4_k_m` and `mmbert-safety-q5_k_m` packs replace the
-legacy XLM-RoBERTa ONNX encoder with a smaller, faster, more multilingual model:
+The `mmbert-safety-q4_k_m` pack is the unified encoder for safety classification,
+text embedding, and cross-encoder reranking:
 
 - **Base**: mmBERT-small (140M params, 384-dim, 22 layers, 256K vocab, 1800+ languages)
-- **Taxonomy**: 17 categories (kchat.guardrail.taxonomy.v1) vs legacy 10
-- **Embedding dim**: 384 (vs legacy 768)
+- **Taxonomy**: 17 categories (kchat.guardrail.taxonomy.v1)
+- **Embedding dim**: 384
 - **Backend**: GGUF via llama-server `--embedding` endpoint
 - **Task heads**: Loaded separately from `classifier_weights.safetensors`
-- **Size**: ~90MB (Q4_K_M) vs 143MB (INT4) / 266MB (INT8)
+- **Size**: ~145MB (Q4_K_M)
 - **Feature flag**: `gguf-runtime` in kchat-encoder crate
 - **Training**: `/Users/Ken/workspaces/mmbert-safety/` workspace
 
@@ -358,27 +353,27 @@ legacy XLM-RoBERTa ONNX encoder with a smaller, faster, more multilingual model:
 
 - **Low tier**:
   - Generative: iOS/macOS: `bonsai-1.7b-mlx-1bit` via **MLX** (269MB) / Android/Windows: `bonsai-1.7b-q1_0` via **llama.cpp Vulkan** (248MB)
-  - Vision: `mobileclip-s2-int8` (37MB runtime, INT8, 17 categories, image + video)
-  - Encoder: `kchat-encoder-int4` (143MB, INT4) — safety + embedding + reranking
+  - Vision: `mobileclip-s2-int8` (102MB, INT8, 17 categories, image + video)
+  - Encoder: `mmbert-safety-q4_k_m` (145MB, Q4_K_M GGUF) — safety + embedding + reranking
   - ASR: `whisper-tiny` (33MB, ONNX FP32, nb-whisper-tiny, multilingual)
   - Video: `mobileclip-s2-int8` (same model as vision)
-  - **Total footprint**: ~482MB all loaded (Apple Silicon) / ~461MB all loaded (GGUF)
+  - **Total footprint**: ~549MB all loaded (Apple Silicon) / ~528MB all loaded (GGUF)
   - Context cap: 1,024 tokens (iOS) / 2,048 (Android) / 2,048 (desktop)
 - **Medium tier**:
   - Generative: iOS/macOS: `bonsai-1.7b-mlx-1bit` via **MLX** (269MB) / Android: `bonsai-1.7b-q1_0` via **llama.cpp Vulkan** (248MB)
-  - Vision: `mobileclip-s2-int8` (37MB runtime, INT8, image + video)
-  - Encoder: `kchat-encoder-int4` (143MB, INT4) — safety + embedding + reranking
+  - Vision: `mobileclip-s2-int8` (102MB, INT8, image + video)
+  - Encoder: `mmbert-safety-q4_k_m` (145MB, Q4_K_M GGUF) — safety + embedding + reranking
   - ASR: `whisper-base` (82MB, ONNX FP32, nb-whisper-base, multilingual)
   - Video: `mobileclip-s2-int8` (same model as vision)
-  - **Total footprint**: ~531MB all loaded (Apple Silicon) / ~510MB all loaded (GGUF)
+  - **Total footprint**: ~598MB all loaded (Apple Silicon) / ~577MB all loaded (GGUF)
   - Context cap: 2,048 tokens (iOS) / 4,096 (Android) / 4,096 (desktop)
 - **High tier**:
   - Generative: iOS/macOS: `bonsai-1.7b-mlx-1bit` via **MLX** (269MB) / Android/Windows: `bonsai-1.7b-q1_0` via **llama.cpp Vulkan** (248MB)
-  - Vision: `mobileclip-s2-int8` (37MB runtime, INT8, image + video)
-  - Encoder: `kchat-encoder-int4` (143MB, INT4) — safety + embedding + reranking
+  - Vision: `mobileclip-s2-int8` (102MB, INT8, image + video)
+  - Encoder: `mmbert-safety-q4_k_m` (145MB, Q4_K_M GGUF) — safety + embedding + reranking
   - ASR: `whisper-base` (82MB, ONNX FP32, nb-whisper-base, multilingual)
   - Video: `mobileclip-s2-int8` (same model as vision)
-  - **Total footprint**: ~531MB all loaded (Apple Silicon) / ~510MB all loaded (Android/Windows)
+  - **Total footprint**: ~598MB all loaded (Apple Silicon) / ~577MB all loaded (Android/Windows)
   - Context cap: 4,096 tokens (iOS) / 8,192 (Android) / 16,384 (desktop)
 
 All tiers use the same 1.7B base generative model (bonsai-1.7b-mlx-1bit or bonsai-1.7b-q1_0)
@@ -386,13 +381,13 @@ with task-specialized LoRA adapters. Tier differences are handled via context wi
 output budget, and performance targets — not different model sizes.
 All generative models support `tool_use`. The "deterministic-first" principle is preserved —
 safety works on ALL devices without a generative model. Vision and ASR run on ALL tiers.
-All tiers use INT4 encoder for consistency and efficiency.
+All tiers use the mmbert-safety-q4_k_m GGUF encoder (145MB) for consistency and efficiency.
 Vision, ASR, and safety encoder models are lazy-loaded on-demand (not co-resident with generative model).
-During generation, only the generative model is resident. All tiers use kchat-encoder-int4 (143MB) for efficiency.
+During generation, only the generative model is resident. All tiers use mmbert-safety-q4_k_m (145MB) for efficiency.
 KV cache: Q8_0 quantized for llama.cpp (Android/Windows/Intel Mac), FP16 for MLX (Apple Silicon).
 Context caps: iOS 1K/2K/4K (FP16 KV cache), Android 2K/4K/8K (Q8 KV cache), desktop 2K/4K/16K.
 No budget increases needed — all profiles fit with 268+ MB headroom on mobile.
-The unified kchat-encoder replaces 4 separate model packs (e5-small, safety-int8,
-safety-int4, cross-encoder-miniLM) with 2 multi-task packs (INT8 + INT4).
+The unified kchat-encoder (mmbert-safety-q4_k_m) replaces 4 separate model packs (e5-small, safety-int8,
+safety-int4, cross-encoder-miniLM) with 1 multi-task GGUF pack.
 The unified mobileclip-s2-int8 replaces 3 separate vision packs (image-int8,
 image-fp32, video-int8) with 1 multi-task pack handling both image and video.

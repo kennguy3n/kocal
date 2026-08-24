@@ -145,14 +145,16 @@ The foundation crate that all other crates depend on.
   output token range, peak memory, TTFT target, decode rate target, max perf cores,
   idle unload timeout
 - Memory optimization: Q8_0 KV cache for llama.cpp, FP16 for MLX, lazy-loaded encoder/vision/ASR
-  (only generative model resident during inference), all tiers use INT4 encoder,
+  (only generative model resident during inference), all tiers use mmbert-safety-q4_k_m encoder,
   all profiles fit within peak memory budgets with 163+ MB mobile headroom
 
 **Model Registry** (`registry.rs`):
-- 7 model packs (2 generative, 2 encoder, 1 vision, 2 ASR)
+- 6 model packs (2 generative, 1 encoder, 1 vision, 2 ASR)
+- Generative and encoder models are unified across all tiers (same model on Low/Medium/High)
+- Only ASR differentiates by tier: whisper-tiny (Low), whisper-base (Medium/High)
 - `RegistryEntry` with pack_id, version, pack_type, download_url, sha256,
   size_bytes, min_tier, task_capabilities, languages, quantization
-- 7/7 packs have real SHA-256 hashes
+- 4/6 packs have real SHA-256 hashes (2 pending: bonsai-1.7b-mlx-1bit, bonsai-1.7b-q1_0)
 - `find_for_task(task, tier)` — filter by capability and tier eligibility
 - `find_for_language(lang, tier)` — filter by language and tier
 - `default_registry()` — hardcoded built-in catalog

@@ -343,7 +343,7 @@ mod tests {
     fn test_backend_config_for_tier() {
         let config = BackendConfig::for_tier(
             BackendType::LlamaCppMetal,
-            "ternary-bonsai-1.7b-q2_0",
+            "bonsai-1.7b-q1_0",
             "/path/to/model.gguf",
             DeviceTier::Medium,
             "ios",

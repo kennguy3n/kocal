@@ -92,8 +92,8 @@ impl EncoderSession {
             .map_err(|e| EncoderError::TokenizerError(format!("truncation config: {e}")))?;
 
         let model_name = match quantization {
-            Quantization::Int8 => "kchat-encoder-int8",
-            Quantization::Int4 => "kchat-encoder-int4",
+            Quantization::Int8 => "mmbert-safety-q4_k_m",
+            Quantization::Int4 => "mmbert-safety-q4_k_m",
         };
 
         Ok(Self {

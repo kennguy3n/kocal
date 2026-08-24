@@ -93,7 +93,7 @@ def export_onnx(
         print("Applying INT8 dynamic quantization...")
         try:
             from onnxruntime.quantization import quantize_dynamic, QuantType
-            quantized_file = output_path / "kchat-encoder-int8.onnx"
+            quantized_file = output_path / "mmbert-safety-q4_k_m.onnx"
             quantize_dynamic(
                 str(onnx_file),
                 str(quantized_file),
@@ -143,7 +143,7 @@ def export_onnx(
             calibration_data.mkdir(exist_ok=True)
 
             reader = DummyCalibrationReader(tokenizer)
-            quantized_file = output_path / "kchat-encoder-int4.onnx"
+            quantized_file = output_path / "mmbert-safety-int4.onnx"
 
             quantize_static(
                 str(onnx_file),

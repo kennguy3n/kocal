@@ -302,6 +302,181 @@ pub enum SlmError {
     InvalidOutput(String),
 }
 
+/// A production SLM adjudicator that calls a llama-server instance with
+/// grammar-constrained JSON output.
+///
+/// The SLM receives the text and deterministic signal context, then outputs
+/// a structured JSON decision: `{category, severity, action, confidence,
+/// rationale_code}`. The output is constrained to valid JSON via
+/// llama-server's `json_schema` field.
+///
+/// This adjudicator is used in step 4 of the 6-step guardrail flow:
+/// when the encoder's confidence is below the warn threshold, the SLM
+/// provides a final adjudication.
+pub struct LlamaServerSlmAdjudicator {
+    /// llama-server URL (e.g., "http://127.0.0.1:18888")
+    server_url: String,
+    /// Maximum tokens for SLM response (keep small for latency)
+    max_tokens: u32,
+    /// Timeout for the SLM call in seconds
+    timeout_secs: u64,
+}
+
+impl LlamaServerSlmAdjudicator {
+    /// Create a new SLM adjudicator pointing to a llama-server instance.
+    ///
+    /// The llama-server should be started with the Bonsai-1.7B model and
+    /// optionally a `safety_adjudicate` LoRA adapter.
+    pub fn new(server_url: impl Into<String>) -> Self {
+        Self {
+            server_url: server_url.into(),
+            max_tokens: 128,
+            timeout_secs: 10,
+        }
+    }
+
+    /// Set the maximum tokens for the SLM response.
+    pub fn with_max_tokens(mut self, max_tokens: u32) -> Self {
+        self.max_tokens = max_tokens;
+        self
+    }
+
+    /// Set the timeout for the SLM call.
+    pub fn with_timeout(mut self, timeout_secs: u64) -> Self {
+        self.timeout_secs = timeout_secs;
+        self
+    }
+
+    /// Build the SLM prompt for safety adjudication.
+    fn build_prompt(&self, text: &str, signal_json: &str) -> String {
+        format!(
+            "You are a safety adjudicator. Classify the following text into exactly one category.\n\
+             Categories: 0=safe, 1=harassment, 2=hate_speech, 3=violence, 4=self_harm, \
+             5=child_safety, 6=substance_abuse, 7=scam_fraud, 8=url_risk, 9=pii_privacy, \
+             10=sexual_content, 11=drugs_weapons, 12=illegal_goods, 13=extremism, \
+             14=deepfake_synthetic, 15=misinformation, 16=robocall_spam.\n\
+             Actions: allow, warn, block, redact, require_consent.\n\
+             Severity: 0-5 (0=safe, 1-2=low, 3=medium, 4-5=high).\n\n\
+             Deterministic signals: {signal_json}\n\n\
+             Text to classify:\n\"{text}\"\n\n\
+             Respond with ONLY a JSON object: \
+             {{\"category\": <int>, \"severity\": <int>, \"action\": \"<string>\", \
+             \"confidence\": <float>, \"rationale_code\": \"<short_code>\"}}"
+        )
+    }
+
+    /// The JSON schema for the SLM output, used for grammar-constrained generation.
+    fn output_schema() -> serde_json::Value {
+        serde_json::json!({
+            "type": "object",
+            "required": ["category", "severity", "action", "confidence", "rationale_code"],
+            "properties": {
+                "category": {"type": "integer", "minimum": 0, "maximum": 16},
+                "severity": {"type": "integer", "minimum": 0, "maximum": 5},
+                "action": {"type": "string", "enum": ["allow", "warn", "block", "redact", "require_consent"]},
+                "confidence": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+                "rationale_code": {"type": "string", "maxLength": 50}
+            }
+        })
+    }
+}
+
+impl SlmAdjudicator for LlamaServerSlmAdjudicator {
+    fn adjudicate(&self, text: &str, signal_json: &str) -> Result<SlmDecision, SlmError> {
+        let prompt = self.build_prompt(text, signal_json);
+        let body = serde_json::json!({
+            "prompt": prompt,
+            "n_predict": self.max_tokens,
+            "temperature": 0.1,
+            "top_p": 0.9,
+            "top_k": 40,
+            "seed": 42,
+            "json_schema": Self::output_schema(),
+        });
+
+        let output = std::process::Command::new("curl")
+            .arg("-s")
+            .arg("-X").arg("POST")
+            .arg(format!("{}/completion", self.server_url))
+            .arg("-H").arg("Content-Type: application/json")
+            .arg("-d").arg(body.to_string())
+            .arg("--connect-timeout").arg("3")
+            .arg("--max-time").arg(self.timeout_secs.to_string())
+            .output()
+            .map_err(|e| SlmError::InferenceFailed(format!("curl failed: {}", e)))?;
+
+        if !output.status.success() {
+            return Err(SlmError::InferenceFailed(format!(
+                "curl exit code: {}",
+                output.status
+            )));
+        }
+
+        let resp: serde_json::Value = serde_json::from_slice(&output.stdout)
+            .map_err(|e| SlmError::InvalidOutput(format!("failed to parse response: {}", e)))?;
+
+        let content = resp
+            .get("content")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .trim();
+
+        // Parse the JSON response
+        let decision: serde_json::Value = serde_json::from_str(content)
+            .map_err(|e| SlmError::InvalidOutput(format!("failed to parse SLM JSON: {} (content: {})", e, &content[..content.len().min(200)])))?;
+
+        let category = decision
+            .get("category")
+            .and_then(|v| v.as_u64())
+            .ok_or_else(|| SlmError::InvalidOutput("missing category".into()))?
+            as u32;
+
+        let severity = decision
+            .get("severity")
+            .and_then(|v| v.as_u64())
+            .ok_or_else(|| SlmError::InvalidOutput("missing severity".into()))?
+            as u8;
+
+        let action_str = decision
+            .get("action")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| SlmError::InvalidOutput("missing action".into()))?;
+
+        let action = match action_str {
+            "allow" => Action::Allow,
+            "warn" => Action::Warn,
+            "block" => Action::Block,
+            "redact" => Action::Redact,
+            "require_consent" => Action::RequireConsent,
+            other => {
+                return Err(SlmError::InvalidOutput(format!(
+                    "unknown action: {}",
+                    other
+                )))
+            }
+        };
+
+        let confidence = decision
+            .get("confidence")
+            .and_then(|v| v.as_f64())
+            .unwrap_or(0.5);
+
+        let rationale_code = decision
+            .get("rationale_code")
+            .and_then(|v| v.as_str())
+            .unwrap_or("slm_adjudicated")
+            .to_string();
+
+        Ok(SlmDecision {
+            category,
+            severity,
+            action,
+            confidence,
+            rationale_code,
+        })
+    }
+}
+
 impl SafetyClassifier {
     /// Create a new classifier with no policy packs (deterministic-only mode).
     pub fn new() -> Self {
