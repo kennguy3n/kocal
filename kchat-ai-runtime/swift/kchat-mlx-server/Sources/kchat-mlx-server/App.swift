@@ -53,6 +53,7 @@ func parseArgs() -> CliArgs {
             Endpoints:
               GET  /health              — Health check
               POST /completion          — llama-server compatible completion API
+              POST /completion/stream   — SSE streaming completion (token-by-token)
               POST /v1/chat/completions — OpenAI-compatible chat completion API
               POST /lora/load           — Load/swap LoRA adapter at runtime
               POST /lora/detach         — Detach LoRA adapter (revert to base model)
@@ -118,6 +119,7 @@ struct Main {
 
         fputs("  GET  /health              — health check\n", stderr)
         fputs("  POST /completion          — completion API\n", stderr)
+        fputs("  POST /completion/stream   — SSE streaming completion\n", stderr)
         fputs("  POST /v1/chat/completions — chat completion API\n", stderr)
         fputs("  POST /lora/load           — load/swap LoRA adapter\n", stderr)
         fputs("  POST /lora/detach         — detach LoRA adapter\n", stderr)

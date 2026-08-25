@@ -163,6 +163,13 @@ class ModelServer {
             }
             handleCompletion(request, fd: fd)
 
+        case ("POST", "/completion/stream"):
+            if !modelReady {
+                sendJsonResponse(fd, status: 503, body: ErrorResponse(error: "model still loading"))
+                return
+            }
+            handleCompletionStream(request, fd: fd)
+
         case ("GET", "/v1/models"):
             struct ModelsList: Codable {
                 let object: String
@@ -264,6 +271,92 @@ class ModelServer {
                 sendJsonResponse(fd, status: 200, body: response)
             case .failure(let error):
                 sendJsonResponse(fd, status: 500, body: ErrorResponse(error: "\(error)"))
+            }
+
+        } catch {
+            sendJsonResponse(fd, status: 400, body: ErrorResponse(error: "invalid JSON: \(error)"))
+        }
+    }
+
+    // MARK: - Streaming Completion Endpoint (SSE)
+
+    private func handleCompletionStream(_ request: HTTPRequest, fd: Int32) {
+        guard !request.body.isEmpty else {
+            sendJsonResponse(fd, status: 400, body: ErrorResponse(error: "empty body"))
+            return
+        }
+
+        do {
+            let req = try JSONDecoder().decode(CompletionRequest.self, from: request.body)
+
+            let maxTokens = req.n_predict ?? 128
+            let temperature = req.temperature ?? 0.7
+            let topP = req.top_p ?? 0.9
+            let seed = req.seed ?? 42
+
+            // Send SSE headers immediately so the client can start reading
+            let header = "HTTP/1.1 200 OK\r\n" +
+                         "Content-Type: text/event-stream\r\n" +
+                         "Cache-Control: no-cache\r\n" +
+                         "Connection: close\r\n" +
+                         "Access-Control-Allow-Origin: *\r\n" +
+                         "\r\n"
+            let headerData = Data(header.utf8)
+            _ = headerData.withUnsafeBytes { ptr in
+                write(fd, ptr.baseAddress, ptr.count)
+            }
+
+            // Stream tokens via generateStream callback.
+            // Task.detached runs on the cooperative pool; we use a semaphore
+            // to bridge back to this thread for writing each SSE event.
+            let sem = DispatchSemaphore(value: 0)
+            var finalResult: GenerateResult?
+            var genError: Error?
+
+            Task.detached {
+                do {
+                    let result = try await self.inference!.generateStream(
+                        prompt: req.prompt,
+                        maxTokens: maxTokens,
+                        temperature: temperature,
+                        topP: topP,
+                        seed: seed
+                    ) { token in
+                        // Encode token as SSE data event and write immediately.
+                        // JSON-encode the token string to handle newlines/special chars.
+                        let encoded = (try? JSONEncoder().encode(token)) ?? Data("\"\"".utf8)
+                        let sseEvent = "data: " + String(data: encoded, encoding: .utf8)! + "\n\n"
+                        let eventData = Data(sseEvent.utf8)
+                        eventData.withUnsafeBytes { ptr in
+                            _ = write(fd, ptr.baseAddress, ptr.count)
+                        }
+                    }
+                    finalResult = result
+                } catch {
+                    genError = error
+                }
+                sem.signal()
+            }
+
+            // Wait for generation to complete (120s timeout)
+            let waitResult = sem.wait(timeout: .now() + .seconds(120))
+            if waitResult == .timedOut {
+                let errEvent = "data: {\"error\":\"generation timed out\"}\n\n"
+                _ = write(fd, errEvent, errEvent.count)
+                return
+            }
+
+            if let error = genError {
+                let errEvent = "data: {\"error\":\"\(error)\"}\n\n"
+                _ = write(fd, errEvent, errEvent.count)
+                return
+            }
+
+            // Send final result as a [DONE] event
+            if let result = finalResult {
+                let finalJson = "{\"content\":\"\(result.content.replacingOccurrences(of: "\"", with: "\\\""))\",\"tokens_predicted\":\(result.tokensPredicted),\"tokens_evaluated\":\(result.tokensEvaluated),\"prompt_ms\":\(result.promptMs),\"predicted_ms\":\(result.predictedMs)}"
+                let doneEvent = "data: " + finalJson + "\n\ndata: [DONE]\n\n"
+                _ = write(fd, doneEvent, doneEvent.count)
             }
 
         } catch {

@@ -308,28 +308,17 @@ impl BackendAdapter for MlxBackend {
         }
 
         let start = Instant::now();
-        let resp = self.post_completion(prompt, config, None)?;
+        let sse_result = self.post_completion_stream(prompt, config, stream)?;
         let total_ms = start.elapsed().as_millis() as u64;
 
-        // The Swift server doesn't support SSE streaming, so we push the full
-        // content in word-sized chunks for simulated streaming. The caller's
-        // think-tag state machine handles partial tags across chunks.
-        for chunk in split_into_word_chunks(&resp.content) {
-            if stream.is_cancelled() {
-                stream.cancel("cancelled by caller");
-                break;
-            }
-            stream.push_token(chunk);
-        }
-
         let result = GenerationResult {
-            text: resp.content,
-            prompt_tokens: resp.tokens_evaluated,
-            completion_tokens: resp.tokens_predicted,
-            ttft_ms: resp.prompt_ms as u64,
+            text: sse_result.content,
+            prompt_tokens: sse_result.tokens_evaluated,
+            completion_tokens: sse_result.tokens_predicted,
+            ttft_ms: sse_result.prompt_ms as u64,
             total_ms,
-            tokens_per_second: if resp.predicted_ms > 0.0 {
-                (resp.tokens_predicted as f64) / (resp.predicted_ms / 1000.0)
+            tokens_per_second: if sse_result.predicted_ms > 0.0 {
+                (sse_result.tokens_predicted as f64) / (sse_result.predicted_ms / 1000.0)
             } else {
                 0.0
             },
@@ -338,7 +327,7 @@ impl BackendAdapter for MlxBackend {
         };
 
         if !stream.is_cancelled() {
-            stream.complete(resp.tokens_predicted as u32, total_ms);
+            stream.complete(sse_result.tokens_predicted as u32, total_ms);
         }
 
         Ok(result)
@@ -430,6 +419,128 @@ impl MlxBackend {
 
         resp.json::<CompletionResponse>()
             .map_err(|e| BackendError::GenerationFailed(format!("failed to parse completion response: {}", e)))
+    }
+
+    /// POST to `/completion/stream` and consume the SSE stream token-by-token.
+    /// Each `data: "token"` event is pushed to the `StreamHandle` immediately.
+    /// The final `data: {json}` event contains the full result metadata.
+    fn post_completion_stream(
+        &self,
+        prompt: &str,
+        config: &GenerationConfig,
+        stream: &StreamHandle,
+    ) -> Result<CompletionResponse, BackendError> {
+        let body = CompletionBody {
+            prompt,
+            n_predict: config.max_tokens,
+            temperature: config.temperature,
+            top_p: config.top_p,
+            top_k: config.top_k,
+            repeat_penalty: config.repeat_penalty,
+            seed: config.seed,
+            stream: true,
+        };
+
+        let url = format!("{}/completion/stream", self.base_url());
+        let resp = http_client()
+            .post(&url)
+            .json(&body)
+            .send()
+            .map_err(|e| BackendError::GenerationFailed(format!("stream request failed: {}", e)))?;
+
+        if !resp.status().is_success() {
+            let status = resp.status();
+            let text = resp.text().unwrap_or_default();
+            return Err(BackendError::GenerationFailed(format!(
+                "kchat-mlx-server stream returned {}: {}",
+                status, text
+            )));
+        }
+
+        // Read the SSE stream line by line.
+        // Format:
+        //   data: "token"\n\n      → individual token (JSON-encoded string)
+        //   data: {json}\n\n        → final result metadata
+        //   data: [DONE]\n\n        → end marker
+        let mut full_text = String::new();
+        let mut final_result: Option<CompletionResponse> = None;
+        let mut buf = String::new();
+
+        // Use a buffered reader over the response body.
+        use std::io::BufRead;
+        let reader = std::io::BufReader::new(resp);
+        for line in reader.lines() {
+            if stream.is_cancelled() {
+                stream.cancel("cancelled by caller");
+                break;
+            }
+
+            let line = line.map_err(|e| {
+                BackendError::GenerationFailed(format!("SSE read error: {}", e))
+            })?;
+
+            if line.is_empty() {
+                // Event boundary — flush buffer
+                if !buf.is_empty() {
+                    process_sse_data(&buf, stream, &mut full_text, &mut final_result);
+                    buf.clear();
+                }
+                continue;
+            }
+
+            if line.starts_with("data: ") {
+                buf = line["data: ".len()..].to_string();
+            }
+        }
+
+        // Flush any remaining buffered event
+        if !buf.is_empty() {
+            process_sse_data(&buf, stream, &mut full_text, &mut final_result);
+        }
+
+        // Return the final result from the server, or construct one from
+        // accumulated text if the final JSON event was missing.
+        if let Some(result) = final_result {
+            Ok(result)
+        } else {
+            let text_len = full_text.len();
+            Ok(CompletionResponse {
+                content: full_text,
+                tokens_predicted: (text_len / 4) as u32,
+                tokens_evaluated: 0,
+                prompt_ms: 0.0,
+                predicted_ms: 0.0,
+            })
+        }
+    }
+}
+
+/// Process a single SSE `data:` payload.
+/// - If it's a JSON string (token), push it to the stream.
+/// - If it's a JSON object (final result), parse it.
+/// - If it's `[DONE]`, ignore (stream end marker).
+fn process_sse_data(
+    data: &str,
+    stream: &StreamHandle,
+    full_text: &mut String,
+    final_result: &mut Option<CompletionResponse>,
+) {
+    if data == "[DONE]" {
+        return;
+    }
+
+    // Try to parse as a JSON string (individual token)
+    if let Ok(token) = serde_json::from_str::<String>(data) {
+        full_text.push_str(&token);
+        stream.push_token(token);
+        return;
+    }
+
+    // Try to parse as a JSON object (final result metadata)
+    if data.starts_with('{') {
+        if let Ok(result) = serde_json::from_str::<CompletionResponse>(data) {
+            *final_result = Some(result);
+        }
     }
 }
 

@@ -147,18 +147,7 @@ class MlxInference {
         seed: UInt64
     ) async throws -> GenerateResult {
         let promptStart = Date()
-
-        // Wrap raw prompts in chat template format for models that expect it
-        // (e.g. macaw/LFM2.5 uses <|im_start|>...<|im_end|> format with thinking)
-        let chatPrompt: String
-        if prompt.contains("<|im_start|>") {
-            chatPrompt = prompt
-        } else if prompt.contains("JSON") || prompt.contains("json") || prompt.contains("ToolPlan") {
-            // For JSON tasks, add a system prompt instructing the model to output only JSON
-            chatPrompt = "<|im_start|>system\nYou are a JSON generator. Output ONLY valid JSON. No explanation, no markdown, no thinking, no extra text. Start your response with { and end with }.<|im_end|>\n<|im_start|>user\n\(prompt)<|im_end|>\n<|im_start|>assistant\n"
-        } else {
-            chatPrompt = "<|im_start|>user\n\(prompt)<|im_end|>\n<|im_start|>assistant\n"
-        }
+        let chatPrompt = buildChatPrompt(prompt)
         let userInput: UserInput = .init(prompt: chatPrompt)
         let lmInput = try await modelContainer.prepare(input: userInput)
 
@@ -219,5 +208,84 @@ class MlxInference {
             promptMs: promptMs,
             predictedMs: predictedMs
         )
+    }
+
+    /// Generate text with a streaming callback. Each token chunk is passed to
+    /// `onToken` as soon as it is produced by the model. Returns the full result.
+    func generateStream(
+        prompt: String,
+        maxTokens: Int,
+        temperature: Float,
+        topP: Float,
+        seed: UInt64,
+        onToken: @escaping (String) -> Void
+    ) async throws -> GenerateResult {
+        let promptStart = Date()
+        let chatPrompt = buildChatPrompt(prompt)
+        let userInput: UserInput = .init(prompt: chatPrompt)
+        let lmInput = try await modelContainer.prepare(input: userInput)
+
+        let promptMs = Date().timeIntervalSince(promptStart) * 1000.0
+
+        let decodeStart = Date()
+        var resultText = ""
+        var tokenCount = 0
+
+        let params = GenerateParameters(
+            temperature: temperature,
+            topP: topP,
+            seed: seed
+        )
+
+        let stream = try await modelContainer.generate(
+            input: lmInput,
+            parameters: params
+        )
+
+        for await event in stream {
+            if tokenCount >= maxTokens {
+                break
+            }
+            switch event {
+            case .chunk(let token):
+                resultText += token
+                tokenCount += 1
+                onToken(token)
+            case .toolCall:
+                break
+            case .info:
+                break
+            @unknown default:
+                break
+            }
+        }
+
+        let predictedMs = Date().timeIntervalSince(decodeStart) * 1000.0
+
+        var finalText = resultText
+        if let outputRange = finalText.range(of: "") {
+            finalText = String(finalText[outputRange.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        let estimatedTokens = max(tokenCount, resultText.count / 4)
+
+        return GenerateResult(
+            content: finalText,
+            tokensPredicted: estimatedTokens,
+            tokensEvaluated: 0,
+            promptMs: promptMs,
+            predictedMs: predictedMs
+        )
+    }
+
+    /// Build the chat-formatted prompt for the model.
+    private func buildChatPrompt(_ prompt: String) -> String {
+        if prompt.contains("<|im_start|>") {
+            return prompt
+        } else if prompt.contains("JSON") || prompt.contains("json") || prompt.contains("ToolPlan") {
+            return "<|im_start|>system\nYou are a JSON generator. Output ONLY valid JSON. No explanation, no markdown, no thinking, no extra text. Start your response with { and end with }.<|im_end|>\n<|im_start|>user\n\(prompt)<|im_end|>\n<|im_start|>assistant\n"
+        } else {
+            return "<|im_start|>user\n\(prompt)<|im_end|>\n<|im_start|>assistant\n"
+        }
     }
 }
