@@ -144,7 +144,10 @@ class MlxInference {
         maxTokens: Int,
         temperature: Float,
         topP: Float,
-        seed: UInt64
+        topK: Int = 40,
+        repeatPenalty: Float = 1.1,
+        seed: UInt64,
+        stopSequences: [String] = []
     ) async throws -> GenerateResult {
         let promptStart = Date()
         let chatPrompt = buildChatPrompt(prompt)
@@ -161,6 +164,9 @@ class MlxInference {
         let params = GenerateParameters(
             temperature: temperature,
             topP: topP,
+            topK: topK,
+            repetitionPenalty: repeatPenalty,
+            repetitionContextSize: 64,
             seed: seed
         )
 
@@ -177,6 +183,10 @@ class MlxInference {
             case .chunk(let token):
                 resultText += token
                 tokenCount += 1
+                // Check stop sequences
+                if !stopSequences.isEmpty && checkStopSequences(&resultText, stopSequences) {
+                    break
+                }
             case .toolCall:
                 break
             case .info:
@@ -217,7 +227,10 @@ class MlxInference {
         maxTokens: Int,
         temperature: Float,
         topP: Float,
+        topK: Int = 40,
+        repeatPenalty: Float = 1.1,
         seed: UInt64,
+        stopSequences: [String] = [],
         onToken: @escaping (String) -> Void
     ) async throws -> GenerateResult {
         let promptStart = Date()
@@ -230,10 +243,14 @@ class MlxInference {
         let decodeStart = Date()
         var resultText = ""
         var tokenCount = 0
+        var stopped = false
 
         let params = GenerateParameters(
             temperature: temperature,
             topP: topP,
+            topK: topK,
+            repetitionPenalty: repeatPenalty,
+            repetitionContextSize: 64,
             seed: seed
         )
 
@@ -243,7 +260,7 @@ class MlxInference {
         )
 
         for await event in stream {
-            if tokenCount >= maxTokens {
+            if tokenCount >= maxTokens || stopped {
                 break
             }
             switch event {
@@ -251,6 +268,10 @@ class MlxInference {
                 resultText += token
                 tokenCount += 1
                 onToken(token)
+                // Check stop sequences — if found, stop generation
+                if !stopSequences.isEmpty && checkStopSequences(&resultText, stopSequences) {
+                    stopped = true
+                }
             case .toolCall:
                 break
             case .info:
@@ -276,6 +297,18 @@ class MlxInference {
             promptMs: promptMs,
             predictedMs: predictedMs
         )
+    }
+
+    /// Check if any stop sequence appears in the result text.
+    /// If found, truncate the text at the stop sequence and return true.
+    private func checkStopSequences(_ text: inout String, _ stops: [String]) -> Bool {
+        for stop in stops {
+            if let range = text.range(of: stop) {
+                text = String(text[..<range.lowerBound])
+                return true
+            }
+        }
+        return false
     }
 
     /// Build the chat-formatted prompt for the model.

@@ -131,6 +131,8 @@ pub struct GenerationConfig {
     pub grammar: Option<Grammar>,
     /// Seed for reproducibility (0 = random)
     pub seed: u64,
+    /// Stop sequences — generation stops when any of these strings appears
+    pub stop: Vec<String>,
 }
 
 impl Default for GenerationConfig {
@@ -143,6 +145,7 @@ impl Default for GenerationConfig {
             repeat_penalty: 1.1,
             grammar: None,
             seed: 0,
+            stop: Vec::new(),
         }
     }
 }
@@ -158,6 +161,7 @@ impl GenerationConfig {
             repeat_penalty: 1.1,
             grammar: None,
             seed: 0,
+            stop: Vec::new(),
         }
     }
 
@@ -171,6 +175,7 @@ impl GenerationConfig {
             repeat_penalty: 1.1,
             grammar: None,
             seed: 0,
+            stop: Vec::new(),
         }
     }
 }

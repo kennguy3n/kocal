@@ -161,6 +161,7 @@ impl<'a> GenerationPipeline<'a> {
             repeat_penalty: 1.1,
             grammar: None,
             seed: 0,
+            stop: Vec::new(),
         };
 
         let mut result = self.backend.generate(&full_prompt, &config)?;

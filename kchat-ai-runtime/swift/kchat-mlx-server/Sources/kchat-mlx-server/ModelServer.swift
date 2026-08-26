@@ -220,7 +220,10 @@ class ModelServer {
             let maxTokens = req.n_predict ?? 128
             let temperature = req.temperature ?? 0.7
             let topP = req.top_p ?? 0.9
+            let topK = req.top_k ?? 40
+            let repeatPenalty = req.repeat_penalty ?? 1.1
             let seed = req.seed ?? 42
+            let stopSequences = req.stop ?? []
 
             // Bridge async generate() to sync using a semaphore with timeout.
             // Task.detached runs on the Swift Concurrency cooperative pool — NOT
@@ -237,7 +240,10 @@ class ModelServer {
                         maxTokens: maxTokens,
                         temperature: temperature,
                         topP: topP,
-                        seed: seed
+                        topK: topK,
+                        repeatPenalty: repeatPenalty,
+                        seed: seed,
+                        stopSequences: stopSequences
                     )
                     responseResult = .success(result)
                 } catch {
@@ -292,7 +298,10 @@ class ModelServer {
             let maxTokens = req.n_predict ?? 128
             let temperature = req.temperature ?? 0.7
             let topP = req.top_p ?? 0.9
+            let topK = req.top_k ?? 40
+            let repeatPenalty = req.repeat_penalty ?? 1.1
             let seed = req.seed ?? 42
+            let stopSequences = req.stop ?? []
 
             // Send SSE headers immediately so the client can start reading
             let header = "HTTP/1.1 200 OK\r\n" +
@@ -320,7 +329,10 @@ class ModelServer {
                         maxTokens: maxTokens,
                         temperature: temperature,
                         topP: topP,
-                        seed: seed
+                        topK: topK,
+                        repeatPenalty: repeatPenalty,
+                        seed: seed,
+                        stopSequences: stopSequences
                     ) { token in
                         // Encode token as SSE data event and write immediately.
                         // JSON-encode the token string to handle newlines/special chars.

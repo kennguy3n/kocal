@@ -366,6 +366,8 @@ struct CompletionBody<'a> {
     repeat_penalty: f32,
     seed: u64,
     stream: bool,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    stop: &'a Vec<String>,
 }
 
 /// JSON response from `/completion`.
@@ -399,6 +401,7 @@ impl MlxBackend {
             // The Swift server doesn't support SSE streaming; stream:false
             // returns the full content in one JSON response.
             stream: false,
+            stop: &config.stop,
         };
 
         let url = format!("{}/completion", self.base_url());
@@ -439,6 +442,7 @@ impl MlxBackend {
             repeat_penalty: config.repeat_penalty,
             seed: config.seed,
             stream: true,
+            stop: &config.stop,
         };
 
         let url = format!("{}/completion/stream", self.base_url());
@@ -457,45 +461,59 @@ impl MlxBackend {
             )));
         }
 
-        // Read the SSE stream line by line.
-        // Format:
+        // Read the SSE stream as bytes, accumulating into a buffer and
+        // processing events on "\n\n" boundaries. Using read_until instead of
+        // lines() avoids UTF-8 validation issues when multi-byte characters
+        // span chunk boundaries in the HTTP response.
+        //
+        // SSE format:
         //   data: "token"\n\n      → individual token (JSON-encoded string)
         //   data: {json}\n\n        → final result metadata
         //   data: [DONE]\n\n        → end marker
         let mut full_text = String::new();
         let mut final_result: Option<CompletionResponse> = None;
-        let mut buf = String::new();
+        let mut data_buf = String::new();
 
-        // Use a buffered reader over the response body.
         use std::io::BufRead;
-        let reader = std::io::BufReader::new(resp);
-        for line in reader.lines() {
+        let mut reader = std::io::BufReader::new(resp);
+        let mut byte_buf: Vec<u8> = Vec::with_capacity(4096);
+
+        loop {
             if stream.is_cancelled() {
                 stream.cancel("cancelled by caller");
                 break;
             }
 
-            let line = line.map_err(|e| {
+            byte_buf.clear();
+            let n = reader.read_until(b'\n', &mut byte_buf).map_err(|e| {
                 BackendError::GenerationFailed(format!("SSE read error: {}", e))
             })?;
+            if n == 0 {
+                break; // EOF
+            }
+
+            // Convert bytes to string, handling potential UTF-8 issues
+            // at chunk boundaries gracefully.
+            let line = String::from_utf8_lossy(&byte_buf);
+            let line = line.trim_end_matches('\n');
 
             if line.is_empty() {
-                // Event boundary — flush buffer
-                if !buf.is_empty() {
-                    process_sse_data(&buf, stream, &mut full_text, &mut final_result);
-                    buf.clear();
+                // Event boundary — flush data buffer
+                if !data_buf.is_empty() {
+                    process_sse_data(&data_buf, stream, &mut full_text, &mut final_result);
+                    data_buf.clear();
                 }
                 continue;
             }
 
-            if line.starts_with("data: ") {
-                buf = line["data: ".len()..].to_string();
+            if let Some(data) = line.strip_prefix("data: ") {
+                data_buf = data.to_string();
             }
         }
 
         // Flush any remaining buffered event
-        if !buf.is_empty() {
-            process_sse_data(&buf, stream, &mut full_text, &mut final_result);
+        if !data_buf.is_empty() {
+            process_sse_data(&data_buf, stream, &mut full_text, &mut final_result);
         }
 
         // Return the final result from the server, or construct one from

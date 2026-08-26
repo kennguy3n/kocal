@@ -10,6 +10,7 @@ struct CompletionRequest: Codable {
     let top_k: Int?
     let seed: UInt64?
     let repeat_penalty: Float?
+    let stop: [String]?
     // Accept json_schema as either a string or an object — we use it as a
     // signal to enable JSON extraction post-processing, not for grammar
     // constraining (MLX doesn't support that). Using a wrapper type avoids
