@@ -88,13 +88,15 @@ To run generation tests, either:
 ### Per-Device Eval Setup
 
 The `--perdevice` mode tests each of the 12 device profiles against its assigned
-real model (2 generative models, unified across all tiers), running 150 tasks across 15 categories:
+real model (4 generative models: 2 fast 1-bit + 2 quality 2-bit), running 150 tasks across 15 categories:
 
 - **15 task categories**: summarization, translation, structured output, tool use,
   multi-turn conversation, code generation, reasoning, instruction following,
   safety, context retrieval, action, core, generation, WASM, bindings
-- **2 generative models**: bonsai-1.7b-mlx-1bit (Apple Silicon, 269MB),
-  bonsai-1.7b-q1_0 (Android/Windows/Intel, 248MB)
+- **4 generative models**: bonsai-1.7b-mlx-1bit (Apple Silicon, 269MB, fast),
+  bonsai-1.7b-q1_0 (Android/Windows/Intel, 248MB, fast),
+  bonsai-1.7b-mlx-2bit (Apple Silicon, 484MB, quality),
+  bonsai-1.7b-q2_0 (Android/Windows/Intel, 442MB, quality)
 - **Non-generative models per profile**: vision (mobileclip-s2-int8),
   safety encoder (mmbert-safety-q4_k_m), ASR (whisper-tiny/base),
   video (mobileclip-s2-int8, same model as vision)
@@ -316,29 +318,48 @@ The `ImageSearchRegistry` merges results across providers with:
   - Guardrail eval reports per-category breakdown, per-path latency (det vs enc), and applies jurisdiction severity floors (skill-pack overlay)
   - Real model: Ternary-Bonsai-1.7B Q2_0 via llama-server (Metal), ~130 tok/s, 30ms TTFT
 - **Go server offload: 7 tests, all passing**
-- **Per-device eval: 12 profiles × 150 tasks = 1800 task runs (2 generative models, unified)**
+- **Per-device eval: 12 profiles × 150 tasks = 1800 task runs (4 generative models, unified)**
   - 15 task categories: summarization, translation, structured output, tool use,
     multi-turn, code generation, reasoning, instruction following, safety,
     context retrieval, action, core, generation, WASM, bindings
   - Multilingual: EN, VI, JA, KO, ZH, ES, AR, DE, HI, FR + mixed-language
   - Judgment: Pass (≥75%), Marginal (50-74%), Fail (<50%)
-  - 2 generative models: bonsai-1.7b-mlx-1bit (Apple Silicon, 269MB),
-    bonsai-1.7b-q1_0 (Android/Windows/Intel, 248MB)
+  - 4 generative models: bonsai-1.7b-mlx-1bit (Apple Silicon, 269MB, fast),
+    bonsai-1.7b-q1_0 (Android/Windows/Intel, 248MB, fast),
+    bonsai-1.7b-mlx-2bit (Apple Silicon, 484MB, quality),
+    bonsai-1.7b-q2_0 (Android/Windows/Intel, 442MB, quality)
   - Also tracks per-profile: vision (mobileclip-s2-int8), safety encoder (mmbert-safety-q4_k_m),
     ASR (whisper-tiny/base), and video (mobileclip-s2-int8, same as vision) model assignments
 
-## Model Registry (6 packs)
+## Model Registry (8 packs)
 
 | Pack ID | Type | Min Tier | Size | Quant | Backend | Platform | SHA-256 |
 |---------|------|----------|------|-------|---------|----------|---------|
 | bonsai-1.7b-mlx-1bit | generative | Low | 269 MB | 1bit-MLX | MLX | ios/macos (Apple Silicon) | placeholder |
 | bonsai-1.7b-q1_0 | generative | Low | 248 MB | Q1_0 | llama.cpp Vulkan/CPU | android/windows/intel | placeholder |
+| bonsai-1.7b-mlx-2bit | generative | Low | 484 MB | 2bit-MLX | MLX | ios/macos (Apple Silicon) | placeholder |
+| bonsai-1.7b-q2_0 | generative | Low | 442 MB | Q2_0 | llama.cpp Vulkan/CPU | android/windows/intel | placeholder |
 | mmbert-safety-q4_k_m | encoder | Low | 145 MB | Q4_K_M | GGUF (llama.cpp) | all | ✅ trained |
 | mobileclip-s2-int8 | vision | Low | 102 MB | INT8 | ONNX | all | ✅ real |
 | whisper-tiny | asr | Low | 33 MB | ONNX (FP32) | ONNX | all | ✅ real |
 | whisper-base | asr | Medium | 82 MB | ONNX (FP32) | ONNX | all | ✅ real |
 
-4/6 packs have real SHA-256 hashes. 2 generative Bonsai packs are pending final export.
+4/8 packs have real SHA-256 hashes. 4 generative Bonsai packs are pending final export.
+
+### Model Quality Selection (Fast vs Quality)
+
+The runtime supports two model quality modes, user-configurable at runtime:
+- **Fast** (default): 1-bit Bonsai (~269MB MLX / ~248MB GGUF, ~22 tok/s on M5)
+- **Quality**: 2-bit Ternary Bonsai (~484MB MLX / ~442MB GGUF, ~11 tok/s on M5, +18% benchmark score)
+
+Both modes share the same Qwen3-1.7B architecture and LoRA adapters (75 adapters:
+5 task-families × 15 language slots). The 2-bit pack's `lora/` directory symlinks
+to the 1-bit pack's lora directory, so adapters are shared without duplication.
+
+The `ModelQuality` enum in `kchat-generation::backend` controls which pack is
+loaded. The KDoc frontend exposes a Fast/Quality toggle in the AI panel header.
+The backend `/api/quality` endpoint (GET/POST) sets the preference, and
+`/api/auto-load` respects it when selecting which model pack to load.
 
 ### mmBERT-small GGUF Encoder (v2.0)
 
@@ -360,34 +381,42 @@ text embedding, and cross-encoder reranking:
 
 ### Model selection by tier and platform
 
+Each tier has a default quality mode (Fast for Low/Medium, Quality for High),
+but users can override at runtime via the `ModelQuality` setting.
+
 - **Low tier**:
-  - Generative: iOS/macOS: `bonsai-1.7b-mlx-1bit` via **MLX** (269MB) / Android/Windows: `bonsai-1.7b-q1_0` via **llama.cpp Vulkan** (248MB)
+  - Generative (fast, default): iOS/macOS: `bonsai-1.7b-mlx-1bit` via **MLX** (269MB) / Android/Windows: `bonsai-1.7b-q1_0` via **llama.cpp Vulkan** (248MB)
+  - Generative (quality, opt-in): iOS/macOS: `bonsai-1.7b-mlx-2bit` via **MLX** (484MB) / Android/Windows: `bonsai-1.7b-q2_0` via **llama.cpp Vulkan** (442MB)
   - Vision: `mobileclip-s2-int8` (102MB, INT8, 17 categories, image + video)
   - Encoder: `mmbert-safety-q4_k_m` (145MB, Q4_K_M GGUF) — safety + embedding + reranking
   - ASR: `whisper-tiny` (33MB, ONNX FP32, nb-whisper-tiny, multilingual)
   - Video: `mobileclip-s2-int8` (same model as vision)
-  - **Total footprint**: ~549MB all loaded (Apple Silicon) / ~528MB all loaded (GGUF)
+  - **Total footprint**: ~549MB fast / ~764MB quality (Apple Silicon) / ~528MB fast / ~722MB quality (GGUF)
   - Context cap: 1,024 tokens (iOS) / 2,048 (Android) / 2,048 (desktop)
 - **Medium tier**:
-  - Generative: iOS/macOS: `bonsai-1.7b-mlx-1bit` via **MLX** (269MB) / Android: `bonsai-1.7b-q1_0` via **llama.cpp Vulkan** (248MB)
+  - Generative (fast, default): iOS/macOS: `bonsai-1.7b-mlx-1bit` via **MLX** (269MB) / Android: `bonsai-1.7b-q1_0` via **llama.cpp Vulkan** (248MB)
+  - Generative (quality, opt-in): iOS/macOS: `bonsai-1.7b-mlx-2bit` via **MLX** (484MB) / Android: `bonsai-1.7b-q2_0` via **llama.cpp Vulkan** (442MB)
   - Vision: `mobileclip-s2-int8` (102MB, INT8, image + video)
   - Encoder: `mmbert-safety-q4_k_m` (145MB, Q4_K_M GGUF) — safety + embedding + reranking
   - ASR: `whisper-base` (82MB, ONNX FP32, nb-whisper-base, multilingual)
   - Video: `mobileclip-s2-int8` (same model as vision)
-  - **Total footprint**: ~598MB all loaded (Apple Silicon) / ~577MB all loaded (GGUF)
+  - **Total footprint**: ~598MB fast / ~813MB quality (Apple Silicon) / ~577MB fast / ~771MB quality (GGUF)
   - Context cap: 2,048 tokens (iOS) / 4,096 (Android) / 4,096 (desktop)
 - **High tier**:
-  - Generative: iOS/macOS: `bonsai-1.7b-mlx-1bit` via **MLX** (269MB) / Android/Windows: `bonsai-1.7b-q1_0` via **llama.cpp Vulkan** (248MB)
+  - Generative (quality, default): iOS/macOS: `bonsai-1.7b-mlx-2bit` via **MLX** (484MB) / Android/Windows: `bonsai-1.7b-q2_0` via **llama.cpp Vulkan** (442MB)
+  - Generative (fast, fallback): iOS/macOS: `bonsai-1.7b-mlx-1bit` via **MLX** (269MB) / Android/Windows: `bonsai-1.7b-q1_0` via **llama.cpp Vulkan** (248MB)
   - Vision: `mobileclip-s2-int8` (102MB, INT8, image + video)
   - Encoder: `mmbert-safety-q4_k_m` (145MB, Q4_K_M GGUF) — safety + embedding + reranking
   - ASR: `whisper-base` (82MB, ONNX FP32, nb-whisper-base, multilingual)
   - Video: `mobileclip-s2-int8` (same model as vision)
-  - **Total footprint**: ~598MB all loaded (Apple Silicon) / ~577MB all loaded (Android/Windows)
+  - **Total footprint**: ~813MB quality / ~598MB fast (Apple Silicon) / ~771MB quality / ~577MB fast (Android/Windows)
   - Context cap: 4,096 tokens (iOS) / 8,192 (Android) / 16,384 (desktop)
 
-All tiers use the same 1.7B base generative model (bonsai-1.7b-mlx-1bit or bonsai-1.7b-q1_0)
+All tiers use the same 1.7B base generative model family (Bonsai 1-bit or Ternary Bonsai 2-bit)
 with task-specialized LoRA adapters. Tier differences are handled via context window size,
-output budget, and performance targets — not different model sizes.
+output budget, and performance targets — not different model sizes. The 2-bit quality mode
+is available on all tiers (fits the 750MB mobile budget) but defaults to High tier only;
+Low/Medium tier defaults to fast mode for better latency.
 All generative models support `tool_use`. The "deterministic-first" principle is preserved —
 safety works on ALL devices without a generative model. Vision and ASR run on ALL tiers.
 All tiers use the mmbert-safety-q4_k_m GGUF encoder (145MB) for consistency and efficiency.

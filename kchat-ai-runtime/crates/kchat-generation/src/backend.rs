@@ -82,6 +82,10 @@ pub struct BackendConfig {
     pub threads: u32,
     /// Batch size
     pub batch_size: u32,
+    /// Model quality preference: Fast (1-bit) or Quality (2-bit).
+    /// Defaults to Fast for backward compatibility.
+    #[serde(default)]
+    pub model_quality: ModelQuality,
 }
 
 impl BackendConfig {
@@ -110,6 +114,50 @@ impl BackendConfig {
             context_size,
             threads,
             batch_size: 512,
+            model_quality: ModelQuality::Fast,
+        }
+    }
+}
+
+/// Model quality preference — determines which Bonsai quantization to use.
+///
+/// - `Fast`: 1-bit model (~269MB MLX / ~248MB GGUF, ~22 tok/s on M5)
+/// - `Quality`: 2-bit ternary model (~484MB MLX / ~442MB GGUF, ~11 tok/s on M5, +18% benchmark score)
+///
+/// Both models share the same Qwen3-1.7B architecture and LoRA adapters.
+/// The user can toggle between modes at runtime; the backend unloads and
+/// reloads the appropriate model pack.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum ModelQuality {
+    /// 1-bit Bonsai (fast, ~22 tok/s, lower quality)
+    #[default]
+    Fast,
+    /// 2-bit Ternary Bonsai (slower, ~11 tok/s, higher quality)
+    Quality,
+}
+
+impl ModelQuality {
+    /// Returns the preferred model pack ID for this quality level on Apple Silicon.
+    pub fn mlx_pack_id(self) -> &'static str {
+        match self {
+            ModelQuality::Fast => "bonsai-1.7b-mlx-1bit",
+            ModelQuality::Quality => "bonsai-1.7b-mlx-2bit",
+        }
+    }
+
+    /// Returns the preferred model pack ID for this quality level on non-Apple platforms.
+    pub fn gguf_pack_id(self) -> &'static str {
+        match self {
+            ModelQuality::Fast => "bonsai-1.7b-q1_0",
+            ModelQuality::Quality => "bonsai-1.7b-q2_0",
+        }
+    }
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            ModelQuality::Fast => "fast",
+            ModelQuality::Quality => "quality",
         }
     }
 }

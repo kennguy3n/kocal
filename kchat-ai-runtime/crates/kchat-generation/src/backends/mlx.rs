@@ -758,6 +758,7 @@ mod tests {
             context_size: 2048,
             threads: 4,
             batch_size: 512,
+            model_quality: crate::backend::ModelQuality::Fast,
         };
 
         backend.load(&config).expect("failed to load MLX model");

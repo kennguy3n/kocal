@@ -1109,8 +1109,24 @@ fn find_model_path(pack_id: &str) -> Option<PathBuf> {
                 None
             }
         }
+        "bonsai-1.7b-mlx-2bit" => {
+            let dir = pack_dir.join("ternary-bonsai-1.7b-mlx-2bit");
+            if dir.exists() {
+                Some(dir)
+            } else {
+                None
+            }
+        }
         "bonsai-1.7b-q1_0" => {
             let path = pack_dir.join("bonsai-1.7b-q1_0").join("Bonsai-1.7B-Q1_0.gguf");
+            if path.exists() {
+                Some(path)
+            } else {
+                None
+            }
+        }
+        "bonsai-1.7b-q2_0" => {
+            let path = pack_dir.join("ternary-bonsai-1.7b-q2_0").join("Ternary-Bonsai-1.7B-Q2_0.gguf");
             if path.exists() {
                 Some(path)
             } else {
@@ -1132,8 +1148,14 @@ fn get_model_config_with_lora(pack_id: &str, port: u16, lora_path: Option<PathBu
         "bonsai-1.7b-mlx-1bit" => {
             (ServerType::MlxServer, "Bonsai-1.7B-MLX-1bit".into(), 2048)
         }
+        "bonsai-1.7b-mlx-2bit" => {
+            (ServerType::MlxServer, "Ternary-Bonsai-1.7B-MLX-2bit".into(), 2048)
+        }
         "bonsai-1.7b-q1_0" => {
             (ServerType::LlamaServer, "Bonsai-1.7B-Q1_0".into(), 2048)
+        }
+        "bonsai-1.7b-q2_0" => {
+            (ServerType::LlamaServer, "Ternary-Bonsai-1.7B-Q2_0".into(), 2048)
         }
         _ => return None,
     };

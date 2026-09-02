@@ -161,6 +161,44 @@ impl ModelRegistry {
             quantization: "Q1_0".into(),
         });
 
+        // --- Ternary Bonsai 1.7B 2-bit models (quality mode) ---
+        // Higher quality than 1-bit (58.47 vs 49.60 avg benchmark score)
+        // but ~2x slower (~11 tok/s vs ~22 tok/s on M5) and ~1.8x larger.
+        // Same Qwen3-1.7B architecture, ternary weights {-1, 0, +1} g128.
+        // LoRA adapters are shared with the 1-bit model (same architecture).
+
+        // Low tier: Ternary-Bonsai-1.7B MLX 2-bit for Apple Silicon (quality mode)
+        // ~484MB, Qwen3-1.7B base, ternary g128, MLX format
+        // 58.47 avg benchmark score (vs 49.60 for 1-bit)
+        models.push(RegistryEntry {
+            pack_id: "bonsai-1.7b-mlx-2bit".into(),
+            version: "1.0.0".into(),
+            pack_type: "generative".into(),
+            download_url: "https://huggingface.co/prism-ml/Ternary-Bonsai-1.7B-mlx-2bit/resolve/main/model.safetensors".into(),
+            sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(), // placeholder - update after upload
+            size_bytes: 484_049_216, // ~484 MB (exact from HF LFS)
+            min_tier: MinTier::Low,
+            task_capabilities: vec!["summarize".into(), "translate".into(), "generate".into(), "tool_use".into(), "extract_json".into(), "rewrite_grammar".into(), "summarize_catchup".into(), "doc_creative".into(), "slides_deck".into()],
+            languages: vec!["en".into(), "vi".into(), "zh".into(), "ja".into(), "ko".into(), "es".into(), "ar".into(), "de".into(), "hi".into(), "fr".into(), "es-en".into(), "ja-en".into(), "ko-en".into(), "vi-en".into(), "zh-en".into()],
+            quantization: "2bit-MLX".into(),
+        });
+
+        // Low tier: Ternary-Bonsai-1.7B Q2_0 GGUF for Android/Windows/Linux (quality mode)
+        // ~442MB, Qwen3-1.7B base, ternary Q2_0 g128
+        // Requires PrismML llama.cpp fork (branch: prism) for Q2_0 support
+        models.push(RegistryEntry {
+            pack_id: "bonsai-1.7b-q2_0".into(),
+            version: "1.0.0".into(),
+            pack_type: "generative".into(),
+            download_url: "https://huggingface.co/prism-ml/Ternary-Bonsai-1.7B-gguf/resolve/main/Ternary-Bonsai-1.7B-Q2_0.gguf".into(),
+            sha256: "0000000000000000000000000000000000000000000000000000000000000000".into(), // placeholder - update after upload
+            size_bytes: 442_000_000, // ~442 MB (approximate)
+            min_tier: MinTier::Low,
+            task_capabilities: vec!["summarize".into(), "translate".into(), "generate".into(), "tool_use".into()],
+            languages: vec!["en".into(), "vi".into(), "zh".into(), "ja".into(), "ko".into(), "es".into(), "ar".into(), "de".into(), "hi".into(), "fr".into()],
+            quantization: "Q2_0".into(),
+        });
+
         // --- Vision model (MobileCLIP-S2) ---
 
         // Unified MobileCLIP-S2 INT8 for both image and video classification
@@ -389,14 +427,14 @@ quantization = "INT8"
     }
 
     #[test]
-    fn test_default_registry_has_six_entries() {
+    fn test_default_registry_has_eight_entries() {
         let registry = ModelRegistry::default_registry();
-        // 2 generative (bonsai-1.7b-mlx-1bit, bonsai-1.7b-q1_0)
+        // 4 generative (bonsai-1.7b-mlx-1bit, bonsai-1.7b-q1_0, bonsai-1.7b-mlx-2bit, bonsai-1.7b-q2_0)
         // + 1 encoder (mmbert-safety-q4_k_m)
         // + 1 vision (mobileclip-s2-int8)
         // + 2 ASR (whisper-tiny, whisper-base)
-        // = 6
-        assert_eq!(registry.list().len(), 6);
+        // = 8
+        assert_eq!(registry.list().len(), 8);
     }
 
     #[test]
@@ -405,6 +443,8 @@ quantization = "INT8"
         let ids: Vec<&str> = registry.list().iter().map(|e| e.pack_id.as_str()).collect();
         assert!(ids.contains(&"bonsai-1.7b-mlx-1bit"));
         assert!(ids.contains(&"bonsai-1.7b-q1_0"));
+        assert!(ids.contains(&"bonsai-1.7b-mlx-2bit"));
+        assert!(ids.contains(&"bonsai-1.7b-q2_0"));
         assert!(ids.contains(&"mmbert-safety-q4_k_m"));
         assert!(ids.contains(&"mobileclip-s2-int8"));
         assert!(ids.contains(&"whisper-tiny"));
@@ -416,11 +456,35 @@ quantization = "INT8"
         let registry = ModelRegistry::default_registry();
         let mlx_1bit = registry.find("bonsai-1.7b-mlx-1bit").expect("bonsai-1.7b-mlx-1bit");
         let q1_0 = registry.find("bonsai-1.7b-q1_0").expect("bonsai-1.7b-q1_0");
-        // Both unified Bonsai models are Low tier (fit 750MB mobile budget)
+        let mlx_2bit = registry.find("bonsai-1.7b-mlx-2bit").expect("bonsai-1.7b-mlx-2bit");
+        let q2_0 = registry.find("bonsai-1.7b-q2_0").expect("bonsai-1.7b-q2_0");
+        // All four Bonsai models are Low tier (fit 750MB mobile budget)
         assert_eq!(mlx_1bit.min_tier, MinTier::Low);
         assert_eq!(q1_0.min_tier, MinTier::Low);
+        assert_eq!(mlx_2bit.min_tier, MinTier::Low);
+        assert_eq!(q2_0.min_tier, MinTier::Low);
         assert_eq!(mlx_1bit.quantization, "1bit-MLX");
         assert_eq!(q1_0.quantization, "Q1_0");
+        assert_eq!(mlx_2bit.quantization, "2bit-MLX");
+        assert_eq!(q2_0.quantization, "Q2_0");
+    }
+
+    #[test]
+    fn test_default_registry_2bit_models_have_correct_sizes() {
+        let registry = ModelRegistry::default_registry();
+        let mlx_2bit = registry.find("bonsai-1.7b-mlx-2bit").expect("bonsai-1.7b-mlx-2bit");
+        let q2_0 = registry.find("bonsai-1.7b-q2_0").expect("bonsai-1.7b-q2_0");
+        // 2-bit models are larger than 1-bit but still fit mobile budget
+        assert!(mlx_2bit.size_bytes > 400_000_000); // > 400MB
+        assert!(mlx_2bit.size_bytes <= 750 * 1024 * 1024); // fits low-tier budget
+        assert!(q2_0.size_bytes > 400_000_000);
+        assert!(q2_0.size_bytes <= 750 * 1024 * 1024);
+        // 2-bit MLX should support same task capabilities as 1-bit
+        assert!(mlx_2bit.task_capabilities.contains(&"extract_json".to_string()));
+        assert!(mlx_2bit.task_capabilities.contains(&"slides_deck".to_string()));
+        assert!(mlx_2bit.task_capabilities.contains(&"tool_use".to_string()));
+        // 2-bit MLX should support 15 language slots (same as 1-bit)
+        assert_eq!(mlx_2bit.languages.len(), 15);
     }
 
     #[test]
@@ -523,20 +587,22 @@ quantization = "INT8"
     #[test]
     fn test_default_registry_find_generative_for_all_tiers() {
         let registry = ModelRegistry::default_registry();
-        // Low tier: 2 unified Bonsai models
+        // Low tier: 4 Bonsai models (2 fast 1-bit + 2 quality 2-bit)
         let low = registry.find_for_task("summarize", MinTier::Low);
-        assert_eq!(low.len(), 2);
+        assert_eq!(low.len(), 4);
         let low_ids: Vec<&str> = low.iter().map(|e| e.pack_id.as_str()).collect();
         assert!(low_ids.contains(&"bonsai-1.7b-mlx-1bit"));
         assert!(low_ids.contains(&"bonsai-1.7b-q1_0"));
+        assert!(low_ids.contains(&"bonsai-1.7b-mlx-2bit"));
+        assert!(low_ids.contains(&"bonsai-1.7b-q2_0"));
 
-        // Medium tier: same 2 models
+        // Medium tier: same 4 models
         let medium = registry.find_for_task("summarize", MinTier::Medium);
-        assert_eq!(medium.len(), 2);
+        assert_eq!(medium.len(), 4);
 
-        // High tier: same 2 models
+        // High tier: same 4 models
         let high = registry.find_for_task("summarize", MinTier::High);
-        assert_eq!(high.len(), 2);
+        assert_eq!(high.len(), 4);
     }
 
     #[test]
