@@ -1,10 +1,21 @@
 # Guardrail Benchmark Results
 
+> **Provenance note:** These are committed benchmark *records* imported from
+> the `kchat-skills` source repository. The referenced tooling
+> (`tools/run_guardrail_demo.py`, `build-tools/compiler/xlmr_adapter.py`,
+> `tools/export_xlmr_onnx.py`, `kchat-skills/samples/`) lives in that repo —
+> the paths below are not resolvable from this workspace. The Rust eval
+> harness in `eval/kchat-task-suite/` re-runs equivalent coverage natively
+> (see `--realworld` guardrail/held-out suites). The production encoder is
+> now mmBERT-small GGUF (`mmbert-safety-q4_k_m`); the XLM-R ONNX numbers
+> below are the historical baseline.
+
 This directory pins the committed benchmark measurements for the
 hybrid local guardrail pipeline against the **XLM-R** multilingual
 encoder classifier — the same model used by
-[`XLMRAdapter`](../../build-tools/compiler/xlmr_adapter.py), exported once to ONNX
-INT8 by [`tools/export_xlmr_onnx.py`](../../tools/export_xlmr_onnx.py)
+`XLMRAdapter` (`build-tools/compiler/xlmr_adapter.py` in kchat-skills),
+exported once to ONNX
+INT8 by `tools/export_xlmr_onnx.py`
 and loaded on-device through `onnxruntime`.
 
 The 250 ms p95 latency target from

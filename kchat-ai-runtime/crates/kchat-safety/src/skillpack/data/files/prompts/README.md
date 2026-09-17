@@ -3,9 +3,10 @@
 > **TL;DR:** Files in this directory are **policy manifests** —
 > structured, reviewer-readable records of the compiled skill bundle.
 > They are **not** generative-model system prompts. The on-device
-> encoder backend (XLM-R classifier head, see
-> `build-tools/compiler/xlmr_adapter.py`) is a frozen classifier;
-> nothing in the runtime ever consumes these files as an LLM prompt.
+> encoder backend (mmBERT-small GGUF classifier head,
+> `mmbert-safety-q4_k_m` via `crates/kchat-encoder/`) is a frozen
+> classifier; nothing in the runtime ever consumes these files as an
+> LLM prompt.
 
 ## Why the name "prompt" persists
 

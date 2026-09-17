@@ -6,7 +6,7 @@ context — and emits a single compact text prompt that records the
 classifier-bundle configuration. The compiled prompt is pinned to
 the instruction budget (**< 1800 tokens**, output budget **< 600
 tokens**) so the bundle stays compatible with future
-generative-classifier backends. The reference XLM-R encoder
+generative-classifier backends. The reference mmBERT encoder
 consumes the bundle directly (no chat-completion call,
 deterministic argmax over fixed prototypes — "temperature **0.0**"
 is kept in the schema for backward compatibility but is not used by

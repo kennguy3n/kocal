@@ -1,18 +1,24 @@
 # Sample Messages
 
-A curated, privacy-safe corpus used by
-[`tools/run_guardrail_demo.py`](../../tools/run_guardrail_demo.py) and
-the test suite to drive the full hybrid local pipeline through every
-taxonomy category and every protected-speech context.
+> **Provenance note:** This corpus was imported from the `kchat-skills`
+> repository. The `tools/` and `build-tools/` paths referenced below live in
+> that repo; in this workspace the corpus is consumed natively by the Rust
+> eval harness (`run_guardrail_sample_messages` in
+> `eval/kchat-task-suite/src/eval_realworld.rs`, run via
+> `cargo run -p kchat-task-suite -- --realworld`).
+
+A curated, privacy-safe corpus used by the guardrail eval suite
+(`tools/run_guardrail_demo.py` in kchat-skills; `eval_realworld.rs` here)
+to drive the full hybrid local pipeline through every taxonomy category
+and every protected-speech context.
 
 ## What's in here
 
-- [`sample_messages.yaml`](sample_messages.yaml) — 206 cases (68 text +
-  138 vision/image/video). Each case is a fixture that maps directly
-  onto
-  [`kchat.guardrail.local_signal.v1`](../global/local_signal_schema.json)
-  fields plus an `expected_category` / `expected_severity` /
-  `description` field used by the demo and tests.
+- [`sample_messages.yaml`](sample_messages.yaml) — 220 cases (64 text +
+  156 vision/image/video). Each case is a fixture that maps directly
+  onto the `kchat.guardrail.local_signal.v1` schema fields plus an
+  `expected_category` / `expected_severity` / `description` field used
+  by the eval and tests.
 
 The text corpus covers:
 
@@ -44,7 +50,7 @@ The text corpus covers:
 
 ## Vision / image / video corpus
 
-The 138 `vision-*` cases extend the corpus into the image and video
+The 156 `vision-*` cases extend the corpus into the image and video
 modality. Every case carries a `media_descriptors` block (the
 structured on-device signal — `kind`, `nsfw_score`, `violence_score`,
 `face_count`) and is grouped into four blocks delimited by
@@ -79,12 +85,12 @@ and are retained as coverage for the held-out vision eval.
 ### Regenerating the vision corpus
 
 The vision cases are produced deterministically (idempotent) by
-[`tools/gen_vision_corpus.py`](../../tools/gen_vision_corpus.py), which
+`tools/gen_vision_corpus.py` in the kchat-skills repo, which
 rewrites the marked block in `sample_messages.yaml` and the companion
-[`eval/held_out_vision.yaml`](../eval/held_out_vision.yaml):
+`held_out_vision.yaml`:
 
 ```bash
-python tools/gen_vision_corpus.py
+python tools/gen_vision_corpus.py   # run in the kchat-skills repo
 ```
 
 ## File format
@@ -141,40 +147,25 @@ All fixtures comply with
 
 ## How to use
 
-### Run the demo against a local XLM-R
+### Run through the Rust eval harness (this repo)
 
 ```bash
-# 1. Make the XLM-R ONNX model + tokenizer available locally (see
-#    "Running with XLM-R" in the top-level README). Then:
-python tools/run_guardrail_demo.py
+cargo run -p kchat-task-suite -- --realworld   # includes the 220-case guardrail suite
 ```
 
-### Run the demo with the deterministic mock adapter
+### Run the original demo (kchat-skills repo)
+
+The Python demo lives in the source repository; from that checkout:
 
 ```bash
-python tools/run_guardrail_demo.py --mock
-```
-
-### Run with overlays
-
-```bash
-python tools/run_guardrail_demo.py \
-  --jurisdiction us \
-  --community workplace \
-  --mock
-```
-
-### Benchmark + commit results
-
-```bash
-# Runs PipelineBenchmark over the corpus and writes
-# kchat-skills/benchmarks/xlmr_results.json (or _mock_*.json
-# when --mock is set).
+python tools/run_guardrail_demo.py          # real encoder adapter
+python tools/run_guardrail_demo.py --mock   # deterministic mock adapter
+python tools/run_guardrail_demo.py --jurisdiction us --community workplace --mock
 python tools/run_guardrail_demo.py --benchmark --commit-results
 ```
 
-See [`kchat-skills/benchmarks/README.md`](../benchmarks/README.md) for
-the benchmark methodology.
+See `benchmarks/README.md` in this repo for the committed benchmark
+methodology and results.
 
 ## Extending the corpus
 

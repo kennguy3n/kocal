@@ -15,15 +15,21 @@ cargo test --workspace
 # Run the standard eval harness (synthetic unit-level evals)
 cargo run -p kchat-task-suite
 
-# Run the slides AI skill eval (mock mode — 880 test cases, 12 skills × 210 templates)
+# Run the slides AI skill eval (mock mode — 2,171 test cases, 12 skills × 210 templates)
 cargo run -p kchat-task-suite -- --slides
 
 # Run the slides AI skill eval (real model mode — requires llama-server)
 cargo run -p kchat-task-suite -- --slides --realworld
 
-# Run the image search eval (always real — requires PEXELS_API_KEY, PIXABAY_API_KEY,
-# UNSPLASH_ACCESS_KEY, and/or SHUTTERSTOCK_API_TOKEN env vars)
+# Run the image search eval (always real — 170 cases; requires PEXELS_API_KEY,
+# PIXABAY_API_KEY, UNSPLASH_ACCESS_KEY, and/or SHUTTERSTOCK_API_TOKEN env vars)
 cargo run -p kchat-task-suite -- --slides-images
+
+# Run the skills eval (307 cases across the 39 document/chat skills)
+cargo run -p kchat-task-suite -- --skills
+
+# Run the device simulator (12 profiles × full decision-tree check pass)
+cargo run -p kchat-task-suite -- --simulate
 
 # Run the real-world eval harness (comprehensive datasets + real model inference)
 # Requires llama-server running with a GGUF model, or it will auto-start one
@@ -43,11 +49,14 @@ cargo build -p kchat-wasm --target wasm32-unknown-unknown --release
 #   PATH="$HOME/.rustup/toolchains/stable-aarch64-apple-darwin/bin:$PATH" \
 #     cargo build -p kchat-wasm --target wasm32-unknown-unknown --release
 
-# Run the red-team eval suite (36 attack cases)
+# Run the red-team eval suite (36 attack cases, deterministic mode)
 cargo run -p kchat-task-suite -- --redteam
 
-# Run the per-device real-world eval (12 profiles × 150 tasks × real model inference)
-# Tests each device profile's assigned model with 150 tasks across 15 categories
+# Red-team with encoder escalation (known-gap cases expect non-Allow)
+cargo run -p kchat-task-suite -- --redteam-encoder
+
+# Run the per-device real-world eval (12 profiles × 251 tasks × real model inference)
+# Tests each device profile's assigned model with 251 tasks across 15 categories
 # GGUF models use llama-server; MLX models use kchat-mlx-server (Swift or Python fallback)
 cargo run -p kchat-task-suite -- --perdevice
 
@@ -84,25 +93,29 @@ cargo run -p kchat-task-suite --features skill-pack -- --realworld
 The `--realworld` mode loads JSON datasets from `eval/kchat-task-suite/datasets/`
 and runs comprehensive tests with real model inference:
 
-- **Safety**: 2005 JSON cases (benign, PII, harmful, scam, URL risk, obfuscation, injection, multilingual)
+- **Safety**: 3,447 cases total — 3,142 JSON cases from `safety_dataset_v2.json`
+  (benign, PII, harmful, scam, URL risk, obfuscation, injection, multilingual, code-switch,
+  protected speech) + 220 guardrail YAML cases + held-out corpora —
   with per-class precision/recall/F1 and latency P50/P95/P99
-- **Guardrail**: 221 YAML cases from `guardrail/text_sample/sample_messages.yaml` using the
-  full 17-category taxonomy (0-16), severity rubric (0-5), jurisdiction codes, community
-  overlays, and locale tags — tests harmonized classification against `kchat.guardrail.taxonomy.v1`
-- **Context**: 12 documents, 12 queries (multilingual, ACL tests) with recall@10 and MRR
-- **Generation**: 10 prompts with real Ternary-Bonsai-1.7B inference via llama-server,
-  measuring TTFT, decode rate (tok/s), and JSON schema compliance
-- **Action**: 16 cases (tool plans, artifact ops, commit tokens, formula injection)
+- **Guardrail**: 220 deterministic cases from `guardrail/text_sample/sample_messages.yaml`
+  using the full 17-category taxonomy (0-16), severity rubric (0-5), jurisdiction codes,
+  community overlays, and locale tags — tests harmonized classification against
+  `kchat.guardrail.taxonomy.v1`. Held-out sets (adversarial, benign, codeswitch,
+  multilingual, multimessage, self-harm/misinfo, vision) are evaluated separately.
+- **Context**: 80 documents, 88 queries (multilingual, ACL tests) with recall@10 and MRR
+- **Generation**: 58 prompts with real Bonsai-1.7B Q1_0 inference via llama-server,
+  measuring TTFT, decode rate (tok/s), JSON schema compliance, and LoRA adapter routing
+- **Action**: 48 cases (tool plans, artifact ops, commit tokens, formula injection)
 
 To run generation tests, either:
-1. Start llama-server manually: `llama-server -m manifest/packs/Ternary-Bonsai-1.7B-Q2_0.gguf --port 18888 -ngl 99`
+1. Start llama-server manually: `llama-server -m manifest/packs/bonsai-1.7b-q1_0/Bonsai-1.7B-Q1_0.gguf --port 18888 -ngl 99`
 2. Or let the harness auto-start it (requires llama-server on PATH and model in manifest/packs/)
 3. Or set `LLAMA_SERVER_URL` to point to an existing server
 
 ### Per-Device Eval Setup
 
 The `--perdevice` mode tests each of the 12 device profiles against its assigned
-real model (4 generative models: 2 fast 1-bit + 2 quality 2-bit), running 150 tasks across 15 categories:
+real model (4 generative models: 2 fast 1-bit + 2 quality 2-bit), running 251 tasks across 15 categories:
 
 - **15 task categories**: summarization, translation, structured output, tool use,
   multi-turn conversation, code generation, reasoning, instruction following,
@@ -147,7 +160,7 @@ cp mlx/backend/metal/kernels/mlx.metallib ../../../../../../.build/release/
 ```
 
 The Swift server supports 1-bit (`bonsai-1.7b-mlx-1bit`) and 2-bit
-(`Ternary-Bonsai-1.7B-mlx-2bit`) MLX models. The 1-bit model runs at ~22 tok/s
+(`bonsai-1.7b-mlx-2bit`) MLX models. The 1-bit model runs at ~22 tok/s
 and the 2-bit at ~11 tok/s on M5.
 
 The Swift server also supports LoRA adapters — both at startup (`--lora <path>`)
@@ -165,7 +178,7 @@ quantization — only the Swift server with the PrismML fork can run 1-bit model
 
 ## Architecture
 
-The workspace is organized into 10 crates + 1 Go sidecar following the 4-plane architecture:
+The workspace is organized into 11 crates + 1 eval harness + 2 sidecars following the 4-plane architecture:
 
 - **kchat-core**: Capability probe (real OS APIs via sysctl/procfs/Win32),
   device tier selection, scheduler, signed manifest manager, telemetry,
@@ -176,6 +189,9 @@ The workspace is organized into 10 crates + 1 Go sidecar following the 4-plane a
   and cross-encoder reranking. GGUF backend uses llama-server --embedding HTTP API.
   Feature-gated behind `gguf-runtime`; includes mock implementations for testing
   without the backend. Uses the `mmbert-safety-q4_k_m` model pack.
+- **kchat-asr**: Speech-to-text plane — Whisper ASR with two backends:
+  ONNX Runtime (desktop, feature `onnx-runtime`) and whisper.cpp GGML
+  (mobile, feature `whispercpp`). Multilingual (whisper-tiny/base packs).
 - **kchat-safety**: Deterministic safety plane — NFKC normalization, PII/scam/
   URL detectors, signed policy packs (Ed25519), encoder/SLM escalation,
   unified kchat-encoder for safety classification (GGUF mmbert-safety-q4_k_m), media descriptor
@@ -195,8 +211,9 @@ The workspace is organized into 10 crates + 1 Go sidecar following the 4-plane a
   JSON Schema/regex/Lark grammar validation (real Lark parser), backend
   adapters (llama.cpp via llama-cpp-2 with Metal/Vulkan/Cuda), model lifecycle
   with idle unload, token streaming with safety cancellation, LoRA hot-swap
-  (75 adapters: 5 task-families × 15 language slots, via Swift server /lora/load
-  endpoint or MlxBackend::load_lora/detach_lora), swarm inference (multi-peer consensus).
+  (75 family-based adapters: 5 task-families × 15 language slots + 270 task-based
+  legacy adapters, via Swift server /lora/load endpoint or
+  MlxBackend::load_lora/detach_lora), swarm inference (multi-peer consensus).
 - **kchat-action**: Action plane — artifact AST (typed operations, no arbitrary
   code), ToolPlan validation against signed manifests, RBAC authorization
   broker, commit tokens, audit log. Slide operations (InsertSlide, UpdateSlide,
@@ -205,7 +222,10 @@ The workspace is organized into 10 crates + 1 Go sidecar following the 4-plane a
 - **kchat-image**: Image search plane — unified image search across Pexels,
   Pixabay, Unsplash, and Shutterstock. ImageSearchProvider trait with 4 adapter
   implementations, ImageSearchRegistry with fallback/dedup/safety-filter/cache,
-  MockProvider for offline testing. 21 unit tests.
+  MockProvider for offline testing.
+- **kchat-runtime**: Orchestration plane — Orchestrator wiring safety → context →
+  generation → action, SkillRouter dispatching to the 51-skill registry, and
+  ConversationMemory with tier-scaled sliding window.
 - **kchat-bindings**: FFI surface — UniFFI for Swift/Kotlin (mobile), N-API
   for Node.js (desktop). High-level KChatAiRuntime facade with real
   capability probing and tier-based config selection.
@@ -213,9 +233,12 @@ The workspace is organized into 10 crates + 1 Go sidecar following the 4-plane a
   deterministic safety plane (classification, PII detection, normalization)
   as a ~2.1MB WASM module. No server-side model required.
 - **kchat-task-suite**: Eval harness — safety, context, generation, action,
-  integration test suites, and red-team eval suite (36 attack cases across
-  7 categories: prompt injection, jailbreak, PII extraction, encoding attacks,
-  obfuscation, social engineering, multi-turn).
+  integration + device-profile suites, slides/skills/image-search evals, device
+  simulator, per-device real-model eval, and red-team eval suite (36 attack cases
+  across 7 categories: prompt injection, jailbreak, PII extraction, encoding
+  attacks, obfuscation, social engineering, multi-turn).
+- **kchat-generative-sidecar** (Rust): Generative serving sidecar — stub
+  placeholder for dedicated model-serving process.
 - **kchat-server-offload** (Go): Server-side offload service — handles AI
   inference when on-device runtime can't (low tier, thermal, battery).
   Gin-based HTTP API with auth, rate limiting, and safety classification.
@@ -238,7 +261,7 @@ The workspace is organized into 10 crates + 1 Go sidecar following the 4-plane a
 ## Slides AI Skills (12 skills, 210 templates)
 
 The `SkillSurface::Slides` surface adds 12 slides-specific skills to the existing
-33 document skills (45 total):
+39 document/chat skills (51 total):
 
 | Skill ID | Label | Mode | Grammar | Tier | Description |
 |----------|-------|------|---------|------|-------------|
@@ -300,39 +323,44 @@ The `ImageSearchRegistry` merges results across providers with:
 
 ## Test Counts
 
-- kchat-core: 94 tests (capability probe, model manager, governor, registry)
-- kchat-safety: 389 tests (deterministic pipeline, encoder, policy packs, vision module)
-  - 927 tests with `--features skill-pack` (adds skillpack loader, overlay merge, verifier,
-    policy interpreter, threshold policy, revocation, anti-misuse, canonical JSON,
-    jurisdiction tests, community overlay tests, adversarial corpus tests)
+- kchat-core: 134 tests (capability probe, model manager, governor, registry, tokenizer)
+- kchat-safety: 393 tests (deterministic pipeline, encoder, policy packs, vision module)
+  - additional tests with `--features skill-pack` (skillpack loader, overlay merge,
+    verifier, policy interpreter, threshold policy, revocation, anti-misuse,
+    canonical JSON, jurisdiction tests, community overlay tests, adversarial corpus)
 - kchat-action: 47 tests (artifact AST, ToolPlan, commit tokens, slide ops, image search tools)
-- kchat-context: 44 tests (FTS, embeddings, reranker, provenance, cache invalidation)
-- kchat-image: 21 tests (cache, safety, mock provider, registry, dedup, orientation rerank)
-- kchat-generation: 171 tests (llama.cpp backend, LoRA, swarm, Lark grammar, MLX,
-  45 skills, 210 slide templates, prompt construction, grammar schemas)
+- kchat-context: 54 tests (FTS, embeddings, reranker, provenance, cache invalidation)
+- kchat-image: 25 tests (24 unit + 1 doctest — cache, safety, mock provider, registry, dedup)
+- kchat-generation: 197 tests (192 lib + 5 llamacpp integration — backend, LoRA, swarm,
+  Lark grammar, MLX, 51 skills, 210 slide templates, prompt construction, grammar schemas)
+- kchat-asr: 67 tests (Whisper ONNX + whisper.cpp GGML backends, chunking, VAD)
 - kchat-bindings: 12 tests (FFI facade, capability probing, tier selection)
 - kchat-wasm: 10 tests (WASM safety classification)
 - kchat-encoder: 5 tests (mock safety, embed, rerank, session)
-- kchat-task-suite: 24 unit tests + 205 standard eval + 36 red-team cases
-  + 880 slides mock eval cases (12 skills × 210 templates) + 80 image search eval cases
-  - Standard eval: 160 synthetic (64 safety + 33 context + 46 generation + 11 action + 6 integration) + 209 device profile = 369 cases
-  - Safety eval: 64 cases covering all 6 PII types, 8 scam families, URL risk, obfuscation resistance, multilingual, false positive resistance, latency percentiles, per-category F1
+- kchat-runtime: 10 tests (orchestrator pipeline)
+- kchat-task-suite: 33 unit tests + eval suites below
+  - Standard eval: 369 cases (64 safety + 33 context + 46 generation + 11 action + 6 integration + 209 device profile)
+  - Safety eval: 64 cases covering all PII types, scam families, URL risk, obfuscation resistance, multilingual, false positive resistance, latency percentiles, per-category F1
   - Context eval: 33 cases with multi-doc retrieval quality (MRR, recall@k, MAP, NDCG), cross-language, ACL enforcement, encryption integrity, scale performance
   - Generation eval: 46 cases with grammar edge cases, prompt injection resistance, token budget, backend selection, model lifecycle
-  - Device profile suite: 12 profiles × 15 test categories + 9 standalone tests = 189 cases
-  - Device simulator: `--simulate` flag runs 12 profiles × full decision tree (138 checks)
-- **Unit total: 902 tests, all passing**
+  - Device profile suite: 12 profiles × ~16 test categories + standalone tests = 209 cases
+  - Device simulator: `--simulate` flag runs 12 profiles × full decision tree
+- **Unit total: 987 tests, all passing**
 - **Standard eval: 369 cases, all passing**
 - **Red-team eval: 36/36 cases (100%) across 7 attack categories**
-- **Real-world eval: 2005 safety + 221 guardrail + 13 context + 11 generation + 17 action = 2267 cases**
-  - Safety: 2005/2005 (100%), Guardrail: 220/220 (100%), Context: 13/13 (100%), Generation: 9/11 (82%), Action: 17/17 (100%)
-  - Safety dataset v2: 14 languages (en, vi, zh, ja, ko, es, fr, de, ar, hi, th, id, pt, tl) + 13 mixed-lingual code-switch combos
-  - Guardrail corpus: 221 YAML cases from `sample_messages.yaml` with 17-category taxonomy (0-16), severity rubric (0-5), jurisdiction codes, community overlays, locale tags
+- **Real-world eval: 3,447 safety + 89 context + 59 generation + 49 action = 3,644 cases**
+  - Safety: 3302/3447 (95.8%), Guardrail: 220/220 (100%), Context: 78/89 (87.6%), Generation: 58/59 (98.3%), Action: 49/49 (100%)
+  - Safety dataset v2: 3,142 core JSON cases + 220 guardrail YAML + held-out corpora,
+    14 languages (en, vi, zh, ja, ko, es, fr, de, ar, hi, th, id, pt, tl) + mixed-lingual code-switch combos
+  - Guardrail corpus: `sample_messages.yaml` with 17-category taxonomy (0-16), severity rubric (0-5), jurisdiction codes, community overlays, locale tags
+  - Held-out sets: adversarial, benign, codeswitch, multilingual, multimessage, self-harm/misinfo, vision
   - Guardrail eval supports tier-aware execution: Deterministic (default), WithEncoder (GGUF mmbert-safety-q4_k_m), FullPipeline (encoder + MobileCLIP-S2 vision)
-  - Guardrail eval reports per-category breakdown, per-path latency (det vs enc), and applies jurisdiction severity floors (skill-pack overlay)
-  - Real model: Ternary-Bonsai-1.7B Q2_0 via llama-server (Metal), ~130 tok/s, 30ms TTFT
+  - Real model: Bonsai-1.7B Q1_0 via llama-server (Metal), ~120 tok/s decode, ~40ms TTFT
+- **Skills eval: 307 cases** across the 39 document/chat skills
+- **Slides mock eval: 2,171 cases** (12 slides skills × 210 templates)
+- **Image search eval: 170 cases** (real provider APIs, requires keys)
 - **Go server offload: 7 tests, all passing**
-- **Per-device eval: 12 profiles × 150 tasks = 1800 task runs (4 generative models, unified)**
+- **Per-device eval: 12 profiles × 251 tasks = 3,012 task runs (4 generative models, unified)**
   - 15 task categories: summarization, translation, structured output, tool use,
     multi-turn, code generation, reasoning, instruction following, safety,
     context retrieval, action, core, generation, WASM, bindings
@@ -345,7 +373,7 @@ The `ImageSearchRegistry` merges results across providers with:
   - Also tracks per-profile: vision (mobileclip-s2-int8), safety encoder (mmbert-safety-q4_k_m),
     ASR (whisper-tiny/base), and video (mobileclip-s2-int8, same as vision) model assignments
 
-## Model Registry (8 packs)
+## Model Registry (13 packs)
 
 | Pack ID | Type | Min Tier | Size | Quant | Backend | Platform | SHA-256 |
 |---------|------|----------|------|-------|---------|----------|---------|
@@ -353,12 +381,17 @@ The `ImageSearchRegistry` merges results across providers with:
 | bonsai-1.7b-q1_0 | generative | Low | 248 MB | Q1_0 | llama.cpp Vulkan/CPU | android/windows/intel | placeholder |
 | bonsai-1.7b-mlx-2bit | generative | Low | 484 MB | 2bit-MLX | MLX | ios/macos (Apple Silicon) | placeholder |
 | bonsai-1.7b-q2_0 | generative | Low | 442 MB | Q2_0 | llama.cpp Vulkan/CPU | android/windows/intel | placeholder |
+| qwen3-0.6b-q4_k_m | generative | Low | 484 MB | Q4_K_M | llama.cpp | all | ✅ real |
+| qwen3-1.7b-q4_k_m | generative | Medium | 1.28 GB | Q4_K_M | llama.cpp | all | ✅ real |
+| qwen3-4b-instruct-2507-q4_k_m | generative | High | 2.5 GB | Q4_K_M | llama.cpp | all | ✅ real |
 | mmbert-safety-q4_k_m | encoder | Low | 145 MB | Q4_K_M | GGUF (llama.cpp) | all | ✅ trained |
 | mobileclip-s2-int8 | vision | Low | 102 MB | INT8 | ONNX | all | ✅ real |
 | whisper-tiny | asr | Low | 33 MB | ONNX (FP32) | ONNX | all | ✅ real |
 | whisper-base | asr | Medium | 82 MB | ONNX (FP32) | ONNX | all | ✅ real |
+| whisper-tiny-ggml | asr | Low | 78 MB | GGML (F32) | whisper.cpp | all | ✅ real |
+| whisper-base-ggml | asr | Medium | 148 MB | GGML (F32) | whisper.cpp | all | ✅ real |
 
-4/8 packs have real SHA-256 hashes. 4 generative Bonsai packs are pending final export.
+9/13 packs have real SHA-256 hashes. The 4 generative Bonsai packs are pending final export.
 
 ### Model Quality Selection (Fast vs Quality)
 
@@ -406,7 +439,7 @@ but users can override at runtime via the `ModelQuality` setting.
   - ASR: `whisper-tiny` (33MB, ONNX FP32, nb-whisper-tiny, multilingual)
   - Video: `mobileclip-s2-int8` (same model as vision)
   - **Total footprint**: ~549MB fast / ~764MB quality (Apple Silicon) / ~528MB fast / ~722MB quality (GGUF)
-  - Context cap: 1,024 tokens (iOS) / 2,048 (Android) / 2,048 (desktop)
+  - Context cap: 4,096 tokens (all platforms)
 - **Medium tier**:
   - Generative (fast, default): iOS/macOS: `bonsai-1.7b-mlx-1bit` via **MLX** (269MB) / Android: `bonsai-1.7b-q1_0` via **llama.cpp Vulkan** (248MB)
   - Generative (quality, opt-in): iOS/macOS: `bonsai-1.7b-mlx-2bit` via **MLX** (484MB) / Android: `bonsai-1.7b-q2_0` via **llama.cpp Vulkan** (442MB)
@@ -415,7 +448,7 @@ but users can override at runtime via the `ModelQuality` setting.
   - ASR: `whisper-base` (82MB, ONNX FP32, nb-whisper-base, multilingual)
   - Video: `mobileclip-s2-int8` (same model as vision)
   - **Total footprint**: ~598MB fast / ~813MB quality (Apple Silicon) / ~577MB fast / ~771MB quality (GGUF)
-  - Context cap: 2,048 tokens (iOS) / 4,096 (Android) / 4,096 (desktop)
+  - Context cap: 8,192 tokens (all platforms)
 - **High tier**:
   - Generative (quality, default): iOS/macOS: `bonsai-1.7b-mlx-2bit` via **MLX** (484MB) / Android/Windows: `bonsai-1.7b-q2_0` via **llama.cpp Vulkan** (442MB)
   - Generative (fast, fallback): iOS/macOS: `bonsai-1.7b-mlx-1bit` via **MLX** (269MB) / Android/Windows: `bonsai-1.7b-q1_0` via **llama.cpp Vulkan** (248MB)
@@ -424,7 +457,7 @@ but users can override at runtime via the `ModelQuality` setting.
   - ASR: `whisper-base` (82MB, ONNX FP32, nb-whisper-base, multilingual)
   - Video: `mobileclip-s2-int8` (same model as vision)
   - **Total footprint**: ~813MB quality / ~598MB fast (Apple Silicon) / ~771MB quality / ~577MB fast (Android/Windows)
-  - Context cap: 4,096 tokens (iOS) / 8,192 (Android) / 16,384 (desktop)
+  - Context cap: 16,384 tokens (all platforms)
 
 All tiers use the same 1.7B base generative model family (Bonsai 1-bit or Ternary Bonsai 2-bit)
 with task-specialized LoRA adapters. Tier differences are handled via context window size,
@@ -437,7 +470,7 @@ All tiers use the mmbert-safety-q4_k_m GGUF encoder (145MB) for consistency and 
 Vision, ASR, and safety encoder models are lazy-loaded on-demand (not co-resident with generative model).
 During generation, only the generative model is resident. All tiers use mmbert-safety-q4_k_m (145MB) for efficiency.
 KV cache: Q8_0 quantized for llama.cpp (Android/Windows/Intel Mac), FP16 for MLX (Apple Silicon).
-Context caps: iOS 1K/2K/4K (FP16 KV cache), Android 2K/4K/8K (Q8 KV cache), desktop 2K/4K/16K.
+Context caps are uniform across platforms: Low 4,096 / Medium 8,192 / High 16,384 tokens.
 No budget increases needed — all profiles fit with 268+ MB headroom on mobile.
 The unified kchat-encoder (mmbert-safety-q4_k_m) replaces 4 separate model packs (e5-small, safety-int8,
 safety-int4, cross-encoder-miniLM) with 1 multi-task GGUF pack.

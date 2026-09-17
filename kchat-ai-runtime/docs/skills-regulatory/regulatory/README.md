@@ -1,5 +1,11 @@
 # Regulatory Alignment Index
 
+> **Provenance note:** These documents were imported from the
+> `kchat-skills` source repository. Artefact paths they cite
+> (`kchat-skills/`, `build-tools/`, `tools/`) refer to that repo; in
+> this workspace the runtime equivalents live under
+> `crates/kchat-safety/src/skillpack/` and `eval/kchat-task-suite/`.
+
 This directory collects the concrete mappings between each
 regulatory instrument that applies to the KChat on-device guardrail
 system and the specific artefacts (YAML overlays, compiler modules,

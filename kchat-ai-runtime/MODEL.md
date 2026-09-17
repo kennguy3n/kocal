@@ -3,7 +3,7 @@
 > Complete technical reference for all model packs, device profiles, memory
 > budgets, and model selection logic in kchat-ai-runtime.
 
-## Model Registry (6 packs)
+## Model Registry (13 packs)
 
 The model registry is the canonical catalog of all downloadable model packs.
 It is defined in `crates/kchat-core/src/registry.rs` as
@@ -21,36 +21,55 @@ Each `RegistryEntry` contains:
 - `languages` — supported language codes (e.g. `en`, `vi`, `zh`, `ja`, `ko`, `es`, `ar`, `de`, `hi`, `fr`)
 - `quantization` — quantization recipe (e.g. `Q2_0`, `Q4_K_M`, `Q8_0`, `2bit-MLX`, `INT8`, `INT4`)
 
-### Generative Models (2 packs, unified across all tiers)
+### Generative Models (7 packs)
 
-The generative plane uses a single 1.7B base model for all device tiers. Tier
-differentiation is achieved through LoRA adapters (50 adapters: 5 tasks × 10
-languages) that are hot-swapped at runtime, not by loading larger base models.
+The generative plane centers on the Bonsai-1.7B family (ternary-quantized
+Qwen3-1.7B) with two quality modes per platform backend — **Fast** (1-bit) and
+**Quality** (2-bit) — plus a Qwen3 Q4_K_M lineup as standard-quant alternates
+per tier. Tier differentiation within the Bonsai family is achieved through
+LoRA adapters (75 family-based: 5 task-families × 15 language slots; plus 270
+task-based legacy adapters) that are hot-swapped at runtime, not by loading
+larger base models.
 
-| Pack ID | Base Model | Params | Min Tier | Size | Quant | Backend | Platform | Context | Capabilities | Languages |
-|---------|-----------|--------|----------|------|-------|---------|----------|---------|-------------|-----------|
-| `bonsai-1.7b-mlx-1bit` | Qwen3-1.7B | 1.7B | Low | 269 MB | 1bit-MLX | MLX | iOS/macOS (aarch64) | 1,024 | summarize, translate, generate, tool_use | en, vi, zh, ja, ko, es, ar, de, hi, fr |
-| `bonsai-1.7b-q1_0` | Qwen3-1.7B | 1.7B | Low | 248 MB | Q1_0 | llama.cpp Vulkan/CPU | Android/Windows/Intel Mac | 1,024 | summarize, translate, generate, tool_use | en, vi, zh, ja, ko, es, ar, de, hi, fr |
+| Pack ID | Base Model | Params | Min Tier | Size | Quant | Backend | Platform | Capabilities | Languages |
+|---------|-----------|--------|----------|------|-------|---------|----------|-------------|-----------|
+| `bonsai-1.7b-mlx-1bit` | Qwen3-1.7B | 1.7B | Low | 269 MB | 1bit-MLX | MLX | iOS/macOS (aarch64) | summarize, translate, generate, tool_use | en, vi, zh, ja, ko, es, ar, de, hi, fr |
+| `bonsai-1.7b-q1_0` | Qwen3-1.7B | 1.7B | Low | 248 MB | Q1_0 | llama.cpp Vulkan/CPU | Android/Windows/Intel Mac | summarize, translate, generate, tool_use | en, vi, zh, ja, ko, es, ar, de, hi, fr |
+| `bonsai-1.7b-mlx-2bit` | Qwen3-1.7B | 1.7B | Low | 484 MB | 2bit-MLX | MLX | iOS/macOS (aarch64) | summarize, translate, generate, tool_use | en, vi, zh, ja, ko, es, ar, de, hi, fr |
+| `bonsai-1.7b-q2_0` | Qwen3-1.7B | 1.7B | Low | 442 MB | Q2_0 | llama.cpp Vulkan/CPU | Android/Windows/Intel Mac | summarize, translate, generate, tool_use | en, vi, zh, ja, ko, es, ar, de, hi, fr |
+| `qwen3-0.6b-q4_k_m` | Qwen3-0.6B | 0.6B | Low | 484 MB | Q4_K_M | llama.cpp | all | summarize, translate, generate, tool_use | en, vi, zh, ja, ko, es, ar, de, hi, fr |
+| `qwen3-1.7b-q4_k_m` | Qwen3-1.7B | 1.7B | Medium | 1.28 GB | Q4_K_M | llama.cpp | all | summarize, translate, generate, tool_use | en, vi, zh, ja, ko, es, ar, de, hi, fr |
+| `qwen3-4b-instruct-2507-q4_k_m` | Qwen3-4B-Instruct-2507 | 4B | High | 2.5 GB | Q4_K_M | llama.cpp | all | summarize, translate, generate, tool_use, reasoning | en, vi, zh, ja, ko, es, ar, de, hi, fr |
 
 #### Ternary Bonsai Family
 
-The Ternary Bonsai models are 1.58-bit ternary quantized variants of the Qwen3
-model family. They use ternary weights (-1, 0, +1) which dramatically reduces
-model size while maintaining reasonable quality. The unified architecture uses
-the 1.7B variant for all tiers, with LoRA adapters providing task/language
-specialization.
+The Ternary Bonsai models are ternary-quantized variants of the Qwen3-1.7B
+model. Ternary weights (-1, 0, +1) dramatically reduce model size while
+maintaining reasonable quality. Each platform backend has a Fast (1-bit) and
+Quality (2-bit) pack; the `ModelQuality` setting selects between them.
 
 | Model | Base | Parameters | Bits/Weight | Download Size | Running Size (est.) |
 |-------|------|-----------|-------------|--------------|-------------------|
-| Bonsai-1.7B MLX (1-bit) | Qwen3-1.7B | 1.7B | 1.0 | 269 MB | ~400 MB |
-| Bonsai-1.7B GGUF (Q1_0) | Qwen3-1.7B | 1.7B | 1.0 (Q1_0) | 248 MB | ~400 MB |
+| Bonsai-1.7B MLX (1-bit, Fast) | Qwen3-1.7B | 1.7B | 1.0 | 269 MB | ~400 MB |
+| Bonsai-1.7B GGUF (Q1_0, Fast) | Qwen3-1.7B | 1.7B | 1.0 (Q1_0) | 248 MB | ~400 MB |
+| Bonsai-1.7B MLX (2-bit, Quality) | Qwen3-1.7B | 1.7B | 2.0 | 484 MB | ~700 MB |
+| Bonsai-1.7B GGUF (Q2_0, Quality) | Qwen3-1.7B | 1.7B | 2.0 (Q2_0) | 442 MB | ~650 MB |
+
+#### Qwen3 Q4_K_M Lineup
+
+Standard-quant (Q4_K_M) alternates with real SHA-256 digests, covering each
+tier: 0.6B for Low, 1.7B for Medium (same architecture as Bonsai — all LoRA
+adapters apply), and 4B-Instruct-2507 for High (adds `reasoning` capability).
 
 #### Quantization Comparison
 
 | Quant | Bits/Weight | Quality | Size Factor | Use Case |
 |-------|------------|---------|------------|----------|
-| 1bit-MLX | 1.0 | Good | 0.14× | Apple Silicon, MLX framework |
-| Q1_0 | 1.0 | Good | 0.13× | Non-Apple, llama.cpp |
+| 1bit-MLX | 1.0 | Good | 0.14× | Apple Silicon, MLX framework (Fast) |
+| Q1_0 | 1.0 | Good | 0.13× | Non-Apple, llama.cpp (Fast) |
+| 2bit-MLX | 2.0 | Better | 0.26× | Apple Silicon, MLX framework (Quality) |
+| Q2_0 | 2.0 | Better | 0.23× | Non-Apple, llama.cpp (Quality) |
+| Q4_K_M | ~4.8 | Best | 0.28× | Standard-quant alternates, all tiers |
 
 ### Encoder Model (1 pack)
 
@@ -71,19 +90,25 @@ classification/embedding and video frame classification.
 |---------|-----------|----------|-----------|---------|-------|---------|-------|--------------|
 | `mobileclip-s2-int8` | MobileCLIP-S2 | Low | 102 MB | 37 MB | INT8 | ONNX Runtime | image_classify, image_embed, video_classify | 512 |
 
-### ASR Models (2 packs)
+### ASR Models (4 packs)
 
-Whisper ONNX models from NbAiLab (Norwegian Language Technology Lab). These are
-Norwegian fine-tunes of OpenAI's Whisper models — `nb-whisper-tiny` and `nb-whisper-base`.
-Despite the Norwegian fine-tuning, the models retain full multilingual capability
-inherited from the original Whisper models. The ONNX files are **FP32 (not INT8-quantized)**.
+Two backend families:
 
-Full pack includes encoder + decoder + decoder_with_past ONNX files.
+**ONNX Runtime** (desktop path) — NbAiLab `nb-whisper-tiny`/`nb-whisper-base`
+(Norwegian fine-tunes of OpenAI Whisper that retain full multilingual
+capability). ONNX files are **FP32 (not INT8-quantized)**; packs include
+encoder + decoder + decoder_with_past.
+
+**whisper.cpp GGML** (mobile-safe in-process path, feature `whispercpp`) —
+standard `ggml-tiny.bin`/`ggml-base.bin` F32 files from the whisper.cpp
+project, for iOS/Android where ONNX/subprocess paths cannot ship.
 
 | Pack ID | Base Model | Params | Min Tier | Size | Quant | Backend | Languages | SHA-256 |
 |---------|-----------|--------|----------|------|-------|---------|-----------|---------|
 | `whisper-tiny` | nb-whisper-tiny | 39M | Low | 33 MB | ONNX (FP32) | ONNX Runtime | en, vi, zh, ja, ko, es, fr, de, ar, hi, th | ✅ real |
 | `whisper-base` | nb-whisper-base | 74M | Medium | 82 MB | ONNX (FP32) | ONNX Runtime | en, vi, zh, ja, ko, es, fr, de, ar, hi, th | ✅ real |
+| `whisper-tiny-ggml` | whisper-tiny | 39M | Low | 78 MB | GGML (F32) | whisper.cpp | en, vi, zh, ja, ko, es, fr, de, ar, hi, th | ✅ real |
+| `whisper-base-ggml` | whisper-base | 74M | Medium | 148 MB | GGML (F32) | whisper.cpp | en, vi, zh, ja, ko, es, fr, de, ar, hi, th | ✅ real |
 
 ## Device Tiers
 
@@ -117,7 +142,7 @@ is typically 60-83% of physical memory, depending on platform.
 
 | Resource | Low | Medium | High |
 |----------|-----|--------|------|
-| Context window | 2,048 tok | 4,096 tok | 8,192 tok (mobile) / 16,384 tok (desktop) |
+| Context window (all platforms) | 4,096 tok | 8,192 tok | 16,384 tok |
 | Output tokens | 64–192 | 256–512 | 512–1,024 |
 | Peak memory (iOS) | 750 MB | 1,700 MB | 3,100 MB |
 | Peak memory (Android) | 750 MB | 1,800 MB | 3,200 MB |
@@ -135,17 +160,24 @@ is typically 60-83% of physical memory, depending on platform.
 ### Generative Model Selection
 
 `select_model_for_tier_platform(tier, platform, cpu_arch)` in
-`eval/kchat-task-suite/src/eval_device_profile.rs`:
+`eval/kchat-task-suite/src/eval_device_profile.rs` selects the default
+(Fast-quality) pack:
 
 ```
 is_apple_silicon = (platform == "ios" OR platform == "macos") AND cpu_arch == "aarch64"
 
-All tiers (Low/Medium/High) use the same 1.7B base model:
-  Apple Silicon  → bonsai-1.7b-mlx-1bit  (269 MB, MLX)
-  Other          → bonsai-1.7b-q1_0       (248 MB, GGUF)
+All tiers (Low/Medium/High) use the same 1.7B base family:
+  Apple Silicon  → bonsai-1.7b-mlx-1bit  (269 MB, MLX, Fast)
+  Other          → bonsai-1.7b-q1_0       (248 MB, GGUF, Fast)
 
-Tier differentiation is achieved via LoRA adapters (50 adapters: 5 tasks × 10
-languages) hot-swapped at runtime, not by loading larger base models.
+Quality mode (user-selectable via ModelQuality::Quality):
+  Apple Silicon  → bonsai-1.7b-mlx-2bit  (484 MB, MLX)
+  Other          → bonsai-1.7b-q2_0       (442 MB, GGUF)
+
+Tier differentiation is achieved via LoRA adapters (75 family-based: 5
+task-families × 15 language slots; plus 270 task-based legacy adapters)
+hot-swapped at runtime. The Qwen3 Q4_K_M lineup (0.6B/1.7B/4B) provides
+standard-quant alternates per tier.
 ```
 
 ### Backend Selection
@@ -166,9 +198,10 @@ Other                  → llama.cpp CPU
 
 | Model Type | Low Tier | Medium Tier | High Tier |
 |-----------|----------|-------------|-----------|
-| Vision (image+video) | mobileclip-s2-int8 (37 MB) | mobileclip-s2-int8 (37 MB) | mobileclip-s2-int8 (37 MB) |
+| Vision (image+video) | mobileclip-s2-int8 (102 MB pack / 37 MB runtime) | mobileclip-s2-int8 | mobileclip-s2-int8 |
 | Encoder | mmbert-safety-q4_k_m (145 MB) | mmbert-safety-q4_k_m (145 MB) | mmbert-safety-q4_k_m (145 MB) |
-| ASR | whisper-tiny (33 MB) | whisper-base (82 MB) | whisper-base (82 MB) |
+| ASR (ONNX, desktop) | whisper-tiny (33 MB) | whisper-base (82 MB) | whisper-base (82 MB) |
+| ASR (GGML, mobile) | whisper-tiny-ggml (78 MB) | whisper-base-ggml (148 MB) | whisper-base-ggml (148 MB) |
 | Video | mobileclip-s2-int8 (same as vision) | mobileclip-s2-int8 (same as vision) | mobileclip-s2-int8 (same as vision) |
 
 > **Lazy-loading**: Vision, ASR, and safety encoder models are loaded on-demand for
@@ -179,7 +212,10 @@ Other                  → llama.cpp CPU
 ## Device Profiles (12 profiles)
 
 All profiles are defined in `eval/kchat-task-suite/src/eval_device_profile.rs`
-and mirrored in `eval/kchat-task-suite/src/eval_perdevice.rs`.
+and mirrored in `eval/kchat-task-suite/src/eval_perdevice.rs`. The tables below
+show the **Fast-quality** generative assignment; each profile also has a
+Quality-mode variant (`bonsai-1.7b-mlx-2bit` on Apple Silicon,
+`bonsai-1.7b-q2_0` elsewhere).
 
 ### Mobile: iOS
 
@@ -509,11 +545,13 @@ KV cache type depends on the inference backend:
 
 All Bonsai models use GQA with 8 KV heads and 128 head dimension.
 
-| Model | Layers | KV Heads | Head Dim | Per-Token (Q8) | Per-Token (FP16) | iOS Ctx | Android Ctx | Q8 @ Android | FP16 @ iOS |
-|-------|--------|----------|----------|----------------|------------------|---------|-------------|--------------|------------|
-| Bonsai-1.7B | 28 | 8 | 128 | ~56 KB | ~115 KB | 1,024 | 2,048 | ~115 MB | ~115 MB |
+| Model | Layers | KV Heads | Head Dim | Per-Token (Q8) | Per-Token (FP16) |
+|-------|--------|----------|----------|----------------|------------------|
+| Bonsai-1.7B | 28 | 8 | 128 | ~56 KB | ~115 KB |
 
-Desktop context caps: Low 2K, Medium 4K, High 16K (generous memory budgets).
+Context caps are uniform across platforms: Low 4,096 / Medium 8,192 / High
+16,384 tokens. Worst-case KV cache (High, 16K ctx): ~896 MB FP16 / ~448 MB Q8.
+At the Low-tier 4K cap: ~230 MB FP16 / ~115 MB Q8.
 
 ### Memory Budget vs Effective Footprint + KV Cache
 
@@ -533,18 +571,19 @@ Desktop context caps: Low 2K, Medium 4K, High 16K (generous memory budgets).
 | High | Windows | llama.cpp (Q8) | 8,000 MB | 248 MB | 115 MB | **363 MB** | **7,637 MB** |
 
 > **All profiles fit within their peak memory budgets** with per-backend KV cache
-> (Q8 for llama.cpp, FP16 for MLX), platform-aware context caps, and lazy-loaded
-> encoder/vision/ASR models. No budget increases needed.
+> (Q8 for llama.cpp, FP16 for MLX), uniform context caps (4K/8K/16K by tier), and
+> lazy-loaded encoder/vision/ASR models. No budget increases needed.
 > The unified 1.7B model leaves substantial headroom on all profiles.
 
-### Unique Generative Models per Profile
+### Unique Generative Models per Profile (Fast mode)
 
 | Model | Size | Profiles Using It |
 |-------|------|-------------------|
 | `bonsai-1.7b-mlx-1bit` | 269 MB | iPhone 15 Pro, iPhone 14, iPhone SE 2022, MacBook Pro M3 Max, MacBook Air M2 |
 | `bonsai-1.7b-q1_0` | 248 MB | Pixel 8 Pro, Pixel 7a, Galaxy A14, Intel NUC, Windows RTX 4090, Windows Surface 8, Windows Legacy |
 
-**2 generative models** (unified across all tiers) across 12 device profiles.
+**4 generative Bonsai packs** (2 Fast + 2 Quality) across 12 device profiles,
+plus the Qwen3 Q4_K_M alternates (0.6B/1.7B/4B) available per tier.
 Tier differentiation is achieved via LoRA adapters hot-swapped at runtime.
 
 ### Backend Distribution
@@ -563,6 +602,11 @@ Tier differentiation is achieved via LoRA adapters hot-swapped at runtime.
 |---------|-------------|
 | `bonsai-1.7b-mlx-1bit` | `https://huggingface.co/prism-ml/Bonsai-1.7B-mlx-1bit/resolve/main/model.safetensors` |
 | `bonsai-1.7b-q1_0` | `https://huggingface.co/prism-ml/Bonsai-1.7B-gguf/resolve/main/Bonsai-1.7B-Q1_0.gguf` |
+| `bonsai-1.7b-mlx-2bit` | `https://huggingface.co/prism-ml/Bonsai-1.7B-mlx-2bit/resolve/main/model.safetensors` |
+| `bonsai-1.7b-q2_0` | `https://huggingface.co/prism-ml/Bonsai-1.7B-gguf/resolve/main/Bonsai-1.7B-Q2_0.gguf` |
+| `qwen3-0.6b-q4_k_m` | `https://huggingface.co/bartowski/Qwen_Qwen3-0.6B-GGUF/resolve/main/Qwen_Qwen3-0.6B-Q4_K_M.gguf` |
+| `qwen3-1.7b-q4_k_m` | `https://huggingface.co/bartowski/Qwen_Qwen3-1.7B-GGUF/resolve/main/Qwen_Qwen3-1.7B-Q4_K_M.gguf` |
+| `qwen3-4b-instruct-2507-q4_k_m` | `https://huggingface.co/bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF/resolve/main/Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf` |
 
 ### Non-Generative Models
 
@@ -572,6 +616,8 @@ Tier differentiation is achieved via LoRA adapters hot-swapped at runtime.
 | `mobileclip-s2-int8` | `https://cdn.kchat.dev/models/mobileclip-s2-int8/1.0.0/visual_encoder_int8.onnx` |
 | `whisper-tiny` | `https://huggingface.co/NbAiLabBeta/nb-whisper-tiny/resolve/main/onnx/encoder_model.onnx` |
 | `whisper-base` | `https://huggingface.co/NbAiLabBeta/nb-whisper-base/resolve/main/onnx/encoder_model.onnx` |
+| `whisper-tiny-ggml` | `https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin` |
+| `whisper-base-ggml` | `https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin` |
 
 ## Inference Servers
 
@@ -585,7 +631,8 @@ llama-server -m <model.gguf> --port <port> -ngl 99 -c <context_size>
 
 | Model | Context Size | Server Type |
 |-------|-------------|-------------|
-| `bonsai-1.7b-q1_0` | 2,048 | LlamaServer |
+| `bonsai-1.7b-q1_0` / `bonsai-1.7b-q2_0` | per-tier cap (4K/8K/16K) | LlamaServer |
+| `qwen3-*-q4_k_m` | per-tier cap (4K/8K/16K) | LlamaServer |
 
 ### MLX Models (kchat-mlx-server)
 
@@ -601,7 +648,7 @@ swift/kchat-mlx-server/kchat_mlx_server.py
 
 | Model | Context Size | Server Type |
 |-------|-------------|-------------|
-| `bonsai-1.7b-mlx-1bit` | 2,048 | MlxServer |
+| `bonsai-1.7b-mlx-1bit` / `bonsai-1.7b-mlx-2bit` | per-tier cap (4K/8K/16K) | MlxServer |
 
 ## Language Coverage
 
@@ -642,7 +689,7 @@ mixed-language scenarios.
 
 | File | Purpose |
 |------|---------|
-| `crates/kchat-core/src/registry.rs` | Model registry definition (6 packs) |
+| `crates/kchat-core/src/registry.rs` | Model registry definition (13 packs) |
 | `crates/kchat-core/src/tier.rs` | Tier selection logic and resource budgets |
 | `crates/kchat-core/src/capability.rs` | Device capability probe |
 | `crates/kchat-generation/src/backend.rs` | Backend type selection (MLX/Vulkan/CPU) |

@@ -1,7 +1,13 @@
-# Documentation Index — `kchat-skills/`
+# Documentation Index — Regulatory Alignment
 
-Documentation that lives inside the `kchat-skills/` tree, alongside
-the skill packs and the compiler.
+> **Provenance note:** These documents were imported from the `kchat-skills`
+> source repository and map regulatory obligations onto that repo's artefact
+> paths (`kchat-skills/`, `build-tools/compiler/`, `tools/`). In this
+> repository the equivalent runtime artefacts live under
+> `crates/kchat-safety/src/skillpack/` (embedded data: communities,
+> jurisdictions, prompts, lexicons) and `eval/kchat-task-suite/datasets/`.
+
+Documentation that lives alongside the skill packs and the compiler.
 
 ## Regulatory Alignment
 
@@ -29,16 +35,14 @@ The canonical project documents live at the repository root:
 - [`../../README.md`](../../README.md) — project overview, quick
   start, and documentation map.
 - [`../../ARCHITECTURE.md`](../../ARCHITECTURE.md) — technical
-  reference: layering, privacy contract, hybrid pipeline, schemas,
-  anti-misuse controls.
-- [`../../docs/COMPILER.md`](../../docs/COMPILER.md) — skill-pack
-  compiler, signing, bias auditing, lifecycle, benchmarks, appeal
-  flow.
-- [`../../docs/MODEL_LIFECYCLE.md`](../../docs/MODEL_LIFECYCLE.md)
-  — signed model manifests, last-known-good rollback, recovery.
-- [`../../docs/RUNNING_XLMR.md`](../../docs/RUNNING_XLMR.md) — ONNX
-  export guide and XLM-R encoder runtime.
-- [`../../docs/SUPPORTED_REGIONS.md`](../../docs/SUPPORTED_REGIONS.md)
-  — full roster of country packs and community overlays.
-- [`../../docs/CHANGELOG.md`](../../docs/CHANGELOG.md) — release
-  notes.
+  reference: crate layering, four-plane design, data flow.
+- [`../../MODEL.md`](../../MODEL.md) — model registry, device
+  profiles, memory budgets, selection logic.
+- [`../../AGENTS.md`](../../AGENTS.md) — build/test commands and
+  workspace conventions.
+
+The kchat-skills-side references (`docs/COMPILER.md`,
+`docs/MODEL_LIFECYCLE.md`, `docs/RUNNING_XLMR.md`,
+`docs/SUPPORTED_REGIONS.md`, `docs/CHANGELOG.md`) are not present in
+this repository — see the source repo for the skill-pack compiler,
+signing, lifecycle, and regional-roster documentation.

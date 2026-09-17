@@ -8,7 +8,7 @@ Each lexicon file in this directory declares:
 - `lexicon_id` — globally unique, referenced from `overlay.yaml`
   under `local_language_assets.lexicons`.
 - `language` — IETF BCP 47 code.
-- `categories` — taxonomy ids (see `kchat-skills/global/taxonomy.yaml`).
+- `categories` — taxonomy ids (see `crates/kchat-safety/src/skillpack/data/files/global/taxonomy.yaml`).
 - `provenance` — reviewer / source for the lexicon entries.
 
 Because this is an archetype, only the English placeholder lexicon

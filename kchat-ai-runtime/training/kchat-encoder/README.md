@@ -1,5 +1,13 @@
 # kchat-encoder Training Pipeline
 
+> **Status: legacy pipeline.** This directory documents the original
+> XLM-RoBERTa-base multi-task ONNX training pipeline. The **production**
+> encoder shipped in the runtime registry is **mmBERT-small GGUF**
+> (`mmbert-safety-q4_k_m`, ~145MB, 17-category taxonomy, 384-dim embeddings)
+> served through llama-server `--embedding` — see
+> `crates/kchat-encoder/` and `MODEL.md`. The scripts here remain as the
+> reference implementation for retraining or re-baselining the classifier.
+
 Training pipeline for the unified multi-task XLM-RoBERTa-base encoder model.
 
 ## Overview

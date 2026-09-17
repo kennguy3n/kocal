@@ -14,7 +14,7 @@ model. The deterministic safety plane uses:
 - **Regex-based PII detection** — emails, phone numbers, SSN, credit cards, addresses
 - **Scam/URL detectors** — known scam patterns, suspicious URL heuristics
 - **Signed policy packs (Ed25519)** — community/jurisdiction-specific rules
-- **mmBERT safety encoder (GGUF)** — mmBERT-small Q4_K_M (~90MB) via llama.cpp, 17-category taxonomy
+- **mmBERT safety encoder (GGUF)** — mmBERT-small Q4_K_M (~145MB) via llama.cpp, 17-category taxonomy
 - **Skill-pack system** — 17-category taxonomy, 0-5 severity rubric, 38 communities,
   62 jurisdictions, threshold policy (0.45/0.62/0.78/0.85)
 
@@ -116,6 +116,11 @@ Model output is always constrained to a valid format:
 │  │ • KChatAiRuntime │  │ • Normalize  │  │ • Cloud inference      │  │
 │  │   facade         │  │ • No model   │  │                        │  │
 │  └─────────────────┘  └──────────────┘  └────────────────────────┘  │
+│                                                                      │
+│  Shared services: kchat-encoder (mmBERT embeddings/safety head),       │
+│  kchat-asr (Whisper ONNX + whisper.cpp GGML), kchat-image (stock       │
+│  photo search), kchat-runtime (Orchestrator/SkillRouter/Memory),       │
+│  kchat-generative-sidecar (Rust, stub)                                 │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -141,7 +146,7 @@ The foundation crate that all other crates depend on.
 - Memory-based initial gate with platform-specific thresholds
 - Thermal downgrade (Serious → drop one tier, Critical → force Low)
 - Enterprise policy cap (can lower but not elevate)
-- Per-tier budgets: context cap (platform-aware: iOS 1K/2K/4K, Android 2K/4K/8K, desktop 2K/4K/16K),
+- Per-tier budgets: context cap (uniform across platforms: Low 4K / Medium 8K / High 16K tokens),
   output token range, peak memory, TTFT target, decode rate target, max perf cores,
   idle unload timeout
 - Memory optimization: Q8_0 KV cache for llama.cpp, FP16 for MLX, lazy-loaded encoder/vision/ASR
@@ -149,12 +154,15 @@ The foundation crate that all other crates depend on.
   all profiles fit within peak memory budgets with 163+ MB mobile headroom
 
 **Model Registry** (`registry.rs`):
-- 6 model packs (2 generative, 1 encoder, 1 vision, 2 ASR)
-- Generative and encoder models are unified across all tiers (same model on Low/Medium/High)
-- Only ASR differentiates by tier: whisper-tiny (Low), whisper-base (Medium/High)
+- 13 model packs (7 generative, 1 encoder, 1 vision, 4 ASR)
+- Generative lineup: 4 Bonsai 1.7B packs (1-bit/2-bit × MLX/GGUF, Fast/Quality modes)
+  plus Qwen3 Q4_K_M alternates (0.6B Low, 1.7B Medium, 4B-Instruct-2507 High)
+- Encoder and vision models are unified across all tiers; ASR differentiates by
+  tier (whisper-tiny Low, whisper-base Medium/High) with both ONNX and
+  whisper.cpp GGML pack variants
 - `RegistryEntry` with pack_id, version, pack_type, download_url, sha256,
   size_bytes, min_tier, task_capabilities, languages, quantization
-- 4/6 packs have real SHA-256 hashes (2 pending: bonsai-1.7b-mlx-1bit, bonsai-1.7b-q1_0)
+- 9/13 packs have real SHA-256 hashes (4 pending: the Bonsai generative packs)
 - `find_for_task(task, tier)` — filter by capability and tier eligibility
 - `find_for_language(lang, tier)` — filter by language and tier
 - `default_registry()` — hardcoded built-in catalog
@@ -206,7 +214,7 @@ The foundation crate that all other crates depend on.
 - Multilingual support: 14 languages + 13 mixed-lingual code-switch combos
 
 **GGUF Safety Encoder** (mmBERT-small):
-- Q4_K_M quantized (~90MB, all tiers)
+- Q4_K_M quantized (~145MB, all tiers)
 - llama.cpp embedding backend (`gguf-runtime` feature); subprocess on
   desktop, in-process engine on mobile
 - Escalation from deterministic → encoder → SLM
@@ -226,12 +234,12 @@ The foundation crate that all other crates depend on.
 
 **Vision Module** (feature: `onnx-runtime-vision`):
 - MobileCLIP-S2 unified image + video encoder (ONNX)
-- INT8 (97MB pack, 37MB runtime, all tiers) — single model for both image and video
+- INT8 (102MB pack, all tiers) — single model for both image and video
 - 512-dim embeddings, 17 categories
 - Video frame aggregation with temporal smoothing
 - Vision bridge connecting to safety pipeline
 
-**Test Coverage**: 389 tests (927 with `--features skill-pack`)
+**Test Coverage**: 393 tests (more with `--features skill-pack`)
 
 ### kchat-context (Context Plane)
 
@@ -242,7 +250,7 @@ The foundation crate that all other crates depend on.
 - Scope-based access control (user/role authorization)
 
 **Retrieval Pipeline**:
-- Dense embeddings: kchat-encoder (mmBERT-small) GGUF Q4_K_M (~90MB, 384-dim) on all tiers
+- Dense embeddings: kchat-encoder (mmBERT-small) GGUF Q4_K_M (~145MB, 384-dim) on all tiers
 - Fallback overlap scoring when embeddings unavailable
 - Cross-encoder reranker: kchat-encoder shared session (all tiers)
 - Recency boost for recent results
@@ -253,7 +261,7 @@ The foundation crate that all other crates depend on.
 - Per-scope isolation
 - Forget/delete with tombstone preservation
 
-**Test Coverage**: 44 tests
+**Test Coverage**: 54 tests
 
 ### kchat-generation (Generation Plane)
 
@@ -280,10 +288,12 @@ The foundation crate that all other crates depend on.
 - Validation at decode time, not post-hoc
 
 **LoRA Hot-Swap**:
-- 30 adapters: 5 tasks × 6 languages
+- 75 family-based adapters: 5 task-families × 15 language slots, plus
+  270 task-based adapters (18 tasks × 15 slots, legacy layout)
 - Runtime adapter swapping without model reload
-- Task: summarize, translate, generate, tool_use, code
-- Languages: en, vi, zh, ja, ko, es
+- Task families: summarize, translate, generate, tool_use, code
+- Language slots: en, es, fr, de, ja, ko, zh, ar, hi, pt, ru, it, th, vi, id
+- Shared between the 1-bit and 2-bit Bonsai packs (same architecture)
 
 **Swarm Inference**:
 - Multi-peer consensus for high-stakes generation
@@ -295,7 +305,14 @@ The foundation crate that all other crates depend on.
 - Safety plane can abort generation mid-stream
 - Backpressure-aware
 
-**Test Coverage**: 84 tests
+**Slides Engine**:
+- 12 slides-specific skills layered on 39 document/chat skills (51 total)
+- 210 declarative slide templates across 12 families (Title, Agenda, Bullet,
+  Quote, Comparison, Timeline, Image, Chart, Diagram, Team, Media, Section)
+- JSON Schema slot-fill grammars auto-generated per template
+- Image orientation hints and chart-series slots
+
+**Test Coverage**: 197 tests (192 lib + 5 llamacpp integration)
 
 ### kchat-action (Action Plane)
 
@@ -316,7 +333,50 @@ The foundation crate that all other crates depend on.
 - Commit tokens for atomic operations
 - Audit log for all actions
 
-**Test Coverage**: 37 tests
+**Test Coverage**: 47 tests
+
+### kchat-encoder (Unified Encoder)
+
+- mmBERT-small multi-task encoder (140M params, 384-dim, 22 layers, 256K vocab)
+- GGUF Q4_K_M backend via llama-server `--embedding` endpoint
+- Shared across safety classification (17-class head), text embedding, and
+  cross-encoder reranking
+- Task heads loaded separately from `classifier_weights.safetensors`
+- Feature-gated behind `gguf-runtime`; mock implementations for testing
+- Pack: `mmbert-safety-q4_k_m` (~145MB)
+
+**Test Coverage**: 5 tests
+
+### kchat-asr (Speech-to-Text)
+
+- Whisper ASR with two backends:
+  - ONNX Runtime (desktop, feature `onnx-runtime`): whisper-tiny (33MB),
+    whisper-base (82MB), FP32 NbAiLab exports
+  - whisper.cpp GGML (mobile, feature `whispercpp`): whisper-tiny-ggml (78MB),
+    whisper-base-ggml (148MB), F32 GGML format
+- Multilingual transcription (whisper multilingual vocab)
+- Chunking and voice-activity detection for long audio
+
+**Test Coverage**: 67 tests
+
+### kchat-image (Image Search Plane)
+
+- Unified image search across 4 providers: Pexels, Pixabay, Unsplash, Shutterstock
+- `ImageSearchProvider` trait with per-provider adapters
+- `ImageSearchRegistry`: fallback ordering, URL dedup, safety filtering,
+  in-memory cache (256 entries, 10-minute TTL, SHA-256 keys)
+- `MockProvider` for offline testing
+
+**Test Coverage**: 25 tests (24 unit + 1 doctest)
+
+### kchat-runtime (Orchestration)
+
+- `Orchestrator` — wires safety → context → generation → action pipeline
+- `SkillRouter` — dispatches requests to the 51-skill registry
+- `ConversationMemory` — tier-scaled sliding window + RAG compression
+- Criterion benches for orchestrator overhead
+
+**Test Coverage**: 10 tests (orchestrator pipeline)
 
 ### kchat-bindings (FFI Surface)
 
@@ -356,29 +416,36 @@ The foundation crate that all other crates depend on.
 
 ### kchat-task-suite (Eval Harness)
 
-**Standard Eval** (233 cases):
-- 44 synthetic tests (safety, context, generation, action)
-- 161 device profile tests (12 profiles × 15 categories + 9 standalone)
-- 36 red-team attack cases (7 categories)
+**Standard Eval** (369 cases):
+- 160 synthetic tests (64 safety + 33 context + 46 generation + 11 action + 6 integration)
+- 209 device profile tests (12 profiles × ~16 categories + standalone)
+- 36 red-team attack cases (7 categories) via `--redteam`
 
-**Real-World Eval** (2,267 cases):
-- 2,005 safety cases (14 languages + 13 code-switch combos)
-- 221 guardrail cases (17-category taxonomy, YAML from sample_messages.yaml)
-- 13 context cases (multilingual, ACL tests)
-- 11 generation cases (real Bonsai-1.7B inference via llama-server)
-- 17 action cases (tool plans, artifact ops, commit tokens)
+**Real-World Eval** (3,644 cases):
+- 3,447 safety cases (3,142 core JSON + 220 guardrail YAML + held-out corpora;
+  14 languages + mixed-lingual code-switch)
+- 89 context cases (multilingual, ACL tests)
+- 59 generation cases (real Bonsai-1.7B Q1_0 inference via llama-server)
+- 49 action cases (tool plans, artifact ops, commit tokens)
 
-**Per-Device Eval** (1,800 task runs):
-- 12 device profiles × 150 tasks × 2 generative models (unified across all tiers)
+**Additional Suites**:
+- Skills eval: 307 cases across 39 document/chat skills (`--skills`)
+- Slides mock eval: 2,171 cases (12 skills × 210 templates, `--slides`)
+- Image search eval: 170 cases, real provider APIs (`--slides-images`)
+- Per-device eval: 12 profiles × 251 tasks × 4 generative models (`--perdevice`)
+- Red-team encoder mode: `--redteam-encoder` (known-gap escalation)
+- Baseline regression: `--compare-old`, `--write-baseline` for smoke eval
+
+**Per-Device Eval** (3,012 task runs):
+- 12 device profiles × 251 tasks × generative model assigned per profile
 - 15 task categories per profile
 - Quality scoring (0.0-1.0 per task, ≥0.7 pass threshold)
 - Judgment: Pass (≥75%), Marginal (50-74%), Fail (<50%)
 
-**Device Simulator**:
-- 12 profiles × 138 checks each
-- Full decision tree: capability probe → tier selection → model selection →
-  backend selection → memory budget → model fit → registry lookup →
-  non-generative model availability
+**Device Simulator** (`--simulate`):
+- 12 profiles × full decision tree
+- Capability probe → tier selection → model selection → backend selection →
+  memory budget → model fit → registry lookup → non-generative model availability
 
 ## Data Flow
 
@@ -475,11 +542,20 @@ strip = true
 
 | Crate | Feature | Description |
 |-------|---------|-------------|
-| kchat-safety | `skill-pack` | Overlay-aware policy system (927 tests) |
-| kchat-safety | `onnx-runtime-vision` | MobileCLIP-S2 vision encoder (ONNX) |
-| kchat-generation | `llamacpp` | llama.cpp backend (Metal/Vulkan/CUDA) |
-| kchat-bindings | `mobile` | UniFFI bindings for Swift/Kotlin |
-| kchat-bindings | `desktop` | N-API bindings for Node.js |
+| kchat-safety | `skill-pack` | Overlay-aware policy system (community/jurisdiction overlays) |
+| kchat-safety | `encoder` / `gguf-encoder` | mmBERT GGUF safety encoder escalation |
+| kchat-safety | `onnx-runtime` / `onnx-runtime-vision` | ONNX classifier / MobileCLIP-S2 vision encoder |
+| kchat-encoder | `gguf-runtime` | GGUF backend via llama-server `--embedding` |
+| kchat-encoder | `onnx-runtime` / `domain-adapters` | ONNX backend / domain adapter heads |
+| kchat-context | `lexical` (default) / `embeddings` | BM25-only vs dense retrieval |
+| kchat-context | `connectors` / `reranker` / `gguf-embeddings` | Source connectors, cross-encoder rerank, GGUF embedding |
+| kchat-generation | `llamacpp` / `llamacpp-metal` / `llamacpp-vulkan` / `llamacpp-cuda` | llama.cpp backend variants |
+| kchat-generation | `mlx` / `litert` | MLX server backend / LiteRT (Android NPU) |
+| kchat-asr | `onnx-runtime` / `whispercpp` | ONNX Whisper / whisper.cpp GGML backend |
+| kchat-bindings | `mobile` / `mobile-full` / `desktop` | UniFFI / UniFFI+encoder / N-API |
+| kchat-bindings | `gguf-encoder` / `llamacpp` | Encoder attach / generation backend in FFI |
+| kchat-task-suite | `full-pipeline` / `gguf-runtime` / `skill-pack` | Eval pipeline tiers |
+| kchat-task-suite | `smoke` / `smoke-metal` | Real-model smoke eval (in-process llama.cpp) |
 
 ### WASM Build
 
