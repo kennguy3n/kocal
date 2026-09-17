@@ -71,9 +71,15 @@ pub fn jurisdiction_overlay_yaml(code: &str) -> Option<&'static str> {
         "uy" => Some(include_str!("files/jurisdictions/uy/overlay.yaml")),
         "vn" => Some(include_str!("files/jurisdictions/vn/overlay.yaml")),
         "za" => Some(include_str!("files/jurisdictions/za/overlay.yaml")),
-        "archetype-strict-adult" => Some(include_str!("files/jurisdictions/archetype-strict-adult/overlay.yaml")),
-        "archetype-strict-hate" => Some(include_str!("files/jurisdictions/archetype-strict-hate/overlay.yaml")),
-        "archetype-strict-marketplace" => Some(include_str!("files/jurisdictions/archetype-strict-marketplace/overlay.yaml")),
+        "archetype-strict-adult" => Some(include_str!(
+            "files/jurisdictions/archetype-strict-adult/overlay.yaml"
+        )),
+        "archetype-strict-hate" => Some(include_str!(
+            "files/jurisdictions/archetype-strict-hate/overlay.yaml"
+        )),
+        "archetype-strict-marketplace" => Some(include_str!(
+            "files/jurisdictions/archetype-strict-marketplace/overlay.yaml"
+        )),
         _ => None,
     }
 }
@@ -143,9 +149,15 @@ pub fn jurisdiction_normalization_yaml(code: &str) -> Option<&'static str> {
         "uy" => Some(include_str!("files/jurisdictions/uy/normalization.yaml")),
         "vn" => Some(include_str!("files/jurisdictions/vn/normalization.yaml")),
         "za" => Some(include_str!("files/jurisdictions/za/normalization.yaml")),
-        "archetype-strict-adult" => Some(include_str!("files/jurisdictions/archetype-strict-adult/normalization.yaml")),
-        "archetype-strict-hate" => Some(include_str!("files/jurisdictions/archetype-strict-hate/normalization.yaml")),
-        "archetype-strict-marketplace" => Some(include_str!("files/jurisdictions/archetype-strict-marketplace/normalization.yaml")),
+        "archetype-strict-adult" => Some(include_str!(
+            "files/jurisdictions/archetype-strict-adult/normalization.yaml"
+        )),
+        "archetype-strict-hate" => Some(include_str!(
+            "files/jurisdictions/archetype-strict-hate/normalization.yaml"
+        )),
+        "archetype-strict-marketplace" => Some(include_str!(
+            "files/jurisdictions/archetype-strict-marketplace/normalization.yaml"
+        )),
         _ => None,
     }
 }
@@ -153,12 +165,65 @@ pub fn jurisdiction_normalization_yaml(code: &str) -> Option<&'static str> {
 /// List all jurisdiction codes (excluding `_template`).
 pub fn jurisdiction_codes() -> &'static [&'static str] {
     &[
-        "ae", "ar", "at", "au", "bd", "br", "ca", "ch", "cl", "co",
-        "cz", "de", "dk", "dz", "ec", "eg", "es", "et", "fi", "fr",
-        "gb", "gh", "gr", "hu", "id", "ie", "il", "in", "iq", "it",
-        "jp", "ke", "kr", "ma", "mx", "my", "ng", "nl", "no", "nz",
-        "pe", "ph", "pk", "pl", "pt", "ro", "ru", "sa", "se", "sg",
-        "th", "tr", "tw", "tz", "ua", "us", "uy", "vn", "za",
+        "ae",
+        "ar",
+        "at",
+        "au",
+        "bd",
+        "br",
+        "ca",
+        "ch",
+        "cl",
+        "co",
+        "cz",
+        "de",
+        "dk",
+        "dz",
+        "ec",
+        "eg",
+        "es",
+        "et",
+        "fi",
+        "fr",
+        "gb",
+        "gh",
+        "gr",
+        "hu",
+        "id",
+        "ie",
+        "il",
+        "in",
+        "iq",
+        "it",
+        "jp",
+        "ke",
+        "kr",
+        "ma",
+        "mx",
+        "my",
+        "ng",
+        "nl",
+        "no",
+        "nz",
+        "pe",
+        "ph",
+        "pk",
+        "pl",
+        "pt",
+        "ro",
+        "ru",
+        "sa",
+        "se",
+        "sg",
+        "th",
+        "tr",
+        "tw",
+        "tz",
+        "ua",
+        "us",
+        "uy",
+        "vn",
+        "za",
         "archetype-strict-adult",
         "archetype-strict-hate",
         "archetype-strict-marketplace",

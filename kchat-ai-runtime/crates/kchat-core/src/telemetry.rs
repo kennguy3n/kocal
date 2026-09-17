@@ -68,13 +68,16 @@ impl TelemetryEvent {
 
     pub fn thermal_event(tier: &str, state: &str) -> Self {
         let mut metrics = HashMap::new();
-        metrics.insert("thermal_state".into(), match state {
-            "nominal" => 0.0,
-            "fair" => 1.0,
-            "serious" => 2.0,
-            "critical" => 3.0,
-            _ => -1.0,
-        });
+        metrics.insert(
+            "thermal_state".into(),
+            match state {
+                "nominal" => 0.0,
+                "fair" => 1.0,
+                "serious" => 2.0,
+                "critical" => 3.0,
+                _ => -1.0,
+            },
+        );
         Self {
             event_type: "thermal_event".into(),
             plane: "scheduler".into(),
@@ -121,7 +124,10 @@ impl TelemetryRecorder {
     pub fn record(&self, event: TelemetryEvent) {
         let mut events = self.events.lock();
         if events.len() >= self.max_buffer {
-            tracing::warn!("Telemetry buffer full (max={}), dropping oldest event", self.max_buffer);
+            tracing::warn!(
+                "Telemetry buffer full (max={}), dropping oldest event",
+                self.max_buffer
+            );
             events.pop_front(); // O(1) for VecDeque
         }
         events.push_back(event);
@@ -175,13 +181,22 @@ mod tests {
     fn test_buffer_overflow_drops_oldest() {
         let recorder = TelemetryRecorder::new(2);
         recorder.record(TelemetryEvent::job_complete(
-            "safety", "low", Duration::from_millis(10), true,
+            "safety",
+            "low",
+            Duration::from_millis(10),
+            true,
         ));
         recorder.record(TelemetryEvent::job_complete(
-            "safety", "low", Duration::from_millis(20), true,
+            "safety",
+            "low",
+            Duration::from_millis(20),
+            true,
         ));
         recorder.record(TelemetryEvent::job_complete(
-            "safety", "low", Duration::from_millis(30), true,
+            "safety",
+            "low",
+            Duration::from_millis(30),
+            true,
         ));
         let events = recorder.drain();
         assert_eq!(events.len(), 2);
@@ -192,11 +207,17 @@ mod tests {
 
     #[test]
     fn test_no_raw_content_in_events() {
-        let event = TelemetryEvent::job_complete(
-            "context", "medium", Duration::from_millis(100), true,
-        );
+        let event =
+            TelemetryEvent::job_complete("context", "medium", Duration::from_millis(100), true);
         // Verify no fields could contain raw content
-        assert!(event.model_pack_id.is_none() || !event.model_pack_id.as_ref().unwrap().contains("user_message"));
+        assert!(
+            event.model_pack_id.is_none()
+                || !event
+                    .model_pack_id
+                    .as_ref()
+                    .unwrap()
+                    .contains("user_message")
+        );
         assert!(!event.event_type.contains("raw"));
         assert!(event.metrics.is_empty() || !event.metrics.keys().any(|k| k.contains("content")));
     }

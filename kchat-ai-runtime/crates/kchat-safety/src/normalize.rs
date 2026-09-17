@@ -24,26 +24,57 @@ const HOMOGLYPH_MAP_JSON: &str = include_str!("../data/homoglyph_map.json");
 /// malformed. Mirrors slm-guardrail's `HAND_CURATED_HOMOGLYPH_MAP`.
 const HAND_CURATED: &[(char, char)] = &[
     // Cyrillic → Latin (lowercase).
-    ('\u{0430}', 'a'), ('\u{0432}', 'b'), ('\u{0435}', 'e'),
-    ('\u{043a}', 'k'), ('\u{043c}', 'm'), ('\u{043d}', 'h'),
-    ('\u{043e}', 'o'), ('\u{0440}', 'p'), ('\u{0441}', 'c'),
-    ('\u{0442}', 't'), ('\u{0443}', 'y'), ('\u{0445}', 'x'),
-    ('\u{0456}', 'i'), ('\u{0458}', 'j'),
+    ('\u{0430}', 'a'),
+    ('\u{0432}', 'b'),
+    ('\u{0435}', 'e'),
+    ('\u{043a}', 'k'),
+    ('\u{043c}', 'm'),
+    ('\u{043d}', 'h'),
+    ('\u{043e}', 'o'),
+    ('\u{0440}', 'p'),
+    ('\u{0441}', 'c'),
+    ('\u{0442}', 't'),
+    ('\u{0443}', 'y'),
+    ('\u{0445}', 'x'),
+    ('\u{0456}', 'i'),
+    ('\u{0458}', 'j'),
     // Cyrillic → Latin (uppercase).
-    ('\u{0410}', 'a'), ('\u{0412}', 'b'), ('\u{0415}', 'e'),
-    ('\u{041a}', 'k'), ('\u{041c}', 'm'), ('\u{041d}', 'h'),
-    ('\u{041e}', 'o'), ('\u{0420}', 'p'), ('\u{0421}', 'c'),
-    ('\u{0422}', 't'), ('\u{0423}', 'y'), ('\u{0425}', 'x'),
+    ('\u{0410}', 'a'),
+    ('\u{0412}', 'b'),
+    ('\u{0415}', 'e'),
+    ('\u{041a}', 'k'),
+    ('\u{041c}', 'm'),
+    ('\u{041d}', 'h'),
+    ('\u{041e}', 'o'),
+    ('\u{0420}', 'p'),
+    ('\u{0421}', 'c'),
+    ('\u{0422}', 't'),
+    ('\u{0423}', 'y'),
+    ('\u{0425}', 'x'),
     // Greek → Latin (lowercase).
-    ('\u{03b1}', 'a'), ('\u{03b2}', 'b'), ('\u{03b5}', 'e'),
-    ('\u{03b7}', 'h'), ('\u{03b9}', 'i'), ('\u{03ba}', 'k'),
-    ('\u{03bc}', 'm'), ('\u{03bd}', 'v'), ('\u{03bf}', 'o'),
-    ('\u{03c1}', 'p'), ('\u{03c4}', 't'), ('\u{03c5}', 'y'),
+    ('\u{03b1}', 'a'),
+    ('\u{03b2}', 'b'),
+    ('\u{03b5}', 'e'),
+    ('\u{03b7}', 'h'),
+    ('\u{03b9}', 'i'),
+    ('\u{03ba}', 'k'),
+    ('\u{03bc}', 'm'),
+    ('\u{03bd}', 'v'),
+    ('\u{03bf}', 'o'),
+    ('\u{03c1}', 'p'),
+    ('\u{03c4}', 't'),
+    ('\u{03c5}', 'y'),
     ('\u{03c7}', 'x'),
     // Fullwidth digits → ASCII.
-    ('\u{ff10}', '0'), ('\u{ff11}', '1'), ('\u{ff12}', '2'),
-    ('\u{ff13}', '3'), ('\u{ff14}', '4'), ('\u{ff15}', '5'),
-    ('\u{ff16}', '6'), ('\u{ff17}', '7'), ('\u{ff18}', '8'),
+    ('\u{ff10}', '0'),
+    ('\u{ff11}', '1'),
+    ('\u{ff12}', '2'),
+    ('\u{ff13}', '3'),
+    ('\u{ff14}', '4'),
+    ('\u{ff15}', '5'),
+    ('\u{ff16}', '6'),
+    ('\u{ff17}', '7'),
+    ('\u{ff18}', '8'),
     ('\u{ff19}', '9'),
 ];
 
@@ -64,22 +95,31 @@ struct LoadedMap {
 
 fn load_homoglyph_map() -> &'static LoadedMap {
     static CELL: OnceLock<LoadedMap> = OnceLock::new();
-    CELL.get_or_init(|| match serde_json::from_str::<HomoglyphMapFile>(HOMOGLYPH_MAP_JSON) {
-        Ok(payload) => {
-            let mut table: HashMap<char, char> = HashMap::with_capacity(payload.map.len());
-            for (raw_key, raw_value) in &payload.map {
-                let cp = match u32::from_str_radix(raw_key, 16) {
-                    Ok(cp) => cp,
-                    Err(_) => return hand_curated_map(),
-                };
-                let Some(key_char) = char::from_u32(cp) else { return hand_curated_map() };
-                let Some(value_char) = raw_value.chars().next() else { return hand_curated_map() };
-                table.insert(key_char, value_char);
+    CELL.get_or_init(
+        || match serde_json::from_str::<HomoglyphMapFile>(HOMOGLYPH_MAP_JSON) {
+            Ok(payload) => {
+                let mut table: HashMap<char, char> = HashMap::with_capacity(payload.map.len());
+                for (raw_key, raw_value) in &payload.map {
+                    let cp = match u32::from_str_radix(raw_key, 16) {
+                        Ok(cp) => cp,
+                        Err(_) => return hand_curated_map(),
+                    };
+                    let Some(key_char) = char::from_u32(cp) else {
+                        return hand_curated_map();
+                    };
+                    let Some(value_char) = raw_value.chars().next() else {
+                        return hand_curated_map();
+                    };
+                    table.insert(key_char, value_char);
+                }
+                LoadedMap {
+                    table,
+                    tr39_unicode_version: payload.tr39_unicode_version,
+                }
             }
-            LoadedMap { table, tr39_unicode_version: payload.tr39_unicode_version }
-        }
-        Err(_) => hand_curated_map(),
-    })
+            Err(_) => hand_curated_map(),
+        },
+    )
 }
 
 fn hand_curated_map() -> LoadedMap {
@@ -95,7 +135,9 @@ pub fn homoglyph_fold(text: &str) -> String {
     if map.is_empty() {
         return text.to_string();
     }
-    text.chars().map(|ch| map.get(&ch).copied().unwrap_or(ch)).collect()
+    text.chars()
+        .map(|ch| map.get(&ch).copied().unwrap_or(ch))
+        .collect()
 }
 
 /// Source Unicode revision the packaged map was generated against.
@@ -188,7 +230,9 @@ pub fn defang_variants_for_matching(normalized_text: &str) -> Vec<String> {
     if !stripped.contains('1') {
         return vec![defang_leetspeak(&stripped, 'l')];
     }
-    LEET_DIGIT_ONE_VARIANTS.iter().copied()
+    LEET_DIGIT_ONE_VARIANTS
+        .iter()
+        .copied()
         .map(|v| defang_leetspeak(&stripped, v))
         .collect()
 }
@@ -278,9 +322,7 @@ fn despace_obfuscation(text: &str) -> String {
         if tokens[i].chars().count() == 1 {
             let run_start = i;
             let mut run_len = 1usize;
-            while i + run_len < tokens.len()
-                && tokens[i + run_len].chars().count() == 1
-            {
+            while i + run_len < tokens.len() && tokens[i + run_len].chars().count() == 1 {
                 run_len += 1;
             }
             if run_len >= 3 {
@@ -364,7 +406,11 @@ mod tests {
     #[test]
     fn test_homoglyph_map_loaded_from_json() {
         let table = &load_homoglyph_map().table;
-        assert!(table.len() > 100, "TR39 map should be >100 entries; got {}", table.len());
+        assert!(
+            table.len() > 100,
+            "TR39 map should be >100 entries; got {}",
+            table.len()
+        );
     }
 
     #[test]
@@ -409,7 +455,15 @@ mod tests {
     fn test_despace_obfuscation_preserves_multichar_tokens() {
         // Multi-char tokens should NOT be joined into runs
         let result = normalize("hello a b c world");
-        assert!(!result.contains("helloabc"), "multi-char token should not be joined: {}", result);
-        assert!(result.contains("abc"), "single-char run should still be joined: {}", result);
+        assert!(
+            !result.contains("helloabc"),
+            "multi-char token should not be joined: {}",
+            result
+        );
+        assert!(
+            result.contains("abc"),
+            "single-char run should still be joined: {}",
+            result
+        );
     }
 }

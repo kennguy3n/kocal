@@ -81,3 +81,12 @@ source_image_manifests:
 #   13 = MisinfoHealth     (synthetic screenshots)
 #   14 = MisinfoCivic      (synthetic screenshots)
 image_file_categories: [0, 5, 7, 8, 11, 13, 14]
+
+# ── Tier-1 extension (30x_build_vision_corpus.py) ─────────────────────
+# New image-grounded categories from self-generated + permissive corpora:
+#   cat 3  (VIOLENCE_THREAT partial) — Open Images weapon-adjacent classes
+#   cat 10 (SEXUAL_ADULT)            — staged/synthetic (LSPD is Tier-2 gated)
+#   cat 16 (DEEPFAKE_SYNTHETIC)      — self-generated deepfakes on StyleGAN faces
+# Generation jobs: data/vision_jobs/job_*.sh (no real person manipulated)
+# Tier-2 gated corpora (FaceForensics++, DFDC, UCF-Crime) remain documented
+# in dataset_sourcing/*.yaml for operator bake.

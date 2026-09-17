@@ -17,9 +17,9 @@ use crate::normalize;
 use crate::policy::{PolicyPack, PolicyThresholds};
 use crate::verdict::{Action, Severity, Verdict, VerdictBuilder, VerdictSource};
 use parking_lot::RwLock;
-use unicode_normalization::UnicodeNormalization;
 use std::sync::Arc;
 use std::time::Instant;
+use unicode_normalization::UnicodeNormalization;
 
 /// Maximum input text length accepted by [`SafetyClassifier::classify`].
 ///
@@ -138,16 +138,30 @@ const NEWS_CONTEXT_OVERLAY_TOKENS: &[&str] = &["journalism", "news"];
 
 /// Overlay-id substring tokens that imply an educational context.
 const EDUCATION_CONTEXT_OVERLAY_TOKENS: &[&str] = &[
-    "education_higher", "education", "school", "research", "science",
+    "education_higher",
+    "education",
+    "school",
+    "research",
+    "science",
 ];
 
 /// Overlay-id substring tokens that imply a counterspeech / civic-rights
 /// context. NOTE: bare "tolerance" is intentionally excluded — would
 /// false-fire on "zero_tolerance" overlays (the opposite of counterspeech).
 const COUNTERSPEECH_CONTEXT_OVERLAY_TOKENS: &[&str] = &[
-    "lgbtq_support", "minority_support", "civic", "humanrights",
-    "human_rights", "counterspeech", "counter_speech", "anti_racism",
-    "antiracism", "anti_hate", "antihate", "anti_bullying", "antibullying",
+    "lgbtq_support",
+    "minority_support",
+    "civic",
+    "humanrights",
+    "human_rights",
+    "counterspeech",
+    "counter_speech",
+    "anti_racism",
+    "antiracism",
+    "anti_hate",
+    "antihate",
+    "anti_bullying",
+    "antibullying",
 ];
 
 /// Derive protected-speech context hints from request fields.
@@ -170,19 +184,28 @@ pub fn derive_context_hints(
     }
     if let Some(overlay) = community_overlay_id {
         let lower = overlay.to_ascii_lowercase();
-        if NEWS_CONTEXT_OVERLAY_TOKENS.iter().any(|t| lower.contains(t)) {
+        if NEWS_CONTEXT_OVERLAY_TOKENS
+            .iter()
+            .any(|t| lower.contains(t))
+        {
             hints.push(ContextHint {
                 reason_code: "NEWS_CONTEXT".into(),
                 context_confidence: 0.5,
             });
         }
-        if EDUCATION_CONTEXT_OVERLAY_TOKENS.iter().any(|t| lower.contains(t)) {
+        if EDUCATION_CONTEXT_OVERLAY_TOKENS
+            .iter()
+            .any(|t| lower.contains(t))
+        {
             hints.push(ContextHint {
                 reason_code: "EDUCATION_CONTEXT".into(),
                 context_confidence: 0.5,
             });
         }
-        if COUNTERSPEECH_CONTEXT_OVERLAY_TOKENS.iter().any(|t| lower.contains(t)) {
+        if COUNTERSPEECH_CONTEXT_OVERLAY_TOKENS
+            .iter()
+            .any(|t| lower.contains(t))
+        {
             hints.push(ContextHint {
                 reason_code: "COUNTERSPEECH_CONTEXT".into(),
                 context_confidence: 0.5,
@@ -210,7 +233,9 @@ fn should_demote_for_protected_speech(
     {
         return None;
     }
-    hints.iter().find(|h| h.context_confidence >= CONTEXT_DEMOTION_CONFIDENCE_THRESHOLD)
+    hints
+        .iter()
+        .find(|h| h.context_confidence >= CONTEXT_DEMOTION_CONFIDENCE_THRESHOLD)
 }
 
 /// Content-based educational/research context detection. Recognizes phrases
@@ -242,6 +267,14 @@ pub struct ClassifyResult {
 pub const MAX_POLICY_PACKS: usize = 16;
 
 /// The safety classifier — owns loaded policy packs and optional encoder/SLM.
+/// Cached lexicon keyed by `(pack_count, jurisdiction, community_overlay_id)`.
+type LexiconCacheEntry = (
+    usize,
+    Option<String>,
+    Option<String>,
+    Vec<(String, u32, Severity)>,
+);
+
 pub struct SafetyClassifier {
     policy_packs: RwLock<Vec<Arc<PolicyPack>>>,
     /// Optional encoder (ONNX classifier) — set on medium+ devices
@@ -250,7 +283,7 @@ pub struct SafetyClassifier {
     slm: RwLock<Option<Box<dyn SlmAdjudicator>>>,
     /// Cached lexicon keyed by `(pack_count, jurisdiction, community_overlay_id)`.
     /// Invalidated when a new policy pack is loaded.
-    lexicon_cache: RwLock<Option<(usize, Option<String>, Option<String>, Vec<(String, u32, Severity)>)>>,
+    lexicon_cache: RwLock<Option<LexiconCacheEntry>>,
 }
 
 /// Trait for encoder-based classification (ONNX INT8/INT4).
@@ -396,12 +429,17 @@ impl SlmAdjudicator for LlamaServerSlmAdjudicator {
 
         let output = std::process::Command::new("curl")
             .arg("-s")
-            .arg("-X").arg("POST")
+            .arg("-X")
+            .arg("POST")
             .arg(format!("{}/completion", self.server_url))
-            .arg("-H").arg("Content-Type: application/json")
-            .arg("-d").arg(body.to_string())
-            .arg("--connect-timeout").arg("3")
-            .arg("--max-time").arg(self.timeout_secs.to_string())
+            .arg("-H")
+            .arg("Content-Type: application/json")
+            .arg("-d")
+            .arg(body.to_string())
+            .arg("--connect-timeout")
+            .arg("3")
+            .arg("--max-time")
+            .arg(self.timeout_secs.to_string())
             .output()
             .map_err(|e| SlmError::InferenceFailed(format!("curl failed: {}", e)))?;
 
@@ -422,8 +460,13 @@ impl SlmAdjudicator for LlamaServerSlmAdjudicator {
             .trim();
 
         // Parse the JSON response
-        let decision: serde_json::Value = serde_json::from_str(content)
-            .map_err(|e| SlmError::InvalidOutput(format!("failed to parse SLM JSON: {} (content: {})", e, &content[..content.len().min(200)])))?;
+        let decision: serde_json::Value = serde_json::from_str(content).map_err(|e| {
+            SlmError::InvalidOutput(format!(
+                "failed to parse SLM JSON: {} (content: {})",
+                e,
+                &content[..content.len().min(200)]
+            ))
+        })?;
 
         let category = decision
             .get("category")
@@ -578,12 +621,15 @@ impl SafetyClassifier {
                     && request.community_overlay_id.is_some()
                 {
                     // Look for a COMMUNITY_RULE lexicon signal
-                    let community_signal = signals.signals.iter()
+                    let community_signal = signals
+                        .signals
+                        .iter()
                         .find(|s| s.category == detectors::categories::COMMUNITY_RULE);
                     if let Some(cs) = community_signal {
                         // Check if the community overlay is a type that would
                         // reclassify promotional content (workplace, school, etc.)
-                        let overlay_lower = request.community_overlay_id
+                        let overlay_lower = request
+                            .community_overlay_id
                             .as_ref()
                             .map(|s| s.to_ascii_lowercase())
                             .unwrap_or_default();
@@ -608,13 +654,17 @@ impl SafetyClassifier {
         let verdict = if let Some(signal) = resolved_signal {
             // Check protected-speech demotion BEFORE building the verdict.
             // CHILD_SAFETY is never demoted — defense in depth.
-            if let Some(hint) = should_demote_for_protected_speech(signal.category, &context_hints) {
+            if let Some(hint) = should_demote_for_protected_speech(signal.category, &context_hints)
+            {
                 VerdictBuilder::default()
                     .action(Action::Allow)
                     .severity(Severity::SAFE)
                     .category(detectors::categories::SAFE)
                     .confidence(0.90)
-                    .reason_code(&format!("protected_speech_{}", hint.reason_code.to_lowercase()))
+                    .reason_code(format!(
+                        "protected_speech_{}",
+                        hint.reason_code.to_lowercase()
+                    ))
                     .source(VerdictSource::Deterministic)
                     .build()
             } else if detect_educational_context(text)
@@ -638,59 +688,61 @@ impl SafetyClassifier {
                     .source(VerdictSource::Deterministic)
                     .build()
             } else {
-            // Deterministic match found
-            let mut builder = VerdictBuilder::default()
-                .action(signal.action)
-                .severity(signal.severity)
-                .category(signal.category)
-                .confidence(signal.confidence)
-                .reason_code(&signal.reason_code)
-                .source(VerdictSource::Deterministic);
+                // Deterministic match found
+                let mut builder = VerdictBuilder::default()
+                    .action(signal.action)
+                    .severity(signal.severity)
+                    .category(signal.category)
+                    .confidence(signal.confidence)
+                    .reason_code(&signal.reason_code)
+                    .source(VerdictSource::Deterministic);
 
-            // Step 3: If confidence is below the encoder escalation threshold,
-            // and encoder is available, escalate
-            let thresholds = self.get_thresholds();
-            if signal.confidence < thresholds.encoder_escalation_threshold
-                && request.encoder_available
-            {
-                if let Some(encoder) = self.encoder.read().as_ref() {
-                    if let Ok(enc_verdict) = encoder.classify(&pattern_text) {
-                        builder = builder
-                            .used_encoder(true)
-                            .confidence(enc_verdict.confidence)
-                            .category(enc_verdict.category);
+                // Step 3: If confidence is below the encoder escalation threshold,
+                // and encoder is available, escalate
+                let thresholds = self.get_thresholds();
+                if signal.confidence < thresholds.encoder_escalation_threshold
+                    && request.encoder_available
+                {
+                    if let Some(encoder) = self.encoder.read().as_ref() {
+                        if let Ok(enc_verdict) = encoder.classify(&pattern_text) {
+                            builder = builder
+                                .used_encoder(true)
+                                .confidence(enc_verdict.confidence)
+                                .category(enc_verdict.category);
 
-                        // Step 4: If still ambiguous and SLM is available, adjudicate
-                        if enc_verdict.confidence < thresholds.warn_threshold
-                            && request.slm_available
-                        {
-                            if let Some(slm) = self.slm.read().as_ref() {
-                                let signal_json = serde_json::json!({
-                                    "category": enc_verdict.category,
-                                    "confidence": enc_verdict.confidence,
-                                    "is_group": request.is_group,
-                                    "age_mode": request.age_mode,
-                                })
-                                .to_string();
+                            // Step 4: If still ambiguous and SLM is available, adjudicate
+                            if enc_verdict.confidence < thresholds.warn_threshold
+                                && request.slm_available
+                            {
+                                if let Some(slm) = self.slm.read().as_ref() {
+                                    let signal_json = serde_json::json!({
+                                        "category": enc_verdict.category,
+                                        "confidence": enc_verdict.confidence,
+                                        "is_group": request.is_group,
+                                        "age_mode": request.age_mode,
+                                    })
+                                    .to_string();
 
-                                if let Ok(slm_decision) = slm.adjudicate(&pattern_text, &signal_json) {
-                                    builder = builder
-                                        .used_slm(true)
-                                        .action(slm_decision.action)
-                                        .severity(Severity(slm_decision.severity))
-                                        .confidence(slm_decision.confidence)
-                                        .reason_code(&slm_decision.rationale_code)
-                                        .source(VerdictSource::Slm);
+                                    if let Ok(slm_decision) =
+                                        slm.adjudicate(&pattern_text, &signal_json)
+                                    {
+                                        builder = builder
+                                            .used_slm(true)
+                                            .action(slm_decision.action)
+                                            .severity(Severity(slm_decision.severity))
+                                            .confidence(slm_decision.confidence)
+                                            .reason_code(&slm_decision.rationale_code)
+                                            .source(VerdictSource::Slm);
+                                    }
                                 }
+                            } else {
+                                builder = builder.source(VerdictSource::Encoder);
                             }
-                        } else {
-                            builder = builder.source(VerdictSource::Encoder);
                         }
                     }
                 }
-            }
 
-            builder.build()
+                builder.build()
             }
         } else {
             // No deterministic match — check if we need encoder for safety
@@ -786,12 +838,7 @@ impl SafetyClassifier {
 
         let lexicon = self.build_lexicon_with_overlays_uncached(jurisdiction, community_overlay_id);
 
-        *self.lexicon_cache.write() = Some((
-            pack_count,
-            jur_owned,
-            com_owned,
-            lexicon.clone(),
-        ));
+        *self.lexicon_cache.write() = Some((pack_count, jur_owned, com_owned, lexicon.clone()));
 
         lexicon
     }
@@ -825,8 +872,8 @@ impl SafetyClassifier {
         // Merge scam phrases from embedded overlays (skill-pack feature only).
         #[cfg(feature = "skill-pack")]
         {
-            use crate::skillpack::data::loaders;
             use crate::detectors::categories;
+            use crate::skillpack::data::loaders;
 
             // Jurisdiction scam phrases (applied first — legal floor).
             if let Some(code) = jurisdiction {
@@ -874,13 +921,16 @@ impl SafetyClassifier {
         // Merge: take the most conservative threshold from all packs.
         // For warn/block, higher = more conservative (trigger more often).
         // For encoder_escalation, lower = more conservative (escalate more often).
-        packs.iter().skip(1).fold(packs[0].thresholds.clone(), |acc, pack| {
-            PolicyThresholds {
+        packs
+            .iter()
+            .skip(1)
+            .fold(packs[0].thresholds.clone(), |acc, pack| PolicyThresholds {
                 warn_threshold: acc.warn_threshold.max(pack.thresholds.warn_threshold),
                 block_threshold: acc.block_threshold.max(pack.thresholds.block_threshold),
-                encoder_escalation_threshold: acc.encoder_escalation_threshold.min(pack.thresholds.encoder_escalation_threshold),
-            }
-        })
+                encoder_escalation_threshold: acc
+                    .encoder_escalation_threshold
+                    .min(pack.thresholds.encoder_escalation_threshold),
+            })
     }
 
     /// Check for high-risk indicators that warrant encoder escalation.
@@ -888,26 +938,71 @@ impl SafetyClassifier {
         let lower = text.to_lowercase();
         let indicators = [
             // Violence / self-harm
-            "kill", "hurt", "die", "suicide", "self-harm", "cut myself",
+            "kill",
+            "hurt",
+            "die",
+            "suicide",
+            "self-harm",
+            "cut myself",
             // Sexual / NSFW
-            "nude", "nsfw", "sexual", "explicit",
+            "nude",
+            "nsfw",
+            "sexual",
+            "explicit",
             // Weapons / drugs
-            "weapon", "gun", "bomb", "drug", "cocaine", "meth", "opioid",
+            "weapon",
+            "gun",
+            "bomb",
+            "drug",
+            "cocaine",
+            "meth",
+            "opioid",
             // Child safety
-            "minor", "child", "underage", "groom", "loli",
+            "minor",
+            "child",
+            "underage",
+            "groom",
+            "loli",
             // Harassment / hate
-            "harass", "bully", "doxx", "subhuman", "vermin", "parasite",
-            "inferior race", "ethnic cleansing", "genocide",
+            "harass",
+            "bully",
+            "doxx",
+            "subhuman",
+            "vermin",
+            "parasite",
+            "inferior race",
+            "ethnic cleansing",
+            "genocide",
             // Extremism
-            "extremist", "radical", "terror", "martyrdom", "uprising",
+            "extremist",
+            "radical",
+            "terror",
+            "martyrdom",
+            "uprising",
             // Scam / fraud
-            "scam", "fraud", "phishing", "lottery", "you've won", "prize",
-            "crypto", "bitcoin", "wallet", "seed phrase",
+            "scam",
+            "fraud",
+            "phishing",
+            "lottery",
+            "you've won",
+            "prize",
+            "crypto",
+            "bitcoin",
+            "wallet",
+            "seed phrase",
             // Misinformation
-            "miracle cure", "vaccine", "anti-vax", "election fraud",
-            "deepfake", "fake news", "hoax",
+            "miracle cure",
+            "vaccine",
+            "anti-vax",
+            "election fraud",
+            "deepfake",
+            "fake news",
+            "hoax",
             // Illegal
-            "illegal", "stolen", "counterfeit", "black market",
+            "illegal",
+            "stolen",
+            "counterfeit",
+            "black market",
         ];
         indicators.iter().any(|i| lower.contains(i))
     }
@@ -915,6 +1010,16 @@ impl SafetyClassifier {
     /// Check if the classifier is in deterministic-only mode (no encoder/SLM).
     pub fn is_deterministic_only(&self) -> bool {
         self.encoder.read().is_none() && self.slm.read().is_none()
+    }
+
+    /// Whether an encoder is actually attached (truthful availability).
+    pub fn has_encoder(&self) -> bool {
+        self.encoder.read().is_some()
+    }
+
+    /// Whether an SLM adjudicator is actually attached (truthful availability).
+    pub fn has_slm(&self) -> bool {
+        self.slm.read().is_some()
     }
 
     /// Number of loaded policy packs.
@@ -1060,11 +1165,15 @@ mod tests {
         let classifier = SafetyClassifier::new();
         // Scam detector fires on "Congratulations! You've won" — with
         // quoted_from_user=true, it should be demoted to Allow
-        let req = ClassifyRequest::from_text("Congratulations! You've won $1,000,000")
-            .with_quoted();
+        let req =
+            ClassifyRequest::from_text("Congratulations! You've won $1,000,000").with_quoted();
         let result = classifier.classify(&req);
         assert_eq!(result.verdict.action, Action::Allow);
-        assert!(result.verdict.reason_codes.iter().any(|r| r.contains("protected_speech")));
+        assert!(result
+            .verdict
+            .reason_codes
+            .iter()
+            .any(|r| r.contains("protected_speech")));
     }
 
     #[test]
@@ -1074,7 +1183,11 @@ mod tests {
             .with_overlay("kchat.community.news.guardrail.v1");
         let result = classifier.classify(&req);
         assert_eq!(result.verdict.action, Action::Allow);
-        assert!(result.verdict.reason_codes.iter().any(|r| r.contains("protected_speech")));
+        assert!(result
+            .verdict
+            .reason_codes
+            .iter()
+            .any(|r| r.contains("protected_speech")));
     }
 
     #[test]
@@ -1112,10 +1225,10 @@ mod tests {
             reason_code: "QUOTED_SPEECH_CONTEXT".into(),
             context_confidence: 0.9,
         }];
-        assert!(should_demote_for_protected_speech(
-            detectors::categories::CHILD_SAFETY,
-            &hints,
-        ).is_none());
+        assert!(
+            should_demote_for_protected_speech(detectors::categories::CHILD_SAFETY, &hints,)
+                .is_none()
+        );
     }
 
     #[test]

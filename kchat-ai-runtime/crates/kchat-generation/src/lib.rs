@@ -14,6 +14,7 @@
 pub mod backend;
 pub mod backends;
 pub mod budget;
+pub mod gbnf;
 pub mod grammar;
 pub mod lifecycle;
 pub mod lora;
@@ -25,19 +26,22 @@ pub mod stream;
 pub mod swarm;
 
 pub use backend::{BackendAdapter, BackendConfig, BackendType, GenerationConfig, GenerationResult};
-pub use backends::{select_backend, MockBackend};
 #[cfg(feature = "llamacpp")]
 pub use backends::LlamaCppBackend;
 #[cfg(feature = "mlx")]
 pub use backends::MlxBackend;
+pub use backends::{select_backend, MockBackend};
 pub use budget::{
     adaptive_max_output, budget_for_context, chunk_document, estimate_tokens_text,
-    extract_outline_context, get_local_context, truncate_context, truncate_head,
-    truncate_tail, DocChunk,
+    extract_outline_context, get_local_context, truncate_context, truncate_head, truncate_tail,
+    DocChunk,
 };
+pub use gbnf::{regex_to_gbnf, RegexToGbnfError};
 pub use grammar::{Grammar, GrammarType, GrammarValidator};
 pub use lifecycle::{ModelLifecycle, ModelState};
-pub use lora::{LoraAdapter, LoraManager, LoraError, SkillLoRAResolver};
+pub use lora::{
+    BackendLoraHook, LoraAdapter, LoraBackendHook, LoraError, LoraManager, SkillLoRAResolver,
+};
 pub use pipeline::{GenerationPipeline, PipelineProgress, PipelineResult};
 pub use prompt::{PromptTemplate, PromptTemplateRegistry, TemplateId};
 pub use skills::{
@@ -45,8 +49,8 @@ pub use skills::{
     SkillRegistry, SkillScope, SkillSubVariant, SkillSurface, SkillTier,
 };
 pub use slides_templates::{
-    SlotDef, SlotType, SlidesTemplate, SlidesTemplateFamily, SlidesTemplateRegistry,
+    SlidesTemplate, SlidesTemplateFamily, SlidesTemplateRegistry, SlotDef, SlotType,
     TEMPLATE_CATALOG, TEMPLATE_REGISTRY,
 };
-pub use stream::{StreamEvent, StreamHandle, StreamId};
+pub use stream::{spawn_stream, StreamEvent, StreamHandle, StreamId, StreamingGeneration};
 pub use swarm::{Peer, Swarm, SwarmConfig, SwarmError, SwarmResult};

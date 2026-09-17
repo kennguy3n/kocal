@@ -14,43 +14,68 @@ fn parse_overlay(code: &str) -> serde_yaml::Value {
 }
 
 fn parse_normalization(code: &str) -> serde_yaml::Value {
-    let yaml = jurisdiction_normalization_yaml(code).unwrap_or_else(|| panic!("{code} normalization should exist"));
+    let yaml = jurisdiction_normalization_yaml(code)
+        .unwrap_or_else(|| panic!("{code} normalization should exist"));
     serde_yaml::from_str(yaml).unwrap_or_else(|e| panic!("{code} normalization should parse: {e}"))
 }
 
 fn get_override(overlay: &serde_yaml::Value, category: u64) -> serde_yaml::Value {
-    let overrides = overlay.get("overrides").and_then(|v| v.as_sequence()).unwrap();
-    let matches: Vec<_> = overrides.iter().filter(|o| o.get("category").and_then(|c| c.as_u64()) == Some(category)).collect();
-    assert!(!matches.is_empty(), "overlay must define an override for category {category}");
-    assert_eq!(matches.len(), 1, "exactly one override expected for category {category}");
+    let overrides = overlay
+        .get("overrides")
+        .and_then(|v| v.as_sequence())
+        .unwrap();
+    let matches: Vec<_> = overrides
+        .iter()
+        .filter(|o| o.get("category").and_then(|c| c.as_u64()) == Some(category))
+        .collect();
+    assert!(
+        !matches.is_empty(),
+        "overlay must define an override for category {category}"
+    );
+    assert_eq!(
+        matches.len(),
+        1,
+        "exactly one override expected for category {category}"
+    );
     matches[0].clone()
 }
 
 const REQUIRED_TOP_LEVEL: &[&str] = &[
-    "skill_id", "parent", "schema_version", "expires_on", "signers",
-    "activation", "local_definitions", "local_language_assets",
-    "overrides", "allowed_contexts", "user_notice",
+    "skill_id",
+    "parent",
+    "schema_version",
+    "expires_on",
+    "signers",
+    "activation",
+    "local_definitions",
+    "local_language_assets",
+    "overrides",
+    "allowed_contexts",
+    "user_notice",
 ];
 
 const REQUIRED_FORBIDDEN_CRITERIA: &[&str] = &[
-    "gps_location", "ip_geolocation", "inferred_nationality",
-    "inferred_ethnicity", "inferred_religion",
+    "gps_location",
+    "ip_geolocation",
+    "inferred_nationality",
+    "inferred_ethnicity",
+    "inferred_religion",
 ];
 
 const REQUIRED_SIGNERS: &[&str] = &["trust_and_safety", "legal_review", "cultural_review"];
 
 const REQUIRED_ALLOWED_CONTEXTS: &[&str] = &[
-    "QUOTED_SPEECH_CONTEXT", "NEWS_CONTEXT",
-    "EDUCATION_CONTEXT", "COUNTERSPEECH_CONTEXT",
+    "QUOTED_SPEECH_CONTEXT",
+    "NEWS_CONTEXT",
+    "EDUCATION_CONTEXT",
+    "COUNTERSPEECH_CONTEXT",
 ];
 
 const COUNTRY_CODES: &[&str] = &[
-    "ae", "ar", "at", "au", "bd", "br", "ca", "ch", "cl", "co",
-    "cz", "de", "dk", "dz", "ec", "eg", "es", "et", "fi", "fr",
-    "gb", "gh", "gr", "hu", "id", "ie", "il", "in", "iq", "it",
-    "jp", "ke", "kr", "ma", "mx", "my", "ng", "nl", "no", "nz",
-    "pe", "ph", "pk", "pl", "pt", "ro", "ru", "sa", "se", "sg",
-    "th", "tr", "tw", "tz", "ua", "us", "uy", "vn", "za",
+    "ae", "ar", "at", "au", "bd", "br", "ca", "ch", "cl", "co", "cz", "de", "dk", "dz", "ec", "eg",
+    "es", "et", "fi", "fr", "gb", "gh", "gr", "hu", "id", "ie", "il", "in", "iq", "it", "jp", "ke",
+    "kr", "ma", "mx", "my", "ng", "nl", "no", "nz", "pe", "ph", "pk", "pl", "pt", "ro", "ru", "sa",
+    "se", "sg", "th", "tr", "tw", "tz", "ua", "us", "uy", "vn", "za",
 ];
 
 const ARCHETYPE_CODES: &[&str] = &[
@@ -67,7 +92,10 @@ fn run_structural_assertions(code: &str) {
 
     // Required top-level keys
     for key in REQUIRED_TOP_LEVEL {
-        assert!(overlay.get(*key).is_some(), "{code} missing top-level key: {key}");
+        assert!(
+            overlay.get(*key).is_some(),
+            "{code} missing top-level key: {key}"
+        );
     }
 
     // Skill ID
@@ -79,25 +107,36 @@ fn run_structural_assertions(code: &str) {
 
     // Parent
     let parent = overlay.get("parent").and_then(|v| v.as_str()).unwrap();
-    assert_eq!(parent, "kchat.global.guardrail.baseline", "{code} parent mismatch");
+    assert_eq!(
+        parent, "kchat.global.guardrail.baseline",
+        "{code} parent mismatch"
+    );
 
     // Schema version
-    let sv = overlay.get("schema_version").and_then(|v| v.as_u64()).unwrap();
+    let sv = overlay
+        .get("schema_version")
+        .and_then(|v| v.as_u64())
+        .unwrap();
     assert_eq!(sv, 1, "{code} schema_version must be 1");
 
     // Signers
-    let signers: Vec<String> = overlay.get("signers")
+    let signers: Vec<String> = overlay
+        .get("signers")
         .and_then(|v| v.as_sequence())
         .unwrap()
         .iter()
         .filter_map(|v| v.as_str().map(String::from))
         .collect();
     for s in REQUIRED_SIGNERS {
-        assert!(signers.iter().any(|x| x == *s), "{code} signers missing: {s}");
+        assert!(
+            signers.iter().any(|x| x == *s),
+            "{code} signers missing: {s}"
+        );
     }
 
     // Forbidden criteria
-    let forbidden: Vec<String> = overlay.get("activation")
+    let forbidden: Vec<String> = overlay
+        .get("activation")
         .and_then(|v| v.get("forbidden_criteria"))
         .and_then(|v| v.as_sequence())
         .unwrap()
@@ -105,41 +144,66 @@ fn run_structural_assertions(code: &str) {
         .filter_map(|v| v.as_str().map(String::from))
         .collect();
     for fc in REQUIRED_FORBIDDEN_CRITERIA {
-        assert!(forbidden.iter().any(|x| x == *fc), "{code} forbidden_criteria missing: {fc}");
+        assert!(
+            forbidden.iter().any(|x| x == *fc),
+            "{code} forbidden_criteria missing: {fc}"
+        );
     }
 
     // Activation criteria references country code
-    let criteria = overlay.get("activation")
+    let criteria = overlay
+        .get("activation")
         .and_then(|v| v.get("criteria"))
         .and_then(|v| v.as_sequence())
         .unwrap();
-    assert!(!criteria.is_empty(), "{code} activation criteria must be non-empty");
-    let flat: Vec<String> = criteria.iter()
+    assert!(
+        !criteria.is_empty(),
+        "{code} activation criteria must be non-empty"
+    );
+    let flat: Vec<String> = criteria
+        .iter()
         .filter_map(|c| {
             if let serde_yaml::Value::Mapping(m) = c {
-                m.values().filter_map(|v| v.as_str().map(String::from)).next()
-            } else { None }
+                m.values()
+                    .filter_map(|v| v.as_str().map(String::from))
+                    .next()
+            } else {
+                None
+            }
         })
         .collect();
-    assert!(flat.iter().any(|v| v == code), "{code} activation criteria must reference country code {code}: {flat:?}");
+    assert!(
+        flat.iter().any(|v| v == code),
+        "{code} activation criteria must reference country code {code}: {flat:?}"
+    );
 
     // Allowed contexts
-    let contexts: Vec<String> = overlay.get("allowed_contexts")
+    let contexts: Vec<String> = overlay
+        .get("allowed_contexts")
         .and_then(|v| v.as_sequence())
         .unwrap()
         .iter()
         .filter_map(|v| v.as_str().map(String::from))
         .collect();
     for ctx in REQUIRED_ALLOWED_CONTEXTS {
-        assert!(contexts.iter().any(|x| x == *ctx), "{code} allowed_contexts missing: {ctx}");
+        assert!(
+            contexts.iter().any(|x| x == *ctx),
+            "{code} allowed_contexts missing: {ctx}"
+        );
     }
 
     // No relaxed child safety
-    let overrides = overlay.get("overrides").and_then(|v| v.as_sequence()).unwrap();
+    let overrides = overlay
+        .get("overrides")
+        .and_then(|v| v.as_sequence())
+        .unwrap();
     for o in overrides {
         if o.get("category").and_then(|c| c.as_u64()) == Some(1) {
             let floor = o.get("severity_floor").and_then(|v| v.as_u64()).unwrap();
-            assert!(floor >= 5, "{code} CHILD_SAFETY floor cannot be lowered below 5");
+            assert!(
+                floor >= 5,
+                "{code} CHILD_SAFETY floor cannot be lowered below 5"
+            );
         }
     }
 
@@ -150,48 +214,117 @@ fn run_structural_assertions(code: &str) {
     let exp_date = chrono::NaiveDate::parse_from_str(expires, "%Y-%m-%d")
         .unwrap_or_else(|e| panic!("{code} expires_on must be a valid date: {expires} ({e})"));
     let today = chrono::Local::now().date_naive();
-    assert!(exp_date > today, "{code} expires_on must be in the future: {expires}");
+    assert!(
+        exp_date > today,
+        "{code} expires_on must be in the future: {expires}"
+    );
     let max_expiry = today + chrono::Duration::days(18 * 31);
-    assert!(exp_date <= max_expiry, "{code} expires_on must be within 18 months: {expires}");
+    assert!(
+        exp_date <= max_expiry,
+        "{code} expires_on must be within 18 months: {expires}"
+    );
 
     // User notice
     let notice = overlay.get("user_notice").unwrap();
-    let summary = notice.get("visible_pack_summary").and_then(|v| v.as_str()).unwrap();
-    assert!(!summary.trim().is_empty(), "{code} user_notice summary must be non-empty");
-    assert!(notice.get("appeal_resource_id").is_some(), "{code} user_notice missing appeal_resource_id");
-    assert!(notice.get("opt_out_allowed").is_some(), "{code} user_notice missing opt_out_allowed");
-    assert!(notice.get("opt_out_allowed").and_then(|v| v.as_bool()).is_some(),
-        "{code} opt_out_allowed must be a boolean");
+    let summary = notice
+        .get("visible_pack_summary")
+        .and_then(|v| v.as_str())
+        .unwrap();
+    assert!(
+        !summary.trim().is_empty(),
+        "{code} user_notice summary must be non-empty"
+    );
+    assert!(
+        notice.get("appeal_resource_id").is_some(),
+        "{code} user_notice missing appeal_resource_id"
+    );
+    assert!(
+        notice.get("opt_out_allowed").is_some(),
+        "{code} user_notice missing opt_out_allowed"
+    );
+    assert!(
+        notice
+            .get("opt_out_allowed")
+            .and_then(|v| v.as_bool())
+            .is_some(),
+        "{code} opt_out_allowed must be a boolean"
+    );
 
     // Normalization
-    let norm_section = overlay.get("local_language_assets")
+    let norm_section = overlay
+        .get("local_language_assets")
         .and_then(|v| v.get("normalization"))
         .unwrap();
-    assert_eq!(norm_section.get("nfkc").and_then(|v| v.as_bool()), Some(true), "{code} nfkc must be true");
-    assert_eq!(norm_section.get("case_fold").and_then(|v| v.as_bool()), Some(true), "{code} case_fold must be true");
-    assert!(norm_section.get("homoglyph_map_id").is_some(), "{code} homoglyph_map_id must exist");
-    let translit = norm_section.get("transliteration_refs")
+    assert_eq!(
+        norm_section.get("nfkc").and_then(|v| v.as_bool()),
+        Some(true),
+        "{code} nfkc must be true"
+    );
+    assert_eq!(
+        norm_section.get("case_fold").and_then(|v| v.as_bool()),
+        Some(true),
+        "{code} case_fold must be true"
+    );
+    assert!(
+        norm_section.get("homoglyph_map_id").is_some(),
+        "{code} homoglyph_map_id must exist"
+    );
+    let translit = norm_section
+        .get("transliteration_refs")
         .and_then(|v| v.as_sequence())
         .unwrap();
-    assert!(!translit.is_empty(), "{code} transliteration_refs must be non-empty");
+    assert!(
+        !translit.is_empty(),
+        "{code} transliteration_refs must be non-empty"
+    );
 
     // Normalization file matches overlay
-    assert_eq!(norm.get("nfkc").and_then(|v| v.as_bool()), Some(true), "{code} norm file nfkc must be true");
-    assert_eq!(norm.get("case_fold").and_then(|v| v.as_bool()), Some(true), "{code} norm file case_fold must be true");
-    let norm_glyph = norm.get("homoglyph_map_id").and_then(|v| v.as_str()).unwrap();
-    let overlay_glyph = norm_section.get("homoglyph_map_id").and_then(|v| v.as_str()).unwrap();
-    assert_eq!(norm_glyph, overlay_glyph, "{code} norm file homoglyph_map_id mismatch");
+    assert_eq!(
+        norm.get("nfkc").and_then(|v| v.as_bool()),
+        Some(true),
+        "{code} norm file nfkc must be true"
+    );
+    assert_eq!(
+        norm.get("case_fold").and_then(|v| v.as_bool()),
+        Some(true),
+        "{code} norm file case_fold must be true"
+    );
+    let norm_glyph = norm
+        .get("homoglyph_map_id")
+        .and_then(|v| v.as_str())
+        .unwrap();
+    let overlay_glyph = norm_section
+        .get("homoglyph_map_id")
+        .and_then(|v| v.as_str())
+        .unwrap();
+    assert_eq!(
+        norm_glyph, overlay_glyph,
+        "{code} norm file homoglyph_map_id mismatch"
+    );
 
     // Lexicons have provenance
-    let lexicons = overlay.get("local_language_assets")
+    let lexicons = overlay
+        .get("local_language_assets")
         .and_then(|v| v.get("lexicons"))
         .and_then(|v| v.as_sequence())
         .unwrap();
-    assert!(!lexicons.is_empty(), "{code} must declare at least one lexicon");
+    assert!(
+        !lexicons.is_empty(),
+        "{code} must declare at least one lexicon"
+    );
     for lex in lexicons {
-        assert!(lex.get("provenance").is_some(), "{code} lexicon missing provenance");
-        assert!(lex.get("language").is_some(), "{code} lexicon missing language");
-        assert!(lex.get("categories").is_some(), "{code} lexicon missing categories");
+        assert!(
+            lex.get("provenance").is_some(),
+            "{code} lexicon missing provenance"
+        );
+        assert!(
+            lex.get("language").is_some(),
+            "{code} lexicon missing language"
+        );
+        assert!(
+            lex.get("categories").is_some(),
+            "{code} lexicon missing categories"
+        );
     }
 }
 
@@ -218,8 +351,14 @@ fn all_countries_structural_assertions() {
 fn all_countries_child_safety_floor_5() {
     for code in COUNTRY_CODES {
         let overlay = parse_overlay(code);
-        let overrides = overlay.get("overrides").and_then(|v| v.as_sequence()).unwrap();
-        if let Some(o) = overrides.iter().find(|o| o.get("category").and_then(|c| c.as_u64()) == Some(1)) {
+        let overrides = overlay
+            .get("overrides")
+            .and_then(|v| v.as_sequence())
+            .unwrap();
+        if let Some(o) = overrides
+            .iter()
+            .find(|o| o.get("category").and_then(|c| c.as_u64()) == Some(1))
+        {
             let floor = o.get("severity_floor").and_then(|v| v.as_u64()).unwrap();
             assert_eq!(floor, 5, "{code} CHILD_SAFETY floor must be 5");
         }
@@ -230,10 +369,19 @@ fn all_countries_child_safety_floor_5() {
 fn all_countries_extremism_floor_4_or_5() {
     for code in COUNTRY_CODES {
         let overlay = parse_overlay(code);
-        let overrides = overlay.get("overrides").and_then(|v| v.as_sequence()).unwrap();
-        if let Some(o) = overrides.iter().find(|o| o.get("category").and_then(|c| c.as_u64()) == Some(4)) {
+        let overrides = overlay
+            .get("overrides")
+            .and_then(|v| v.as_sequence())
+            .unwrap();
+        if let Some(o) = overrides
+            .iter()
+            .find(|o| o.get("category").and_then(|c| c.as_u64()) == Some(4))
+        {
             let floor = o.get("severity_floor").and_then(|v| v.as_u64()).unwrap();
-            assert!(floor == 4 || floor == 5, "{code} EXTREMISM floor must be 4 or 5, got {floor}");
+            assert!(
+                floor == 4 || floor == 5,
+                "{code} EXTREMISM floor must be 4 or 5, got {floor}"
+            );
         }
     }
 }
@@ -249,39 +397,81 @@ fn archetype_strict_adult_structural() {
     let norm = parse_normalization(code);
 
     for key in REQUIRED_TOP_LEVEL {
-        assert!(overlay.get(*key).is_some(), "{code} missing top-level key: {key}");
+        assert!(
+            overlay.get(*key).is_some(),
+            "{code} missing top-level key: {key}"
+        );
     }
     let skill_id = overlay.get("skill_id").and_then(|v| v.as_str()).unwrap();
-    assert_eq!(skill_id, "kchat.jurisdiction.archetype-strict-adult.guardrail.v1");
-    assert_eq!(overlay.get("parent").and_then(|v| v.as_str()), Some("kchat.global.guardrail.baseline"));
-    assert_eq!(overlay.get("schema_version").and_then(|v| v.as_u64()), Some(1));
+    assert_eq!(
+        skill_id,
+        "kchat.jurisdiction.archetype-strict-adult.guardrail.v1"
+    );
+    assert_eq!(
+        overlay.get("parent").and_then(|v| v.as_str()),
+        Some("kchat.global.guardrail.baseline")
+    );
+    assert_eq!(
+        overlay.get("schema_version").and_then(|v| v.as_u64()),
+        Some(1)
+    );
 
-    let signers: Vec<String> = overlay.get("signers").and_then(|v| v.as_sequence()).unwrap()
-        .iter().filter_map(|v| v.as_str().map(String::from)).collect();
+    let signers: Vec<String> = overlay
+        .get("signers")
+        .and_then(|v| v.as_sequence())
+        .unwrap()
+        .iter()
+        .filter_map(|v| v.as_str().map(String::from))
+        .collect();
     for s in REQUIRED_SIGNERS {
-        assert!(signers.iter().any(|x| x == *s), "{code} signers missing: {s}");
+        assert!(
+            signers.iter().any(|x| x == *s),
+            "{code} signers missing: {s}"
+        );
     }
 
-    let forbidden: Vec<String> = overlay.get("activation").and_then(|v| v.get("forbidden_criteria"))
-        .and_then(|v| v.as_sequence()).unwrap()
-        .iter().filter_map(|v| v.as_str().map(String::from)).collect();
+    let forbidden: Vec<String> = overlay
+        .get("activation")
+        .and_then(|v| v.get("forbidden_criteria"))
+        .and_then(|v| v.as_sequence())
+        .unwrap()
+        .iter()
+        .filter_map(|v| v.as_str().map(String::from))
+        .collect();
     for fc in REQUIRED_FORBIDDEN_CRITERIA {
-        assert!(forbidden.iter().any(|x| x == *fc), "{code} forbidden_criteria missing: {fc}");
+        assert!(
+            forbidden.iter().any(|x| x == *fc),
+            "{code} forbidden_criteria missing: {fc}"
+        );
     }
 
-    let contexts: Vec<String> = overlay.get("allowed_contexts").and_then(|v| v.as_sequence()).unwrap()
-        .iter().filter_map(|v| v.as_str().map(String::from)).collect();
+    let contexts: Vec<String> = overlay
+        .get("allowed_contexts")
+        .and_then(|v| v.as_sequence())
+        .unwrap()
+        .iter()
+        .filter_map(|v| v.as_str().map(String::from))
+        .collect();
     for ctx in REQUIRED_ALLOWED_CONTEXTS {
-        assert!(contexts.iter().any(|x| x == *ctx), "{code} allowed_contexts missing: {ctx}");
+        assert!(
+            contexts.iter().any(|x| x == *ctx),
+            "{code} allowed_contexts missing: {ctx}"
+        );
     }
 
     // Category 10 severity floor 5
     let cat10 = get_override(&overlay, 10);
-    assert_eq!(cat10.get("severity_floor").and_then(|v| v.as_u64()), Some(5),
-        "archetype-strict-adult category 10 must have severity_floor 5");
+    assert_eq!(
+        cat10.get("severity_floor").and_then(|v| v.as_u64()),
+        Some(5),
+        "archetype-strict-adult category 10 must have severity_floor 5"
+    );
 
     // No relaxed child safety
-    let overrides = overlay.get("overrides").and_then(|v| v.as_sequence()).unwrap();
+    let overrides = overlay
+        .get("overrides")
+        .and_then(|v| v.as_sequence())
+        .unwrap();
     for o in overrides {
         if o.get("category").and_then(|c| c.as_u64()) == Some(1) {
             assert!(o.get("severity_floor").and_then(|v| v.as_u64()).unwrap() >= 5);
@@ -289,16 +479,38 @@ fn archetype_strict_adult_structural() {
     }
 
     // Normalization
-    let norm_section = overlay.get("local_language_assets").and_then(|v| v.get("normalization")).unwrap();
-    assert_eq!(norm_section.get("nfkc").and_then(|v| v.as_bool()), Some(true));
-    assert_eq!(norm_section.get("case_fold").and_then(|v| v.as_bool()), Some(true));
+    let norm_section = overlay
+        .get("local_language_assets")
+        .and_then(|v| v.get("normalization"))
+        .unwrap();
+    assert_eq!(
+        norm_section.get("nfkc").and_then(|v| v.as_bool()),
+        Some(true)
+    );
+    assert_eq!(
+        norm_section.get("case_fold").and_then(|v| v.as_bool()),
+        Some(true)
+    );
     assert!(norm_section.get("homoglyph_map_id").is_some());
-    assert!(norm_section.get("transliteration_refs").and_then(|v| v.as_sequence()).unwrap().is_empty() == false);
+    assert!(
+        norm_section
+            .get("transliteration_refs")
+            .and_then(|v| v.as_sequence())
+            .unwrap()
+            .is_empty()
+            == false
+    );
 
     assert_eq!(norm.get("nfkc").and_then(|v| v.as_bool()), Some(true));
     assert_eq!(norm.get("case_fold").and_then(|v| v.as_bool()), Some(true));
-    let norm_glyph = norm.get("homoglyph_map_id").and_then(|v| v.as_str()).unwrap();
-    let overlay_glyph = norm_section.get("homoglyph_map_id").and_then(|v| v.as_str()).unwrap();
+    let norm_glyph = norm
+        .get("homoglyph_map_id")
+        .and_then(|v| v.as_str())
+        .unwrap();
+    let overlay_glyph = norm_section
+        .get("homoglyph_map_id")
+        .and_then(|v| v.as_str())
+        .unwrap();
     assert_eq!(norm_glyph, overlay_glyph);
 }
 
@@ -309,35 +521,70 @@ fn archetype_strict_hate_structural() {
     let norm = parse_normalization(code);
 
     for key in REQUIRED_TOP_LEVEL {
-        assert!(overlay.get(*key).is_some(), "{code} missing top-level key: {key}");
+        assert!(
+            overlay.get(*key).is_some(),
+            "{code} missing top-level key: {key}"
+        );
     }
     let skill_id = overlay.get("skill_id").and_then(|v| v.as_str()).unwrap();
-    assert_eq!(skill_id, "kchat.jurisdiction.archetype-strict-hate.guardrail.v1");
-    assert_eq!(overlay.get("parent").and_then(|v| v.as_str()), Some("kchat.global.guardrail.baseline"));
-    assert_eq!(overlay.get("schema_version").and_then(|v| v.as_u64()), Some(1));
+    assert_eq!(
+        skill_id,
+        "kchat.jurisdiction.archetype-strict-hate.guardrail.v1"
+    );
+    assert_eq!(
+        overlay.get("parent").and_then(|v| v.as_str()),
+        Some("kchat.global.guardrail.baseline")
+    );
+    assert_eq!(
+        overlay.get("schema_version").and_then(|v| v.as_u64()),
+        Some(1)
+    );
 
-    let signers: Vec<String> = overlay.get("signers").and_then(|v| v.as_sequence()).unwrap()
-        .iter().filter_map(|v| v.as_str().map(String::from)).collect();
+    let signers: Vec<String> = overlay
+        .get("signers")
+        .and_then(|v| v.as_sequence())
+        .unwrap()
+        .iter()
+        .filter_map(|v| v.as_str().map(String::from))
+        .collect();
     for s in REQUIRED_SIGNERS {
-        assert!(signers.iter().any(|x| x == *s), "{code} signers missing: {s}");
+        assert!(
+            signers.iter().any(|x| x == *s),
+            "{code} signers missing: {s}"
+        );
     }
 
     // Category 4 floor 4 or 5
     let cat4 = get_override(&overlay, 4);
     let floor4 = cat4.get("severity_floor").and_then(|v| v.as_u64()).unwrap();
-    assert!(floor4 == 4 || floor4 == 5, "archetype-strict-hate cat 4 floor must be 4 or 5");
+    assert!(
+        floor4 == 4 || floor4 == 5,
+        "archetype-strict-hate cat 4 floor must be 4 or 5"
+    );
 
     // Category 6 floor 4 or 5
     let cat6 = get_override(&overlay, 6);
     let floor6 = cat6.get("severity_floor").and_then(|v| v.as_u64()).unwrap();
-    assert!(floor6 == 4 || floor6 == 5, "archetype-strict-hate cat 6 floor must be 4 or 5");
+    assert!(
+        floor6 == 4 || floor6 == 5,
+        "archetype-strict-hate cat 6 floor must be 4 or 5"
+    );
 
     // Normalization matches
-    let norm_section = overlay.get("local_language_assets").and_then(|v| v.get("normalization")).unwrap();
+    let norm_section = overlay
+        .get("local_language_assets")
+        .and_then(|v| v.get("normalization"))
+        .unwrap();
     assert_eq!(norm.get("nfkc").and_then(|v| v.as_bool()), Some(true));
     assert_eq!(norm.get("case_fold").and_then(|v| v.as_bool()), Some(true));
-    let norm_glyph = norm.get("homoglyph_map_id").and_then(|v| v.as_str()).unwrap();
-    let overlay_glyph = norm_section.get("homoglyph_map_id").and_then(|v| v.as_str()).unwrap();
+    let norm_glyph = norm
+        .get("homoglyph_map_id")
+        .and_then(|v| v.as_str())
+        .unwrap();
+    let overlay_glyph = norm_section
+        .get("homoglyph_map_id")
+        .and_then(|v| v.as_str())
+        .unwrap();
     assert_eq!(norm_glyph, overlay_glyph);
 }
 
@@ -348,40 +595,72 @@ fn archetype_strict_marketplace_structural() {
     let norm = parse_normalization(code);
 
     for key in REQUIRED_TOP_LEVEL {
-        assert!(overlay.get(*key).is_some(), "{code} missing top-level key: {key}");
+        assert!(
+            overlay.get(*key).is_some(),
+            "{code} missing top-level key: {key}"
+        );
     }
     let skill_id = overlay.get("skill_id").and_then(|v| v.as_str()).unwrap();
-    assert_eq!(skill_id, "kchat.jurisdiction.archetype-strict-marketplace.guardrail.v1");
-    assert_eq!(overlay.get("parent").and_then(|v| v.as_str()), Some("kchat.global.guardrail.baseline"));
-    assert_eq!(overlay.get("schema_version").and_then(|v| v.as_u64()), Some(1));
+    assert_eq!(
+        skill_id,
+        "kchat.jurisdiction.archetype-strict-marketplace.guardrail.v1"
+    );
+    assert_eq!(
+        overlay.get("parent").and_then(|v| v.as_str()),
+        Some("kchat.global.guardrail.baseline")
+    );
+    assert_eq!(
+        overlay.get("schema_version").and_then(|v| v.as_u64()),
+        Some(1)
+    );
 
     // Activation uses archetype region code
-    let criteria = overlay.get("activation").and_then(|v| v.get("criteria"))
-        .and_then(|v| v.as_sequence()).unwrap();
+    let criteria = overlay
+        .get("activation")
+        .and_then(|v| v.get("criteria"))
+        .and_then(|v| v.as_sequence())
+        .unwrap();
     for c in criteria {
         if let serde_yaml::Value::Mapping(m) = c {
             let val = m.values().filter_map(|v| v.as_str()).next().unwrap();
-            assert_eq!(val, "archetype-strict-marketplace",
-                "every activation criterion must use the archetype region code");
+            assert_eq!(
+                val, "archetype-strict-marketplace",
+                "every activation criterion must use the archetype region code"
+            );
         }
     }
 
     // Category 11 floor 4
     let cat11 = get_override(&overlay, 11);
-    assert_eq!(cat11.get("severity_floor").and_then(|v| v.as_u64()), Some(4),
-        "archetype-strict-marketplace cat 11 must have severity_floor 4");
+    assert_eq!(
+        cat11.get("severity_floor").and_then(|v| v.as_u64()),
+        Some(4),
+        "archetype-strict-marketplace cat 11 must have severity_floor 4"
+    );
 
     // Category 12 floor 4
     let cat12 = get_override(&overlay, 12);
-    assert_eq!(cat12.get("severity_floor").and_then(|v| v.as_u64()), Some(4),
-        "archetype-strict-marketplace cat 12 must have severity_floor 4");
+    assert_eq!(
+        cat12.get("severity_floor").and_then(|v| v.as_u64()),
+        Some(4),
+        "archetype-strict-marketplace cat 12 must have severity_floor 4"
+    );
 
     // Normalization matches
-    let norm_section = overlay.get("local_language_assets").and_then(|v| v.get("normalization")).unwrap();
+    let norm_section = overlay
+        .get("local_language_assets")
+        .and_then(|v| v.get("normalization"))
+        .unwrap();
     assert_eq!(norm.get("nfkc").and_then(|v| v.as_bool()), Some(true));
     assert_eq!(norm.get("case_fold").and_then(|v| v.as_bool()), Some(true));
-    let norm_glyph = norm.get("homoglyph_map_id").and_then(|v| v.as_str()).unwrap();
-    let overlay_glyph = norm_section.get("homoglyph_map_id").and_then(|v| v.as_str()).unwrap();
+    let norm_glyph = norm
+        .get("homoglyph_map_id")
+        .and_then(|v| v.as_str())
+        .unwrap();
+    let overlay_glyph = norm_section
+        .get("homoglyph_map_id")
+        .and_then(|v| v.as_str())
+        .unwrap();
     assert_eq!(norm_glyph, overlay_glyph);
 }
 
@@ -392,64 +671,114 @@ fn archetype_strict_marketplace_structural() {
 fn assert_severity_floor(code: &str, category: u64, expected: u64) {
     let overlay = parse_overlay(code);
     let override_ = get_override(&overlay, category);
-    let floor = override_.get("severity_floor").and_then(|v| v.as_u64()).unwrap();
-    assert_eq!(floor, expected, "{code} category {category} severity_floor must be {expected}");
+    let floor = override_
+        .get("severity_floor")
+        .and_then(|v| v.as_u64())
+        .unwrap();
+    assert_eq!(
+        floor, expected,
+        "{code} category {category} severity_floor must be {expected}"
+    );
 }
 
 #[test]
-fn de_extremism_floor_5() { assert_severity_floor("de", 4, 5); }
+fn de_extremism_floor_5() {
+    assert_severity_floor("de", 4, 5);
+}
 #[test]
-fn de_hate_floor_4() { assert_severity_floor("de", 6, 4); }
+fn de_hate_floor_4() {
+    assert_severity_floor("de", 6, 4);
+}
 #[test]
-fn de_sexual_adult_floor_3() { assert_severity_floor("de", 10, 3); }
+fn de_sexual_adult_floor_3() {
+    assert_severity_floor("de", 10, 3);
+}
 
 #[test]
-fn br_hate_floor_4() { assert_severity_floor("br", 6, 4); }
+fn br_hate_floor_4() {
+    assert_severity_floor("br", 6, 4);
+}
 #[test]
-fn br_misinfo_civic_floor_3() { assert_severity_floor("br", 14, 3); }
+fn br_misinfo_civic_floor_3() {
+    assert_severity_floor("br", 14, 3);
+}
 
 #[test]
-fn in_extremism_floor_4() { assert_severity_floor("in", 4, 4); }
+fn in_extremism_floor_4() {
+    assert_severity_floor("in", 4, 4);
+}
 #[test]
-fn in_hate_floor_4() { assert_severity_floor("in", 6, 4); }
+fn in_hate_floor_4() {
+    assert_severity_floor("in", 6, 4);
+}
 #[test]
-fn in_sexual_adult_floor_5() { assert_severity_floor("in", 10, 5); }
+fn in_sexual_adult_floor_5() {
+    assert_severity_floor("in", 10, 5);
+}
 
 #[test]
-fn jp_drugs_weapons_floor_5() { assert_severity_floor("jp", 11, 5); }
+fn jp_drugs_weapons_floor_5() {
+    assert_severity_floor("jp", 11, 5);
+}
 #[test]
-fn jp_scam_fraud_floor_4() { assert_severity_floor("jp", 7, 4); }
+fn jp_scam_fraud_floor_4() {
+    assert_severity_floor("jp", 7, 4);
+}
 
 #[test]
-fn us_scam_fraud_floor_3() { assert_severity_floor("us", 7, 3); }
+fn us_scam_fraud_floor_3() {
+    assert_severity_floor("us", 7, 3);
+}
 
 #[test]
-fn ca_scam_fraud_floor_3() { assert_severity_floor("ca", 7, 3); }
+fn ca_scam_fraud_floor_3() {
+    assert_severity_floor("ca", 7, 3);
+}
 #[test]
-fn gb_scam_fraud_floor_3() { assert_severity_floor("gb", 7, 3); }
+fn gb_scam_fraud_floor_3() {
+    assert_severity_floor("gb", 7, 3);
+}
 
 #[test]
-fn fr_extremism_floor_5() { assert_severity_floor("fr", 4, 5); }
+fn fr_extremism_floor_5() {
+    assert_severity_floor("fr", 4, 5);
+}
 #[test]
-fn fr_hate_floor_4() { assert_severity_floor("fr", 6, 4); }
+fn fr_hate_floor_4() {
+    assert_severity_floor("fr", 6, 4);
+}
 
 #[test]
-fn th_hate_floor_5() { assert_severity_floor("th", 6, 5); }
+fn th_hate_floor_5() {
+    assert_severity_floor("th", 6, 5);
+}
 
 #[test]
-fn id_sexual_adult_floor_5() { assert_severity_floor("id", 10, 5); }
+fn id_sexual_adult_floor_5() {
+    assert_severity_floor("id", 10, 5);
+}
 
 #[test]
-fn mx_drugs_weapons_floor_4() { assert_severity_floor("mx", 11, 4); }
+fn mx_drugs_weapons_floor_4() {
+    assert_severity_floor("mx", 11, 4);
+}
 
 #[test]
-fn ae_extremism_floor_5() { assert_severity_floor("ae", 4, 5); }
+fn ae_extremism_floor_5() {
+    assert_severity_floor("ae", 4, 5);
+}
 #[test]
-fn eg_extremism_floor_5() { assert_severity_floor("eg", 4, 5); }
+fn eg_extremism_floor_5() {
+    assert_severity_floor("eg", 4, 5);
+}
 #[test]
-fn sa_extremism_floor_5() { assert_severity_floor("sa", 4, 5); }
+fn sa_extremism_floor_5() {
+    assert_severity_floor("sa", 4, 5);
+}
 #[test]
-fn at_extremism_floor_5() { assert_severity_floor("at", 4, 5); }
+fn at_extremism_floor_5() {
+    assert_severity_floor("at", 4, 5);
+}
 
 // ===========================================================================
 // Country-specific legal age tests
@@ -457,7 +786,8 @@ fn at_extremism_floor_5() { assert_severity_floor("at", 4, 5); }
 
 fn assert_legal_age(code: &str, kind: &str, expected: u64) {
     let overlay = parse_overlay(code);
-    let age = overlay.get("local_definitions")
+    let age = overlay
+        .get("local_definitions")
         .and_then(|v| v.get(kind))
         .and_then(|v| v.as_u64())
         .unwrap_or_else(|| panic!("{code} missing local_definitions.{kind}"));
@@ -465,67 +795,117 @@ fn assert_legal_age(code: &str, kind: &str, expected: u64) {
 }
 
 #[test]
-fn us_legal_age_alcohol_21() { assert_legal_age("us", "legal_age_marketplace_alcohol", 21); }
+fn us_legal_age_alcohol_21() {
+    assert_legal_age("us", "legal_age_marketplace_alcohol", 21);
+}
 #[test]
-fn us_legal_age_tobacco_21() { assert_legal_age("us", "legal_age_marketplace_tobacco", 21); }
+fn us_legal_age_tobacco_21() {
+    assert_legal_age("us", "legal_age_marketplace_tobacco", 21);
+}
 
 #[test]
-fn de_legal_age_alcohol_16() { assert_legal_age("de", "legal_age_marketplace_alcohol", 16); }
+fn de_legal_age_alcohol_16() {
+    assert_legal_age("de", "legal_age_marketplace_alcohol", 16);
+}
 #[test]
-fn de_legal_age_tobacco_18() { assert_legal_age("de", "legal_age_marketplace_tobacco", 18); }
+fn de_legal_age_tobacco_18() {
+    assert_legal_age("de", "legal_age_marketplace_tobacco", 18);
+}
 
 #[test]
-fn jp_legal_age_alcohol_20() { assert_legal_age("jp", "legal_age_marketplace_alcohol", 20); }
+fn jp_legal_age_alcohol_20() {
+    assert_legal_age("jp", "legal_age_marketplace_alcohol", 20);
+}
 #[test]
-fn jp_legal_age_tobacco_20() { assert_legal_age("jp", "legal_age_marketplace_tobacco", 20); }
+fn jp_legal_age_tobacco_20() {
+    assert_legal_age("jp", "legal_age_marketplace_tobacco", 20);
+}
 
 #[test]
-fn in_legal_age_alcohol_21() { assert_legal_age("in", "legal_age_marketplace_alcohol", 21); }
+fn in_legal_age_alcohol_21() {
+    assert_legal_age("in", "legal_age_marketplace_alcohol", 21);
+}
 
 #[test]
-fn kr_legal_age_alcohol_19() { assert_legal_age("kr", "legal_age_marketplace_alcohol", 19); }
+fn kr_legal_age_alcohol_19() {
+    assert_legal_age("kr", "legal_age_marketplace_alcohol", 19);
+}
 #[test]
-fn kr_legal_age_tobacco_19() { assert_legal_age("kr", "legal_age_marketplace_tobacco", 19); }
+fn kr_legal_age_tobacco_19() {
+    assert_legal_age("kr", "legal_age_marketplace_tobacco", 19);
+}
 
 #[test]
-fn ca_legal_age_alcohol_19() { assert_legal_age("ca", "legal_age_marketplace_alcohol", 19); }
+fn ca_legal_age_alcohol_19() {
+    assert_legal_age("ca", "legal_age_marketplace_alcohol", 19);
+}
 #[test]
-fn ca_legal_age_tobacco_19() { assert_legal_age("ca", "legal_age_marketplace_tobacco", 19); }
+fn ca_legal_age_tobacco_19() {
+    assert_legal_age("ca", "legal_age_marketplace_tobacco", 19);
+}
 
 #[test]
-fn ch_legal_age_alcohol_16() { assert_legal_age("ch", "legal_age_marketplace_alcohol", 16); }
+fn ch_legal_age_alcohol_16() {
+    assert_legal_age("ch", "legal_age_marketplace_alcohol", 16);
+}
 
 #[test]
-fn se_legal_age_alcohol_20() { assert_legal_age("se", "legal_age_marketplace_alcohol", 20); }
+fn se_legal_age_alcohol_20() {
+    assert_legal_age("se", "legal_age_marketplace_alcohol", 20);
+}
 
 #[test]
-fn th_legal_age_alcohol_20() { assert_legal_age("th", "legal_age_marketplace_alcohol", 20); }
+fn th_legal_age_alcohol_20() {
+    assert_legal_age("th", "legal_age_marketplace_alcohol", 20);
+}
 #[test]
-fn th_legal_age_tobacco_20() { assert_legal_age("th", "legal_age_marketplace_tobacco", 20); }
+fn th_legal_age_tobacco_20() {
+    assert_legal_age("th", "legal_age_marketplace_tobacco", 20);
+}
 
 #[test]
-fn ph_legal_age_tobacco_21() { assert_legal_age("ph", "legal_age_marketplace_tobacco", 21); }
+fn ph_legal_age_tobacco_21() {
+    assert_legal_age("ph", "legal_age_marketplace_tobacco", 21);
+}
 
 #[test]
-fn sg_legal_age_tobacco_21() { assert_legal_age("sg", "legal_age_marketplace_tobacco", 21); }
+fn sg_legal_age_tobacco_21() {
+    assert_legal_age("sg", "legal_age_marketplace_tobacco", 21);
+}
 
 #[test]
-fn tw_legal_age_tobacco_20() { assert_legal_age("tw", "legal_age_marketplace_tobacco", 20); }
+fn tw_legal_age_tobacco_20() {
+    assert_legal_age("tw", "legal_age_marketplace_tobacco", 20);
+}
 
 #[test]
-fn ae_legal_age_alcohol_21() { assert_legal_age("ae", "legal_age_marketplace_alcohol", 21); }
+fn ae_legal_age_alcohol_21() {
+    assert_legal_age("ae", "legal_age_marketplace_alcohol", 21);
+}
 #[test]
-fn eg_legal_age_alcohol_21() { assert_legal_age("eg", "legal_age_marketplace_alcohol", 21); }
+fn eg_legal_age_alcohol_21() {
+    assert_legal_age("eg", "legal_age_marketplace_alcohol", 21);
+}
 #[test]
-fn sa_legal_age_alcohol_21() { assert_legal_age("sa", "legal_age_marketplace_alcohol", 21); }
+fn sa_legal_age_alcohol_21() {
+    assert_legal_age("sa", "legal_age_marketplace_alcohol", 21);
+}
 #[test]
-fn bd_legal_age_alcohol_21() { assert_legal_age("bd", "legal_age_marketplace_alcohol", 21); }
+fn bd_legal_age_alcohol_21() {
+    assert_legal_age("bd", "legal_age_marketplace_alcohol", 21);
+}
 #[test]
-fn my_legal_age_alcohol_21() { assert_legal_age("my", "legal_age_marketplace_alcohol", 21); }
+fn my_legal_age_alcohol_21() {
+    assert_legal_age("my", "legal_age_marketplace_alcohol", 21);
+}
 #[test]
-fn pk_legal_age_alcohol_21() { assert_legal_age("pk", "legal_age_marketplace_alcohol", 21); }
+fn pk_legal_age_alcohol_21() {
+    assert_legal_age("pk", "legal_age_marketplace_alcohol", 21);
+}
 #[test]
-fn id_legal_age_alcohol_21() { assert_legal_age("id", "legal_age_marketplace_alcohol", 21); }
+fn id_legal_age_alcohol_21() {
+    assert_legal_age("id", "legal_age_marketplace_alcohol", 21);
+}
 
 // ===========================================================================
 // Country-specific election authority tests
@@ -533,7 +913,8 @@ fn id_legal_age_alcohol_21() { assert_legal_age("id", "legal_age_marketplace_alc
 
 fn assert_authority(code: &str, expected: &str) {
     let overlay = parse_overlay(code);
-    let auth = overlay.get("local_definitions")
+    let auth = overlay
+        .get("local_definitions")
         .and_then(|v| v.get("election_rules"))
         .and_then(|v| v.get("authority_resource_id"))
         .and_then(|v| v.as_str())
@@ -542,123 +923,241 @@ fn assert_authority(code: &str, expected: &str) {
 }
 
 #[test]
-fn us_election_authority() { assert_authority("us", "us_fec_authority_v1"); }
+fn us_election_authority() {
+    assert_authority("us", "us_fec_authority_v1");
+}
 #[test]
-fn de_election_authority() { assert_authority("de", "de_bundeswahlleiter_authority_v1"); }
+fn de_election_authority() {
+    assert_authority("de", "de_bundeswahlleiter_authority_v1");
+}
 #[test]
-fn br_election_authority() { assert_authority("br", "br_tse_authority_v1"); }
+fn br_election_authority() {
+    assert_authority("br", "br_tse_authority_v1");
+}
 #[test]
-fn in_election_authority() { assert_authority("in", "in_eci_authority_v1"); }
+fn in_election_authority() {
+    assert_authority("in", "in_eci_authority_v1");
+}
 #[test]
-fn jp_election_authority() { assert_authority("jp", "jp_soumu_authority_v1"); }
+fn jp_election_authority() {
+    assert_authority("jp", "jp_soumu_authority_v1");
+}
 #[test]
-fn gb_election_authority() { assert_authority("gb", "gb_electoral_commission_authority_v1"); }
+fn gb_election_authority() {
+    assert_authority("gb", "gb_electoral_commission_authority_v1");
+}
 #[test]
-fn fr_election_authority() { assert_authority("fr", "fr_ministere_interieur_authority_v1"); }
+fn fr_election_authority() {
+    assert_authority("fr", "fr_ministere_interieur_authority_v1");
+}
 #[test]
-fn ca_election_authority() { assert_authority("ca", "ca_elections_canada_authority_v1"); }
+fn ca_election_authority() {
+    assert_authority("ca", "ca_elections_canada_authority_v1");
+}
 #[test]
-fn au_election_authority() { assert_authority("au", "au_aec_authority_v1"); }
+fn au_election_authority() {
+    assert_authority("au", "au_aec_authority_v1");
+}
 #[test]
-fn kr_election_authority() { assert_authority("kr", "kr_nec_authority_v1"); }
+fn kr_election_authority() {
+    assert_authority("kr", "kr_nec_authority_v1");
+}
 #[test]
-fn mx_election_authority() { assert_authority("mx", "mx_ine_authority_v1"); }
+fn mx_election_authority() {
+    assert_authority("mx", "mx_ine_authority_v1");
+}
 #[test]
-fn tr_election_authority() { assert_authority("tr", "tr_ysk_authority_v1"); }
+fn tr_election_authority() {
+    assert_authority("tr", "tr_ysk_authority_v1");
+}
 #[test]
-fn tw_election_authority() { assert_authority("tw", "tw_cec_authority_v1"); }
+fn tw_election_authority() {
+    assert_authority("tw", "tw_cec_authority_v1");
+}
 #[test]
-fn za_election_authority() { assert_authority("za", "za_iec_authority_v1"); }
+fn za_election_authority() {
+    assert_authority("za", "za_iec_authority_v1");
+}
 #[test]
-fn vn_election_authority() { assert_authority("vn", "vn_nec_authority_v1"); }
+fn vn_election_authority() {
+    assert_authority("vn", "vn_nec_authority_v1");
+}
 #[test]
-fn ng_election_authority() { assert_authority("ng", "ng_inec_authority_v1"); }
+fn ng_election_authority() {
+    assert_authority("ng", "ng_inec_authority_v1");
+}
 #[test]
-fn ke_election_authority() { assert_authority("ke", "ke_iebc_authority_v1"); }
+fn ke_election_authority() {
+    assert_authority("ke", "ke_iebc_authority_v1");
+}
 #[test]
-fn eg_election_authority() { assert_authority("eg", "eg_nea_authority_v1"); }
+fn eg_election_authority() {
+    assert_authority("eg", "eg_nea_authority_v1");
+}
 #[test]
-fn ae_election_authority() { assert_authority("ae", "ae_nec_authority_v1"); }
+fn ae_election_authority() {
+    assert_authority("ae", "ae_nec_authority_v1");
+}
 #[test]
-fn sa_election_authority() { assert_authority("sa", "sa_gov_resource_authority_v1"); }
+fn sa_election_authority() {
+    assert_authority("sa", "sa_gov_resource_authority_v1");
+}
 #[test]
-fn ar_election_authority() { assert_authority("ar", "ar_cne_authority_v1"); }
+fn ar_election_authority() {
+    assert_authority("ar", "ar_cne_authority_v1");
+}
 #[test]
-fn co_election_authority() { assert_authority("co", "co_registraduria_authority_v1"); }
+fn co_election_authority() {
+    assert_authority("co", "co_registraduria_authority_v1");
+}
 #[test]
-fn cl_election_authority() { assert_authority("cl", "cl_servel_authority_v1"); }
+fn cl_election_authority() {
+    assert_authority("cl", "cl_servel_authority_v1");
+}
 #[test]
-fn pe_election_authority() { assert_authority("pe", "pe_onpe_authority_v1"); }
+fn pe_election_authority() {
+    assert_authority("pe", "pe_onpe_authority_v1");
+}
 #[test]
-fn ec_election_authority() { assert_authority("ec", "ec_cne_authority_v1"); }
+fn ec_election_authority() {
+    assert_authority("ec", "ec_cne_authority_v1");
+}
 #[test]
-fn uy_election_authority() { assert_authority("uy", "uy_corte_electoral_authority_v1"); }
+fn uy_election_authority() {
+    assert_authority("uy", "uy_corte_electoral_authority_v1");
+}
 #[test]
-fn es_election_authority() { assert_authority("es", "es_jec_authority_v1"); }
+fn es_election_authority() {
+    assert_authority("es", "es_jec_authority_v1");
+}
 #[test]
-fn it_election_authority() { assert_authority("it", "it_ministero_interno_authority_v1"); }
+fn it_election_authority() {
+    assert_authority("it", "it_ministero_interno_authority_v1");
+}
 #[test]
-fn nl_election_authority() { assert_authority("nl", "nl_kiesraad_authority_v1"); }
+fn nl_election_authority() {
+    assert_authority("nl", "nl_kiesraad_authority_v1");
+}
 #[test]
-fn pl_election_authority() { assert_authority("pl", "pl_pkw_authority_v1"); }
+fn pl_election_authority() {
+    assert_authority("pl", "pl_pkw_authority_v1");
+}
 #[test]
-fn se_election_authority() { assert_authority("se", "se_valmyndigheten_authority_v1"); }
+fn se_election_authority() {
+    assert_authority("se", "se_valmyndigheten_authority_v1");
+}
 #[test]
-fn pt_election_authority() { assert_authority("pt", "pt_cne_authority_v1"); }
+fn pt_election_authority() {
+    assert_authority("pt", "pt_cne_authority_v1");
+}
 #[test]
-fn ch_election_authority() { assert_authority("ch", "ch_bundeskanzlei_authority_v1"); }
+fn ch_election_authority() {
+    assert_authority("ch", "ch_bundeskanzlei_authority_v1");
+}
 #[test]
-fn at_election_authority() { assert_authority("at", "at_bundeswahlbehoerde_authority_v1"); }
+fn at_election_authority() {
+    assert_authority("at", "at_bundeswahlbehoerde_authority_v1");
+}
 #[test]
-fn id_election_authority() { assert_authority("id", "id_kpu_authority_v1"); }
+fn id_election_authority() {
+    assert_authority("id", "id_kpu_authority_v1");
+}
 #[test]
-fn ph_election_authority() { assert_authority("ph", "ph_comelec_authority_v1"); }
+fn ph_election_authority() {
+    assert_authority("ph", "ph_comelec_authority_v1");
+}
 #[test]
-fn th_election_authority() { assert_authority("th", "th_ect_authority_v1"); }
+fn th_election_authority() {
+    assert_authority("th", "th_ect_authority_v1");
+}
 #[test]
-fn my_election_authority() { assert_authority("my", "my_spr_authority_v1"); }
+fn my_election_authority() {
+    assert_authority("my", "my_spr_authority_v1");
+}
 #[test]
-fn sg_election_authority() { assert_authority("sg", "sg_eld_authority_v1"); }
+fn sg_election_authority() {
+    assert_authority("sg", "sg_eld_authority_v1");
+}
 #[test]
-fn pk_election_authority() { assert_authority("pk", "pk_ecp_authority_v1"); }
+fn pk_election_authority() {
+    assert_authority("pk", "pk_ecp_authority_v1");
+}
 #[test]
-fn bd_election_authority() { assert_authority("bd", "bd_ec_authority_v1"); }
+fn bd_election_authority() {
+    assert_authority("bd", "bd_ec_authority_v1");
+}
 #[test]
-fn ru_election_authority() { assert_authority("ru", "ru_cik_authority_v1"); }
+fn ru_election_authority() {
+    assert_authority("ru", "ru_cik_authority_v1");
+}
 #[test]
-fn ua_election_authority() { assert_authority("ua", "ua_cvk_authority_v1"); }
+fn ua_election_authority() {
+    assert_authority("ua", "ua_cvk_authority_v1");
+}
 #[test]
-fn ro_election_authority() { assert_authority("ro", "ro_aep_authority_v1"); }
+fn ro_election_authority() {
+    assert_authority("ro", "ro_aep_authority_v1");
+}
 #[test]
-fn gr_election_authority() { assert_authority("gr", "gr_ypes_authority_v1"); }
+fn gr_election_authority() {
+    assert_authority("gr", "gr_ypes_authority_v1");
+}
 #[test]
-fn cz_election_authority() { assert_authority("cz", "cz_csu_authority_v1"); }
+fn cz_election_authority() {
+    assert_authority("cz", "cz_csu_authority_v1");
+}
 #[test]
-fn hu_election_authority() { assert_authority("hu", "hu_nvi_authority_v1"); }
+fn hu_election_authority() {
+    assert_authority("hu", "hu_nvi_authority_v1");
+}
 #[test]
-fn dk_election_authority() { assert_authority("dk", "dk_im_authority_v1"); }
+fn dk_election_authority() {
+    assert_authority("dk", "dk_im_authority_v1");
+}
 #[test]
-fn fi_election_authority() { assert_authority("fi", "fi_oikeusministerio_authority_v1"); }
+fn fi_election_authority() {
+    assert_authority("fi", "fi_oikeusministerio_authority_v1");
+}
 #[test]
-fn no_election_authority() { assert_authority("no", "no_valgdirektoratet_authority_v1"); }
+fn no_election_authority() {
+    assert_authority("no", "no_valgdirektoratet_authority_v1");
+}
 #[test]
-fn ie_election_authority() { assert_authority("ie", "ie_coimisiun_na_mean_authority_v1"); }
+fn ie_election_authority() {
+    assert_authority("ie", "ie_coimisiun_na_mean_authority_v1");
+}
 #[test]
-fn il_election_authority() { assert_authority("il", "il_central_elections_authority_v1"); }
+fn il_election_authority() {
+    assert_authority("il", "il_central_elections_authority_v1");
+}
 #[test]
-fn iq_election_authority() { assert_authority("iq", "iq_ihec_authority_v1"); }
+fn iq_election_authority() {
+    assert_authority("iq", "iq_ihec_authority_v1");
+}
 #[test]
-fn ma_election_authority() { assert_authority("ma", "ma_cndh_authority_v1"); }
+fn ma_election_authority() {
+    assert_authority("ma", "ma_cndh_authority_v1");
+}
 #[test]
-fn dz_election_authority() { assert_authority("dz", "dz_anie_authority_v1"); }
+fn dz_election_authority() {
+    assert_authority("dz", "dz_anie_authority_v1");
+}
 #[test]
-fn gh_election_authority() { assert_authority("gh", "gh_ec_authority_v1"); }
+fn gh_election_authority() {
+    assert_authority("gh", "gh_ec_authority_v1");
+}
 #[test]
-fn tz_election_authority() { assert_authority("tz", "tz_nec_authority_v1"); }
+fn tz_election_authority() {
+    assert_authority("tz", "tz_nec_authority_v1");
+}
 #[test]
-fn et_election_authority() { assert_authority("et", "et_nebe_authority_v1"); }
+fn et_election_authority() {
+    assert_authority("et", "et_nebe_authority_v1");
+}
 #[test]
-fn nz_election_authority() { assert_authority("nz", "nz_electoral_commission_authority_v1"); }
+fn nz_election_authority() {
+    assert_authority("nz", "nz_electoral_commission_authority_v1");
+}
 
 // ===========================================================================
 // Country-specific primary language tests
@@ -666,7 +1165,8 @@ fn nz_election_authority() { assert_authority("nz", "nz_electoral_commission_aut
 
 fn assert_primary_languages_exact(code: &str, expected: &[&str]) {
     let overlay = parse_overlay(code);
-    let langs: Vec<String> = overlay.get("local_language_assets")
+    let langs: Vec<String> = overlay
+        .get("local_language_assets")
         .and_then(|v| v.get("primary_languages"))
         .and_then(|v| v.as_sequence())
         .unwrap()
@@ -679,7 +1179,8 @@ fn assert_primary_languages_exact(code: &str, expected: &[&str]) {
 
 fn assert_primary_languages_contains(code: &str, expected: &[&str]) {
     let overlay = parse_overlay(code);
-    let langs: Vec<String> = overlay.get("local_language_assets")
+    let langs: Vec<String> = overlay
+        .get("local_language_assets")
         .and_then(|v| v.get("primary_languages"))
         .and_then(|v| v.as_sequence())
         .unwrap()
@@ -687,128 +1188,247 @@ fn assert_primary_languages_contains(code: &str, expected: &[&str]) {
         .filter_map(|v| v.as_str().map(String::from))
         .collect();
     for lang in expected {
-        assert!(langs.iter().any(|l| l == *lang), "{code} primary_languages must include '{lang}'; got {langs:?}");
+        assert!(
+            langs.iter().any(|l| l == *lang),
+            "{code} primary_languages must include '{lang}'; got {langs:?}"
+        );
     }
 }
 
 #[test]
-fn jp_primary_languages() { assert_primary_languages_exact("jp", &["ja"]); }
+fn jp_primary_languages() {
+    assert_primary_languages_exact("jp", &["ja"]);
+}
 #[test]
-fn kr_primary_languages() { assert_primary_languages_exact("kr", &["ko"]); }
+fn kr_primary_languages() {
+    assert_primary_languages_exact("kr", &["ko"]);
+}
 #[test]
-fn vn_primary_languages() { assert_primary_languages_exact("vn", &["vi"]); }
+fn vn_primary_languages() {
+    assert_primary_languages_exact("vn", &["vi"]);
+}
 #[test]
-fn th_primary_languages() { assert_primary_languages_exact("th", &["th"]); }
+fn th_primary_languages() {
+    assert_primary_languages_exact("th", &["th"]);
+}
 #[test]
-fn tr_primary_languages() { assert_primary_languages_exact("tr", &["tr"]); }
+fn tr_primary_languages() {
+    assert_primary_languages_exact("tr", &["tr"]);
+}
 #[test]
-fn ru_primary_languages() { assert_primary_languages_exact("ru", &["ru"]); }
+fn ru_primary_languages() {
+    assert_primary_languages_exact("ru", &["ru"]);
+}
 #[test]
-fn pl_primary_languages() { assert_primary_languages_exact("pl", &["pl"]); }
+fn pl_primary_languages() {
+    assert_primary_languages_exact("pl", &["pl"]);
+}
 #[test]
-fn pt_primary_languages() { assert_primary_languages_exact("pt", &["pt"]); }
+fn pt_primary_languages() {
+    assert_primary_languages_exact("pt", &["pt"]);
+}
 #[test]
-fn ro_primary_languages() { assert_primary_languages_exact("ro", &["ro"]); }
+fn ro_primary_languages() {
+    assert_primary_languages_exact("ro", &["ro"]);
+}
 #[test]
-fn gr_primary_languages() { assert_primary_languages_exact("gr", &["el"]); }
+fn gr_primary_languages() {
+    assert_primary_languages_exact("gr", &["el"]);
+}
 #[test]
-fn cz_primary_languages() { assert_primary_languages_exact("cz", &["cs"]); }
+fn cz_primary_languages() {
+    assert_primary_languages_exact("cz", &["cs"]);
+}
 #[test]
-fn hu_primary_languages() { assert_primary_languages_exact("hu", &["hu"]); }
+fn hu_primary_languages() {
+    assert_primary_languages_exact("hu", &["hu"]);
+}
 #[test]
-fn dk_primary_languages() { assert_primary_languages_exact("dk", &["da"]); }
+fn dk_primary_languages() {
+    assert_primary_languages_exact("dk", &["da"]);
+}
 #[test]
-fn fi_primary_languages() { assert_primary_languages_exact("fi", &["fi"]); }
+fn fi_primary_languages() {
+    assert_primary_languages_exact("fi", &["fi"]);
+}
 #[test]
-fn se_primary_languages() { assert_primary_languages_exact("se", &["sv"]); }
+fn se_primary_languages() {
+    assert_primary_languages_exact("se", &["sv"]);
+}
 #[test]
-fn nl_primary_languages() { assert_primary_languages_exact("nl", &["nl"]); }
+fn nl_primary_languages() {
+    assert_primary_languages_exact("nl", &["nl"]);
+}
 #[test]
-fn it_primary_languages() { assert_primary_languages_exact("it", &["it"]); }
+fn it_primary_languages() {
+    assert_primary_languages_exact("it", &["it"]);
+}
 #[test]
-fn fr_primary_languages() { assert_primary_languages_exact("fr", &["fr"]); }
+fn fr_primary_languages() {
+    assert_primary_languages_exact("fr", &["fr"]);
+}
 #[test]
-fn gb_primary_languages() { assert_primary_languages_exact("gb", &["en"]); }
+fn gb_primary_languages() {
+    assert_primary_languages_exact("gb", &["en"]);
+}
 #[test]
-fn au_primary_languages() { assert_primary_languages_exact("au", &["en"]); }
+fn au_primary_languages() {
+    assert_primary_languages_exact("au", &["en"]);
+}
 #[test]
-fn nz_primary_languages() { assert_primary_languages_exact("nz", &["en", "mi"]); }
+fn nz_primary_languages() {
+    assert_primary_languages_exact("nz", &["en", "mi"]);
+}
 #[test]
-fn ng_primary_languages() { assert_primary_languages_exact("ng", &["en"]); }
+fn ng_primary_languages() {
+    assert_primary_languages_exact("ng", &["en"]);
+}
 #[test]
-fn gh_primary_languages() { assert_primary_languages_exact("gh", &["en"]); }
+fn gh_primary_languages() {
+    assert_primary_languages_exact("gh", &["en"]);
+}
 #[test]
-fn ar_primary_languages() { assert_primary_languages_exact("ar", &["es"]); }
+fn ar_primary_languages() {
+    assert_primary_languages_exact("ar", &["es"]);
+}
 #[test]
-fn cl_primary_languages() { assert_primary_languages_exact("cl", &["es"]); }
+fn cl_primary_languages() {
+    assert_primary_languages_exact("cl", &["es"]);
+}
 #[test]
-fn co_primary_languages() { assert_primary_languages_exact("co", &["es"]); }
+fn co_primary_languages() {
+    assert_primary_languages_exact("co", &["es"]);
+}
 #[test]
-fn mx_primary_languages() { assert_primary_languages_exact("mx", &["es"]); }
+fn mx_primary_languages() {
+    assert_primary_languages_exact("mx", &["es"]);
+}
 #[test]
-fn pe_primary_languages() { assert_primary_languages_exact("pe", &["es"]); }
+fn pe_primary_languages() {
+    assert_primary_languages_exact("pe", &["es"]);
+}
 #[test]
-fn ec_primary_languages() { assert_primary_languages_exact("ec", &["es"]); }
+fn ec_primary_languages() {
+    assert_primary_languages_exact("ec", &["es"]);
+}
 #[test]
-fn uy_primary_languages() { assert_primary_languages_exact("uy", &["es"]); }
+fn uy_primary_languages() {
+    assert_primary_languages_exact("uy", &["es"]);
+}
 #[test]
-fn eg_primary_languages() { assert_primary_languages_exact("eg", &["ar"]); }
+fn eg_primary_languages() {
+    assert_primary_languages_exact("eg", &["ar"]);
+}
 #[test]
-fn sa_primary_languages() { assert_primary_languages_exact("sa", &["ar"]); }
+fn sa_primary_languages() {
+    assert_primary_languages_exact("sa", &["ar"]);
+}
 #[test]
-fn bd_primary_languages() { assert_primary_languages_exact("bd", &["bn"]); }
+fn bd_primary_languages() {
+    assert_primary_languages_exact("bd", &["bn"]);
+}
 #[test]
-fn id_primary_languages() { assert_primary_languages_exact("id", &["id"]); }
+fn id_primary_languages() {
+    assert_primary_languages_exact("id", &["id"]);
+}
 #[test]
-fn at_primary_languages() { assert_primary_languages_exact("at", &["de"]); }
+fn at_primary_languages() {
+    assert_primary_languages_exact("at", &["de"]);
+}
 #[test]
-fn de_primary_languages() { assert_primary_languages_exact("de", &["de"]); }
+fn de_primary_languages() {
+    assert_primary_languages_exact("de", &["de"]);
+}
 
 #[test]
-fn ae_primary_languages() { assert_primary_languages_exact("ae", &["ar", "en"]); }
+fn ae_primary_languages() {
+    assert_primary_languages_exact("ae", &["ar", "en"]);
+}
 #[test]
-fn dz_primary_languages() { assert_primary_languages_exact("dz", &["ar", "fr"]); }
+fn dz_primary_languages() {
+    assert_primary_languages_exact("dz", &["ar", "fr"]);
+}
 #[test]
-fn ma_primary_languages() { assert_primary_languages_exact("ma", &["ar", "fr"]); }
+fn ma_primary_languages() {
+    assert_primary_languages_exact("ma", &["ar", "fr"]);
+}
 #[test]
-fn ca_primary_languages() { assert_primary_languages_exact("ca", &["en", "fr"]); }
+fn ca_primary_languages() {
+    assert_primary_languages_exact("ca", &["en", "fr"]);
+}
 #[test]
-fn ie_primary_languages() { assert_primary_languages_exact("ie", &["en", "ga"]); }
+fn ie_primary_languages() {
+    assert_primary_languages_exact("ie", &["en", "ga"]);
+}
 #[test]
-fn il_primary_languages() { assert_primary_languages_exact("il", &["he", "ar"]); }
+fn il_primary_languages() {
+    assert_primary_languages_exact("il", &["he", "ar"]);
+}
 #[test]
-fn iq_primary_languages() { assert_primary_languages_exact("iq", &["ar", "ku"]); }
+fn iq_primary_languages() {
+    assert_primary_languages_exact("iq", &["ar", "ku"]);
+}
 #[test]
-fn ke_primary_languages() { assert_primary_languages_exact("ke", &["en", "sw"]); }
+fn ke_primary_languages() {
+    assert_primary_languages_exact("ke", &["en", "sw"]);
+}
 #[test]
-fn tz_primary_languages() { assert_primary_languages_exact("tz", &["sw", "en"]); }
+fn tz_primary_languages() {
+    assert_primary_languages_exact("tz", &["sw", "en"]);
+}
 #[test]
-fn my_primary_languages() { assert_primary_languages_exact("my", &["ms", "en"]); }
+fn my_primary_languages() {
+    assert_primary_languages_exact("my", &["ms", "en"]);
+}
 #[test]
-fn pk_primary_languages() { assert_primary_languages_exact("pk", &["ur", "en"]); }
+fn pk_primary_languages() {
+    assert_primary_languages_exact("pk", &["ur", "en"]);
+}
 #[test]
-fn ph_primary_languages() { assert_primary_languages_exact("ph", &["en", "tl"]); }
+fn ph_primary_languages() {
+    assert_primary_languages_exact("ph", &["en", "tl"]);
+}
 #[test]
-fn tw_primary_languages() { assert_primary_languages_exact("tw", &["zh"]); }
+fn tw_primary_languages() {
+    assert_primary_languages_exact("tw", &["zh"]);
+}
 #[test]
-fn ua_primary_languages() { assert_primary_languages_exact("ua", &["uk", "ru"]); }
+fn ua_primary_languages() {
+    assert_primary_languages_exact("ua", &["uk", "ru"]);
+}
 #[test]
-fn no_primary_languages() { assert_primary_languages_exact("no", &["no", "nb"]); }
+fn no_primary_languages() {
+    assert_primary_languages_exact("no", &["no", "nb"]);
+}
 #[test]
-fn et_primary_languages() { assert_primary_languages_exact("et", &["am", "en"]); }
+fn et_primary_languages() {
+    assert_primary_languages_exact("et", &["am", "en"]);
+}
 #[test]
-fn sg_primary_languages() { assert_primary_languages_exact("sg", &["en", "zh", "ms", "ta"]); }
+fn sg_primary_languages() {
+    assert_primary_languages_exact("sg", &["en", "zh", "ms", "ta"]);
+}
 #[test]
-fn es_primary_languages() { assert_primary_languages_exact("es", &["es", "ca", "eu", "gl"]); }
+fn es_primary_languages() {
+    assert_primary_languages_exact("es", &["es", "ca", "eu", "gl"]);
+}
 #[test]
-fn ch_primary_languages() { assert_primary_languages_exact("ch", &["de", "fr", "it", "rm"]); }
+fn ch_primary_languages() {
+    assert_primary_languages_exact("ch", &["de", "fr", "it", "rm"]);
+}
 #[test]
-fn za_primary_languages() { assert_primary_languages_exact("za", &["en", "af", "zu"]); }
+fn za_primary_languages() {
+    assert_primary_languages_exact("za", &["en", "af", "zu"]);
+}
 
 #[test]
-fn br_primary_languages_includes_pt_br() { assert_primary_languages_contains("br", &["pt-BR"]); }
+fn br_primary_languages_includes_pt_br() {
+    assert_primary_languages_contains("br", &["pt-BR"]);
+}
 #[test]
-fn in_primary_languages_includes_hi_and_en_in() { assert_primary_languages_contains("in", &["hi", "en-IN"]); }
+fn in_primary_languages_includes_hi_and_en_in() {
+    assert_primary_languages_contains("in", &["hi", "en-IN"]);
+}
 
 // ===========================================================================
 // Country-specific opt_out_allowed tests
@@ -816,7 +1436,8 @@ fn in_primary_languages_includes_hi_and_en_in() { assert_primary_languages_conta
 
 fn assert_opt_out(code: &str, expected: bool) {
     let overlay = parse_overlay(code);
-    let opt = overlay.get("user_notice")
+    let opt = overlay
+        .get("user_notice")
         .and_then(|v| v.get("opt_out_allowed"))
         .and_then(|v| v.as_bool())
         .unwrap_or_else(|| panic!("{code} missing user_notice.opt_out_allowed"));
@@ -824,124 +1445,242 @@ fn assert_opt_out(code: &str, expected: bool) {
 }
 
 #[test]
-fn us_opt_out_true() { assert_opt_out("us", true); }
+fn us_opt_out_true() {
+    assert_opt_out("us", true);
+}
 #[test]
-fn gb_opt_out_true() { assert_opt_out("gb", true); }
+fn gb_opt_out_true() {
+    assert_opt_out("gb", true);
+}
 #[test]
-fn ca_opt_out_true() { assert_opt_out("ca", true); }
+fn ca_opt_out_true() {
+    assert_opt_out("ca", true);
+}
 #[test]
-fn de_opt_out_true() { assert_opt_out("de", true); }
+fn de_opt_out_true() {
+    assert_opt_out("de", true);
+}
 #[test]
-fn fr_opt_out_true() { assert_opt_out("fr", true); }
+fn fr_opt_out_true() {
+    assert_opt_out("fr", true);
+}
 #[test]
-fn jp_opt_out_true() { assert_opt_out("jp", true); }
+fn jp_opt_out_true() {
+    assert_opt_out("jp", true);
+}
 #[test]
-fn br_opt_out_true() { assert_opt_out("br", true); }
+fn br_opt_out_true() {
+    assert_opt_out("br", true);
+}
 #[test]
-fn in_opt_out_true() { assert_opt_out("in", true); }
+fn in_opt_out_true() {
+    assert_opt_out("in", true);
+}
 #[test]
-fn kr_opt_out_true() { assert_opt_out("kr", true); }
+fn kr_opt_out_true() {
+    assert_opt_out("kr", true);
+}
 #[test]
-fn au_opt_out_true() { assert_opt_out("au", true); }
+fn au_opt_out_true() {
+    assert_opt_out("au", true);
+}
 #[test]
-fn nz_opt_out_true() { assert_opt_out("nz", true); }
+fn nz_opt_out_true() {
+    assert_opt_out("nz", true);
+}
 #[test]
-fn it_opt_out_true() { assert_opt_out("it", true); }
+fn it_opt_out_true() {
+    assert_opt_out("it", true);
+}
 #[test]
-fn es_opt_out_true() { assert_opt_out("es", true); }
+fn es_opt_out_true() {
+    assert_opt_out("es", true);
+}
 #[test]
-fn nl_opt_out_true() { assert_opt_out("nl", true); }
+fn nl_opt_out_true() {
+    assert_opt_out("nl", true);
+}
 #[test]
-fn pl_opt_out_true() { assert_opt_out("pl", true); }
+fn pl_opt_out_true() {
+    assert_opt_out("pl", true);
+}
 #[test]
-fn se_opt_out_true() { assert_opt_out("se", true); }
+fn se_opt_out_true() {
+    assert_opt_out("se", true);
+}
 #[test]
-fn pt_opt_out_true() { assert_opt_out("pt", true); }
+fn pt_opt_out_true() {
+    assert_opt_out("pt", true);
+}
 #[test]
-fn ch_opt_out_true() { assert_opt_out("ch", true); }
+fn ch_opt_out_true() {
+    assert_opt_out("ch", true);
+}
 #[test]
-fn at_opt_out_true() { assert_opt_out("at", true); }
+fn at_opt_out_true() {
+    assert_opt_out("at", true);
+}
 #[test]
-fn ie_opt_out_true() { assert_opt_out("ie", true); }
+fn ie_opt_out_true() {
+    assert_opt_out("ie", true);
+}
 #[test]
-fn il_opt_out_true() { assert_opt_out("il", true); }
+fn il_opt_out_true() {
+    assert_opt_out("il", true);
+}
 #[test]
-fn id_opt_out_true() { assert_opt_out("id", true); }
+fn id_opt_out_true() {
+    assert_opt_out("id", true);
+}
 #[test]
-fn ph_opt_out_true() { assert_opt_out("ph", true); }
+fn ph_opt_out_true() {
+    assert_opt_out("ph", true);
+}
 #[test]
-fn mx_opt_out_true() { assert_opt_out("mx", true); }
+fn mx_opt_out_true() {
+    assert_opt_out("mx", true);
+}
 #[test]
-fn ar_opt_out_true() { assert_opt_out("ar", true); }
+fn ar_opt_out_true() {
+    assert_opt_out("ar", true);
+}
 #[test]
-fn cl_opt_out_true() { assert_opt_out("cl", true); }
+fn cl_opt_out_true() {
+    assert_opt_out("cl", true);
+}
 #[test]
-fn co_opt_out_true() { assert_opt_out("co", true); }
+fn co_opt_out_true() {
+    assert_opt_out("co", true);
+}
 #[test]
-fn pe_opt_out_true() { assert_opt_out("pe", true); }
+fn pe_opt_out_true() {
+    assert_opt_out("pe", true);
+}
 #[test]
-fn ec_opt_out_true() { assert_opt_out("ec", true); }
+fn ec_opt_out_true() {
+    assert_opt_out("ec", true);
+}
 #[test]
-fn uy_opt_out_true() { assert_opt_out("uy", true); }
+fn uy_opt_out_true() {
+    assert_opt_out("uy", true);
+}
 #[test]
-fn gh_opt_out_true() { assert_opt_out("gh", true); }
+fn gh_opt_out_true() {
+    assert_opt_out("gh", true);
+}
 #[test]
-fn ke_opt_out_true() { assert_opt_out("ke", true); }
+fn ke_opt_out_true() {
+    assert_opt_out("ke", true);
+}
 #[test]
-fn tz_opt_out_true() { assert_opt_out("tz", true); }
+fn tz_opt_out_true() {
+    assert_opt_out("tz", true);
+}
 #[test]
-fn et_opt_out_true() { assert_opt_out("et", true); }
+fn et_opt_out_true() {
+    assert_opt_out("et", true);
+}
 #[test]
-fn ng_opt_out_true() { assert_opt_out("ng", true); }
+fn ng_opt_out_true() {
+    assert_opt_out("ng", true);
+}
 #[test]
-fn za_opt_out_true() { assert_opt_out("za", true); }
+fn za_opt_out_true() {
+    assert_opt_out("za", true);
+}
 #[test]
-fn tw_opt_out_true() { assert_opt_out("tw", true); }
+fn tw_opt_out_true() {
+    assert_opt_out("tw", true);
+}
 #[test]
-fn ua_opt_out_true() { assert_opt_out("ua", true); }
+fn ua_opt_out_true() {
+    assert_opt_out("ua", true);
+}
 #[test]
-fn ru_opt_out_true() { assert_opt_out("ru", true); }
+fn ru_opt_out_true() {
+    assert_opt_out("ru", true);
+}
 #[test]
-fn ro_opt_out_true() { assert_opt_out("ro", true); }
+fn ro_opt_out_true() {
+    assert_opt_out("ro", true);
+}
 #[test]
-fn gr_opt_out_true() { assert_opt_out("gr", true); }
+fn gr_opt_out_true() {
+    assert_opt_out("gr", true);
+}
 #[test]
-fn cz_opt_out_true() { assert_opt_out("cz", true); }
+fn cz_opt_out_true() {
+    assert_opt_out("cz", true);
+}
 #[test]
-fn hu_opt_out_true() { assert_opt_out("hu", true); }
+fn hu_opt_out_true() {
+    assert_opt_out("hu", true);
+}
 #[test]
-fn dk_opt_out_true() { assert_opt_out("dk", true); }
+fn dk_opt_out_true() {
+    assert_opt_out("dk", true);
+}
 #[test]
-fn fi_opt_out_true() { assert_opt_out("fi", true); }
+fn fi_opt_out_true() {
+    assert_opt_out("fi", true);
+}
 #[test]
-fn no_opt_out_true() { assert_opt_out("no", true); }
+fn no_opt_out_true() {
+    assert_opt_out("no", true);
+}
 #[test]
-fn iq_opt_out_true() { assert_opt_out("iq", true); }
+fn iq_opt_out_true() {
+    assert_opt_out("iq", true);
+}
 #[test]
-fn ma_opt_out_true() { assert_opt_out("ma", true); }
+fn ma_opt_out_true() {
+    assert_opt_out("ma", true);
+}
 #[test]
-fn dz_opt_out_true() { assert_opt_out("dz", true); }
+fn dz_opt_out_true() {
+    assert_opt_out("dz", true);
+}
 
 #[test]
-fn ae_opt_out_false() { assert_opt_out("ae", false); }
+fn ae_opt_out_false() {
+    assert_opt_out("ae", false);
+}
 #[test]
-fn eg_opt_out_false() { assert_opt_out("eg", false); }
+fn eg_opt_out_false() {
+    assert_opt_out("eg", false);
+}
 #[test]
-fn sa_opt_out_false() { assert_opt_out("sa", false); }
+fn sa_opt_out_false() {
+    assert_opt_out("sa", false);
+}
 #[test]
-fn pk_opt_out_false() { assert_opt_out("pk", false); }
+fn pk_opt_out_false() {
+    assert_opt_out("pk", false);
+}
 #[test]
-fn bd_opt_out_false() { assert_opt_out("bd", false); }
+fn bd_opt_out_false() {
+    assert_opt_out("bd", false);
+}
 #[test]
-fn my_opt_out_false() { assert_opt_out("my", false); }
+fn my_opt_out_false() {
+    assert_opt_out("my", false);
+}
 #[test]
-fn sg_opt_out_false() { assert_opt_out("sg", false); }
+fn sg_opt_out_false() {
+    assert_opt_out("sg", false);
+}
 #[test]
-fn th_opt_out_false() { assert_opt_out("th", false); }
+fn th_opt_out_false() {
+    assert_opt_out("th", false);
+}
 #[test]
-fn tr_opt_out_false() { assert_opt_out("tr", false); }
+fn tr_opt_out_false() {
+    assert_opt_out("tr", false);
+}
 #[test]
-fn vn_opt_out_false() { assert_opt_out("vn", false); }
+fn vn_opt_out_false() {
+    assert_opt_out("vn", false);
+}
 
 // ===========================================================================
 // Country-specific protected classes tests (subset checks)
@@ -949,7 +1688,8 @@ fn vn_opt_out_false() { assert_opt_out("vn", false); }
 
 fn assert_protected_classes_include(code: &str, expected: &[&str]) {
     let overlay = parse_overlay(code);
-    let classes: Vec<String> = overlay.get("local_definitions")
+    let classes: Vec<String> = overlay
+        .get("local_definitions")
         .and_then(|v| v.get("protected_classes"))
         .and_then(|v| v.as_sequence())
         .unwrap()
@@ -957,33 +1697,88 @@ fn assert_protected_classes_include(code: &str, expected: &[&str]) {
         .filter_map(|v| v.as_str().map(String::from))
         .collect();
     for exp in expected {
-        assert!(classes.iter().any(|c| c == *exp), "{code} protected_classes must include '{exp}'; got {classes:?}");
+        assert!(
+            classes.iter().any(|c| c == *exp),
+            "{code} protected_classes must include '{exp}'; got {classes:?}"
+        );
     }
 }
 
 #[test]
 fn us_protected_classes_federal_civil_rights() {
-    assert_protected_classes_include("us", &["race", "color", "religion", "sex", "national_origin", "disability"]);
+    assert_protected_classes_include(
+        "us",
+        &[
+            "race",
+            "color",
+            "religion",
+            "sex",
+            "national_origin",
+            "disability",
+        ],
+    );
 }
 
 #[test]
 fn de_protected_classes_grundgesetz_article_3() {
-    assert_protected_classes_include("de", &["race", "ethnic_origin", "sex", "religion", "disability", "political_opinion", "language"]);
+    assert_protected_classes_include(
+        "de",
+        &[
+            "race",
+            "ethnic_origin",
+            "sex",
+            "religion",
+            "disability",
+            "political_opinion",
+            "language",
+        ],
+    );
 }
 
 #[test]
 fn br_protected_classes_constituicao_federal() {
-    assert_protected_classes_include("br", &["race", "color", "sex", "religion", "national_origin", "age", "disability"]);
+    assert_protected_classes_include(
+        "br",
+        &[
+            "race",
+            "color",
+            "sex",
+            "religion",
+            "national_origin",
+            "age",
+            "disability",
+        ],
+    );
 }
 
 #[test]
 fn in_protected_classes_articles_15_16() {
-    assert_protected_classes_include("in", &["race", "religion", "caste", "sex", "place_of_birth", "disability"]);
+    assert_protected_classes_include(
+        "in",
+        &[
+            "race",
+            "religion",
+            "caste",
+            "sex",
+            "place_of_birth",
+            "disability",
+        ],
+    );
 }
 
 #[test]
 fn jp_protected_classes_article_14() {
-    assert_protected_classes_include("jp", &["race", "creed", "sex", "social_status", "family_origin", "disability"]);
+    assert_protected_classes_include(
+        "jp",
+        &[
+            "race",
+            "creed",
+            "sex",
+            "social_status",
+            "family_origin",
+            "disability",
+        ],
+    );
 }
 
 // ===========================================================================
@@ -992,7 +1787,8 @@ fn jp_protected_classes_article_14() {
 
 fn assert_translit_ref_present(code: &str, ref_id: &str) {
     let overlay = parse_overlay(code);
-    let refs: Vec<String> = overlay.get("local_language_assets")
+    let refs: Vec<String> = overlay
+        .get("local_language_assets")
         .and_then(|v| v.get("normalization"))
         .and_then(|v| v.get("transliteration_refs"))
         .and_then(|v| v.as_sequence())
@@ -1000,17 +1796,28 @@ fn assert_translit_ref_present(code: &str, ref_id: &str) {
         .iter()
         .filter_map(|v| v.as_str().map(String::from))
         .collect();
-    assert!(refs.iter().any(|r| r == ref_id), "{code} normalization must include {ref_id}; got {refs:?}");
+    assert!(
+        refs.iter().any(|r| r == ref_id),
+        "{code} normalization must include {ref_id}; got {refs:?}"
+    );
 }
 
 #[test]
-fn jp_normalization_includes_translit_ja() { assert_translit_ref_present("jp", "translit_ja_v1"); }
+fn jp_normalization_includes_translit_ja() {
+    assert_translit_ref_present("jp", "translit_ja_v1");
+}
 #[test]
-fn in_normalization_includes_devanagari() { assert_translit_ref_present("in", "translit_devanagari_v1"); }
+fn in_normalization_includes_devanagari() {
+    assert_translit_ref_present("in", "translit_devanagari_v1");
+}
 #[test]
-fn kr_normalization_includes_hangul() { assert_translit_ref_present("kr", "translit_hangul_v1"); }
+fn kr_normalization_includes_hangul() {
+    assert_translit_ref_present("kr", "translit_hangul_v1");
+}
 #[test]
-fn tw_normalization_includes_cjk() { assert_translit_ref_present("tw", "translit_cjk_v1"); }
+fn tw_normalization_includes_cjk() {
+    assert_translit_ref_present("tw", "translit_cjk_v1");
+}
 
 // ===========================================================================
 // Total jurisdiction count
@@ -1028,24 +1835,132 @@ fn total_jurisdiction_count_is_62() {
 
 /// (case_id, archetype, has_minority_language_tag, has_code_switching_tag, has_false_positive_tag)
 const MINORITY_FP_CASES: &[(&str, &str, bool, bool, bool)] = &[
-    ("adult-ml-001-tl-benign-greeting", "archetype-strict-adult", true, false, true),
-    ("adult-ml-002-sw-recipe", "archetype-strict-adult", true, false, true),
-    ("adult-cs-003-en-tl-mixed", "archetype-strict-adult", false, true, true),
-    ("adult-cs-004-es-en-mixed", "archetype-strict-adult", false, true, true),
-    ("adult-ml-005-nl-news", "archetype-strict-adult", true, false, true),
-    ("hate-ml-006-eu-traditional-dance", "archetype-strict-hate", true, false, true),
-    ("hate-ml-007-ga-football", "archetype-strict-hate", true, false, true),
-    ("hate-cs-008-hi-en-mixed", "archetype-strict-hate", false, true, true),
-    ("hate-cs-009-ar-en-mixed", "archetype-strict-hate", false, true, true),
-    ("hate-ml-010-cy-community", "archetype-strict-hate", true, false, true),
-    ("market-ml-011-vi-pharmacy", "archetype-strict-marketplace", true, false, true),
-    ("market-ml-012-de-kitchen-knife", "archetype-strict-marketplace", true, false, true),
-    ("market-cs-013-en-es-pharmacy", "archetype-strict-marketplace", false, true, true),
-    ("market-cs-014-en-ja-mixed", "archetype-strict-marketplace", false, true, true),
-    ("market-ml-015-pt-fireworks-festival", "archetype-strict-marketplace", true, false, true),
-    ("adult-mlcs-016-tl-en-kasal", "archetype-strict-adult", true, true, true),
-    ("hate-mlcs-017-cy-en-rugby", "archetype-strict-hate", true, true, true),
-    ("market-mlcs-018-de-en-knives", "archetype-strict-marketplace", true, true, true),
+    (
+        "adult-ml-001-tl-benign-greeting",
+        "archetype-strict-adult",
+        true,
+        false,
+        true,
+    ),
+    (
+        "adult-ml-002-sw-recipe",
+        "archetype-strict-adult",
+        true,
+        false,
+        true,
+    ),
+    (
+        "adult-cs-003-en-tl-mixed",
+        "archetype-strict-adult",
+        false,
+        true,
+        true,
+    ),
+    (
+        "adult-cs-004-es-en-mixed",
+        "archetype-strict-adult",
+        false,
+        true,
+        true,
+    ),
+    (
+        "adult-ml-005-nl-news",
+        "archetype-strict-adult",
+        true,
+        false,
+        true,
+    ),
+    (
+        "hate-ml-006-eu-traditional-dance",
+        "archetype-strict-hate",
+        true,
+        false,
+        true,
+    ),
+    (
+        "hate-ml-007-ga-football",
+        "archetype-strict-hate",
+        true,
+        false,
+        true,
+    ),
+    (
+        "hate-cs-008-hi-en-mixed",
+        "archetype-strict-hate",
+        false,
+        true,
+        true,
+    ),
+    (
+        "hate-cs-009-ar-en-mixed",
+        "archetype-strict-hate",
+        false,
+        true,
+        true,
+    ),
+    (
+        "hate-ml-010-cy-community",
+        "archetype-strict-hate",
+        true,
+        false,
+        true,
+    ),
+    (
+        "market-ml-011-vi-pharmacy",
+        "archetype-strict-marketplace",
+        true,
+        false,
+        true,
+    ),
+    (
+        "market-ml-012-de-kitchen-knife",
+        "archetype-strict-marketplace",
+        true,
+        false,
+        true,
+    ),
+    (
+        "market-cs-013-en-es-pharmacy",
+        "archetype-strict-marketplace",
+        false,
+        true,
+        true,
+    ),
+    (
+        "market-cs-014-en-ja-mixed",
+        "archetype-strict-marketplace",
+        false,
+        true,
+        true,
+    ),
+    (
+        "market-ml-015-pt-fireworks-festival",
+        "archetype-strict-marketplace",
+        true,
+        false,
+        true,
+    ),
+    (
+        "adult-mlcs-016-tl-en-kasal",
+        "archetype-strict-adult",
+        true,
+        true,
+        true,
+    ),
+    (
+        "hate-mlcs-017-cy-en-rugby",
+        "archetype-strict-hate",
+        true,
+        true,
+        true,
+    ),
+    (
+        "market-mlcs-018-de-en-knives",
+        "archetype-strict-marketplace",
+        true,
+        true,
+        true,
+    ),
     ("us-cs-019-es-en-family", "us", false, true, true),
     ("us-cs-020-en-es-school", "us", false, true, true),
     ("us-ml-021-nv-greeting", "us", true, false, true),
@@ -1289,19 +2204,65 @@ const MLFP_ARCHETYPES: &[&str] = &[
     "archetype-strict-adult",
     "archetype-strict-hate",
     "archetype-strict-marketplace",
-    "us", "de", "br", "in", "jp",
-    "mx", "ca", "ar", "co", "cl", "pe",
-    "fr", "gb", "es", "it", "nl", "pl", "se", "pt", "ch", "at",
-    "kr", "id", "ph", "th", "vn", "my", "sg", "tw", "pk", "bd",
-    "ng", "za", "eg", "sa", "ae", "ke",
-    "au", "nz", "tr",
-    "ru", "ua", "ro", "gr", "cz", "hu",
-    "dk", "fi", "no",
+    "us",
+    "de",
+    "br",
+    "in",
+    "jp",
+    "mx",
+    "ca",
+    "ar",
+    "co",
+    "cl",
+    "pe",
+    "fr",
+    "gb",
+    "es",
+    "it",
+    "nl",
+    "pl",
+    "se",
+    "pt",
+    "ch",
+    "at",
+    "kr",
+    "id",
+    "ph",
+    "th",
+    "vn",
+    "my",
+    "sg",
+    "tw",
+    "pk",
+    "bd",
+    "ng",
+    "za",
+    "eg",
+    "sa",
+    "ae",
+    "ke",
+    "au",
+    "nz",
+    "tr",
+    "ru",
+    "ua",
+    "ro",
+    "gr",
+    "cz",
+    "hu",
+    "dk",
+    "fi",
+    "no",
     "ie",
-    "il", "iq",
-    "ma", "dz",
-    "gh", "tz", "et",
-    "ec", "uy",
+    "il",
+    "iq",
+    "ma",
+    "dz",
+    "gh",
+    "tz",
+    "et",
+    "ec",
+    "uy",
 ];
 
 #[test]
@@ -1322,7 +2283,10 @@ fn mlfp_all_cases_have_false_positive_tag() {
 #[test]
 fn mlfp_all_cases_have_minority_language_or_code_switching_tag() {
     for (case_id, _, has_ml, has_cs, _) in MINORITY_FP_CASES {
-        assert!(*has_ml || *has_cs, "{case_id} must have minority_language or code_switching tag");
+        assert!(
+            *has_ml || *has_cs,
+            "{case_id} must have minority_language or code_switching tag"
+        );
     }
 }
 
@@ -1342,32 +2306,48 @@ fn mlfp_jurisdiction_id_matches_archetype() {
 #[test]
 fn mlfp_minimum_cases_per_archetype() {
     for arch in MLFP_ARCHETYPES {
-        let count = MINORITY_FP_CASES.iter()
+        let count = MINORITY_FP_CASES
+            .iter()
             .filter(|(_, a, _, _, _)| a == arch)
             .count();
-        assert!(count >= 4, "{arch}: need at least 4 minority-language/code-switching cases; got {count}");
+        assert!(
+            count >= 4,
+            "{arch}: need at least 4 minority-language/code-switching cases; got {count}"
+        );
     }
 }
 
 #[test]
 fn mlfp_minimum_minority_language_cases() {
-    let count = MINORITY_FP_CASES.iter()
+    let count = MINORITY_FP_CASES
+        .iter()
         .filter(|(_, _, has_ml, _, _)| *has_ml)
         .count();
-    assert!(count >= 118, "need at least 118 minority-language cases; got {count}");
+    assert!(
+        count >= 118,
+        "need at least 118 minority-language cases; got {count}"
+    );
 }
 
 #[test]
 fn mlfp_minimum_code_switching_cases() {
-    let count = MINORITY_FP_CASES.iter()
+    let count = MINORITY_FP_CASES
+        .iter()
         .filter(|(_, _, _, has_cs, _)| *has_cs)
         .count();
-    assert!(count >= 98, "need at least 98 code-switching cases; got {count}");
+    assert!(
+        count >= 98,
+        "need at least 98 code-switching cases; got {count}"
+    );
 }
 
 #[test]
 fn mlfp_total_case_count() {
-    assert_eq!(MINORITY_FP_CASES.len(), 255, "minority-language FP corpus must have 255 cases");
+    assert_eq!(
+        MINORITY_FP_CASES.len(),
+        255,
+        "minority-language FP corpus must have 255 cases"
+    );
 }
 
 // ===========================================================================
@@ -1375,45 +2355,67 @@ fn mlfp_total_case_count() {
 // ===========================================================================
 
 fn parse_template() -> serde_yaml::Value {
-    let yaml = jurisdiction_overlay_yaml("_template").unwrap_or_else(|| panic!("_template should exist"));
+    let yaml =
+        jurisdiction_overlay_yaml("_template").unwrap_or_else(|| panic!("_template should exist"));
     serde_yaml::from_str(yaml).unwrap_or_else(|e| panic!("_template should parse as YAML: {e}"))
 }
 
 const TEMPLATE_REQUIRED_TOP_LEVEL: &[&str] = &[
-    "skill_id", "parent", "schema_version", "expires_on", "signers",
-    "activation", "local_definitions", "local_language_assets",
-    "overrides", "allowed_contexts", "user_notice",
+    "skill_id",
+    "parent",
+    "schema_version",
+    "expires_on",
+    "signers",
+    "activation",
+    "local_definitions",
+    "local_language_assets",
+    "overrides",
+    "allowed_contexts",
+    "user_notice",
 ];
 
 const TEMPLATE_REQUIRED_LOCAL_DEFINITIONS: &[&str] = &[
-    "legal_age_general", "legal_age_sexual_content_consumer",
-    "legal_age_marketplace_alcohol", "legal_age_marketplace_tobacco",
-    "protected_classes", "listed_extremist_orgs",
-    "restricted_symbols", "election_rules",
+    "legal_age_general",
+    "legal_age_sexual_content_consumer",
+    "legal_age_marketplace_alcohol",
+    "legal_age_marketplace_tobacco",
+    "protected_classes",
+    "listed_extremist_orgs",
+    "restricted_symbols",
+    "election_rules",
 ];
 
-const TEMPLATE_REQUIRED_LANGUAGE_ASSETS: &[&str] = &[
-    "primary_languages", "lexicons", "normalization",
-];
+const TEMPLATE_REQUIRED_LANGUAGE_ASSETS: &[&str] =
+    &["primary_languages", "lexicons", "normalization"];
 
 const TEMPLATE_REQUIRED_NORMALIZATION_FIELDS: &[&str] = &[
-    "nfkc", "case_fold", "homoglyph_map_id", "transliteration_refs",
+    "nfkc",
+    "case_fold",
+    "homoglyph_map_id",
+    "transliteration_refs",
 ];
 
 const TEMPLATE_REQUIRED_USER_NOTICE: &[&str] = &[
-    "visible_pack_summary", "appeal_resource_id", "opt_out_allowed",
+    "visible_pack_summary",
+    "appeal_resource_id",
+    "opt_out_allowed",
 ];
 
 const TEMPLATE_REQUIRED_FORBIDDEN_CRITERIA: &[&str] = &[
-    "gps_location", "ip_geolocation", "inferred_nationality",
-    "inferred_ethnicity", "inferred_religion",
+    "gps_location",
+    "ip_geolocation",
+    "inferred_nationality",
+    "inferred_ethnicity",
+    "inferred_religion",
 ];
 
 const TEMPLATE_REQUIRED_SIGNERS: &[&str] = &["legal_review", "cultural_review"];
 
 const TEMPLATE_REQUIRED_ALLOWED_CONTEXTS: &[&str] = &[
-    "QUOTED_SPEECH_CONTEXT", "NEWS_CONTEXT",
-    "EDUCATION_CONTEXT", "COUNTERSPEECH_CONTEXT",
+    "QUOTED_SPEECH_CONTEXT",
+    "NEWS_CONTEXT",
+    "EDUCATION_CONTEXT",
+    "COUNTERSPEECH_CONTEXT",
 ];
 
 #[test]
@@ -1425,14 +2427,20 @@ fn template_parses_as_valid_yaml() {
 fn template_required_top_level_keys() {
     let t = parse_template();
     for key in TEMPLATE_REQUIRED_TOP_LEVEL {
-        assert!(t.get(*key).is_some(), "template missing top-level key: {key}");
+        assert!(
+            t.get(*key).is_some(),
+            "template missing top-level key: {key}"
+        );
     }
 }
 
 #[test]
 fn template_parent_is_global_baseline() {
     let t = parse_template();
-    assert_eq!(t.get("parent").and_then(|v| v.as_str()), Some("kchat.global.guardrail.baseline"));
+    assert_eq!(
+        t.get("parent").and_then(|v| v.as_str()),
+        Some("kchat.global.guardrail.baseline")
+    );
 }
 
 #[test]
@@ -1445,30 +2453,45 @@ fn template_schema_version_is_1() {
 fn template_signers_include_legal_and_cultural() {
     let t = parse_template();
     let signers = t.get("signers").and_then(|v| v.as_sequence()).unwrap();
-    let signer_set: std::collections::HashSet<_> = signers.iter().filter_map(|v| v.as_str()).collect();
+    let signer_set: std::collections::HashSet<_> =
+        signers.iter().filter_map(|v| v.as_str()).collect();
     for s in TEMPLATE_REQUIRED_SIGNERS {
         assert!(signer_set.contains(*s), "template signers missing: {s}");
     }
-    assert!(signer_set.contains("trust_and_safety"), "template signers must include trust_and_safety");
+    assert!(
+        signer_set.contains("trust_and_safety"),
+        "template signers must include trust_and_safety"
+    );
 }
 
 #[test]
 fn template_skill_id_pattern() {
     let t = parse_template();
     let id = t.get("skill_id").and_then(|v| v.as_str()).unwrap();
-    assert!(id.starts_with("kchat.jurisdiction."), "skill_id must start with kchat.jurisdiction.: {id}");
-    assert!(id.ends_with(".guardrail.v1"), "skill_id must end with .guardrail.v1: {id}");
+    assert!(
+        id.starts_with("kchat.jurisdiction."),
+        "skill_id must start with kchat.jurisdiction.: {id}"
+    );
+    assert!(
+        id.ends_with(".guardrail.v1"),
+        "skill_id must end with .guardrail.v1: {id}"
+    );
 }
 
 #[test]
 fn template_forbidden_criteria_has_all_five() {
     let t = parse_template();
-    let fc = t.get("activation")
+    let fc = t
+        .get("activation")
         .and_then(|v| v.get("forbidden_criteria"))
-        .and_then(|v| v.as_sequence()).unwrap();
+        .and_then(|v| v.as_sequence())
+        .unwrap();
     let fc_set: std::collections::HashSet<_> = fc.iter().filter_map(|v| v.as_str()).collect();
     for c in TEMPLATE_REQUIRED_FORBIDDEN_CRITERIA {
-        assert!(fc_set.contains(*c), "template forbidden_criteria missing: {c}");
+        assert!(
+            fc_set.contains(*c),
+            "template forbidden_criteria missing: {c}"
+        );
     }
 }
 
@@ -1477,55 +2500,95 @@ fn template_activation_criteria_present() {
     let t = parse_template();
     let criteria = t.get("activation").and_then(|v| v.get("criteria"));
     assert!(criteria.is_some(), "template must have activation.criteria");
-    assert!(criteria.unwrap().as_sequence().map(|s| !s.is_empty()).unwrap_or(false),
-        "activation.criteria must be a non-empty list");
+    assert!(
+        criteria
+            .unwrap()
+            .as_sequence()
+            .map(|s| !s.is_empty())
+            .unwrap_or(false),
+        "activation.criteria must be a non-empty list"
+    );
 }
 
 #[test]
 fn template_local_definitions_required_keys() {
     let t = parse_template();
-    let ld = t.get("local_definitions").and_then(|v| v.as_mapping()).unwrap();
+    let ld = t
+        .get("local_definitions")
+        .and_then(|v| v.as_mapping())
+        .unwrap();
     for key in TEMPLATE_REQUIRED_LOCAL_DEFINITIONS {
-        assert!(ld.get(*key).is_some(), "template local_definitions missing: {key}");
+        assert!(
+            ld.get(*key).is_some(),
+            "template local_definitions missing: {key}"
+        );
     }
 }
 
 #[test]
 fn template_language_assets_keys() {
     let t = parse_template();
-    let la = t.get("local_language_assets").and_then(|v| v.as_mapping()).unwrap();
+    let la = t
+        .get("local_language_assets")
+        .and_then(|v| v.as_mapping())
+        .unwrap();
     for key in TEMPLATE_REQUIRED_LANGUAGE_ASSETS {
-        assert!(la.get(*key).is_some(), "template local_language_assets missing: {key}");
+        assert!(
+            la.get(*key).is_some(),
+            "template local_language_assets missing: {key}"
+        );
     }
 }
 
 #[test]
 fn template_normalization_required_fields() {
     let t = parse_template();
-    let norm = t.get("local_language_assets")
+    let norm = t
+        .get("local_language_assets")
         .and_then(|v| v.get("normalization"))
-        .and_then(|v| v.as_mapping()).unwrap();
+        .and_then(|v| v.as_mapping())
+        .unwrap();
     for key in TEMPLATE_REQUIRED_NORMALIZATION_FIELDS {
-        assert!(norm.get(*key).is_some(), "template normalization missing: {key}");
+        assert!(
+            norm.get(*key).is_some(),
+            "template normalization missing: {key}"
+        );
     }
-    assert_eq!(norm.get("nfkc").and_then(|v| v.as_bool()), Some(true), "nfkc must be true");
-    assert_eq!(norm.get("case_fold").and_then(|v| v.as_bool()), Some(true), "case_fold must be true");
+    assert_eq!(
+        norm.get("nfkc").and_then(|v| v.as_bool()),
+        Some(true),
+        "nfkc must be true"
+    );
+    assert_eq!(
+        norm.get("case_fold").and_then(|v| v.as_bool()),
+        Some(true),
+        "case_fold must be true"
+    );
 }
 
 #[test]
 fn template_has_at_least_one_override() {
     let t = parse_template();
     let overrides = t.get("overrides").and_then(|v| v.as_sequence()).unwrap();
-    assert!(!overrides.is_empty(), "template must have at least one override");
+    assert!(
+        !overrides.is_empty(),
+        "template must have at least one override"
+    );
 }
 
 #[test]
 fn template_allowed_contexts_match_protected_speech() {
     let t = parse_template();
-    let ctx = t.get("allowed_contexts").and_then(|v| v.as_sequence()).unwrap();
+    let ctx = t
+        .get("allowed_contexts")
+        .and_then(|v| v.as_sequence())
+        .unwrap();
     let ctx_set: std::collections::HashSet<_> = ctx.iter().filter_map(|v| v.as_str()).collect();
     for c in TEMPLATE_REQUIRED_ALLOWED_CONTEXTS {
-        assert!(ctx_set.contains(*c), "template allowed_contexts missing: {c}");
+        assert!(
+            ctx_set.contains(*c),
+            "template allowed_contexts missing: {c}"
+        );
     }
 }
 
@@ -1534,7 +2597,10 @@ fn template_user_notice_required_fields() {
     let t = parse_template();
     let un = t.get("user_notice").and_then(|v| v.as_mapping()).unwrap();
     for key in TEMPLATE_REQUIRED_USER_NOTICE {
-        assert!(un.get(*key).is_some(), "template user_notice missing: {key}");
+        assert!(
+            un.get(*key).is_some(),
+            "template user_notice missing: {key}"
+        );
     }
 }
 
@@ -1549,8 +2615,11 @@ fn all_jurisdictions_pass_anti_misuse_validation() {
         let yaml = jurisdiction_overlay_yaml(code).unwrap();
         let report = anti_misuse::validate_pack_yaml(yaml)
             .unwrap_or_else(|e| panic!("{code} should parse: {e}"));
-        assert!(report.passed(),
-            "{code} failed anti-misuse validation: {:?}", report.errors);
+        assert!(
+            report.passed(),
+            "{code} failed anti-misuse validation: {:?}",
+            report.errors
+        );
     }
 }
 
@@ -1562,8 +2631,11 @@ fn all_communities_pass_anti_misuse_validation() {
         let yaml = communities::community_overlay_yaml(name).unwrap();
         let report = anti_misuse::validate_pack_yaml(yaml)
             .unwrap_or_else(|e| panic!("{name} should parse: {e}"));
-        assert!(report.passed(),
-            "{name} failed anti-misuse validation: {:?}", report.errors);
+        assert!(
+            report.passed(),
+            "{name} failed anti-misuse validation: {:?}",
+            report.errors
+        );
     }
 }
 
@@ -1574,15 +2646,21 @@ fn all_communities_pass_anti_misuse_validation() {
 #[test]
 fn us_civic_window_open_and_close() {
     let overlay = parse_overlay("us");
-    let rules = overlay.get("local_definitions")
+    let rules = overlay
+        .get("local_definitions")
         .and_then(|v| v.get("election_rules"))
-        .and_then(|v| v.as_mapping()).unwrap();
+        .and_then(|v| v.as_mapping())
+        .unwrap();
     let open = rules.get("civic_window_open").and_then(|v| v.as_str());
     let close = rules.get("civic_window_close").and_then(|v| v.as_str());
-    assert!(open.is_some() && !open.unwrap().is_empty(),
-        "US election_rules must have civic_window_open set");
-    assert!(close.is_some() && !close.unwrap().is_empty(),
-        "US election_rules must have civic_window_close set");
+    assert!(
+        open.is_some() && !open.unwrap().is_empty(),
+        "US election_rules must have civic_window_open set"
+    );
+    assert!(
+        close.is_some() && !close.unwrap().is_empty(),
+        "US election_rules must have civic_window_close set"
+    );
 }
 
 // ===========================================================================
@@ -1593,7 +2671,9 @@ fn us_civic_window_open_and_close() {
 fn template_source_mentions_forbidden_criteria_verbatim() {
     let yaml = jurisdiction_overlay_yaml("_template").unwrap();
     for criterion in TEMPLATE_REQUIRED_FORBIDDEN_CRITERIA {
-        assert!(yaml.contains(criterion),
-            "forbidden criterion '{criterion}' must appear verbatim in the template source");
+        assert!(
+            yaml.contains(criterion),
+            "forbidden criterion '{criterion}' must appear verbatim in the template source"
+        );
     }
 }

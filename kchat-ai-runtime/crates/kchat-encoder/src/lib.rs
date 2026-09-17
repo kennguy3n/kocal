@@ -38,7 +38,7 @@ pub mod rerank;
 pub mod gguf_session;
 
 // Re-export public types
-pub use mock::{MockEncoderSession, MockSafetyHead, MockEmbedHead, MockRerankHead};
+pub use mock::{MockEmbedHead, MockEncoderSession, MockRerankHead, MockSafetyHead};
 
 #[cfg(feature = "onnx-runtime")]
 pub use session::{EncoderSession, ForwardOutput};
@@ -53,7 +53,7 @@ pub use embed::EmbedHead;
 pub use rerank::RerankHead;
 
 #[cfg(feature = "gguf-runtime")]
-pub use gguf_session::{GgufEncoderSession, ClassifierHeads};
+pub use gguf_session::{ClassifierHeads, GgufEncoderSession};
 
 /// Embedding dimension for mmBERT-small (384).
 ///

@@ -4,8 +4,8 @@
 
 use crate::report::{EvalResult, SuiteReport};
 use kchat_bindings::{FfiSafetyAction, KChatAiRuntime};
-use kchat_core::tier::{DeviceTier, TierSelection};
 use kchat_core::capability::{AppState, DeviceCapabilities, GpuBackend, NpuProvider, ThermalState};
+use kchat_core::tier::{DeviceTier, TierSelection};
 
 pub fn run() -> SuiteReport {
     let mut suite = SuiteReport::new("Integration Eval Suite", 0.90);
@@ -61,7 +61,10 @@ fn test_tier_selection_high() -> EvalResult {
     if tier == DeviceTier::High {
         EvalResult::pass("tier_selection_high")
     } else {
-        EvalResult::fail("tier_selection_high", format!("expected High, got {:?}", tier))
+        EvalResult::fail(
+            "tier_selection_high",
+            format!("expected High, got {:?}", tier),
+        )
     }
 }
 
@@ -88,7 +91,10 @@ fn test_tier_selection_low() -> EvalResult {
     if tier == DeviceTier::Low {
         EvalResult::pass("tier_selection_low")
     } else {
-        EvalResult::fail("tier_selection_low", format!("expected Low, got {:?}", tier))
+        EvalResult::fail(
+            "tier_selection_low",
+            format!("expected Low, got {:?}", tier),
+        )
     }
 }
 
@@ -115,7 +121,10 @@ fn test_tier_thermal_downgrade() -> EvalResult {
     if tier == DeviceTier::Low {
         EvalResult::pass("tier_thermal_downgrade")
     } else {
-        EvalResult::fail("tier_thermal_downgrade", format!("expected Low (critical thermal), got {:?}", tier))
+        EvalResult::fail(
+            "tier_thermal_downgrade",
+            format!("expected Low (critical thermal), got {:?}", tier),
+        )
     }
 }
 
@@ -130,8 +139,10 @@ fn test_tier_policy_cap() -> EvalResult {
 }
 
 fn test_manifest_null_digest_rejected() -> EvalResult {
-    use kchat_core::manifest::{ManifestSignature, ModelPackManifest, PackChunk, PackType, SignedManifest};
-    use ed25519_dalek::{SigningKey, Signer};
+    use ed25519_dalek::{Signer, SigningKey};
+    use kchat_core::manifest::{
+        ManifestSignature, ModelPackManifest, PackChunk, PackType, SignedManifest,
+    };
     use rand::rngs::OsRng;
 
     let signing_key = SigningKey::generate(&mut OsRng);
@@ -168,6 +179,7 @@ fn test_manifest_null_digest_rejected() -> EvalResult {
         expires_at: "2027-01-01T00:00:00Z".into(),
         kill_switch: false,
         rollback_target: None,
+        download_url: String::new(),
     };
 
     let mut manifest = SignedManifest {

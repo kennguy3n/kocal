@@ -8,6 +8,8 @@ authors.workspace = true
 [features]
 default = []
 onnx-runtime = ["dep:ort", "dep:tokenizers", "dep:ndarray", "dep:kchat-core"]
+# In-process whisper.cpp backend (GGML/GGUF models, mobile-safe)
+whispercpp = ["dep:whisper-rs"]
 
 [dependencies]
 kchat-core = { path = "../kchat-core", optional = true }
@@ -22,6 +24,9 @@ rustfft = { version = "6.2", default-features = false }
 ort = { version = "=2.0.0-rc.10", default-features = false, features = ["load-dynamic", "ndarray"], optional = true }
 tokenizers = { version = "0.21", default-features = false, features = ["fancy-regex"], optional = true }
 ndarray = { version = "0.16", optional = true }
+
+# Optional whisper.cpp in-process backend
+whisper-rs = { version = "0.15.1", optional = true }
 
 [dev-dependencies]
 tempfile = "3"

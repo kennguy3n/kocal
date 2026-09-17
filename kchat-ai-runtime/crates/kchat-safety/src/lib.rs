@@ -37,20 +37,22 @@ pub mod vision;
 pub mod vision_bridge;
 
 pub use classify::{ClassifyRequest, ClassifyResult, SafetyClassifier};
-pub use encoder::{MockEncoder, MockSlmAdjudicator, SlmDecision};
-pub use media::{MediaDescriptor, MediaDescriptorInput, extract_media_descriptors};
+#[cfg(feature = "gguf-encoder")]
+pub use encoder::GgufSafetyEncoder;
 #[cfg(feature = "onnx-runtime")]
 pub use encoder::OnnxEncoder;
+pub use encoder::{MockEncoder, MockSlmAdjudicator, SlmDecision};
+pub use media::{extract_media_descriptors, MediaDescriptor, MediaDescriptorInput};
 pub use policy::{PolicyPack, PolicyPackManifest, PolicyRule, RiskCategory};
 pub use verdict::{Action, Verdict, VerdictBuilder};
 
 #[cfg(feature = "onnx-runtime-vision")]
 pub use vision::{
-    VisionEncoderAdapter, VisionEncoderAdapterBuilder, VisionEncoderError,
-    VisionEncoderVerdict, VisionImageClassifier,
+    VisionEncoderAdapter, VisionEncoderAdapterBuilder, VisionEncoderError, VisionEncoderVerdict,
+    VisionImageClassifier,
 };
 #[cfg(feature = "onnx-runtime-vision")]
-pub use vision_bridge::{VisionBridge, classify_image as classify_image_with_vision};
+pub use vision_bridge::{classify_image as classify_image_with_vision, VisionBridge};
 
 /// Re-export core types for convenience.
 pub use kchat_core::ids::PolicyPackId;

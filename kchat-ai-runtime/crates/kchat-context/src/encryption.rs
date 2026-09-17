@@ -24,7 +24,12 @@ impl AeadKey {
     /// Create from a byte slice. Panics if length is not exactly AEAD_KEY_LEN.
     /// Use `try_from_bytes` for fallible conversion.
     pub fn from_bytes(bytes: &[u8]) -> Self {
-        assert_eq!(bytes.len(), AEAD_KEY_LEN, "AeadKey must be exactly {} bytes", AEAD_KEY_LEN);
+        assert_eq!(
+            bytes.len(),
+            AEAD_KEY_LEN,
+            "AeadKey must be exactly {} bytes",
+            AEAD_KEY_LEN
+        );
         let mut key = [0u8; AEAD_KEY_LEN];
         key.copy_from_slice(bytes);
         Self(key)
@@ -34,7 +39,9 @@ impl AeadKey {
     pub fn try_from_bytes(bytes: &[u8]) -> Result<Self, CryptoError> {
         if bytes.len() != AEAD_KEY_LEN {
             return Err(CryptoError::EncryptionFailed(format!(
-                "invalid key length: expected {}, got {}", AEAD_KEY_LEN, bytes.len()
+                "invalid key length: expected {}, got {}",
+                AEAD_KEY_LEN,
+                bytes.len()
             )));
         }
         let mut key = [0u8; AEAD_KEY_LEN];
@@ -51,7 +58,12 @@ pub struct AeadNonce(pub [u8; AEAD_NONCE_LEN]);
 impl AeadNonce {
     /// Create from a byte slice. Panics if length is not exactly AEAD_NONCE_LEN.
     pub fn from_bytes(bytes: &[u8]) -> Self {
-        assert_eq!(bytes.len(), AEAD_NONCE_LEN, "AeadNonce must be exactly {} bytes", AEAD_NONCE_LEN);
+        assert_eq!(
+            bytes.len(),
+            AEAD_NONCE_LEN,
+            "AeadNonce must be exactly {} bytes",
+            AEAD_NONCE_LEN
+        );
         let mut nonce = [0u8; AEAD_NONCE_LEN];
         nonce.copy_from_slice(bytes);
         Self(nonce)
@@ -61,7 +73,9 @@ impl AeadNonce {
     pub fn try_from_bytes(bytes: &[u8]) -> Result<Self, CryptoError> {
         if bytes.len() != AEAD_NONCE_LEN {
             return Err(CryptoError::EncryptionFailed(format!(
-                "invalid nonce length: expected {}, got {}", AEAD_NONCE_LEN, bytes.len()
+                "invalid nonce length: expected {}, got {}",
+                AEAD_NONCE_LEN,
+                bytes.len()
             )));
         }
         let mut nonce = [0u8; AEAD_NONCE_LEN];
@@ -95,7 +109,10 @@ pub fn encrypt_aead(
     let ciphertext = cipher
         .encrypt(
             &nonce.0.into(),
-            Payload { msg: plaintext, aad },
+            Payload {
+                msg: plaintext,
+                aad,
+            },
         )
         .map_err(|e| CryptoError::EncryptionFailed(e.to_string()))?;
 
@@ -116,7 +133,10 @@ pub fn decrypt_aead(
     cipher
         .decrypt(
             &nonce.0.into(),
-            Payload { msg: ciphertext, aad },
+            Payload {
+                msg: ciphertext,
+                aad,
+            },
         )
         .map_err(|e| CryptoError::DecryptionFailed(e.to_string()))
 }

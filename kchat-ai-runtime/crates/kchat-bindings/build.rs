@@ -1,8 +1,6 @@
 fn main() {
-    #[cfg(feature = "mobile")]
-    {
-        uniffi_build::generate_scaffolding("./src/kchat.udl").unwrap();
-    }
+    // UniFFI proc-macro mode (#[uniffi::export] + setup_scaffolding!) needs no
+    // build-time scaffolding generation — the macros emit it inline.
 
     #[cfg(feature = "desktop")]
     {

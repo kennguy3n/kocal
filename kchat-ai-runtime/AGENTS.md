@@ -38,6 +38,10 @@ cargo build -p kchat-bindings --features desktop
 # Build WASM bindings for web (deterministic safety plane)
 cargo build -p kchat-wasm --target wasm32-unknown-unknown --release
 # Output: target/wasm32-unknown-unknown/release/kchat_wasm.wasm (~2.1MB)
+# NOTE: requires a rustup toolchain — if Homebrew's rustc shadows rustup on
+# PATH, run with the toolchain bin first:
+#   PATH="$HOME/.rustup/toolchains/stable-aarch64-apple-darwin/bin:$PATH" \
+#     cargo build -p kchat-wasm --target wasm32-unknown-unknown --release
 
 # Run the red-team eval suite (36 attack cases)
 cargo run -p kchat-task-suite -- --redteam
@@ -46,6 +50,16 @@ cargo run -p kchat-task-suite -- --redteam
 # Tests each device profile's assigned model with 150 tasks across 15 categories
 # GGUF models use llama-server; MLX models use kchat-mlx-server (Swift or Python fallback)
 cargo run -p kchat-task-suite -- --perdevice
+
+# Real-model smoke eval — in-process llama.cpp (the same path mobile uses),
+# measures TTFT/decode vs tier targets and checks a recorded baseline
+# (eval/kchat-task-suite/baselines/smoke.json, 25% regression tolerance).
+cargo run -p kchat-task-suite --features smoke-metal -- --smoke
+cargo run -p kchat-task-suite --features smoke-metal -- --smoke --write-baseline
+
+# Criterion micro-benches (safety classify, retrieval, prompt/grammar,
+# orchestrator overhead)
+cargo bench -p kchat-safety -p kchat-context -p kchat-generation -p kchat-runtime
 
 # Build the Go server-side offload service
 cd sidecars/kchat-server-offload && go build && ./kchat-server-offload
@@ -429,3 +443,24 @@ The unified kchat-encoder (mmbert-safety-q4_k_m) replaces 4 separate model packs
 safety-int4, cross-encoder-miniLM) with 1 multi-task GGUF pack.
 The unified mobileclip-s2-int8 replaces 3 separate vision packs (image-int8,
 image-fp32, video-int8) with 1 multi-task pack handling both image and video.
+
+## Environment Notes
+
+- **Xcode license not accepted**: If `cargo build`/`cargo test` fails at link time with
+  "You have not agreed to the Xcode license agreements", point `DEVELOPER_DIR` at the
+  Command Line Tools instead of Xcode:
+  `DEVELOPER_DIR=/Library/Developer/CommandLineTools cargo test --workspace`
+- **Formatting/lint**: `cargo fmt --all` and `cargo clippy --workspace --all-targets`
+  must stay clean (CI enforces both; workspace is at zero warnings).
+
+## New Feature Flags
+
+- `kchat-safety/gguf-encoder` — real mmBERT GGUF safety encoder
+  (`GgufSafetyEncoder`, `SafetyClassifier::attach_encoder`) via llama-server
+  subprocess on an ephemeral port. Wired into the FFI facade via
+  `KChatAiRuntime::attach_gguf_encoder` (feature `kchat-bindings/gguf-encoder`,
+  included in `mobile-full`).
+- `BackendAdapter::apply_lora`/`detach_lora` — real LoRA hot-swap on the trait;
+  implemented by `LlamaCppBackend` (in-process GGUF LoRA) and `MlxBackend`
+  (`/lora/load` + `/lora/detach` HTTP). `LoraManager::set_backend_hook` accepts
+  `BackendLoraHook::new(Arc<dyn BackendAdapter>)` to route swaps into the backend.

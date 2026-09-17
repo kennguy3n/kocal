@@ -3,7 +3,6 @@
 //! Tests each of the 12 device profiles against its assigned real model,
 //! measuring performance + quality, and producing a judgment report.
 
-use crate::report::{EvalReport, EvalResult, EvalStatus, SuiteReport};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::io::Write;
@@ -225,7 +224,7 @@ impl ServerHandle {
             .arg("%{http_code}")
             .arg("--connect-timeout")
             .arg("2")
-            .arg(&format!("{}/health", url))
+            .arg(format!("{}/health", url))
             .output();
         match output {
             Ok(o) => String::from_utf8_lossy(&o.stdout).trim() == "200",
@@ -273,8 +272,7 @@ fn start_llama_server(config: &ModelConfig) -> Result<ServerHandle, String> {
                 })
         }
     } else {
-        std::env::var("LLAMA_SERVER_PATH")
-            .unwrap_or_else(|_| "llama-server".into())
+        std::env::var("LLAMA_SERVER_PATH").unwrap_or_else(|_| "llama-server".into())
     };
 
     if which::which(&llama_server).is_err() {
@@ -422,7 +420,7 @@ fn send_completion(
         .arg("-s")
         .arg("-X")
         .arg("POST")
-        .arg(&format!("{}/completion", server_url))
+        .arg(format!("{}/completion", server_url))
         .arg("-H")
         .arg("Content-Type: application/json")
         .arg("-d")
@@ -469,7 +467,9 @@ fn send_completion(
         )
     } else {
         (
-            resp.get("prompt_ms").and_then(|v| v.as_f64()).unwrap_or(0.0),
+            resp.get("prompt_ms")
+                .and_then(|v| v.as_f64())
+                .unwrap_or(0.0),
             resp.get("predicted_ms")
                 .and_then(|v| v.as_f64())
                 .unwrap_or(0.0),
@@ -493,13 +493,21 @@ fn run_quality_check(output: &str, check: &QualityCheck) -> f64 {
     match check.check_type.as_str() {
         "min_length" => {
             let min = check.min_chars.unwrap_or(0);
-            if output.len() >= min { 1.0 } else if min > 0 {
+            if output.len() >= min {
+                1.0
+            } else if min > 0 {
                 output.len() as f64 / min as f64
-            } else { 1.0 }
+            } else {
+                1.0
+            }
         }
         "max_length" => {
             let max = check.max_chars.unwrap_or(usize::MAX);
-            if output.len() <= max { 1.0 } else { 0.0 }
+            if output.len() <= max {
+                1.0
+            } else {
+                0.0
+            }
         }
         "contains_keyword" => {
             // OR check: any keyword match = 1.0. Keywords are alternative acceptable answers.
@@ -512,13 +520,18 @@ fn run_quality_check(output: &str, check: &QualityCheck) -> f64 {
                     }
                     // Numeric keyword: also match word form (e.g. "19" matches "nineteen")
                     if let Ok(n) = k.parse::<u64>() {
-                        if number_to_words(n).map(|w| lower.contains(&w.to_lowercase())).unwrap_or(false) {
+                        if number_to_words(n)
+                            .map(|w| lower.contains(&w.to_lowercase()))
+                            .unwrap_or(false)
+                        {
                             return 1.0;
                         }
                     }
                 }
                 0.0
-            } else { 0.0 }
+            } else {
+                0.0
+            }
         }
         "contains_all" => {
             if let Some(keywords) = &check.contains_all {
@@ -530,52 +543,83 @@ fn run_quality_check(output: &str, check: &QualityCheck) -> f64 {
                         break;
                     }
                 }
-                if all_found { 1.0 } else { 0.0 }
-            } else { 0.0 }
+                if all_found {
+                    1.0
+                } else {
+                    0.0
+                }
+            } else {
+                0.0
+            }
         }
         "not_contains" => {
             if let Some(forbidden) = &check.not_contains {
                 let lower = output.to_lowercase();
-                let violations = forbidden.iter().filter(|k| lower.contains(&k.to_lowercase())).count();
-                if violations == 0 { 1.0 } else {
+                let violations = forbidden
+                    .iter()
+                    .filter(|k| lower.contains(&k.to_lowercase()))
+                    .count();
+                if violations == 0 {
+                    1.0
+                } else {
                     1.0 - (violations as f64 / forbidden.len().max(1) as f64)
                 }
-            } else { 1.0 }
+            } else {
+                1.0
+            }
         }
         "exact_match" => {
             let expected = check.expected.as_deref().unwrap_or("");
-            if output.trim() == expected.trim() { 1.0 } else { 0.0 }
+            if output.trim() == expected.trim() {
+                1.0
+            } else {
+                0.0
+            }
         }
         "json_schema_valid" => {
             let json_text = extract_json(output);
-            if json_text.is_empty() { return 0.0; }
+            if json_text.is_empty() {
+                return 0.0;
+            }
             let parsed: serde_json::Value = match serde_json::from_str(&json_text) {
                 Ok(v) => v,
                 Err(_) => return 0.0,
             };
             if let Some(schema) = &check.schema {
-                if validate_json_schema(&parsed, schema) { 1.0 } else { 0.5 }
-            } else { 1.0 }
+                if validate_json_schema(&parsed, schema) {
+                    1.0
+                } else {
+                    0.5
+                }
+            } else {
+                1.0
+            }
         }
         "regex_match" => {
             if let Some(pattern) = &check.pattern {
                 regex::Regex::new(pattern)
                     .map(|re| if re.is_match(output) { 1.0 } else { 0.0 })
                     .unwrap_or(0.0)
-            } else { 0.0 }
+            } else {
+                0.0
+            }
         }
         "coherent" => {
-            if output.is_empty() || output.len() <= 10 { 0.0 }
-            else if is_repeated(output) { 0.3 }
-            else { 1.0 }
+            if output.is_empty() || output.len() <= 10 {
+                0.0
+            } else if is_repeated(output) {
+                0.3
+            } else {
+                1.0
+            }
         }
         "sentence_count" => {
             let count = count_sentences(output);
             let min = check.min_sentences.unwrap_or(0);
             let max = check.max_sentences.unwrap_or(usize::MAX);
-            if count >= min && count <= max { 1.0 }
-            else if count >= min && max == usize::MAX { 1.0 }
-            else if count < min {
+            if count >= min && count <= max {
+                1.0
+            } else if count < min {
                 count as f64 / min as f64
             } else {
                 max as f64 / count as f64
@@ -584,52 +628,79 @@ fn run_quality_check(output: &str, check: &QualityCheck) -> f64 {
         "language_script" => {
             if let Some(lang) = &check.language {
                 detect_language_score(output, lang)
-            } else { 1.0 }
+            } else {
+                1.0
+            }
         }
         "min_words" => {
             let min = check.min_words.unwrap_or(0);
             let words = output.split_whitespace().count();
-            if words >= min { 1.0 } else if min > 0 {
+            if words >= min {
+                1.0
+            } else if min > 0 {
                 words as f64 / min as f64
-            } else { 1.0 }
+            } else {
+                1.0
+            }
         }
         "multi_check" => {
             if let Some(sub_checks) = &check.checks {
-                if sub_checks.is_empty() { return 1.0; }
+                if sub_checks.is_empty() {
+                    return 1.0;
+                }
                 let total = sub_checks.len() as f64;
-                let sum: f64 = sub_checks.iter().map(|c| run_quality_check(output, c)).sum();
+                let sum: f64 = sub_checks
+                    .iter()
+                    .map(|c| run_quality_check(output, c))
+                    .sum();
                 sum / total
-            } else { 1.0 }
+            } else {
+                1.0
+            }
         }
         "markdown_structure" => check_markdown_structure(output),
         "no_input_echo" => {
             if let Some(input) = &check.input_text {
                 check_no_input_echo(output, input)
-            } else { 1.0 }
+            } else {
+                1.0
+            }
         }
         "tone_match" => {
             if let Some(tone) = &check.expected_tone {
                 check_tone_match(output, tone)
-            } else { 1.0 }
+            } else {
+                1.0
+            }
         }
         "length_delta" => {
             if let Some(ratio) = &check.expected_ratio {
                 if let Some(input) = &check.input_text {
                     check_length_delta(output, input, ratio)
-                } else { 1.0 }
-            } else { 1.0 }
+                } else {
+                    1.0
+                }
+            } else {
+                1.0
+            }
         }
         "json_field_count" => {
             if let Some(fields) = &check.expected_fields {
                 check_json_field_count(output, fields)
-            } else { 1.0 }
+            } else {
+                1.0
+            }
         }
         "heading_count" => {
             let min = check.min_headings.unwrap_or(0);
             let count = count_markdown_headings(output);
-            if count >= min { 1.0 } else if min > 0 {
+            if count >= min {
+                1.0
+            } else if min > 0 {
                 count as f64 / min as f64
-            } else { 1.0 }
+            } else {
+                1.0
+            }
         }
         _ => 1.0,
     }
@@ -662,18 +733,30 @@ fn check_markdown_structure(output: &str) -> f64 {
         if trimmed.starts_with("```") {
             has_code_block = !has_code_block;
         }
-        if !trimmed.is_empty() && !trimmed.starts_with('#') && !trimmed.starts_with('-')
-            && !trimmed.starts_with('*') && !trimmed.starts_with('+')
-            && !trimmed.starts_with("```") && !trimmed.starts_with('|')
+        if !trimmed.is_empty()
+            && !trimmed.starts_with('#')
+            && !trimmed.starts_with('-')
+            && !trimmed.starts_with('*')
+            && !trimmed.starts_with('+')
+            && !trimmed.starts_with("```")
+            && !trimmed.starts_with('|')
         {
             has_paragraph = true;
         }
     }
 
-    if has_heading { score += 0.4; }
-    if has_paragraph { score += 0.3; }
-    if has_list { score += 0.15; }
-    if has_code_block { score += 0.15; }
+    if has_heading {
+        score += 0.4;
+    }
+    if has_paragraph {
+        score += 0.3;
+    }
+    if has_list {
+        score += 0.15;
+    }
+    if has_code_block {
+        score += 0.15;
+    }
 
     // Check heading hierarchy: levels should not jump more than 1
     if heading_levels.len() > 1 {
@@ -689,7 +772,11 @@ fn check_markdown_structure(output: &str) -> f64 {
         }
     }
 
-    if score > 1.0 { 1.0 } else { score }
+    if score > 1.0 {
+        1.0
+    } else {
+        score
+    }
 }
 
 fn check_no_input_echo(output: &str, input_text: &str) -> f64 {
@@ -723,51 +810,142 @@ fn check_no_input_echo(output: &str, input_text: &str) -> f64 {
 
 fn check_tone_match(output: &str, expected_tone: &str) -> f64 {
     let lower = output.to_lowercase();
-    let mut score = 0.5; // neutral baseline
-
-    match expected_tone {
+    let score = match expected_tone {
         "professional" => {
-            let professional_markers = ["dear", "regards", "sincerely", "furthermore", "however", "therefore", "pursuant", "respectfully"];
-            let casual_markers = ["gonna", "wanna", "hey", "cheers", "no biggie", "lol", "btw", "yeah", "ok "];
-            let prof_count = professional_markers.iter().filter(|m| lower.contains(*m)).count();
+            let professional_markers = [
+                "dear",
+                "regards",
+                "sincerely",
+                "furthermore",
+                "however",
+                "therefore",
+                "pursuant",
+                "respectfully",
+            ];
+            let casual_markers = [
+                "gonna",
+                "wanna",
+                "hey",
+                "cheers",
+                "no biggie",
+                "lol",
+                "btw",
+                "yeah",
+                "ok ",
+            ];
+            let prof_count = professional_markers
+                .iter()
+                .filter(|m| lower.contains(*m))
+                .count();
             let casual_count = casual_markers.iter().filter(|m| lower.contains(*m)).count();
-            score = 0.5 + prof_count as f64 * 0.1 - casual_count as f64 * 0.2;
+            0.5 + prof_count as f64 * 0.1 - casual_count as f64 * 0.2
         }
         "casual" => {
-            let casual_markers = ["hey", "thanks", "cheers", "sounds good", "let me know", "no worries"];
-            let formal_markers = ["pursuant", "aforementioned", "forthwith", "hereby", "wherewith"];
+            let casual_markers = [
+                "hey",
+                "thanks",
+                "cheers",
+                "sounds good",
+                "let me know",
+                "no worries",
+            ];
+            let formal_markers = [
+                "pursuant",
+                "aforementioned",
+                "forthwith",
+                "hereby",
+                "wherewith",
+            ];
             let casual_count = casual_markers.iter().filter(|m| lower.contains(*m)).count();
             let formal_count = formal_markers.iter().filter(|m| lower.contains(*m)).count();
-            score = 0.5 + casual_count as f64 * 0.15 - formal_count as f64 * 0.2;
+            0.5 + casual_count as f64 * 0.15 - formal_count as f64 * 0.2
         }
         "confident" => {
-            let confident_markers = ["will", "certainly", "definitely", "absolutely", "committed", "ensure", "guarantee"];
-            let hesitant_markers = ["maybe", "perhaps", "might", "not sure", "i think", "possibly", "i guess"];
-            let conf_count = confident_markers.iter().filter(|m| lower.contains(*m)).count();
-            let hes_count = hesitant_markers.iter().filter(|m| lower.contains(*m)).count();
-            score = 0.5 + conf_count as f64 * 0.15 - hes_count as f64 * 0.2;
+            let confident_markers = [
+                "will",
+                "certainly",
+                "definitely",
+                "absolutely",
+                "committed",
+                "ensure",
+                "guarantee",
+            ];
+            let hesitant_markers = [
+                "maybe", "perhaps", "might", "not sure", "i think", "possibly", "i guess",
+            ];
+            let conf_count = confident_markers
+                .iter()
+                .filter(|m| lower.contains(*m))
+                .count();
+            let hes_count = hesitant_markers
+                .iter()
+                .filter(|m| lower.contains(*m))
+                .count();
+            0.5 + conf_count as f64 * 0.15 - hes_count as f64 * 0.2
         }
         "friendly" => {
-            let friendly_markers = ["hope", "great", "wonderful", "happy", "looking forward", "pleased", "warm"];
-            let cold_markers = ["must", "required", "immediately", "consequences", "failure", "unacceptable"];
-            let friend_count = friendly_markers.iter().filter(|m| lower.contains(*m)).count();
+            let friendly_markers = [
+                "hope",
+                "great",
+                "wonderful",
+                "happy",
+                "looking forward",
+                "pleased",
+                "warm",
+            ];
+            let cold_markers = [
+                "must",
+                "required",
+                "immediately",
+                "consequences",
+                "failure",
+                "unacceptable",
+            ];
+            let friend_count = friendly_markers
+                .iter()
+                .filter(|m| lower.contains(*m))
+                .count();
             let cold_count = cold_markers.iter().filter(|m| lower.contains(*m)).count();
-            score = 0.5 + friend_count as f64 * 0.15 - cold_count as f64 * 0.2;
+            0.5 + friend_count as f64 * 0.15 - cold_count as f64 * 0.2
         }
         "persuasive" => {
-            let persuasive_markers = ["imagine", "benefit", "opportunity", "exclusive", "limited", "don't miss", "act now", "value", "advantage"];
-            let count = persuasive_markers.iter().filter(|m| lower.contains(*m)).count();
-            score = 0.5 + count as f64 * 0.1;
+            let persuasive_markers = [
+                "imagine",
+                "benefit",
+                "opportunity",
+                "exclusive",
+                "limited",
+                "don't miss",
+                "act now",
+                "value",
+                "advantage",
+            ];
+            let count = persuasive_markers
+                .iter()
+                .filter(|m| lower.contains(*m))
+                .count();
+            0.5 + count as f64 * 0.1
         }
         "empathetic" => {
-            let empathetic_markers = ["understand", "appreciate", "recognize", "sorry", "challenging", "difficult", "support", "care"];
-            let count = empathetic_markers.iter().filter(|m| lower.contains(*m)).count();
-            score = 0.5 + count as f64 * 0.1;
+            let empathetic_markers = [
+                "understand",
+                "appreciate",
+                "recognize",
+                "sorry",
+                "challenging",
+                "difficult",
+                "support",
+                "care",
+            ];
+            let count = empathetic_markers
+                .iter()
+                .filter(|m| lower.contains(*m))
+                .count();
+            0.5 + count as f64 * 0.1
         }
-        _ => score = 1.0,
-    }
-
-    if score < 0.0 { 0.0 } else if score > 1.0 { 1.0 } else { score }
+        _ => 1.0,
+    };
+    score.clamp(0.0, 1.0)
 }
 
 fn check_length_delta(output: &str, input_text: &str, expected_ratio: &str) -> f64 {
@@ -780,7 +958,11 @@ fn check_length_delta(output: &str, input_text: &str, expected_ratio: &str) -> f
         "longer" => {
             if output_len > input_len {
                 let ratio = output_len as f64 / input_len as f64;
-                if ratio >= 1.5 { 1.0 } else { ratio / 1.5 }
+                if ratio >= 1.5 {
+                    1.0
+                } else {
+                    ratio / 1.5
+                }
             } else {
                 0.0
             }
@@ -788,7 +970,11 @@ fn check_length_delta(output: &str, input_text: &str, expected_ratio: &str) -> f
         "shorter" => {
             if output_len < input_len {
                 let ratio = output_len as f64 / input_len as f64;
-                if ratio <= 0.7 { 1.0 } else { (1.0 - ratio) / 0.3 }
+                if ratio <= 0.7 {
+                    1.0
+                } else {
+                    (1.0 - ratio) / 0.3
+                }
             } else {
                 0.0
             }
@@ -829,10 +1015,31 @@ fn count_markdown_headings(text: &str) -> usize {
 }
 
 fn number_to_words(n: u64) -> Option<String> {
-    let ones = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
-                "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen",
-                "seventeen", "eighteen", "nineteen"];
-    let tens = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
+    let ones = [
+        "",
+        "one",
+        "two",
+        "three",
+        "four",
+        "five",
+        "six",
+        "seven",
+        "eight",
+        "nine",
+        "ten",
+        "eleven",
+        "twelve",
+        "thirteen",
+        "fourteen",
+        "fifteen",
+        "sixteen",
+        "seventeen",
+        "eighteen",
+        "nineteen",
+    ];
+    let tens = [
+        "", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety",
+    ];
 
     if n >= 1000 {
         return None; // Keep it simple for eval purposes
@@ -918,10 +1125,7 @@ fn validate_json_schema(value: &serde_json::Value, schema: &serde_json::Value) -
     }
 
     // Check array items
-    if let (Some(items_schema), Some(arr)) = (
-        schema_obj.get("items"),
-        value.as_array(),
-    ) {
+    if let (Some(items_schema), Some(arr)) = (schema_obj.get("items"), value.as_array()) {
         for item in arr {
             if !validate_json_schema(item, items_schema) {
                 return false;
@@ -1041,20 +1245,24 @@ fn count_sentences(text: &str) -> usize {
 fn detect_language_score(text: &str, expected: &str) -> f64 {
     // Detect writing system from Unicode character ranges
     let mut latin = 0u32;
-    let mut cjk = 0u32;      // CJK Unified Ideographs
-    let mut kana = 0u32;     // Hiragana + Katakana
-    let mut hangul = 0u32;   // Korean Hangul
-    let mut arabic = 0u32;   // Arabic
+    let mut cjk = 0u32; // CJK Unified Ideographs
+    let mut kana = 0u32; // Hiragana + Katakana
+    let mut hangul = 0u32; // Korean Hangul
+    let mut arabic = 0u32; // Arabic
     let mut devanagari = 0u32; // Devanagari (Hindi)
-    let mut thai = 0u32;     // Thai
+    let mut thai = 0u32; // Thai
     let mut other = 0u32;
 
     for c in text.chars() {
         if c.is_ascii_alphabetic() || c == ' ' || c.is_ascii_punctuation() || c.is_ascii_digit() {
             latin += 1;
-        } else if (c as u32 >= 0x4E00 && c as u32 <= 0x9FFF) || (c as u32 >= 0x3400 && c as u32 <= 0x4DBF) {
+        } else if (c as u32 >= 0x4E00 && c as u32 <= 0x9FFF)
+            || (c as u32 >= 0x3400 && c as u32 <= 0x4DBF)
+        {
             cjk += 1;
-        } else if (c as u32 >= 0x3040 && c as u32 <= 0x309F) || (c as u32 >= 0x30A0 && c as u32 <= 0x30FF) {
+        } else if (c as u32 >= 0x3040 && c as u32 <= 0x309F)
+            || (c as u32 >= 0x30A0 && c as u32 <= 0x30FF)
+        {
             kana += 1;
         } else if c as u32 >= 0xAC00 && c as u32 <= 0xD7AF {
             hangul += 1;
@@ -1075,8 +1283,11 @@ fn detect_language_score(text: &str, expected: &str) -> f64 {
     }
 
     let score_for = |count: u32| -> f64 {
-        if count == 0 { 0.0 }
-        else { count as f64 / total as f64 }
+        if count == 0 {
+            0.0
+        } else {
+            count as f64 / total as f64
+        }
     };
 
     match expected {
@@ -1097,8 +1308,7 @@ fn detect_language_score(text: &str, expected: &str) -> f64 {
 // ---------------------------------------------------------------------------
 
 fn find_model_path(pack_id: &str) -> Option<PathBuf> {
-    let pack_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../manifest/packs");
+    let pack_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../manifest/packs");
 
     match pack_id {
         "bonsai-1.7b-mlx-1bit" => {
@@ -1118,7 +1328,9 @@ fn find_model_path(pack_id: &str) -> Option<PathBuf> {
             }
         }
         "bonsai-1.7b-q1_0" => {
-            let path = pack_dir.join("bonsai-1.7b-q1_0").join("Bonsai-1.7B-Q1_0.gguf");
+            let path = pack_dir
+                .join("bonsai-1.7b-q1_0")
+                .join("Bonsai-1.7B-Q1_0.gguf");
             if path.exists() {
                 Some(path)
             } else {
@@ -1126,7 +1338,9 @@ fn find_model_path(pack_id: &str) -> Option<PathBuf> {
             }
         }
         "bonsai-1.7b-q2_0" => {
-            let path = pack_dir.join("ternary-bonsai-1.7b-q2_0").join("Ternary-Bonsai-1.7B-Q2_0.gguf");
+            let path = pack_dir
+                .join("ternary-bonsai-1.7b-q2_0")
+                .join("Ternary-Bonsai-1.7B-Q2_0.gguf");
             if path.exists() {
                 Some(path)
             } else {
@@ -1141,22 +1355,26 @@ fn get_model_config(pack_id: &str, port: u16) -> Option<ModelConfig> {
     get_model_config_with_lora(pack_id, port, None)
 }
 
-fn get_model_config_with_lora(pack_id: &str, port: u16, lora_path: Option<PathBuf>) -> Option<ModelConfig> {
+fn get_model_config_with_lora(
+    pack_id: &str,
+    port: u16,
+    lora_path: Option<PathBuf>,
+) -> Option<ModelConfig> {
     let model_path = find_model_path(pack_id)?;
 
     let (server_type, display_name, context_size) = match pack_id {
-        "bonsai-1.7b-mlx-1bit" => {
-            (ServerType::MlxServer, "Bonsai-1.7B-MLX-1bit".into(), 2048)
-        }
-        "bonsai-1.7b-mlx-2bit" => {
-            (ServerType::MlxServer, "Ternary-Bonsai-1.7B-MLX-2bit".into(), 2048)
-        }
-        "bonsai-1.7b-q1_0" => {
-            (ServerType::LlamaServer, "Bonsai-1.7B-Q1_0".into(), 2048)
-        }
-        "bonsai-1.7b-q2_0" => {
-            (ServerType::LlamaServer, "Ternary-Bonsai-1.7B-Q2_0".into(), 2048)
-        }
+        "bonsai-1.7b-mlx-1bit" => (ServerType::MlxServer, "Bonsai-1.7B-MLX-1bit".into(), 2048),
+        "bonsai-1.7b-mlx-2bit" => (
+            ServerType::MlxServer,
+            "Ternary-Bonsai-1.7B-MLX-2bit".into(),
+            2048,
+        ),
+        "bonsai-1.7b-q1_0" => (ServerType::LlamaServer, "Bonsai-1.7B-Q1_0".into(), 2048),
+        "bonsai-1.7b-q2_0" => (
+            ServerType::LlamaServer,
+            "Ternary-Bonsai-1.7B-Q2_0".into(),
+            2048,
+        ),
         _ => return None,
     };
 
@@ -1315,26 +1533,28 @@ fn category_to_lora_family(category: &str) -> &'static str {
         "generation" => "doc_creative",
 
         // Best-match mappings
-        "instruction_following" => "doc_creative",    // writing/instruction tasks
-        "multi_turn" => "summarize_catchup",           // conversation comprehension
-        "reasoning" => "summarize_catchup",            // text understanding
-        "code_generation" => "extract_json",           // structured output
-        "tool_use" => "extract_json",                  // structured output/JSON
-        "action" => "extract_json",                    // structured operations
-        "safety" => "rewrite_grammar",                 // text classification/editing
-        "context_retrieval" => "summarize_catchup",    // text understanding
-        "core" => "summarize_catchup",                 // general text tasks
-        "bindings" => "summarize_catchup",             // general text tasks
-        "wasm" => "rewrite_grammar",                   // text classification
-        _ => "summarize_catchup",                      // default fallback
+        "instruction_following" => "doc_creative", // writing/instruction tasks
+        "multi_turn" => "summarize_catchup",       // conversation comprehension
+        "reasoning" => "summarize_catchup",        // text understanding
+        "code_generation" => "extract_json",       // structured output
+        "tool_use" => "extract_json",              // structured output/JSON
+        "action" => "extract_json",                // structured operations
+        "safety" => "rewrite_grammar",             // text classification/editing
+        "context_retrieval" => "summarize_catchup", // text understanding
+        "core" => "summarize_catchup",             // general text tasks
+        "bindings" => "summarize_catchup",         // general text tasks
+        "wasm" => "rewrite_grammar",               // text classification
+        _ => "summarize_catchup",                  // default fallback
     }
 }
 
 /// Find the GGUF LoRA adapter path for a given family and language.
 fn find_lora_adapter(family: &str, lang: &str) -> Option<PathBuf> {
-    let pack_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../manifest/packs/bonsai-1.7b-q1_0/lora");
-    let adapter_path = pack_dir.join(format!("{}.{}", family, lang)).join("adapters.gguf");
+    let pack_dir =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../manifest/packs/bonsai-1.7b-q1_0/lora");
+    let adapter_path = pack_dir
+        .join(format!("{}.{}", family, lang))
+        .join("adapters.gguf");
     if adapter_path.exists() {
         Some(adapter_path)
     } else {
@@ -1380,21 +1600,37 @@ pub fn run() {
 pub fn run_with_options(compare_old: bool) {
     println!();
     if compare_old {
-        println!("╔══════════════════════════════════════════════════════════════════════════════╗");
-        println!("║  PER-DEVICE EVAL: OLD vs NEW COMPARISON                                      ║");
-        println!("║  Old: Per-tier models (no LoRA)            vs  New: Unified 1bit + LoRA      ║");
-        println!("╚══════════════════════════════════════════════════════════════════════════════╝");
+        println!(
+            "╔══════════════════════════════════════════════════════════════════════════════╗"
+        );
+        println!(
+            "║  PER-DEVICE EVAL: OLD vs NEW COMPARISON                                      ║"
+        );
+        println!(
+            "║  Old: Per-tier models (no LoRA)            vs  New: Unified 1bit + LoRA      ║"
+        );
+        println!(
+            "╚══════════════════════════════════════════════════════════════════════════════╝"
+        );
     } else {
-        println!("╔══════════════════════════════════════════════════════════════════════════════╗");
-        println!("║  PER-DEVICE REAL-WORLD EVAL                                                  ║");
-        println!("║  12 Profiles × 251 Tasks × Real Model Inference (Q1_0 + LoRA)                ║");
-        println!("╚══════════════════════════════════════════════════════════════════════════════╝");
+        println!(
+            "╔══════════════════════════════════════════════════════════════════════════════╗"
+        );
+        println!(
+            "║  PER-DEVICE REAL-WORLD EVAL                                                  ║"
+        );
+        println!(
+            "║  12 Profiles × 251 Tasks × Real Model Inference (Q1_0 + LoRA)                ║"
+        );
+        println!(
+            "╚══════════════════════════════════════════════════════════════════════════════╝"
+        );
     }
     println!();
 
     // Load dataset
-    let dataset_path = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("datasets/multitask/multitask_dataset_v2.json");
+    let dataset_path =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("datasets/multitask/multitask_dataset_v2.json");
     let dataset_str = match std::fs::read_to_string(&dataset_path) {
         Ok(s) => s,
         Err(e) => {
@@ -1410,7 +1646,12 @@ pub fn run_with_options(compare_old: bool) {
         }
     };
 
-    println!("Dataset: {} v{} ({} tasks)", dataset.name, dataset.version, dataset.tasks.len());
+    println!(
+        "Dataset: {} v{} ({} tasks)",
+        dataset.name,
+        dataset.version,
+        dataset.tasks.len()
+    );
     println!();
 
     // Run new approach (unified Q1_0 + LoRA)
@@ -1423,7 +1664,13 @@ pub fn run_with_options(compare_old: bool) {
         let (old_judgments, old_results) = run_eval_pass(&dataset, &old_profiles, "OLD", 19000);
 
         // Print comparison
-        print_comparison_report(&old_judgments, &new_judgments, &dataset, &old_results, &new_results);
+        print_comparison_report(
+            &old_judgments,
+            &new_judgments,
+            &dataset,
+            &old_results,
+            &new_results,
+        );
     } else {
         print_report(&new_judgments, &dataset);
     }
@@ -1451,7 +1698,8 @@ fn run_eval_pass(
     }
 
     // Sort model groups for deterministic order
-    let mut sorted_models: Vec<(String, Vec<DeviceProfileInfo>)> = model_groups.into_iter().collect();
+    let mut sorted_models: Vec<(String, Vec<DeviceProfileInfo>)> =
+        model_groups.into_iter().collect();
     sorted_models.sort_by_key(|(pack_id, _)| pack_id.clone());
 
     let mut all_results: HashMap<String, Vec<TaskResult>> = HashMap::new();
@@ -1483,11 +1731,15 @@ fn run_eval_pass(
                 ServerType::MlxServer => "kchat-mlx-server",
             };
 
-            println!("┌──────────────────────────────────────────────────────────────────────────────┐");
+            println!(
+                "┌──────────────────────────────────────────────────────────────────────────────┐"
+            );
             println!("│ Model: {} ({})", config.display_name, server_type_name);
             println!("│  Pack: {}  Port: {}", pack_id, port);
             println!("│  Path: {}", config.model_path.display());
-            println!("├──────────────────────────────────────────────────────────────────────────────┤");
+            println!(
+                "├──────────────────────────────────────────────────────────────────────────────┤"
+            );
 
             print!("│  Starting server... ");
             std::io::stdout().flush().ok();
@@ -1528,12 +1780,14 @@ fn run_eval_pass(
 
             println!();
             println!("│  {} tasks completed", results.len());
-            println!("└──────────────────────────────────────────────────────────────────────────────┘");
+            println!(
+                "└──────────────────────────────────────────────────────────────────────────────┘"
+            );
             println!();
 
             all_results.insert(pack_id.clone(), results);
 
-            if let Ok(mut s) = server.as_mut() {
+            if let Ok(s) = server.as_mut() {
                 s.stop();
             }
         }
@@ -1591,9 +1845,15 @@ fn run_model_with_lora(
     // Determine server type and LoRA adapter finder based on pack
     let is_mlx = pack_id == "bonsai-1.7b-mlx-1bit";
     let (server_label, server_type) = if is_mlx {
-        ("Bonsai-1.7B-MLX-1bit + LoRA (Swift mlx-server)", ServerType::MlxServer)
+        (
+            "Bonsai-1.7B-MLX-1bit + LoRA (Swift mlx-server)",
+            ServerType::MlxServer,
+        )
     } else {
-        ("Bonsai-1.7B-Q1_0 + LoRA (llama-server)", ServerType::LlamaServer)
+        (
+            "Bonsai-1.7B-Q1_0 + LoRA (llama-server)",
+            ServerType::LlamaServer,
+        )
     };
 
     println!("┌──────────────────────────────────────────────────────────────────────────────┐");
@@ -1613,7 +1873,13 @@ fn run_model_with_lora(
             find_lora_adapter(family, "en")
         };
 
-        println!("│  LoRA group {}/{}: {} ({} tasks)", group_idx + 1, lora_groups.len(), family, task_indices.len());
+        println!(
+            "│  LoRA group {}/{}: {} ({} tasks)",
+            group_idx + 1,
+            lora_groups.len(),
+            family,
+            task_indices.len()
+        );
 
         let config = match get_model_config_with_lora(pack_id, port, lora_path.clone()) {
             Some(c) => c,
@@ -1626,7 +1892,10 @@ fn run_model_with_lora(
         };
 
         let lora_label = match &lora_path {
-            Some(p) => format!("LoRA: {}", p.file_name().unwrap_or_default().to_string_lossy()),
+            Some(p) => format!(
+                "LoRA: {}",
+                p.file_name().unwrap_or_default().to_string_lossy()
+            ),
             None => "LoRA: none (base model)".to_string(),
         };
         println!("│  {}", lora_label);
@@ -1856,7 +2125,10 @@ fn print_comparison_report(
 
     // Summary table
     println!("┌──────────────────────────────────────────────────────────────────────────────┐");
-    println!("│ {:<30} │ {:<6} │ {:<8} │ {:<8} │ {:<8} │", "Profile", "Tier", "Old Q", "New Q", "Delta");
+    println!(
+        "│ {:<30} │ {:<6} │ {:<8} │ {:<8} │ {:<8} │",
+        "Profile", "Tier", "Old Q", "New Q", "Delta"
+    );
     println!("├──────────────────────────────────────────────────────────────────────────────┤");
 
     let mut old_total_q = 0.0;
@@ -1874,9 +2146,14 @@ fn print_comparison_report(
             format!("{:.3}", delta)
         };
 
-        println!("│ {:<30} │ {:<6} │ {:>8.3} │ {:>8.3} │ {:>8} │",
+        println!(
+            "│ {:<30} │ {:<6} │ {:>8.3} │ {:>8.3} │ {:>8} │",
             &new_j.profile_name[..new_j.profile_name.len().min(30)],
-            new_j.tier, old_q, new_q, delta_str);
+            new_j.tier,
+            old_q,
+            new_q,
+            delta_str
+        );
 
         old_total_q += old_q;
         new_total_q += new_q;
@@ -1884,15 +2161,26 @@ fn print_comparison_report(
     }
 
     println!("├──────────────────────────────────────────────────────────────────────────────┤");
-    let avg_old = if count > 0 { old_total_q / count as f64 } else { 0.0 };
-    let avg_new = if count > 0 { new_total_q / count as f64 } else { 0.0 };
+    let avg_old = if count > 0 {
+        old_total_q / count as f64
+    } else {
+        0.0
+    };
+    let avg_new = if count > 0 {
+        new_total_q / count as f64
+    } else {
+        0.0
+    };
     let avg_delta = avg_new - avg_old;
     let delta_str = if avg_delta >= 0.0 {
         format!("+{:.3}", avg_delta)
     } else {
         format!("{:.3}", avg_delta)
     };
-    println!("│ {:<30} │ {:<6} │ {:>8.3} │ {:>8.3} │ {:>8} │", "AVERAGE", "", avg_old, avg_new, delta_str);
+    println!(
+        "│ {:<30} │ {:<6} │ {:>8.3} │ {:>8.3} │ {:>8} │",
+        "AVERAGE", "", avg_old, avg_new, delta_str
+    );
     println!("└──────────────────────────────────────────────────────────────────────────────┘");
     println!();
 
@@ -1911,12 +2199,15 @@ fn print_comparison_report(
     let mut categories: Vec<String> = non_apple_profiles
         .iter()
         .flat_map(|j| j.per_category.keys())
-        .map(|s| s.clone())
+        .cloned()
         .collect();
     categories.sort();
     categories.dedup();
 
-    println!("│ {:<25} │ {:>10} │ {:>10} │ {:>10} │", "Category", "Old Pass", "New Pass", "Delta");
+    println!(
+        "│ {:<25} │ {:>10} │ {:>10} │ {:>10} │",
+        "Category", "Old Pass", "New Pass", "Delta"
+    );
     println!("├──────────────────────────────────────────────────────────────────────────────┤");
 
     for cat in &categories {
@@ -1932,8 +2223,15 @@ fn print_comparison_report(
             .map(|(p, _)| p)
             .sum();
         let delta = new_pass as i64 - old_pass as i64;
-        let delta_str = if delta >= 0 { format!("+{}", delta) } else { format!("{}", delta) };
-        println!("│ {:<25} │ {:>10} │ {:>10} │ {:>10} │", cat, old_pass, new_pass, delta_str);
+        let delta_str = if delta >= 0 {
+            format!("+{}", delta)
+        } else {
+            format!("{}", delta)
+        };
+        println!(
+            "│ {:<25} │ {:>10} │ {:>10} │ {:>10} │",
+            cat, old_pass, new_pass, delta_str
+        );
     }
     println!("└──────────────────────────────────────────────────────────────────────────────┘");
     println!();
@@ -1949,8 +2247,15 @@ fn print_comparison_report(
 
     println!("╔══════════════════════════════════════════════════════════════════════════════╗");
     println!("║  RESULT: {}  (avg delta: {:+.4})", winner, avg_delta);
-    println!("║  Old avg quality: {:.4}  |  New avg quality: {:.4}", avg_old, avg_new);
-    println!("║  Tasks per profile: {}  |  Profiles: {}", dataset.tasks.len(), count);
+    println!(
+        "║  Old avg quality: {:.4}  |  New avg quality: {:.4}",
+        avg_old, avg_new
+    );
+    println!(
+        "║  Tasks per profile: {}  |  Profiles: {}",
+        dataset.tasks.len(),
+        count
+    );
     println!("╚══════════════════════════════════════════════════════════════════════════════╝");
 }
 
@@ -1960,19 +2265,25 @@ fn run_task(server_url: &str, task: &TaskSpec, server_type: &ServerType) -> Task
     // Boost max_tokens for MLX models that generate thinking tokens (Bonsai MLX)
     // The thinking portion can consume 50-100 tokens before the actual answer
     let effective_max_tokens = match server_type {
-        ServerType::MlxServer => (task.max_tokens as u32).saturating_mul(3).max(task.max_tokens as u32 * 2),
+        ServerType::MlxServer => task.max_tokens.saturating_mul(3).max(task.max_tokens * 2),
         ServerType::LlamaServer => task.max_tokens,
     };
 
-    let response = send_completion(server_url, &task.prompt, effective_max_tokens, 0.7, task.grammar.as_ref());
+    let response = send_completion(
+        server_url,
+        &task.prompt,
+        effective_max_tokens,
+        0.7,
+        task.grammar.as_ref(),
+    );
 
     let elapsed_ms = start.elapsed().as_millis() as u64;
 
     match response {
         Ok(resp) => {
             let output_clean = clean_output(&resp.content);
-            let success = resp.tokens_predicted >= task.expected_min_tokens as u32
-                && !output_clean.is_empty();
+            let success =
+                resp.tokens_predicted >= task.expected_min_tokens && !output_clean.is_empty();
 
             let (quality_score, quality_pass) = if let Some(check) = &task.quality_check {
                 let score = run_quality_check(&output_clean, check);
@@ -2063,7 +2374,11 @@ fn compute_judgment(
     }
 
     // Performance metrics
-    let mut ttfts: Vec<u64> = results.iter().filter(|r| r.ttft_ms > 0).map(|r| r.ttft_ms).collect();
+    let mut ttfts: Vec<u64> = results
+        .iter()
+        .filter(|r| r.ttft_ms > 0)
+        .map(|r| r.ttft_ms)
+        .collect();
     ttfts.sort();
     let mut decodes: Vec<f64> = results
         .iter()
@@ -2072,13 +2387,21 @@ fn compute_judgment(
         .collect();
     decodes.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
-    let ttft_p50 = if ttfts.is_empty() { 0 } else { ttfts[ttfts.len() / 2] };
+    let ttft_p50 = if ttfts.is_empty() {
+        0
+    } else {
+        ttfts[ttfts.len() / 2]
+    };
     let ttft_p95 = if ttfts.is_empty() {
         0
     } else {
         ttfts[(ttfts.len() * 95) / 100]
     };
-    let decode_p50 = if decodes.is_empty() { 0.0 } else { decodes[decodes.len() / 2] };
+    let decode_p50 = if decodes.is_empty() {
+        0.0
+    } else {
+        decodes[decodes.len() / 2]
+    };
     let decode_p95 = if decodes.is_empty() {
         0.0
     } else {
@@ -2093,12 +2416,22 @@ fn compute_judgment(
         _ => &dataset.performance_targets.low_tier,
     };
 
-    let task_rate = if total > 0 { passed as f64 / total as f64 } else { 0.0 };
-    let quality_rate = if total > 0 { quality_passed as f64 / total as f64 } else { 0.0 };
+    let task_rate = if total > 0 {
+        passed as f64 / total as f64
+    } else {
+        0.0
+    };
+    let quality_rate = if total > 0 {
+        quality_passed as f64 / total as f64
+    } else {
+        0.0
+    };
     // Average quality score (0.0-1.0) across all tasks — more granular than binary pass rate
     let quality_score_avg = if total > 0 {
         results.iter().map(|r| r.quality_score).sum::<f64>() / total as f64
-    } else { 0.0 };
+    } else {
+        0.0
+    };
 
     let perf_target_met = ttft_p95 <= targets.ttft_p95_ms && decode_p50 >= targets.decode_p50_tps;
     let quality_target_met = quality_score_avg >= 0.70;
@@ -2126,11 +2459,20 @@ fn compute_judgment(
     let overall_score = (task_score + quality_score + ttft_score + decode_score) * 100.0;
 
     let (judgment, reason) = if overall_score >= 75.0 {
-        (Judgment::Pass, format!("score {:.0}% — meets thresholds", overall_score))
+        (
+            Judgment::Pass,
+            format!("score {:.0}% — meets thresholds", overall_score),
+        )
     } else if overall_score >= 50.0 {
-        (Judgment::Marginal, format!("score {:.0}% — below some thresholds", overall_score))
+        (
+            Judgment::Marginal,
+            format!("score {:.0}% — below some thresholds", overall_score),
+        )
     } else {
-        (Judgment::Fail, format!("score {:.0}% — below minimum thresholds", overall_score))
+        (
+            Judgment::Fail,
+            format!("score {:.0}% — below minimum thresholds", overall_score),
+        )
     };
 
     DeviceJudgment {
@@ -2161,13 +2503,10 @@ fn compute_judgment(
 fn print_report(judgments: &[DeviceJudgment], dataset: &MultitaskDataset) {
     // Per-profile detailed report
     for (idx, j) in judgments.iter().enumerate() {
-        println!("┌──────────────────────────────────────────────────────────────────────────────┐");
         println!(
-            "│ [{}/12] {} — {} tier",
-            idx + 1,
-            j.profile_name,
-            j.tier
+            "┌──────────────────────────────────────────────────────────────────────────────┐"
         );
+        println!("│ [{}/12] {} — {} tier", idx + 1, j.profile_name, j.tier);
         println!("│  Model: {}", j.model);
 
         // Per-category results
@@ -2175,16 +2514,34 @@ fn print_report(judgments: &[DeviceJudgment], dataset: &MultitaskDataset) {
         let mut categories: Vec<(&String, &(usize, usize))> = j.per_category.iter().collect();
         categories.sort_by_key(|(k, _)| k.as_str());
         for (cat, (passed, total)) in &categories {
-            let pct = if *total > 0 { *passed as f64 / *total as f64 * 100.0 } else { 0.0 };
+            let pct = if *total > 0 {
+                *passed as f64 / *total as f64 * 100.0
+            } else {
+                0.0
+            };
             println!("│    {:<22} {}/{} passed ({:.0}%)", cat, passed, total, pct);
         }
 
         // Overall task/quality
-        let task_pct = if j.tasks_total > 0 { j.tasks_passed as f64 / j.tasks_total as f64 * 100.0 } else { 0.0 };
-        let qual_pct = if j.tasks_total > 0 { j.quality_passed as f64 / j.tasks_total as f64 * 100.0 } else { 0.0 };
+        let task_pct = if j.tasks_total > 0 {
+            j.tasks_passed as f64 / j.tasks_total as f64 * 100.0
+        } else {
+            0.0
+        };
+        let qual_pct = if j.tasks_total > 0 {
+            j.quality_passed as f64 / j.tasks_total as f64 * 100.0
+        } else {
+            0.0
+        };
         println!("│  OVERALL");
-        println!("│    Task success:    {}/{} ({:.0}%)", j.tasks_passed, j.tasks_total, task_pct);
-        println!("│    Quality pass:    {}/{} ({:.0}%)", j.quality_passed, j.tasks_total, qual_pct);
+        println!(
+            "│    Task success:    {}/{} ({:.0}%)",
+            j.tasks_passed, j.tasks_total, task_pct
+        );
+        println!(
+            "│    Quality pass:    {}/{} ({:.0}%)",
+            j.quality_passed, j.tasks_total, qual_pct
+        );
         println!("│    Quality score:   {:.1}/1.0 avg", j.quality_score_avg);
 
         // Performance
@@ -2195,8 +2552,16 @@ fn print_report(judgments: &[DeviceJudgment], dataset: &MultitaskDataset) {
             _ => &dataset.performance_targets.low_tier,
         };
         println!("│  PERFORMANCE");
-        let ttft_mark = if j.ttft_p95_ms <= targets.ttft_p95_ms { "✓" } else { "✗" };
-        let decode_mark = if j.decode_p50_tps >= targets.decode_p50_tps { "✓" } else { "✗" };
+        let ttft_mark = if j.ttft_p95_ms <= targets.ttft_p95_ms {
+            "✓"
+        } else {
+            "✗"
+        };
+        let decode_mark = if j.decode_p50_tps >= targets.decode_p50_tps {
+            "✓"
+        } else {
+            "✗"
+        };
         println!(
             "│    TTFT P50: {:>5}ms  P95: {:>5}ms  (target: {}ms) {}",
             j.ttft_p50_ms, j.ttft_p95_ms, targets.ttft_p95_ms, ttft_mark
@@ -2208,16 +2573,18 @@ fn print_report(judgments: &[DeviceJudgment], dataset: &MultitaskDataset) {
 
         // Judgment
         let judge_color = match j.judgment {
-            Judgment::Pass => "\x1b[32m",  // green
+            Judgment::Pass => "\x1b[32m",     // green
             Judgment::Marginal => "\x1b[33m", // yellow
-            Judgment::Fail => "\x1b[31m",   // red
+            Judgment::Fail => "\x1b[31m",     // red
         };
         println!(
             "│  \x1b[1mJUDGMENT: {}{} ({:.0}%)\x1b[0m",
             judge_color, j.judgment, j.overall_score
         );
         println!("│    {}", j.judgment_reason);
-        println!("└──────────────────────────────────────────────────────────────────────────────┘");
+        println!(
+            "└──────────────────────────────────────────────────────────────────────────────┘"
+        );
         println!();
     }
 
@@ -2225,7 +2592,10 @@ fn print_report(judgments: &[DeviceJudgment], dataset: &MultitaskDataset) {
     println!("╔══════════════════════════════════════════════════════════════════════════════╗");
     println!("║  JUDGMENT SUMMARY                                                            ║");
     println!("╠══════════════════════════════════════════════════════════════════════════════╣");
-    println!("║ {:<28} {:<5} {:<22} {:<5} {:>4.0}% {:>5.0}% ║", "Device", "Tier", "Model", "Judge", "Score", "QScore");
+    println!(
+        "║ {:<28} {:<5} {:<22} {:<5} {:>4.0}% {:>5.0}% ║",
+        "Device", "Tier", "Model", "Judge", "Score", "QScore"
+    );
     println!("╠══════════════════════════════════════════════════════════════════════════════╣");
 
     for j in judgments {
@@ -2246,23 +2616,38 @@ fn print_report(judgments: &[DeviceJudgment], dataset: &MultitaskDataset) {
         };
         println!(
             "║ {:<28} {:<5} {:<22} {}{:<5}\x1b[0m {:>4.0}% {:>4.0}% ║",
-            short_name, j.tier, short_model, judge_color, j.judgment, j.overall_score, j.quality_score_avg * 100.0
+            short_name,
+            j.tier,
+            short_model,
+            judge_color,
+            j.judgment,
+            j.overall_score,
+            j.quality_score_avg * 100.0
         );
     }
 
     println!("╚══════════════════════════════════════════════════════════════════════════════╝");
 
     // Overall stats
-    let pass_count = judgments.iter().filter(|j| matches!(j.judgment, Judgment::Pass)).count();
+    let pass_count = judgments
+        .iter()
+        .filter(|j| matches!(j.judgment, Judgment::Pass))
+        .count();
     let marg_count = judgments
         .iter()
         .filter(|j| matches!(j.judgment, Judgment::Marginal))
         .count();
-    let fail_count = judgments.iter().filter(|j| matches!(j.judgment, Judgment::Fail)).count();
+    let fail_count = judgments
+        .iter()
+        .filter(|j| matches!(j.judgment, Judgment::Fail))
+        .count();
 
     println!();
     println!(
         "  PASS: {}  MARGINAL: {}  FAIL: {}  (of {} profiles)",
-        pass_count, marg_count, fail_count, judgments.len()
+        pass_count,
+        marg_count,
+        fail_count,
+        judgments.len()
     );
 }

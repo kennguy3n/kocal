@@ -58,7 +58,10 @@ pub struct VisionEncoderVerdict {
 
 impl VisionEncoderVerdict {
     pub fn new(descriptor: MediaDescriptor, embedding: Vec<f32>) -> Self {
-        Self { descriptor, embedding }
+        Self {
+            descriptor,
+            embedding,
+        }
     }
 }
 
@@ -115,7 +118,10 @@ impl VisionImageClassifier for VisionEncoderAdapter {
         self.encode_image_to_vec(image_bytes)
     }
 
-    fn classify_image(&self, image_bytes: &[u8]) -> Result<VisionEncoderVerdict, VisionEncoderError> {
+    fn classify_image(
+        &self,
+        image_bytes: &[u8],
+    ) -> Result<VisionEncoderVerdict, VisionEncoderError> {
         let embedding = self.encode_image_to_vec(image_bytes)?;
         let descriptor = (self.score_mapper)(&embedding);
         Ok(VisionEncoderVerdict::new(descriptor, embedding))
@@ -164,16 +170,21 @@ impl VisionEncoderAdapterBuilder {
 
     /// Set the score mapper that converts a 512-dim embedding to MediaDescriptor scores.
     /// If not set, a placeholder mapper returns all-None scores.
-    pub fn with_score_mapper(mut self, mapper: impl Fn(&[f32]) -> MediaDescriptor + Send + Sync + 'static) -> Self {
+    pub fn with_score_mapper(
+        mut self,
+        mapper: impl Fn(&[f32]) -> MediaDescriptor + Send + Sync + 'static,
+    ) -> Self {
         self.score_mapper = Some(Box::new(mapper));
         self
     }
 
     /// Validate and build the adapter.
     pub fn build(self) -> Result<VisionEncoderAdapter, VisionEncoderError> {
-        let model_source = self.model_source.ok_or(VisionEncoderError::InvalidConfiguration {
-            reason: "missing mobileclip onnx model".into(),
-        })?;
+        let model_source = self
+            .model_source
+            .ok_or(VisionEncoderError::InvalidConfiguration {
+                reason: "missing mobileclip onnx model".into(),
+            })?;
 
         let session = match model_source {
             ModelSource::File(path) => MobileClipSession::from_file(path, self.intra_threads),
@@ -197,7 +208,10 @@ impl VisionEncoderAdapterBuilder {
             })
         });
 
-        Ok(VisionEncoderAdapter { session, score_mapper })
+        Ok(VisionEncoderAdapter {
+            session,
+            score_mapper,
+        })
     }
 }
 
@@ -210,7 +224,10 @@ mod tests {
         let err = VisionEncoderAdapter::builder()
             .build()
             .expect_err("missing model must be rejected");
-        assert!(matches!(err, VisionEncoderError::InvalidConfiguration { .. }));
+        assert!(matches!(
+            err,
+            VisionEncoderError::InvalidConfiguration { .. }
+        ));
     }
 
     #[test]
@@ -220,6 +237,9 @@ mod tests {
             .with_onnx_model_bytes(b"not an onnx model".to_vec())
             .build()
             .expect_err("garbage bytes must fail");
-        assert!(matches!(err, VisionEncoderError::Session(MobileClipSessionError::LoadFailed { .. })));
+        assert!(matches!(
+            err,
+            VisionEncoderError::Session(MobileClipSessionError::LoadFailed { .. })
+        ));
     }
 }

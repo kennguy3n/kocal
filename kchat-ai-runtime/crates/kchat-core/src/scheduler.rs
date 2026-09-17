@@ -201,21 +201,14 @@ impl Scheduler {
         match TierSelection::re_evaluate(state.current_tier, caps) {
             Ok(new_tier) => {
                 if new_tier != state.current_tier {
-                    tracing::info!(
-                        "Tier changed: {:?} → {:?}",
-                        state.current_tier,
-                        new_tier
-                    );
+                    tracing::info!("Tier changed: {:?} → {:?}", state.current_tier, new_tier);
                     state.current_tier = new_tier;
                 }
             }
             Err(e) => {
                 // Fail-safe: downgrade to Low to avoid heavy workloads
                 // on a device with uncertain capabilities
-                tracing::warn!(
-                    "Tier re-evaluation failed, downgrading to Low: {}",
-                    e
-                );
+                tracing::warn!("Tier re-evaluation failed, downgrading to Low: {}", e);
                 state.current_tier = DeviceTier::Low;
             }
         }
@@ -278,7 +271,7 @@ mod tests {
         let caps = DeviceCapabilities {
             platform: "ios".into(),
             physical_memory: 3 * 1024 * 1024 * 1024,
-            safe_allocatable_memory: 1 * 1024 * 1024 * 1024,
+            safe_allocatable_memory: 1024 * 1024 * 1024,
             cpu_arch: "aarch64".into(),
             cpu_cores: 4,
             performance_cores: None,
@@ -315,8 +308,7 @@ mod tests {
         assert!(!scheduler.should_unload_model("ios"));
 
         // Simulate idle by setting last_model_load to the past
-        *scheduler.last_model_load.lock() =
-            Some(Instant::now() - Duration::from_secs(60));
+        *scheduler.last_model_load.lock() = Some(Instant::now() - Duration::from_secs(60));
         assert!(scheduler.should_unload_model("ios"));
     }
 }

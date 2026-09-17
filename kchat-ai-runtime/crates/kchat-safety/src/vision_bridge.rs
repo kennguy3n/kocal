@@ -116,7 +116,10 @@ mod tests {
             Ok(vec![0.0; 512])
         }
 
-        fn classify_image(&self, _image_bytes: &[u8]) -> Result<VisionEncoderVerdict, VisionEncoderError> {
+        fn classify_image(
+            &self,
+            _image_bytes: &[u8],
+        ) -> Result<VisionEncoderVerdict, VisionEncoderError> {
             self.descriptor
                 .clone()
                 .map(|d| VisionEncoderVerdict::new(d, vec![0.0; 512]))

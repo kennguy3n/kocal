@@ -12,11 +12,13 @@
 //! and immediately before execution.
 
 pub mod artifact;
+pub mod audit;
 pub mod auth;
 pub mod toolplan;
-pub mod audit;
 
-pub use artifact::{ArtifactAst, ArtifactNode, ArtifactNodeId, ArtifactType, ArtifactOperation, OperationValidator};
+pub use artifact::{
+    ArtifactAst, ArtifactNode, ArtifactNodeId, ArtifactOperation, ArtifactType, OperationValidator,
+};
+pub use audit::{AuditEntry, AuditLog, AuditOutcome};
 pub use auth::{AuthContext, ConfirmationClass, Permission, RbacBroker};
 pub use toolplan::{ToolManifest, ToolPlan, ToolPlanStep, ToolPlanValidator};
-pub use audit::{AuditEntry, AuditLog, AuditOutcome};

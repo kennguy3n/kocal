@@ -43,12 +43,10 @@ impl BackendType {
         // (e.g. falling back to CPU on Low tier if MLX is unavailable).
         match platform {
             "ios" => Some(BackendType::Mlx),
-            "macos" => {
-                match cpu_arch {
-                    "aarch64" => Some(BackendType::Mlx),
-                    _ => Some(BackendType::LlamaCppCpu),
-                }
-            }
+            "macos" => match cpu_arch {
+                "aarch64" => Some(BackendType::Mlx),
+                _ => Some(BackendType::LlamaCppCpu),
+            },
             "android" | "windows" => Some(BackendType::LlamaCppVulkan),
             _ => Some(BackendType::LlamaCppCpu),
         }
@@ -86,6 +84,11 @@ pub struct BackendConfig {
     /// Defaults to Fast for backward compatibility.
     #[serde(default)]
     pub model_quality: ModelQuality,
+    /// Enable same-model MTP speculative decoding when the loaded model has
+    /// MTP draft heads (e.g. next-gen architectures). Silently ignored when
+    /// the model or backend does not support it.
+    #[serde(default)]
+    pub speculative: bool,
 }
 
 impl BackendConfig {
@@ -115,6 +118,7 @@ impl BackendConfig {
             threads,
             batch_size: 512,
             model_quality: ModelQuality::Fast,
+            speculative: false,
         }
     }
 }
@@ -280,6 +284,26 @@ pub trait BackendAdapter: Send + Sync {
 
     /// Get the backend type.
     fn backend_type(&self) -> BackendType;
+
+    /// Attach a LoRA adapter file to the loaded model.
+    ///
+    /// The adapter is applied to subsequent generations until
+    /// [`BackendAdapter::detach_lora`] is called. Backends without LoRA
+    /// support return [`BackendError::Unavailable`].
+    fn apply_lora(&self, adapter_path: &str, scale: f32) -> Result<(), BackendError> {
+        let _ = (adapter_path, scale);
+        Err(BackendError::Unavailable(format!(
+            "LoRA not supported by {}",
+            self.backend_type().as_str()
+        )))
+    }
+
+    /// Detach the active LoRA adapter, reverting to the base model.
+    ///
+    /// Default is a no-op for backends without LoRA support.
+    fn detach_lora(&self) -> Result<(), BackendError> {
+        Ok(())
+    }
 }
 
 /// Backend errors.
@@ -401,7 +425,7 @@ mod tests {
             DeviceTier::Medium,
             "ios",
         );
-        assert_eq!(config.context_size, 2048);
+        assert_eq!(config.context_size, 8192);
         assert_eq!(config.gpu_layers, -1);
     }
 

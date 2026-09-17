@@ -13,22 +13,28 @@
 
 pub mod embeddings;
 pub mod encryption;
+pub mod provenance;
 pub mod reranker;
 pub mod retrieval;
 pub mod scope;
 pub mod store;
-pub mod provenance;
 
-pub use embeddings::{EmbeddingManager, EmbeddingProvider, EmbeddingError, cosine_similarity, MockEmbedder};
+#[cfg(feature = "gguf-embeddings")]
+pub use embeddings::GgufEmbedder;
 #[cfg(feature = "embeddings")]
 pub use embeddings::LlamaServerEmbedder;
 #[cfg(feature = "embeddings")]
 pub use embeddings::OnnxEmbedder;
-pub use encryption::{AeadKey, AeadNonce, decrypt_aead, encrypt_aead};
-pub use reranker::{MockReranker, Reranker, RerankerError};
+pub use embeddings::{
+    cosine_similarity, EmbeddingError, EmbeddingManager, EmbeddingProvider, MockEmbedder,
+};
+pub use encryption::{decrypt_aead, encrypt_aead, AeadKey, AeadNonce};
+pub use provenance::{AgentKind, Citation, CitationLocation, ProvenanceAgent, ProvenanceBundle};
 #[cfg(feature = "reranker")]
 pub use reranker::CrossEncoderReranker;
-pub use retrieval::{RetrievalResult, Retriever, RetrievalTier, HybridWeights};
-pub use scope::{Scope, ScopeId, ScopeFilter};
+#[cfg(feature = "gguf-embeddings")]
+pub use reranker::GgufReranker;
+pub use reranker::{MockReranker, Reranker, RerankerError};
+pub use retrieval::{HybridWeights, RetrievalResult, RetrievalTier, Retriever};
+pub use scope::{Scope, ScopeFilter, ScopeId};
 pub use store::{ContextStore, ContextStoreConfig, Evidence, EvidenceId};
-pub use provenance::{ProvenanceBundle, ProvenanceAgent, AgentKind, Citation, CitationLocation};

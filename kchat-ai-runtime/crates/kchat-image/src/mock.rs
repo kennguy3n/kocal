@@ -40,20 +40,50 @@ impl MockProvider {
         let mut p = Self::new();
         p.add_fixture(
             "beach",
-            vec![make_result("1", "beach at sunset", 1920, 1080, ImageOrientation::Landscape)],
+            vec![make_result(
+                "1",
+                "beach at sunset",
+                1920,
+                1080,
+                ImageOrientation::Landscape,
+            )],
         );
         p.add_fixture(
             "mountain",
             vec![
-                make_result("2", "snowy mountain peak", 1080, 1920, ImageOrientation::Portrait),
-                make_result("3", "mountain range panorama", 1920, 1080, ImageOrientation::Landscape),
+                make_result(
+                    "2",
+                    "snowy mountain peak",
+                    1080,
+                    1920,
+                    ImageOrientation::Portrait,
+                ),
+                make_result(
+                    "3",
+                    "mountain range panorama",
+                    1920,
+                    1080,
+                    ImageOrientation::Landscape,
+                ),
             ],
         );
         p.add_fixture(
             "city",
             vec![
-                make_result("4", "city skyline at night", 1920, 1080, ImageOrientation::Landscape),
-                make_result("5", "city street portrait", 1080, 1920, ImageOrientation::Portrait),
+                make_result(
+                    "4",
+                    "city skyline at night",
+                    1920,
+                    1080,
+                    ImageOrientation::Landscape,
+                ),
+                make_result(
+                    "5",
+                    "city street portrait",
+                    1080,
+                    1920,
+                    ImageOrientation::Portrait,
+                ),
                 make_result("6", "city square", 800, 800, ImageOrientation::Square),
             ],
         );
@@ -67,13 +97,7 @@ impl Default for MockProvider {
     }
 }
 
-fn make_result(
-    id: &str,
-    alt: &str,
-    w: u32,
-    h: u32,
-    o: ImageOrientation,
-) -> ImageResult {
+fn make_result(id: &str, alt: &str, w: u32, h: u32, o: ImageOrientation) -> ImageResult {
     ImageResult {
         id: id.into(),
         provider: "mock".into(),
@@ -162,8 +186,7 @@ mod tests {
     #[tokio::test]
     async fn test_mock_search_orientation_filter() {
         let p = MockProvider::with_defaults();
-        let req = ImageSearchRequest::new("mountain")
-            .with_orientation(ImageOrientation::Portrait);
+        let req = ImageSearchRequest::new("mountain").with_orientation(ImageOrientation::Portrait);
         let resp = p.search(&req, &ApiKey::default()).await.unwrap();
         assert_eq!(resp.results.len(), 1);
         assert_eq!(resp.results[0].orientation, ImageOrientation::Portrait);

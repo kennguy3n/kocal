@@ -12,12 +12,12 @@
 
 use crate::verdict::{Action, Severity};
 use fancy_regex::Regex as FRegex;
+use lru::LruCache;
+use parking_lot::Mutex;
 use regex::Regex;
 use std::collections::HashSet;
 use std::num::NonZeroUsize;
 use std::sync::{Arc, OnceLock};
-use parking_lot::Mutex;
-use lru::LruCache;
 
 /// Risk category IDs from the KChat taxonomy (kchat.guardrail.taxonomy.v1).
 /// 17 categories (0-16) — overlays can narrow but not invent new categories.
@@ -87,8 +87,12 @@ pub struct LocalSignals {
 }
 
 impl LocalSignals {
-    pub fn is_empty(&self) -> bool { self.signals.is_empty() && self.media_descriptors.is_empty() }
-    pub fn add(&mut self, signal: DetectorSignal) { self.signals.push(signal); }
+    pub fn is_empty(&self) -> bool {
+        self.signals.is_empty() && self.media_descriptors.is_empty()
+    }
+    pub fn add(&mut self, signal: DetectorSignal) {
+        self.signals.push(signal);
+    }
     pub fn with_media(mut self, media: Vec<crate::media::MediaDescriptor>) -> Self {
         self.media_descriptors = media;
         self
@@ -112,55 +116,80 @@ impl PiiDetector {
         let mut credit_card_spans: Vec<(usize, usize)> = Vec::new();
 
         // Email
-        if EMAIL_RE.get_or_init(|| Regex::new(r"[\w.+\-]+@[\w\-]+\.[\w.\-]+").unwrap()).is_match(&cleaned) {
+        if EMAIL_RE
+            .get_or_init(|| Regex::new(r"[\w.+\-]+@[\w\-]+\.[\w.\-]+").unwrap())
+            .is_match(&cleaned)
+        {
             signals.push(DetectorSignal {
-                category: categories::PRIVATE_DATA, severity: Severity::BORDERLINE,
-                confidence: 0.90, reason_code: "pii_email".into(), action: Action::Redact,
+                category: categories::PRIVATE_DATA,
+                severity: Severity::BORDERLINE,
+                confidence: 0.90,
+                reason_code: "pii_email".into(),
+                action: Action::Redact,
             });
         }
 
         // Credit card (Luhn-validated) — runs before PHONE to claim spans
-        let cc_re = CC_RE.get_or_init(|| {
-            FRegex::new(r"(?<!\d)(?:\d[ \-]?){13,19}(?!\d)").unwrap()
-        });
+        let cc_re = CC_RE.get_or_init(|| FRegex::new(r"(?<!\d)(?:\d[ \-]?){13,19}(?!\d)").unwrap());
         for m in cc_re.find_iter(&cleaned).flatten() {
             let raw = &cleaned[m.start()..m.end()];
             let digits: String = raw.chars().filter(|c| c.is_ascii_digit()).collect();
             if digits.len() >= 13 && digits.len() <= 19 && luhn_valid(&digits) {
                 credit_card_spans.push((m.start(), m.end()));
                 signals.push(DetectorSignal {
-                    category: categories::PRIVATE_DATA, severity: Severity::SEVERE,
-                    confidence: 0.95, reason_code: "pii_credit_card".into(), action: Action::Redact,
+                    category: categories::PRIVATE_DATA,
+                    severity: Severity::SEVERE,
+                    confidence: 0.95,
+                    reason_code: "pii_credit_card".into(),
+                    action: Action::Redact,
                 });
             }
         }
 
         // Phone — structural validation + credit-card span suppression
-        let phone_re = PHONE_RE.get_or_init(|| {
-            FRegex::new(r"(?<!\d)\+?\(?\d[\d\-\s().]{7,}\d(?!\d)").unwrap()
-        });
+        let phone_re = PHONE_RE
+            .get_or_init(|| FRegex::new(r"(?<!\d)\+?\(?\d[\d\-\s().]{7,}\d(?!\d)").unwrap());
         for m in phone_re.find_iter(&cleaned).flatten() {
             let raw = &cleaned[m.start()..m.end()];
             let digit_count = raw.chars().filter(|c| c.is_ascii_digit()).count();
-            if digit_count < PHONE_MIN_DIGITS { continue; }
-            if !looks_like_phone(raw) { continue; }
+            if digit_count < PHONE_MIN_DIGITS {
+                continue;
+            }
+            if !looks_like_phone(raw) {
+                continue;
+            }
             let (start, end) = (m.start(), m.end());
-            let overlaps_card = credit_card_spans.iter().any(|(s, e)| start < *e && *s < end);
-            if overlaps_card { continue; }
+            let overlaps_card = credit_card_spans
+                .iter()
+                .any(|(s, e)| start < *e && *s < end);
+            if overlaps_card {
+                continue;
+            }
             signals.push(DetectorSignal {
-                category: categories::PRIVATE_DATA, severity: Severity::BORDERLINE,
-                confidence: 0.70, reason_code: "pii_phone".into(), action: Action::Redact,
+                category: categories::PRIVATE_DATA,
+                severity: Severity::BORDERLINE,
+                confidence: 0.70,
+                reason_code: "pii_phone".into(),
+                action: Action::Redact,
             });
             break;
         }
 
         // SSN (US format with invalid-range exclusion)
-        if SSN_RE.get_or_init(|| {
-            FRegex::new(r"(?<!\d)(?!000|666|9\d{2})\d{3}-(?!00)\d{2}-(?!0000)\d{4}(?!\d)").unwrap()
-        }).is_match(&cleaned).unwrap_or(false) {
+        if SSN_RE
+            .get_or_init(|| {
+                FRegex::new(r"(?<!\d)(?!000|666|9\d{2})\d{3}-(?!00)\d{2}-(?!0000)\d{4}(?!\d)")
+                    .unwrap()
+            })
+            .is_match(&cleaned)
+            .unwrap_or(false)
+        {
             signals.push(DetectorSignal {
-                category: categories::PRIVATE_DATA, severity: Severity::SEVERE,
-                confidence: 0.95, reason_code: "pii_ssn".into(), action: Action::Redact,
+                category: categories::PRIVATE_DATA,
+                severity: Severity::SEVERE,
+                confidence: 0.95,
+                reason_code: "pii_ssn".into(),
+                action: Action::Redact,
             });
         }
 
@@ -181,7 +210,10 @@ impl PiiDetector {
         // A single case-insensitive regex covers both upper and lowercase IBANs;
         // `iban_check` internally uppercases the match before mod-97 validation.
         let iban_re = IBAN_RE_CI.get_or_init(|| {
-            FRegex::new(r"(?<![A-Za-z0-9])([A-Za-z]{2}\d{2}(?:[ ]?[A-Za-z0-9]){10,30})(?![A-Za-z0-9])").unwrap()
+            FRegex::new(
+                r"(?<![A-Za-z0-9])([A-Za-z]{2}\d{2}(?:[ ]?[A-Za-z0-9]){10,30})(?![A-Za-z0-9])",
+            )
+            .unwrap()
         });
         let mut found_iban = false;
         for m in iban_re.captures_iter(&cleaned).flatten() {
@@ -202,29 +234,40 @@ impl PiiDetector {
                         break;
                     }
                 }
-                if found_iban { break; }
+                if found_iban {
+                    break;
+                }
             }
         }
         if found_iban {
             signals.push(DetectorSignal {
-                category: categories::PRIVATE_DATA, severity: Severity::SEVERE,
-                confidence: 0.95, reason_code: "pii_iban".into(), action: Action::Redact,
+                category: categories::PRIVATE_DATA,
+                severity: Severity::SEVERE,
+                confidence: 0.95,
+                reason_code: "pii_iban".into(),
+                action: Action::Redact,
             });
         }
 
         // IP address (private/internal — not PII per se, but flagged for redaction)
-        if IP_RE.get_or_init(|| {
-            FRegex::new(r"(?<!\d)(?:\d{1,3}\.){3}\d{1,3}(?!\d)").unwrap()
-        }).is_match(&cleaned).unwrap_or(false) {
+        if IP_RE
+            .get_or_init(|| FRegex::new(r"(?<!\d)(?:\d{1,3}\.){3}\d{1,3}(?!\d)").unwrap())
+            .is_match(&cleaned)
+            .unwrap_or(false)
+        {
             signals.push(DetectorSignal {
-                category: categories::PRIVATE_DATA, severity: Severity::BORDERLINE,
-                confidence: 0.75, reason_code: "pii_ip_address".into(), action: Action::Redact,
+                category: categories::PRIVATE_DATA,
+                severity: Severity::BORDERLINE,
+                confidence: 0.75,
+                reason_code: "pii_ip_address".into(),
+                action: Action::Redact,
             });
         }
 
         // Credential leak — paired user/password tokens (multilingual)
-        if CRED_LEAK_RE.get_or_init(|| {
-            let parts: [&str; 37] = [
+        if CRED_LEAK_RE
+            .get_or_init(|| {
+                let parts: [&str; 37] = [
                 "(?si)", "(?:",
                 r"\b(?:user|account)(?:[_-]?id|name)?\b", r"|\blogin\b",
                 r"|\bemail\b", r"|\bid\b", r"|\buid\b", r"|\busuario\b",
@@ -253,24 +296,40 @@ impl PiiDetector {
                 "|\u{092a}\u{093e}\u{0938}\u{0935}\u{0930}\u{094d}\u{0921}", // Hindi पासवर्ड
                 ")\\s*[:=]\\s*\\S+",
             ];
-            FRegex::new(&parts.concat()).unwrap()
-        }).is_match(&cleaned).unwrap_or(false) {
+                FRegex::new(&parts.concat()).unwrap()
+            })
+            .is_match(&cleaned)
+            .unwrap_or(false)
+        {
             signals.push(DetectorSignal {
-                category: categories::PRIVATE_DATA, severity: Severity::SEVERE,
-                confidence: 0.90, reason_code: "pii_credentials".into(), action: Action::Redact,
+                category: categories::PRIVATE_DATA,
+                severity: Severity::SEVERE,
+                confidence: 0.90,
+                reason_code: "pii_credentials".into(),
+                action: Action::Redact,
             });
         }
 
         // Passport number (various formats: P1234567A, AB1234567, etc.)
-        if PASSPORT_RE.get_or_init(|| {
-            FRegex::new(r"(?i)(?<!\w)[A-Z]{1,2}\d{6,9}[A-Z]?(?!\w)").unwrap()
-        }).is_match(&cleaned).unwrap_or(false) {
+        if PASSPORT_RE
+            .get_or_init(|| FRegex::new(r"(?i)(?<!\w)[A-Z]{1,2}\d{6,9}[A-Z]?(?!\w)").unwrap())
+            .is_match(&cleaned)
+            .unwrap_or(false)
+        {
             // Only fire if the text mentions "passport" or "visa" context
             let lower = cleaned.to_lowercase();
-            if lower.contains("passport") || lower.contains("visa") || lower.contains("パスポート") || lower.contains("护照") || lower.contains("여권") {
+            if lower.contains("passport")
+                || lower.contains("visa")
+                || lower.contains("パスポート")
+                || lower.contains("护照")
+                || lower.contains("여권")
+            {
                 signals.push(DetectorSignal {
-                    category: categories::PRIVATE_DATA, severity: Severity::SEVERE,
-                    confidence: 0.85, reason_code: "pii_passport".into(), action: Action::Redact,
+                    category: categories::PRIVATE_DATA,
+                    severity: Severity::SEVERE,
+                    confidence: 0.85,
+                    reason_code: "pii_passport".into(),
+                    action: Action::Redact,
                 });
             }
         }
@@ -286,12 +345,17 @@ impl PiiDetector {
         }
 
         // Medical record number (MRN-XXXXXXXX pattern)
-        if MRN_RE.get_or_init(|| {
-            FRegex::new(r"(?i)(?<!\w)MRN[-_]?\d{6,12}(?!\w)").unwrap()
-        }).is_match(&cleaned).unwrap_or(false) {
+        if MRN_RE
+            .get_or_init(|| FRegex::new(r"(?i)(?<!\w)MRN[-_]?\d{6,12}(?!\w)").unwrap())
+            .is_match(&cleaned)
+            .unwrap_or(false)
+        {
             signals.push(DetectorSignal {
-                category: categories::PRIVATE_DATA, severity: Severity::SEVERE,
-                confidence: 0.85, reason_code: "pii_mrn".into(), action: Action::Redact,
+                category: categories::PRIVATE_DATA,
+                severity: Severity::SEVERE,
+                confidence: 0.85,
+                reason_code: "pii_mrn".into(),
+                action: Action::Redact,
             });
         }
 
@@ -339,30 +403,54 @@ fn luhn_valid(digits: &str) -> bool {
     let parity = len % 2;
     let mut total: u32 = 0;
     for (i, ch) in digits.bytes().enumerate() {
-        if !ch.is_ascii_digit() { return false; }
+        if !ch.is_ascii_digit() {
+            return false;
+        }
         let mut d = (ch - b'0') as u32;
-        if i % 2 == parity { d *= 2; if d > 9 { d -= 9; } }
+        if i % 2 == parity {
+            d *= 2;
+            if d > 9 {
+                d -= 9;
+            }
+        }
         total += d;
     }
-    total > 0 && total % 10 == 0
+    total > 0 && total.is_multiple_of(10)
 }
 
 /// ISO 13616 mod-97 IBAN validation.
 fn iban_check(iban: &str) -> bool {
-    let compact: String = iban.chars().filter(|c| !c.is_whitespace())
-        .flat_map(|c| c.to_uppercase()).collect();
-    if compact.len() < 15 || compact.len() > 34 { return false; }
+    let compact: String = iban
+        .chars()
+        .filter(|c| !c.is_whitespace())
+        .flat_map(|c| c.to_uppercase())
+        .collect();
+    if compact.len() < 15 || compact.len() > 34 {
+        return false;
+    }
     let bytes = compact.as_bytes();
-    if !bytes[0].is_ascii_uppercase() || !bytes[1].is_ascii_uppercase()
-        || !bytes[2].is_ascii_digit() || !bytes[3].is_ascii_digit() { return false; }
-    for &b in &bytes[4..] { if !b.is_ascii_alphanumeric() { return false; } }
+    if !bytes[0].is_ascii_uppercase()
+        || !bytes[1].is_ascii_uppercase()
+        || !bytes[2].is_ascii_digit()
+        || !bytes[3].is_ascii_digit()
+    {
+        return false;
+    }
+    for &b in &bytes[4..] {
+        if !b.is_ascii_alphanumeric() {
+            return false;
+        }
+    }
     let rearranged: String = compact[4..].chars().chain(compact[..4].chars()).collect();
     let mut expanded = String::with_capacity(rearranged.len() * 2);
     for ch in rearranged.chars() {
-        if ch.is_ascii_digit() { expanded.push(ch); }
-        else if ch.is_ascii_uppercase() {
+        if ch.is_ascii_digit() {
+            expanded.push(ch);
+        } else if ch.is_ascii_uppercase() {
             expanded.push_str(&((ch as u32 - 'A' as u32 + 10).to_string()));
-        } else { return false; }
+        } else {
+            return false;
+        }
     }
     let mut acc: u64 = 0;
     for ch in expanded.chars() {
@@ -374,18 +462,30 @@ fn iban_check(iban: &str) -> bool {
 
 /// Phone structural validation — rejects lottery sequences.
 fn looks_like_phone(raw: &str) -> bool {
-    if raw.contains('+') { return true; }
+    if raw.contains('+') {
+        return true;
+    }
     let mut run = 0usize;
     for ch in raw.chars() {
-        if ch.is_ascii_digit() { run += 1; if run >= 3 { return true; } }
-        else { run = 0; }
+        if ch.is_ascii_digit() {
+            run += 1;
+            if run >= 3 {
+                return true;
+            }
+        } else {
+            run = 0;
+        }
     }
     let mut has_digit_group = false;
     for token in raw.split_whitespace() {
         let token_digits = token.chars().filter(|c| c.is_ascii_digit()).count();
-        if token_digits == 0 { continue; }
+        if token_digits == 0 {
+            continue;
+        }
         has_digit_group = true;
-        if token_digits < 2 { return false; }
+        if token_digits < 2 {
+            return false;
+        }
     }
     has_digit_group
 }
@@ -435,25 +535,31 @@ impl ScamDetector {
             re.replace_all(text, " ").to_string()
         };
         let has_strong_scam = strong_scam_indicator_re().is_match(text).unwrap_or(false)
-            || scam_specific_context_re().is_match(&text_without_urls).unwrap_or(false);
+            || scam_specific_context_re()
+                .is_match(&text_without_urls)
+                .unwrap_or(false);
         // Conversational context — the text is discussing/asking about a suspicious
         // URL rather than promoting it. In these cases, suppress scam Block signals
         // so the URL risk Warn signal handles it (avoiding over-blocking).
-        let is_conversational = conversational_url_context_re().is_match(text).unwrap_or(false);
-        let has_suspicious_url = score_url_risk(text) >= 0.5
-            || !MalwareUrlDetector::detect(text).is_empty();
+        let is_conversational = conversational_url_context_re()
+            .is_match(text)
+            .unwrap_or(false);
+        let has_suspicious_url =
+            score_url_risk(text) >= 0.5 || !MalwareUrlDetector::detect(text).is_empty();
         let suppress_for_url_risk = is_conversational && has_suspicious_url && !has_strong_scam;
         // Suppress scam signals when the text contains harmful content indicators
         // (drug names, CSAM, hate speech, weapons sale) — these should be classified
         // by their respective harmful categories, not as scam.
-        let has_harmful_content = harmful_content_override_re().is_match(text).unwrap_or(false);
+        let has_harmful_content = harmful_content_override_re()
+            .is_match(text)
+            .unwrap_or(false);
         // Suppress scam signals when PII is detected and there's no URL —
         // the text is likely a legitimate PII sharing context (login help,
         // invoice payment, etc.) rather than a scam.
         let has_pii = !PiiDetector::detect(text).is_empty();
-        let has_url = URL_RE.get_or_init(|| {
-            Regex::new(r#"(?i)(?:https?://|www\.)[^\s<>"']{3,}"#).unwrap()
-        }).is_match(text);
+        let has_url = URL_RE
+            .get_or_init(|| Regex::new(r#"(?i)(?:https?://|www\.)[^\s<>"']{3,}"#).unwrap())
+            .is_match(text);
         let suppress_for_pii = has_pii && !has_url && !has_strong_scam;
         // Boost confidence when strong scam indicators are present (specific phrases
         // that distinguish scam from URL risk). When only a generic scam pattern
@@ -461,9 +567,15 @@ impl ScamDetector {
         let confidence = if has_strong_scam { 0.93 } else { 0.82 };
         let mut seen = HashSet::new();
         for (name, re) in &patterns {
-            if suppress_for_url_risk { continue; }
-            if has_harmful_content { continue; }
-            if suppress_for_pii { continue; }
+            if suppress_for_url_risk {
+                continue;
+            }
+            if has_harmful_content {
+                continue;
+            }
+            if suppress_for_pii {
+                continue;
+            }
             if re.is_match(text).unwrap_or(false) && seen.insert(*name) {
                 signals.push(DetectorSignal {
                     category: categories::SCAM_FRAUD,
@@ -725,13 +837,19 @@ impl UrlDetector {
         let score = score_url_risk(text);
         if score >= 0.85 {
             vec![DetectorSignal {
-                category: categories::SCAM_FRAUD, severity: Severity::SEVERE,
-                confidence: score, reason_code: "url_high_risk".into(), action: Action::Warn,
+                category: categories::SCAM_FRAUD,
+                severity: Severity::SEVERE,
+                confidence: score,
+                reason_code: "url_high_risk".into(),
+                action: Action::Warn,
             }]
         } else if score >= 0.5 {
             vec![DetectorSignal {
-                category: categories::SCAM_FRAUD, severity: Severity::BORDERLINE,
-                confidence: score, reason_code: "url_moderate_risk".into(), action: Action::Warn,
+                category: categories::SCAM_FRAUD,
+                severity: Severity::BORDERLINE,
+                confidence: score,
+                reason_code: "url_moderate_risk".into(),
+                action: Action::Warn,
             }]
         } else {
             vec![]
@@ -750,11 +868,15 @@ pub struct MalwareUrlDetector;
 impl MalwareUrlDetector {
     pub fn detect(text: &str) -> Vec<DetectorSignal> {
         let cleaned = crate::normalize::strip_zero_width(text);
-        let url_re = URL_RE.get_or_init(|| {
-            Regex::new(r#"(?i)(?:https?://|www\.)[^\s<>"']{3,}"#).unwrap()
-        });
-        let urls: Vec<String> = url_re.find_iter(&cleaned).map(|m| m.as_str().to_string()).collect();
-        if urls.is_empty() { return vec![]; }
+        let url_re =
+            URL_RE.get_or_init(|| Regex::new(r#"(?i)(?:https?://|www\.)[^\s<>"']{3,}"#).unwrap());
+        let urls: Vec<String> = url_re
+            .find_iter(&cleaned)
+            .map(|m| m.as_str().to_string())
+            .collect();
+        if urls.is_empty() {
+            return vec![];
+        }
 
         let exe_ext_re = EXE_EXT_RE.get_or_init(|| {
             Regex::new(r#"(?i)\.(exe|scr|bat|msi|apk|dmg|pif|reg|vbs|jar|ps1|zip|rar|7z|tar|gz)(?:$|[/?\s])"#).unwrap()
@@ -793,7 +915,11 @@ impl MalwareUrlDetector {
             // Fire if URL has executable extension, or URL has malware path on high-risk TLD,
             // or URL is on high-risk TLD with install/suspicious context in surrounding text,
             // or URL contains suspicious path keywords (regardless of TLD)
-            if has_exe || (has_malware_path && on_high_risk_tld) || (on_high_risk_tld && has_install_context) || has_suspicious_url {
+            if has_exe
+                || (has_malware_path && on_high_risk_tld)
+                || (on_high_risk_tld && has_install_context)
+                || has_suspicious_url
+            {
                 signals.push(DetectorSignal {
                     category: categories::MALWARE_LINK,
                     severity: Severity::SEVERE,
@@ -815,17 +941,23 @@ static SUSPICIOUS_URL_RE: OnceLock<Regex> = OnceLock::new();
 /// Aggregate URL risk score in [0.0, 1.0].
 pub fn score_url_risk(normalized_text: &str) -> f64 {
     let cleaned = crate::normalize::strip_zero_width(normalized_text);
-    let email_spans: Vec<(usize, usize)> = EMAIL_RE.get_or_init(|| {
-        Regex::new(r"[\w.+\-]+@[\w\-]+\.[\w.\-]+").unwrap()
-    }).find_iter(&cleaned).map(|m| (m.start(), m.end())).collect();
+    let email_spans: Vec<(usize, usize)> = EMAIL_RE
+        .get_or_init(|| Regex::new(r"[\w.+\-]+@[\w\-]+\.[\w.\-]+").unwrap())
+        .find_iter(&cleaned)
+        .map(|m| (m.start(), m.end()))
+        .collect();
     let inside_email = |start: usize, end: usize| -> bool {
-        email_spans.iter().any(|(es, ee)| *es <= start && end <= *ee)
+        email_spans
+            .iter()
+            .any(|(es, ee)| *es <= start && end <= *ee)
     };
 
-    let url_re = URL_RE.get_or_init(|| {
-        Regex::new(r#"(?i)(?:https?://|www\.)[^\s<>"']{3,}"#).unwrap()
-    });
-    let mut urls: Vec<String> = url_re.find_iter(&cleaned).map(|m| m.as_str().to_string()).collect();
+    let url_re =
+        URL_RE.get_or_init(|| Regex::new(r#"(?i)(?:https?://|www\.)[^\s<>"']{3,}"#).unwrap());
+    let mut urls: Vec<String> = url_re
+        .find_iter(&cleaned)
+        .map(|m| m.as_str().to_string())
+        .collect();
 
     // Bare-host candidates
     let bare_re = BARE_HOST_RE.get_or_init(|| {
@@ -833,28 +965,46 @@ pub fn score_url_risk(normalized_text: &str) -> f64 {
     });
     for m in bare_re.find_iter(&cleaned).flatten() {
         let candidate = &cleaned[m.start()..m.end()];
-        if urls.iter().any(|u| u.contains(candidate) || candidate.contains(u.as_str())) { continue; }
-        if inside_email(m.start(), m.end()) { continue; }
+        if urls
+            .iter()
+            .any(|u| u.contains(candidate) || candidate.contains(u.as_str()))
+        {
+            continue;
+        }
+        if inside_email(m.start(), m.end()) {
+            continue;
+        }
         let host = extract_host(candidate);
         let (first_label, last_label) = if host.contains('.') {
             let first = host.split('.').next().unwrap_or("");
             let last = host.rsplit('.').next().unwrap_or("");
             (first.to_string(), last.to_string())
-        } else { (host.clone(), host.clone()) };
+        } else {
+            (host.clone(), host.clone())
+        };
         let lowered = candidate.to_ascii_lowercase();
         let last_known = known_tlds().contains(last_label.as_str());
         let first_shortener = url_shortener_labels().contains(first_label.as_str());
         let lookalike = lookalike_brand_re().is_match(&lowered);
-        if !last_known && !first_shortener && !lookalike { continue; }
+        if !last_known && !first_shortener && !lookalike {
+            continue;
+        }
         // Code-identifier guard — skip file.py, script.sh, main.rs
         if code_extension_overlap().contains(last_label.as_str())
             && host.chars().filter(|c| *c == '.').count() == 1
-            && !candidate.contains('/') && !candidate.contains('?')
-            && !first_shortener && !lookalike { continue; }
+            && !candidate.contains('/')
+            && !candidate.contains('?')
+            && !first_shortener
+            && !lookalike
+        {
+            continue;
+        }
         urls.push(candidate.to_string());
     }
 
-    if urls.is_empty() { return 0.0; }
+    if urls.is_empty() {
+        return 0.0;
+    }
     let mut max_score: f64 = 0.0;
     for url in &urls {
         let lowered = url.to_ascii_lowercase();
@@ -863,49 +1013,119 @@ pub fn score_url_risk(normalized_text: &str) -> f64 {
         for tld in high_risk_tlds() {
             let dot_tld = format!(".{tld}");
             let dot_tld_slash = format!(".{tld}/");
-            if (lowered.ends_with(&dot_tld) || lowered.contains(&dot_tld_slash)) && score < 0.9 { score = 0.9; }
+            if (lowered.ends_with(&dot_tld) || lowered.contains(&dot_tld_slash)) && score < 0.9 {
+                score = 0.9;
+            }
         }
         for kw in high_risk_keywords() {
-            if lowered.contains(kw) && score < 0.85 { score = 0.85; }
+            if lowered.contains(kw) && score < 0.85 {
+                score = 0.85;
+            }
         }
-        if url_shorteners().contains(host.as_str()) && score < 0.85 { score = 0.85; }
+        if url_shorteners().contains(host.as_str()) && score < 0.85 {
+            score = 0.85;
+        }
         let first_label = host.split('.').next().unwrap_or(host.as_str());
-        if url_shortener_labels().contains(first_label) && score < 0.85 { score = 0.85; }
-        if lookalike_brand_re().is_match(&lowered) && score < 0.9 { score = 0.9; }
+        if url_shortener_labels().contains(first_label) && score < 0.85 {
+            score = 0.85;
+        }
+        if lookalike_brand_re().is_match(&lowered) && score < 0.9 {
+            score = 0.9;
+        }
 
         // Bonus: multiple hyphens in hostname (common in phishing URLs)
         let hyphen_count = host.chars().filter(|c| *c == '-').count();
-        if hyphen_count >= 2 && score < 0.7 { score = 0.7; }
-        if hyphen_count >= 3 && score < 0.85 { score = 0.85; }
+        if hyphen_count >= 2 && score < 0.7 {
+            score = 0.7;
+        }
+        if hyphen_count >= 3 && score < 0.85 {
+            score = 0.85;
+        }
 
         // Bonus: URL with both brand keyword + action keyword (e.g. "paypal-secure-verify")
-        let has_brand = ["paypal", "apple", "amazon", "google", "microsoft", "netflix", "facebook",
-                         "instagram", "bank", "chase", "wells", "citi", "walmart", "target",
-                         "roblox", "office", "outlook", "dropbox", "linkedin", "twitter",
-                         "telegram", "whatsapp", "snapchat", "discord", "tiktok"].iter()
-            .any(|b| lowered.contains(b));
-        let has_action = ["verify", "login", "secure", "update", "confirm", "restore", "reset",
-                          "unlock", "suspended", "locked", "account", "password", "check",
-                          "claim", "free", "gift", "prize", "giveaway", "bonus", "reward"].iter()
-            .any(|a| lowered.contains(a));
-        if has_brand && has_action && score < 0.9 { score = 0.9; }
+        let has_brand = [
+            "paypal",
+            "apple",
+            "amazon",
+            "google",
+            "microsoft",
+            "netflix",
+            "facebook",
+            "instagram",
+            "bank",
+            "chase",
+            "wells",
+            "citi",
+            "walmart",
+            "target",
+            "roblox",
+            "office",
+            "outlook",
+            "dropbox",
+            "linkedin",
+            "twitter",
+            "telegram",
+            "whatsapp",
+            "snapchat",
+            "discord",
+            "tiktok",
+        ]
+        .iter()
+        .any(|b| lowered.contains(b));
+        let has_action = [
+            "verify",
+            "login",
+            "secure",
+            "update",
+            "confirm",
+            "restore",
+            "reset",
+            "unlock",
+            "suspended",
+            "locked",
+            "account",
+            "password",
+            "check",
+            "claim",
+            "free",
+            "gift",
+            "prize",
+            "giveaway",
+            "bonus",
+            "reward",
+        ]
+        .iter()
+        .any(|a| lowered.contains(a));
+        if has_brand && has_action && score < 0.9 {
+            score = 0.9;
+        }
 
         // Bonus: URL with numbers in hostname (e.g. "paypa1", "g00gle", "2024")
         let has_digit_in_host = host.chars().any(|c| c.is_ascii_digit());
-        if has_digit_in_host && has_brand && score < 0.85 { score = 0.85; }
+        if has_digit_in_host && has_brand && score < 0.85 {
+            score = 0.85;
+        }
 
-        if score > max_score { max_score = score; }
+        if score > max_score {
+            max_score = score;
+        }
     }
     max_score.min(1.0)
 }
 
 fn extract_host(url: &str) -> String {
     let mut lowered = url.to_ascii_lowercase();
-    if let Some(idx) = lowered.find("://") { lowered = lowered[idx + 3..].to_string(); }
-    for sep in ['/', '?', '#'] {
-        if let Some(idx) = lowered.find(sep) { lowered.truncate(idx); }
+    if let Some(idx) = lowered.find("://") {
+        lowered = lowered[idx + 3..].to_string();
     }
-    if let Some(stripped) = lowered.strip_prefix("www.") { lowered = stripped.to_string(); }
+    for sep in ['/', '?', '#'] {
+        if let Some(idx) = lowered.find(sep) {
+            lowered.truncate(idx);
+        }
+    }
+    if let Some(stripped) = lowered.strip_prefix("www.") {
+        lowered = stripped.to_string();
+    }
     lowered
 }
 
@@ -913,29 +1133,134 @@ static URL_RE: OnceLock<Regex> = OnceLock::new();
 static BARE_HOST_RE: OnceLock<FRegex> = OnceLock::new();
 
 /// Extract URLs from text for scam/URL risk checking.
+#[allow(dead_code)]
 fn extract_urls(text: &str) -> Vec<String> {
     let cleaned = crate::normalize::normalize_for_patterns(text);
-    let url_re = URL_RE.get_or_init(|| {
-        Regex::new(r"(?i)https?://[^\s<>()]+|www\.[^\s<>()]+").unwrap()
-    });
-    url_re.find_iter(&cleaned).map(|m| m.as_str().to_string()).collect()
+    let url_re =
+        URL_RE.get_or_init(|| Regex::new(r"(?i)https?://[^\s<>()]+|www\.[^\s<>()]+").unwrap());
+    url_re
+        .find_iter(&cleaned)
+        .map(|m| m.as_str().to_string())
+        .collect()
 }
 
 fn high_risk_tlds() -> &'static HashSet<&'static str> {
     static CELL: OnceLock<HashSet<&'static str>> = OnceLock::new();
-    CELL.get_or_init(|| ["zip", "mov", "top", "click", "country", "xyz", "ml", "tk", "cf", "ga", "gq", "bid", "shop", "info", "ru", "today", "world", "live", "club", "store", "online", "site", "fun", "cam", "sbs", "rest", "quest", "monster", "buzz", "icu", "loan", "click", "date", "download", "stream", "trade", "win", "review", "men", "work", "party", "click", "gdn", "racing", "accountant", "cricket", "faith", "science", "hud"].iter().copied().collect())
+    CELL.get_or_init(|| {
+        [
+            "zip",
+            "mov",
+            "top",
+            "click",
+            "country",
+            "xyz",
+            "ml",
+            "tk",
+            "cf",
+            "ga",
+            "gq",
+            "bid",
+            "shop",
+            "info",
+            "ru",
+            "today",
+            "world",
+            "live",
+            "club",
+            "store",
+            "online",
+            "site",
+            "fun",
+            "cam",
+            "sbs",
+            "rest",
+            "quest",
+            "monster",
+            "buzz",
+            "icu",
+            "loan",
+            "click",
+            "date",
+            "download",
+            "stream",
+            "trade",
+            "win",
+            "review",
+            "men",
+            "work",
+            "party",
+            "click",
+            "gdn",
+            "racing",
+            "accountant",
+            "cricket",
+            "faith",
+            "science",
+            "hud",
+        ]
+        .iter()
+        .copied()
+        .collect()
+    })
 }
 
 fn high_risk_keywords() -> &'static HashSet<&'static str> {
     static CELL: OnceLock<HashSet<&'static str>> = OnceLock::new();
-    CELL.get_or_init(|| ["login", "verify", "account", "secure", "update", "confirm", "restore", "reset", "unlock", "suspended", "locked", "compromised", "free", "gift", "prize", "giveaway", "claim", "bonus", "reward", "crack", "hack", "spy", "track", "generator", "premium", "deal", "promo", "download"].iter().copied().collect())
+    CELL.get_or_init(|| {
+        [
+            "login",
+            "verify",
+            "account",
+            "secure",
+            "update",
+            "confirm",
+            "restore",
+            "reset",
+            "unlock",
+            "suspended",
+            "locked",
+            "compromised",
+            "free",
+            "gift",
+            "prize",
+            "giveaway",
+            "claim",
+            "bonus",
+            "reward",
+            "crack",
+            "hack",
+            "spy",
+            "track",
+            "generator",
+            "premium",
+            "deal",
+            "promo",
+            "download",
+        ]
+        .iter()
+        .copied()
+        .collect()
+    })
 }
 
 fn known_tlds() -> &'static HashSet<&'static str> {
     static CELL: OnceLock<HashSet<&'static str>> = OnceLock::new();
     CELL.get_or_init(|| {
         let mut s: HashSet<&'static str> = high_risk_tlds().iter().copied().collect();
-        for t in ["com","net","org","edu","gov","mil","int","info","biz","name","pro","io","co","ai","app","dev","me","tv","cc","ws","ly","gl","sh","gg","fm","im","so","in","site","online","store","tech","blog","cloud","page","live","news","media","design","tools","video","shop","world","us","uk","ca","au","nz","jp","fr","de","it","es","nl","se","no","dk","fi","pl","cz","hu","gr","pt","ie","at","be","ch","ro","bg","sk","si","hr","lt","lv","ee","lu","is","mt","cy","eu","cn","kr","hk","tw","sg","id","my","ph","th","vn","pk","bd","lk","np","kh","la","mm","br","mx","ar","cl","pe","ve","uy","py","bo","ec","cr","pa","gt","ni","hn","sv","do","za","ng","eg","ke","ma","tn","dz","et","gh","tz","ug","sn","ci","rw","ae","sa","qa","kw","bh","om","tr","il","ir","iq","jo","lb","ru","ua","by","kz","uz","ge","am","az"] {
+        for t in [
+            "com", "net", "org", "edu", "gov", "mil", "int", "info", "biz", "name", "pro", "io",
+            "co", "ai", "app", "dev", "me", "tv", "cc", "ws", "ly", "gl", "sh", "gg", "fm", "im",
+            "so", "in", "site", "online", "store", "tech", "blog", "cloud", "page", "live", "news",
+            "media", "design", "tools", "video", "shop", "world", "us", "uk", "ca", "au", "nz",
+            "jp", "fr", "de", "it", "es", "nl", "se", "no", "dk", "fi", "pl", "cz", "hu", "gr",
+            "pt", "ie", "at", "be", "ch", "ro", "bg", "sk", "si", "hr", "lt", "lv", "ee", "lu",
+            "is", "mt", "cy", "eu", "cn", "kr", "hk", "tw", "sg", "id", "my", "ph", "th", "vn",
+            "pk", "bd", "lk", "np", "kh", "la", "mm", "br", "mx", "ar", "cl", "pe", "ve", "uy",
+            "py", "bo", "ec", "cr", "pa", "gt", "ni", "hn", "sv", "do", "za", "ng", "eg", "ke",
+            "ma", "tn", "dz", "et", "gh", "tz", "ug", "sn", "ci", "rw", "ae", "sa", "qa", "kw",
+            "bh", "om", "tr", "il", "ir", "iq", "jo", "lb", "ru", "ua", "by", "kz", "uz", "ge",
+            "am", "az",
+        ] {
             s.insert(t);
         }
         s
@@ -944,17 +1269,43 @@ fn known_tlds() -> &'static HashSet<&'static str> {
 
 fn url_shorteners() -> &'static HashSet<&'static str> {
     static CELL: OnceLock<HashSet<&'static str>> = OnceLock::new();
-    CELL.get_or_init(|| ["bit.ly","tinyurl.com","t.co","goo.gl","t.ly","ow.ly","is.gd","buff.ly","rebrand.ly","shorturl.at","cutt.ly","bl.ink","v.gd"].iter().copied().collect())
+    CELL.get_or_init(|| {
+        [
+            "bit.ly",
+            "tinyurl.com",
+            "t.co",
+            "goo.gl",
+            "t.ly",
+            "ow.ly",
+            "is.gd",
+            "buff.ly",
+            "rebrand.ly",
+            "shorturl.at",
+            "cutt.ly",
+            "bl.ink",
+            "v.gd",
+        ]
+        .iter()
+        .copied()
+        .collect()
+    })
 }
 
 fn url_shortener_labels() -> &'static HashSet<&'static str> {
     static CELL: OnceLock<HashSet<&'static str>> = OnceLock::new();
-    CELL.get_or_init(|| ["bit","tinyurl","bitly","tiny","shorten","short","rebrand","cutt","shorturl"].iter().copied().collect())
+    CELL.get_or_init(|| {
+        [
+            "bit", "tinyurl", "bitly", "tiny", "shorten", "short", "rebrand", "cutt", "shorturl",
+        ]
+        .iter()
+        .copied()
+        .collect()
+    })
 }
 
 fn code_extension_overlap() -> &'static HashSet<&'static str> {
     static CELL: OnceLock<HashSet<&'static str>> = OnceLock::new();
-    CELL.get_or_init(|| ["py","rs","sh","cc","pl"].iter().copied().collect())
+    CELL.get_or_init(|| ["py", "rs", "sh", "cc", "pl"].iter().copied().collect())
 }
 
 fn lookalike_brand_re() -> &'static Regex {
@@ -1008,7 +1359,9 @@ fn is_word_boundary_safe(ch: Option<char>) -> bool {
     let Some(ch) = ch else { return false };
     let cp = ch as u32;
     for (lo, hi) in NO_WORD_BOUNDARY_RANGES {
-        if cp >= *lo && cp <= *hi { return false; }
+        if cp >= *lo && cp <= *hi {
+            return false;
+        }
     }
     ch.is_alphanumeric() || ch == '_'
 }
@@ -1037,7 +1390,9 @@ fn token_cache() -> &'static Mutex<LruCache<String, Arc<Regex>>> {
 
 fn cached_lexicon_regex(folded: &str) -> Arc<Regex> {
     let mut guard = token_cache().lock();
-    if let Some(re) = guard.get(folded) { return Arc::clone(re); }
+    if let Some(re) = guard.get(folded) {
+        return Arc::clone(re);
+    }
     let re = Arc::new(compile_lexicon_token(folded));
     guard.put(folded.to_string(), Arc::clone(&re));
     re
@@ -1049,7 +1404,9 @@ impl LexiconDetector {
     pub fn detect(text: &str, lexicon: &[(String, u32, Severity)]) -> Vec<DetectorSignal> {
         let mut signals = Vec::new();
         for (term, category, severity) in lexicon {
-            if term.is_empty() { continue; }
+            if term.is_empty() {
+                continue;
+            }
             let folded = caseless::default_case_fold_str(term);
             let re = cached_lexicon_regex(&folded);
             if re.is_match(text) {
@@ -1058,7 +1415,11 @@ impl LexiconDetector {
                     severity: *severity,
                     confidence: 0.75,
                     reason_code: format!("lexicon_match_{}", term.replace(' ', "_")),
-                    action: if *severity >= Severity::SEVERE { Action::Block } else { Action::Warn },
+                    action: if *severity >= Severity::SEVERE {
+                        Action::Block
+                    } else {
+                        Action::Warn
+                    },
                 });
             }
         }
@@ -1090,15 +1451,58 @@ impl PromptInjectionDetector {
         let lower = text.to_ascii_lowercase();
         let category = if lower.contains("identity theft") || lower.contains("identity_theft") {
             categories::MALWARE_LINK
-        } else if lower.contains("ssn") || lower.contains("credential") || lower.contains("password") || lower.contains("admin") || lower.contains("pii") || lower.contains("redact") || lower.contains("管理者パスワード") || lower.contains("admin123") {
+        } else if lower.contains("ssn")
+            || lower.contains("credential")
+            || lower.contains("password")
+            || lower.contains("admin")
+            || lower.contains("pii")
+            || lower.contains("redact")
+            || lower.contains("管理者パスワード")
+            || lower.contains("admin123")
+        {
             categories::PRIVATE_DATA
-        } else if lower.contains("bomb") || lower.contains("poison") || lower.contains("violence") || lower.contains("harmful content") || lower.contains("制造炸弹") || lower.contains("爆弾") || lower.contains("봄") || lower.contains("बम") || lower.contains("bomba") || lower.contains("bombe") || lower.contains("قنبلة") || lower.contains("ระเบิด") || lower.contains("bomba") {
+        } else if lower.contains("bomb")
+            || lower.contains("poison")
+            || lower.contains("violence")
+            || lower.contains("harmful content")
+            || lower.contains("制造炸弹")
+            || lower.contains("爆弾")
+            || lower.contains("봄")
+            || lower.contains("बम")
+            || lower.contains("bomba")
+            || lower.contains("bombe")
+            || lower.contains("قنبلة")
+            || lower.contains("ระเบิด")
+            || lower.contains("bomba")
+        {
             categories::VIOLENCE_THREAT
-        } else if lower.contains("drug") || lower.contains("synthesize") || lower.contains("cocaine") || lower.contains("meth") || lower.contains("lsd") || lower.contains("mdma") || lower.contains("drogas") || lower.contains("drogen") || lower.contains("drogue") || lower.contains("약물") || lower.contains("مخدرات") || lower.contains("दवा") || lower.contains("ยาเสพติด") || lower.contains("narkoba") || lower.contains("drogas") || lower.contains("마약") {
+        } else if lower.contains("drug")
+            || lower.contains("synthesize")
+            || lower.contains("cocaine")
+            || lower.contains("meth")
+            || lower.contains("lsd")
+            || lower.contains("mdma")
+            || lower.contains("drogas")
+            || lower.contains("drogen")
+            || lower.contains("drogue")
+            || lower.contains("약물")
+            || lower.contains("مخدرات")
+            || lower.contains("दवा")
+            || lower.contains("ยาเสพติด")
+            || lower.contains("narkoba")
+            || lower.contains("drogas")
+            || lower.contains("마약")
+        {
             categories::DRUGS_WEAPONS
         } else if lower.contains("stalk") || lower.contains("harass") {
             categories::HARASSMENT
-        } else if (lower.contains("fake") && (lower.contains("passport") || lower.contains("identification") || lower.contains("id"))) || lower.contains("launder") || lower.contains("fake identification") {
+        } else if (lower.contains("fake")
+            && (lower.contains("passport")
+                || lower.contains("identification")
+                || lower.contains("id")))
+            || lower.contains("launder")
+            || lower.contains("fake identification")
+        {
             categories::ILLEGAL_GOODS
         } else {
             // Default: hacking, virus, malware
@@ -1137,22 +1541,34 @@ pub fn run_all_detectors(
     let mut signals = LocalSignals::default();
 
     // PII, URL, and malware URL run on the digit-preserving view only.
-    for s in PiiDetector::detect(pattern_text) { signals.add(s); }
-    for s in UrlDetector::detect(pattern_text) { signals.add(s); }
-    for s in MalwareUrlDetector::detect(pattern_text) { signals.add(s); }
+    for s in PiiDetector::detect(pattern_text) {
+        signals.add(s);
+    }
+    for s in UrlDetector::detect(pattern_text) {
+        signals.add(s);
+    }
+    for s in MalwareUrlDetector::detect(pattern_text) {
+        signals.add(s);
+    }
 
     // Prompt injection detector runs on the digit-preserving view.
-    for s in PromptInjectionDetector::detect(pattern_text) { signals.add(s); }
+    for s in PromptInjectionDetector::detect(pattern_text) {
+        signals.add(s);
+    }
 
     // Scam and lexicon run across all defang variants — union hits, dedupe.
     let mut seen_scam: HashSet<String> = HashSet::new();
     let mut seen_lex: HashSet<String> = HashSet::new();
     for view in lexicon_views {
         for s in ScamDetector::detect(view) {
-            if seen_scam.insert(s.reason_code.clone()) { signals.add(s); }
+            if seen_scam.insert(s.reason_code.clone()) {
+                signals.add(s);
+            }
         }
         for s in LexiconDetector::detect(view, lexicon) {
-            if seen_lex.insert(s.reason_code.clone()) { signals.add(s); }
+            if seen_lex.insert(s.reason_code.clone()) {
+                signals.add(s);
+            }
         }
     }
 
@@ -1171,19 +1587,41 @@ pub fn run_all_detectors(
 ///   CHILD_SAFETY > SELF_HARM > PRIVATE_DATA > SCAM_FRAUD > HATE_SPEECH > VIOLENCE > NSFW > SPAM
 pub fn resolve_priority_chain(signals: &LocalSignals) -> Option<DetectorSignal> {
     // --- Media branches (highest priority) ---
-    if let Some(s) = child_safety_media_branch(signals) { return Some(s); }
-    if let Some(s) = self_harm_media_branch(signals) { return Some(s); }
-    if let Some(s) = extremism_media_branch(signals) { return Some(s); }
-    if let Some(s) = hate_media_branch(signals) { return Some(s); }
-    if let Some(s) = harassment_media_branch(signals) { return Some(s); }
-    if let Some(s) = drugs_weapons_media_branch(signals) { return Some(s); }
-    if let Some(s) = nsfw_media_branch(signals) { return Some(s); }
-    if let Some(s) = violence_media_branch(signals) { return Some(s); }
-    if let Some(s) = deepfake_media_branch(signals) { return Some(s); }
-    if let Some(s) = malware_media_branch(signals) { return Some(s); }
+    if let Some(s) = child_safety_media_branch(signals) {
+        return Some(s);
+    }
+    if let Some(s) = self_harm_media_branch(signals) {
+        return Some(s);
+    }
+    if let Some(s) = extremism_media_branch(signals) {
+        return Some(s);
+    }
+    if let Some(s) = hate_media_branch(signals) {
+        return Some(s);
+    }
+    if let Some(s) = harassment_media_branch(signals) {
+        return Some(s);
+    }
+    if let Some(s) = drugs_weapons_media_branch(signals) {
+        return Some(s);
+    }
+    if let Some(s) = nsfw_media_branch(signals) {
+        return Some(s);
+    }
+    if let Some(s) = violence_media_branch(signals) {
+        return Some(s);
+    }
+    if let Some(s) = deepfake_media_branch(signals) {
+        return Some(s);
+    }
+    if let Some(s) = malware_media_branch(signals) {
+        return Some(s);
+    }
 
     // --- Text-based signals ---
-    if signals.signals.is_empty() { return None; }
+    if signals.signals.is_empty() {
+        return None;
+    }
     let priority = [
         categories::CHILD_SAFETY,
         categories::SELF_HARM,
@@ -1203,9 +1641,15 @@ pub fn resolve_priority_chain(signals: &LocalSignals) -> Option<DetectorSignal> 
         categories::DEEPFAKE_SYNTHETIC,
     ];
     for &cat in &priority {
-        if let Some(best) = signals.signals.iter()
+        if let Some(best) = signals
+            .signals
+            .iter()
             .filter(|s| s.category == cat)
-            .max_by(|a, b| a.confidence.partial_cmp(&b.confidence).unwrap_or(std::cmp::Ordering::Equal))
+            .max_by(|a, b| {
+                a.confidence
+                    .partial_cmp(&b.confidence)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            })
         {
             return Some(best.clone());
         }
@@ -1222,19 +1666,21 @@ pub fn resolve_priority_chain(signals: &LocalSignals) -> Option<DetectorSignal> 
 
 /// Helper: clamp a value into `[lo, hi]`, collapsing NaN to `lo`.
 fn clamp_finite(value: f64, lo: f64, hi: f64) -> f64 {
-    if value.is_nan() { return lo; }
-    if value < lo { return lo; }
-    if value > hi { return hi; }
+    if value.is_nan() {
+        return lo;
+    }
+    if value < lo {
+        return lo;
+    }
+    if value > hi {
+        return hi;
+    }
     value
 }
 
 /// Helper: build a media branch DetectorSignal for the standard
 /// warn/strong_warn pattern (all branches except child_safety and malware).
-fn media_signal_standard(
-    score: f64,
-    category: u32,
-    reason_code: &str,
-) -> DetectorSignal {
+fn media_signal_standard(score: f64, category: u32, reason_code: &str) -> DetectorSignal {
     let (severity, action) = if score >= MEDIA_HIGH_BAND {
         (Severity::SEVERE, Action::Block)
     } else {
@@ -1258,7 +1704,11 @@ fn child_safety_media_branch(signals: &LocalSignals) -> Option<DetectorSignal> {
                 return Some(DetectorSignal {
                     category: categories::CHILD_SAFETY,
                     severity: Severity::CRITICAL,
-                    confidence: clamp_finite(score, CHILD_SAFETY_CONFIDENCE_FLOOR, CHILD_SAFETY_CONFIDENCE_CEIL),
+                    confidence: clamp_finite(
+                        score,
+                        CHILD_SAFETY_CONFIDENCE_FLOOR,
+                        CHILD_SAFETY_CONFIDENCE_CEIL,
+                    ),
                     reason_code: "CHILD_SAFETY_MEDIA".into(),
                     action: Action::Block,
                 });
@@ -1273,7 +1723,11 @@ fn self_harm_media_branch(signals: &LocalSignals) -> Option<DetectorSignal> {
     for m in &signals.media_descriptors {
         if let Some(score) = m.self_harm_score {
             if score > MEDIA_TRIGGER_THRESHOLD {
-                return Some(media_signal_standard(score, categories::SELF_HARM, "SELF_HARM_MEDIA"));
+                return Some(media_signal_standard(
+                    score,
+                    categories::SELF_HARM,
+                    "SELF_HARM_MEDIA",
+                ));
             }
         }
     }
@@ -1285,7 +1739,11 @@ fn extremism_media_branch(signals: &LocalSignals) -> Option<DetectorSignal> {
     for m in &signals.media_descriptors {
         if let Some(score) = m.extremism_score {
             if score > MEDIA_TRIGGER_THRESHOLD {
-                return Some(media_signal_standard(score, categories::EXTREMISM, "EXTREMISM_MEDIA"));
+                return Some(media_signal_standard(
+                    score,
+                    categories::EXTREMISM,
+                    "EXTREMISM_MEDIA",
+                ));
             }
         }
     }
@@ -1297,7 +1755,11 @@ fn hate_media_branch(signals: &LocalSignals) -> Option<DetectorSignal> {
     for m in &signals.media_descriptors {
         if let Some(score) = m.hate_score {
             if score > MEDIA_TRIGGER_THRESHOLD {
-                return Some(media_signal_standard(score, categories::HATE_SPEECH, "HATE_MEDIA"));
+                return Some(media_signal_standard(
+                    score,
+                    categories::HATE_SPEECH,
+                    "HATE_MEDIA",
+                ));
             }
         }
     }
@@ -1309,7 +1771,11 @@ fn harassment_media_branch(signals: &LocalSignals) -> Option<DetectorSignal> {
     for m in &signals.media_descriptors {
         if let Some(score) = m.harassment_score {
             if score > MEDIA_TRIGGER_THRESHOLD {
-                return Some(media_signal_standard(score, categories::HARASSMENT, "HARASSMENT_MEDIA"));
+                return Some(media_signal_standard(
+                    score,
+                    categories::HARASSMENT,
+                    "HARASSMENT_MEDIA",
+                ));
             }
         }
     }
@@ -1321,7 +1787,11 @@ fn drugs_weapons_media_branch(signals: &LocalSignals) -> Option<DetectorSignal> 
     for m in &signals.media_descriptors {
         if let Some(score) = m.drugs_weapons_score {
             if score > MEDIA_TRIGGER_THRESHOLD {
-                return Some(media_signal_standard(score, categories::DRUGS_WEAPONS, "DRUGS_WEAPONS_MEDIA"));
+                return Some(media_signal_standard(
+                    score,
+                    categories::DRUGS_WEAPONS,
+                    "DRUGS_WEAPONS_MEDIA",
+                ));
             }
         }
     }
@@ -1345,7 +1815,11 @@ fn violence_media_branch(signals: &LocalSignals) -> Option<DetectorSignal> {
     for m in &signals.media_descriptors {
         if let Some(score) = m.violence_score {
             if score > MEDIA_TRIGGER_THRESHOLD {
-                return Some(media_signal_standard(score, categories::VIOLENCE, "VIOLENCE_MEDIA"));
+                return Some(media_signal_standard(
+                    score,
+                    categories::VIOLENCE,
+                    "VIOLENCE_MEDIA",
+                ));
             }
         }
     }
@@ -1357,7 +1831,11 @@ fn deepfake_media_branch(signals: &LocalSignals) -> Option<DetectorSignal> {
     for m in &signals.media_descriptors {
         if let Some(score) = m.deepfake_score {
             if score > MEDIA_TRIGGER_THRESHOLD {
-                return Some(media_signal_standard(score, categories::DEEPFAKE, "DEEPFAKE_MEDIA"));
+                return Some(media_signal_standard(
+                    score,
+                    categories::DEEPFAKE,
+                    "DEEPFAKE_MEDIA",
+                ));
             }
         }
     }
@@ -1391,52 +1869,72 @@ mod tests {
 
     #[test]
     fn test_email_detected() {
-        assert!(PiiDetector::detect("contact alice@example.com").iter().any(|s| s.reason_code == "pii_email"));
+        assert!(PiiDetector::detect("contact alice@example.com")
+            .iter()
+            .any(|s| s.reason_code == "pii_email"));
     }
 
     #[test]
     fn test_credit_card_luhn_valid() {
-        assert!(PiiDetector::detect("card 4111111111111111").iter().any(|s| s.reason_code == "pii_credit_card"));
+        assert!(PiiDetector::detect("card 4111111111111111")
+            .iter()
+            .any(|s| s.reason_code == "pii_credit_card"));
     }
 
     #[test]
     fn test_credit_card_rejects_invalid_luhn() {
-        assert!(!PiiDetector::detect("4111111111111112").iter().any(|s| s.reason_code == "pii_credit_card"));
+        assert!(!PiiDetector::detect("4111111111111112")
+            .iter()
+            .any(|s| s.reason_code == "pii_credit_card"));
     }
 
     #[test]
     fn test_phone_plus_format() {
-        assert!(PiiDetector::detect("call +1-415-555-0199").iter().any(|s| s.reason_code == "pii_phone"));
+        assert!(PiiDetector::detect("call +1-415-555-0199")
+            .iter()
+            .any(|s| s.reason_code == "pii_phone"));
     }
 
     #[test]
     fn test_phone_french_groups() {
-        assert!(PiiDetector::detect("01 23 45 67 89").iter().any(|s| s.reason_code == "pii_phone"));
+        assert!(PiiDetector::detect("01 23 45 67 89")
+            .iter()
+            .any(|s| s.reason_code == "pii_phone"));
     }
 
     #[test]
     fn test_lottery_not_phone() {
-        assert!(!PiiDetector::detect("4 17 23 29 36 41").iter().any(|s| s.reason_code == "pii_phone"));
+        assert!(!PiiDetector::detect("4 17 23 29 36 41")
+            .iter()
+            .any(|s| s.reason_code == "pii_phone"));
     }
 
     #[test]
     fn test_ssn_valid() {
-        assert!(PiiDetector::detect("ssn: 123-45-6789").iter().any(|s| s.reason_code == "pii_ssn"));
+        assert!(PiiDetector::detect("ssn: 123-45-6789")
+            .iter()
+            .any(|s| s.reason_code == "pii_ssn"));
     }
 
     #[test]
     fn test_iban_valid() {
-        assert!(PiiDetector::detect("IBAN GB82WEST12345698765432").iter().any(|s| s.reason_code == "pii_iban"));
+        assert!(PiiDetector::detect("IBAN GB82WEST12345698765432")
+            .iter()
+            .any(|s| s.reason_code == "pii_iban"));
     }
 
     #[test]
     fn test_iban_invalid() {
-        assert!(!PiiDetector::detect("IBAN GB82WEST12345698765433").iter().any(|s| s.reason_code == "pii_iban"));
+        assert!(!PiiDetector::detect("IBAN GB82WEST12345698765433")
+            .iter()
+            .any(|s| s.reason_code == "pii_iban"));
     }
 
     #[test]
     fn test_credential_leak() {
-        assert!(PiiDetector::detect("user: admin password: hunter2").iter().any(|s| s.reason_code == "pii_credentials"));
+        assert!(PiiDetector::detect("user: admin password: hunter2")
+            .iter()
+            .any(|s| s.reason_code == "pii_credentials"));
     }
 
     // --- Scam tests ---
@@ -1450,7 +1948,9 @@ mod tests {
     #[test]
     fn test_scam_credential_harvest() {
         let sigs = ScamDetector::detect("Please verify your password to confirm your account");
-        assert!(sigs.iter().any(|s| s.reason_code.contains("credential_harvest")));
+        assert!(sigs
+            .iter()
+            .any(|s| s.reason_code.contains("credential_harvest")));
     }
 
     #[test]
@@ -1461,7 +1961,9 @@ mod tests {
 
     #[test]
     fn test_scam_tech_support() {
-        let sigs = ScamDetector::detect("Your computer has a virus. Call Microsoft support at +1-800-555-0199");
+        let sigs = ScamDetector::detect(
+            "Your computer has a virus. Call Microsoft support at +1-800-555-0199",
+        );
         assert!(sigs.iter().any(|s| s.reason_code.contains("tech_support")));
     }
 
@@ -1510,13 +2012,21 @@ mod tests {
     #[test]
     fn test_malware_url_zip() {
         let sigs = MalwareUrlDetector::detect("Download the cracked version of Photoshop for free at https://warez-download.ru/photoshop-crack-2024.zip");
-        assert!(!sigs.is_empty(), "expected malware signal for .zip URL, got {:?}", sigs);
+        assert!(
+            !sigs.is_empty(),
+            "expected malware signal for .zip URL, got {:?}",
+            sigs
+        );
     }
 
     #[test]
     fn test_malware_url_spy_tools() {
         let sigs = MalwareUrlDetector::detect("I found this site that lets you see anyone's private messages: https://spy-tools-online.net/hack-instagram");
-        assert!(!sigs.is_empty(), "expected malware signal for spy-tools URL, got {:?}", sigs);
+        assert!(
+            !sigs.is_empty(),
+            "expected malware signal for spy-tools URL, got {:?}",
+            sigs
+        );
     }
 
     // --- Lexicon tests ---
@@ -1528,7 +2038,11 @@ mod tests {
         assert!(!sigs.is_empty());
         // "skillful" should NOT match "kill" due to word boundary
         let sigs2 = LexiconDetector::detect("skillful work", &lex);
-        assert!(sigs2.is_empty(), "word boundary false positive: {:?}", sigs2);
+        assert!(
+            sigs2.is_empty(),
+            "word boundary false positive: {:?}",
+            sigs2
+        );
     }
 
     #[test]
@@ -1536,7 +2050,10 @@ mod tests {
         // CJK token should match without \b (CJK has no word boundaries)
         let lex = vec![("爆破".into(), categories::VIOLENCE, Severity::SEVERE)];
         let sigs = LexiconDetector::detect("爆破方法", &lex);
-        assert!(!sigs.is_empty(), "CJK lexicon should match without word boundary");
+        assert!(
+            !sigs.is_empty(),
+            "CJK lexicon should match without word boundary"
+        );
     }
 
     #[test]
@@ -1551,18 +2068,35 @@ mod tests {
     #[test]
     fn test_lexicon_arabic_match() {
         // Arabic lexicon terms should match Arabic text with question mark
-        let lex = vec![("كيف أصنع سلاحا".into(), categories::VIOLENCE, Severity::SEVERE)];
+        let lex = vec![(
+            "كيف أصنع سلاحا".into(),
+            categories::VIOLENCE,
+            Severity::SEVERE,
+        )];
         let sigs = LexiconDetector::detect("كيف أصنع سلاحا؟", &lex);
-        assert!(!sigs.is_empty(), "Arabic lexicon should match text with question mark: {:?}", sigs);
+        assert!(
+            !sigs.is_empty(),
+            "Arabic lexicon should match text with question mark: {:?}",
+            sigs
+        );
     }
 
     #[test]
     fn test_lexicon_arabic_normalized() {
         // Test Arabic matching through the full normalize_for_lexicon pipeline
         let normalized = crate::normalize::normalize_for_lexicon("كيف أصنع سلاحا؟");
-        let lex = vec![("كيف أصنع سلاحا".into(), categories::VIOLENCE, Severity::SEVERE)];
+        let lex = vec![(
+            "كيف أصنع سلاحا".into(),
+            categories::VIOLENCE,
+            Severity::SEVERE,
+        )];
         let sigs = LexiconDetector::detect(&normalized, &lex);
-        assert!(!sigs.is_empty(), "Arabic lexicon should match normalized text: normalized='{}', sigs={:?}", normalized, sigs);
+        assert!(
+            !sigs.is_empty(),
+            "Arabic lexicon should match normalized text: normalized='{}', sigs={:?}",
+            normalized,
+            sigs
+        );
     }
 
     // --- Media branch tests ---

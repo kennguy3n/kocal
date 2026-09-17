@@ -6,10 +6,19 @@
 //! llama-server-compatible HTTP API (`/completion`, `/health`).
 //!
 //! Unlike the in-process `LlamaCppBackend`, this backend communicates with
-//! the model server over HTTP. The Swift server does not support SSE
-//! streaming — it always returns the full completion in a single JSON
-//! response. `generate_stream` therefore fetches the full response and pushes
-//! word-sized chunks to the `StreamHandle` for simulated streaming.
+//! the model server over HTTP. The Swift server supports SSE streaming via
+//! `/completion/stream` (token-by-token) and `/completion` returns the full
+//! response in a single JSON body.
+//!
+//! Grammar constraints are NOT sampler-enforced by the Swift server — for
+//! `JsonSchema` grammars the schema is forwarded as `json_schema` (the server
+//! extracts a JSON payload from the output), and all grammar types are
+//! post-validated with `GrammarValidator`, so `grammar_valid` is reported
+//! truthfully rather than unconditionally true.
+//!
+//! NOTE: this backend spawns a subprocess, which only works on desktop
+//! (macOS). It cannot run on iOS — use `LlamaCppBackend` (in-process
+//! llama.cpp) there.
 //!
 //! The backend is gated behind the `mlx` feature flag.
 
@@ -23,11 +32,20 @@ use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
 use tokio::process::{Child, Command};
 
-use crate::backend::{BackendAdapter, BackendConfig, BackendError, BackendType, GenerationConfig, GenerationResult};
+use crate::backend::{
+    BackendAdapter, BackendConfig, BackendError, BackendType, GenerationConfig, GenerationResult,
+};
+use crate::grammar::{GrammarType, GrammarValidator};
 use crate::stream::StreamHandle;
 
-/// Default port for the MLX server subprocess.
-const DEFAULT_MLX_PORT: u16 = 9943;
+/// Pick a free ephemeral port for the MLX server subprocess. The OS assigns
+/// an available port on bind; we close the listener immediately — a small
+/// race exists but it avoids the fixed-port collisions a hardcoded port causes.
+fn find_free_port() -> u16 {
+    std::net::TcpListener::bind("127.0.0.1:0")
+        .and_then(|l| l.local_addr().map(|a| a.port()))
+        .unwrap_or(9943)
+}
 
 /// Timeout for waiting for the MLX server to become ready (30 seconds).
 const READY_TIMEOUT_SECS: u64 = 30;
@@ -67,7 +85,9 @@ fn http_client() -> &'static Client {
 /// and `detach_lora()`.
 pub struct MlxBackend {
     child: Mutex<Option<Child>>,
-    port: u16,
+    /// Port for the running subprocess — assigned per `load()` from a free
+    /// ephemeral port (avoids fixed-port collisions between instances).
+    port: Mutex<u16>,
     model_path: Mutex<Option<String>>,
     /// Optional LoRA adapter path to load at startup.
     lora_path: Mutex<Option<String>>,
@@ -80,7 +100,7 @@ impl MlxBackend {
     pub fn new() -> Self {
         Self {
             child: Mutex::new(None),
-            port: DEFAULT_MLX_PORT,
+            port: Mutex::new(0),
             model_path: Mutex::new(None),
             lora_path: Mutex::new(None),
         }
@@ -94,7 +114,7 @@ impl MlxBackend {
 
     /// The base URL of the running MLX server subprocess.
     fn base_url(&self) -> String {
-        format!("http://127.0.0.1:{}", self.port)
+        format!("http://127.0.0.1:{}", *self.port.lock())
     }
 
     /// Hot-swap the LoRA adapter at runtime via `POST /lora/load`.
@@ -113,8 +133,7 @@ impl MlxBackend {
             let text = resp.text().unwrap_or_default();
             return Err(BackendError::GenerationFailed(format!(
                 "/lora/load returned {}: {}",
-                status,
-                text
+                status, text
             )));
         }
         tracing::info!("LoRA adapter loaded: {}", adapter_path);
@@ -134,8 +153,7 @@ impl MlxBackend {
             let text = resp.text().unwrap_or_default();
             return Err(BackendError::GenerationFailed(format!(
                 "/lora/detach returned {}: {}",
-                status,
-                text
+                status, text
             )));
         }
         tracing::info!("LoRA adapter detached");
@@ -171,7 +189,8 @@ impl BackendAdapter for MlxBackend {
         }
 
         let server_bin = find_mlx_server().map_err(BackendError::LoadFailed)?;
-        let port = self.port;
+        let port = find_free_port();
+        *self.port.lock() = port;
 
         tracing::info!(
             "Spawning kchat-mlx-server: {} --model {} --port {}",
@@ -181,9 +200,12 @@ impl BackendAdapter for MlxBackend {
         );
 
         let mut cmd = Command::new(&server_bin);
-        cmd.arg("--model").arg(&config.model_path)
-            .arg("--port").arg(port.to_string())
-            .arg("--host").arg("127.0.0.1")
+        cmd.arg("--model")
+            .arg(&config.model_path)
+            .arg("--port")
+            .arg(port.to_string())
+            .arg("--host")
+            .arg("127.0.0.1")
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .kill_on_drop(true);
@@ -226,9 +248,7 @@ impl BackendAdapter for MlxBackend {
             let reader = tokio::io::BufReader::new(stdout);
             use tokio::io::AsyncBufReadExt;
             let mut lines = reader.lines();
-            tokio::spawn(async move {
-                while let Ok(Some(_line)) = lines.next_line().await {}
-            });
+            tokio::spawn(async move { while let Ok(Some(_line)) = lines.next_line().await {} });
         }
 
         *self.child.lock() = Some(child);
@@ -278,8 +298,21 @@ impl BackendAdapter for MlxBackend {
         }
 
         let start = Instant::now();
-        let resp = self.post_completion(prompt, config, None)?;
+        let resp = self.post_completion(prompt, config)?;
         let total_ms = start.elapsed().as_millis() as u64;
+
+        // Grammar is not sampler-enforced on the MLX path — post-validate so
+        // `grammar_valid` is reported truthfully.
+        let grammar_valid = match &config.grammar {
+            Some(g) if !matches!(g.grammar_type, GrammarType::None) => {
+                let ok = GrammarValidator::validate(&resp.content, g).is_ok();
+                if !ok {
+                    tracing::warn!("MLX output failed grammar validation (not sampler-enforced)");
+                }
+                ok
+            }
+            _ => true,
+        };
 
         Ok(GenerationResult {
             text: resp.content,
@@ -293,7 +326,7 @@ impl BackendAdapter for MlxBackend {
                 0.0
             },
             backend: BackendType::Mlx.as_str().to_string(),
-            grammar_valid: true,
+            grammar_valid,
         })
     }
 
@@ -311,6 +344,13 @@ impl BackendAdapter for MlxBackend {
         let sse_result = self.post_completion_stream(prompt, config, stream)?;
         let total_ms = start.elapsed().as_millis() as u64;
 
+        let grammar_valid = match &config.grammar {
+            Some(g) if !matches!(g.grammar_type, GrammarType::None) => {
+                GrammarValidator::validate(&sse_result.content, g).is_ok()
+            }
+            _ => true,
+        };
+
         let result = GenerationResult {
             text: sse_result.content,
             prompt_tokens: sse_result.tokens_evaluated,
@@ -323,7 +363,7 @@ impl BackendAdapter for MlxBackend {
                 0.0
             },
             backend: BackendType::Mlx.as_str().to_string(),
-            grammar_valid: true,
+            grammar_valid,
         };
 
         if !stream.is_cancelled() {
@@ -335,6 +375,16 @@ impl BackendAdapter for MlxBackend {
 
     fn backend_type(&self) -> BackendType {
         BackendType::Mlx
+    }
+
+    fn apply_lora(&self, adapter_path: &str, _scale: f32) -> Result<(), BackendError> {
+        // The MLX server applies its own scale; per-adapter scale config is
+        // not exposed over HTTP. Path-only attach.
+        MlxBackend::load_lora(self, adapter_path)
+    }
+
+    fn detach_lora(&self) -> Result<(), BackendError> {
+        MlxBackend::detach_lora(self)
     }
 }
 
@@ -367,7 +417,37 @@ struct CompletionBody<'a> {
     seed: u64,
     stream: bool,
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    stop: &'a Vec<String>,
+    stop: Vec<String>,
+    /// Forwarded when the grammar is `JsonSchema` — the server uses it as a
+    /// signal to extract a JSON payload from the generated text.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    json_schema: Option<serde_json::Value>,
+}
+
+/// Merge config stop sequences with grammar stop sequences (and the
+/// `stop_on_newline` directive) into the server `stop` list.
+fn merged_stops(config: &GenerationConfig) -> Vec<String> {
+    let mut stops = config.stop.clone();
+    if let Some(g) = &config.grammar {
+        stops.extend(g.stop_sequences.iter().cloned());
+        if g.stop_on_newline {
+            stops.push("\n".into());
+        }
+    }
+    stops.retain(|s| !s.is_empty());
+    stops.dedup();
+    stops
+}
+
+/// Extract the JSON schema value for the server, if the grammar is JsonSchema.
+fn json_schema_of(config: &GenerationConfig) -> Option<serde_json::Value> {
+    match &config.grammar {
+        Some(g) => match &g.grammar_type {
+            GrammarType::JsonSchema { schema } => Some(schema.clone()),
+            _ => None,
+        },
+        None => None,
+    }
 }
 
 /// JSON response from `/completion`.
@@ -388,7 +468,6 @@ impl MlxBackend {
         &self,
         prompt: &str,
         config: &GenerationConfig,
-        _grammar: Option<&str>,
     ) -> Result<CompletionResponse, BackendError> {
         let body = CompletionBody {
             prompt,
@@ -398,18 +477,16 @@ impl MlxBackend {
             top_k: config.top_k,
             repeat_penalty: config.repeat_penalty,
             seed: config.seed,
-            // The Swift server doesn't support SSE streaming; stream:false
-            // returns the full content in one JSON response.
+            // stream:false returns the full content in one JSON response.
             stream: false,
-            stop: &config.stop,
+            stop: merged_stops(config),
+            json_schema: json_schema_of(config),
         };
 
         let url = format!("{}/completion", self.base_url());
-        let resp = http_client()
-            .post(&url)
-            .json(&body)
-            .send()
-            .map_err(|e| BackendError::GenerationFailed(format!("completion request failed: {}", e)))?;
+        let resp = http_client().post(&url).json(&body).send().map_err(|e| {
+            BackendError::GenerationFailed(format!("completion request failed: {}", e))
+        })?;
 
         if !resp.status().is_success() {
             let status = resp.status();
@@ -420,8 +497,9 @@ impl MlxBackend {
             )));
         }
 
-        resp.json::<CompletionResponse>()
-            .map_err(|e| BackendError::GenerationFailed(format!("failed to parse completion response: {}", e)))
+        resp.json::<CompletionResponse>().map_err(|e| {
+            BackendError::GenerationFailed(format!("failed to parse completion response: {}", e))
+        })
     }
 
     /// POST to `/completion/stream` and consume the SSE stream token-by-token.
@@ -442,15 +520,15 @@ impl MlxBackend {
             repeat_penalty: config.repeat_penalty,
             seed: config.seed,
             stream: true,
-            stop: &config.stop,
+            stop: merged_stops(config),
+            json_schema: json_schema_of(config),
         };
 
         let url = format!("{}/completion/stream", self.base_url());
-        let resp = http_client()
-            .post(&url)
-            .json(&body)
-            .send()
-            .map_err(|e| BackendError::GenerationFailed(format!("stream request failed: {}", e)))?;
+        let resp =
+            http_client().post(&url).json(&body).send().map_err(|e| {
+                BackendError::GenerationFailed(format!("stream request failed: {}", e))
+            })?;
 
         if !resp.status().is_success() {
             let status = resp.status();
@@ -485,9 +563,9 @@ impl MlxBackend {
             }
 
             byte_buf.clear();
-            let n = reader.read_until(b'\n', &mut byte_buf).map_err(|e| {
-                BackendError::GenerationFailed(format!("SSE read error: {}", e))
-            })?;
+            let n = reader
+                .read_until(b'\n', &mut byte_buf)
+                .map_err(|e| BackendError::GenerationFailed(format!("SSE read error: {}", e)))?;
             if n == 0 {
                 break; // EOF
             }
@@ -576,7 +654,10 @@ fn find_mlx_server() -> Result<PathBuf, String> {
     if let Ok(p) = std::env::var("KCHAT_MLX_SERVER") {
         let path = PathBuf::from(&p);
         if path.exists() {
-            tracing::info!("Found kchat-mlx-server at: {} (from KCHAT_MLX_SERVER)", path.display());
+            tracing::info!(
+                "Found kchat-mlx-server at: {} (from KCHAT_MLX_SERVER)",
+                path.display()
+            );
             return Ok(path);
         }
         return Err(format!(
@@ -595,14 +676,20 @@ fn find_mlx_server() -> Result<PathBuf, String> {
     // Try new SwiftPM layout first: .build/arm64-apple-macosx/release/
     let new_path = build_dir.join("arm64-apple-macosx/release/kchat-mlx-server");
     if new_path.exists() {
-        tracing::info!("Found kchat-mlx-server at: {} (new SwiftPM layout)", new_path.display());
+        tracing::info!(
+            "Found kchat-mlx-server at: {} (new SwiftPM layout)",
+            new_path.display()
+        );
         return Ok(new_path);
     }
 
     // Fall back to old SwiftPM layout: .build/release/
     let old_path = build_dir.join("release/kchat-mlx-server");
     if old_path.exists() {
-        tracing::info!("Found kchat-mlx-server at: {} (old SwiftPM layout)", old_path.display());
+        tracing::info!(
+            "Found kchat-mlx-server at: {} (old SwiftPM layout)",
+            old_path.display()
+        );
         return Ok(old_path);
     }
 
@@ -640,7 +727,10 @@ fn wait_for_ready(base_url: &str) -> Result<(), String> {
                 attempt += 1;
                 std::thread::sleep(Duration::from_millis(500));
                 if attempt % 4 == 0 {
-                    tracing::info!("Waiting for kchat-mlx-server to start... (attempt {})", attempt);
+                    tracing::info!(
+                        "Waiting for kchat-mlx-server to start... (attempt {})",
+                        attempt
+                    );
                 }
             }
         }
@@ -653,12 +743,12 @@ fn wait_for_ready(base_url: &str) -> Result<(), String> {
 }
 
 // ---------------------------------------------------------------------------
-// Text chunking for simulated streaming
+// Text chunking (test-only — streaming now uses the server's real SSE events)
 // ---------------------------------------------------------------------------
 
-/// Split text into word-sized chunks (preserving whitespace) for simulated
-/// streaming. Each chunk is one word plus any trailing whitespace, or a
-/// standalone whitespace run.
+/// Split text into word-sized chunks (preserving whitespace). Retained for
+/// tests that exercise chunk boundary handling.
+#[cfg(test)]
 fn split_into_word_chunks(text: &str) -> Vec<String> {
     if text.is_empty() {
         return Vec::new();
@@ -770,7 +860,9 @@ mod tests {
         };
 
         let prompt = "<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n<|im_start|>user\nSay hello.<|im_end|>\n<|im_start|>assistant\n";
-        let result = backend.generate(prompt, &gen_config).expect("generation failed");
+        let result = backend
+            .generate(prompt, &gen_config)
+            .expect("generation failed");
         assert!(!result.text.is_empty());
         assert!(result.completion_tokens > 0);
         assert_eq!(result.backend, "mlx");

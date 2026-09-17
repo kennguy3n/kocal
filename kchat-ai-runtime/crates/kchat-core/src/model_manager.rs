@@ -13,6 +13,7 @@ use crate::manifest::ModelPackManifest;
 use crate::tier::DeviceTier;
 use memmap2::Mmap;
 use parking_lot::Mutex;
+#[cfg(not(target_arch = "wasm32"))]
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::path::{Component, Path, PathBuf};
@@ -120,7 +121,7 @@ impl ModelManager {
     /// Scan the cache directory and populate entries for existing files.
     fn scan_cache_dir(&self) {
         let entries = self.entries.lock();
-        if entries.len() > 0 {
+        if !entries.is_empty() {
             return; // Already populated
         }
         drop(entries);
@@ -129,7 +130,12 @@ impl ModelManager {
             let mut map = self.entries.lock();
             for entry in dir_entries.flatten() {
                 let path = entry.path();
-                if path.is_file() && path.extension().map(|e| e == "gguf" || e == "onnx").unwrap_or(false) {
+                if path.is_file()
+                    && path
+                        .extension()
+                        .map(|e| e == "gguf" || e == "onnx")
+                        .unwrap_or(false)
+                {
                     // Skip symlinks to prevent symlink attacks
                     if entry.file_type().map(|ft| ft.is_symlink()).unwrap_or(false) {
                         continue;
@@ -182,7 +188,7 @@ impl ModelManager {
         // Download the pack (not available on WASM)
         #[cfg(not(target_arch = "wasm32"))]
         {
-            self.download_pack(manifest)
+            self.download_pack(manifest, None)
         }
         #[cfg(target_arch = "wasm32")]
         {
@@ -192,9 +198,49 @@ impl ModelManager {
         }
     }
 
-    /// Download a pack from CDN with chunked download and SHA-256 verification.
+    /// Ensure a model pack is available locally, reporting byte-level download
+    /// progress via `progress(downloaded_bytes, total_bytes)` — `total_bytes`
+    /// is `manifest.total_size_bytes` (0 when unknown).
     #[cfg(not(target_arch = "wasm32"))]
-    fn download_pack(&self, manifest: &ModelPackManifest) -> Result<PathBuf> {
+    pub fn ensure_pack_with_progress(
+        &self,
+        manifest: &ModelPackManifest,
+        progress: &(dyn Fn(u64, u64) + Send + Sync),
+    ) -> Result<PathBuf> {
+        validate_pack_id(&manifest.pack_id)?;
+        {
+            let mut entries = self.entries.lock();
+            if let Some(entry) = entries.get_mut(&manifest.pack_id) {
+                if entry.local_path.exists() {
+                    entry.last_accessed = Instant::now();
+                    return Ok(entry.local_path.clone());
+                }
+                entries.remove(&manifest.pack_id);
+            }
+        }
+        self.download_pack(manifest, Some(progress))
+    }
+
+    /// Download a pack with streaming writes, resumable ranges, and
+    /// SHA-256 verification.
+    ///
+    /// - Uses `manifest.download_url` when set, otherwise falls back to the
+    ///   CDN URL scheme.
+    /// - Streams the response body to a `.tmp` file in bounded memory
+    ///   (never buffers the whole pack in RAM).
+    /// - Resumes an interrupted download with a `Range` request when a
+    ///   `.tmp` file already exists and the server supports partial content.
+    /// - Verifies each manifest chunk's SHA-256 over its byte range; on a
+    ///   mismatch, re-fetches just that chunk's range once before failing.
+    /// - Verifies the complete-pack SHA-256, then atomically renames.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn download_pack(
+        &self,
+        manifest: &ModelPackManifest,
+        progress: Option<&(dyn Fn(u64, u64) + Send + Sync)>,
+    ) -> Result<PathBuf> {
+        use std::io::Write;
+
         // Validate pack_id again (defense in depth)
         validate_pack_id(&manifest.pack_id)?;
 
@@ -205,46 +251,92 @@ impl ModelManager {
         ensure_path_within_cache(&local_path, &self.cache_dir)?;
         ensure_path_within_cache(&temp_path, &self.cache_dir)?;
 
+        let url = if !manifest.download_url.is_empty() {
+            manifest.download_url.clone()
+        } else {
+            format!(
+                "https://cdn.kchat.dev/models/{}/{}/{}.gguf",
+                manifest.pack_id, manifest.version, manifest.pack_id
+            )
+        };
+
         tracing::info!(
-            "Downloading model pack {} ({} bytes) to {}",
+            "Downloading model pack {} ({} bytes) from {}",
             manifest.pack_id,
             manifest.total_size_bytes,
-            local_path.display()
+            url
         );
 
-        // Build CDN URL
-        let cdn_url = format!(
-            "https://cdn.kchat.dev/models/{}/{}/{}.gguf",
-            manifest.pack_id, manifest.version, manifest.pack_id
-        );
-
-        // Download with reqwest (blocking)
         let client = reqwest::blocking::Client::builder()
-            .timeout(std::time::Duration::from_secs(300))
+            .timeout(std::time::Duration::from_secs(600))
             .build()
             .map_err(|e| CoreError::PackDownloadFailed(format!("HTTP client: {e}")))?;
 
-        let response = client
-            .get(&cdn_url)
+        // Resume from an existing partial download when possible.
+        let mut downloaded = std::fs::metadata(&temp_path).map(|m| m.len()).unwrap_or(0);
+        // A stale or oversized temp file cannot be resumed — start over.
+        if manifest.total_size_bytes > 0 && downloaded >= manifest.total_size_bytes {
+            std::fs::remove_file(&temp_path).ok();
+            downloaded = 0;
+        }
+
+        let mut request = client.get(&url);
+        if downloaded > 0 {
+            request = request.header("Range", format!("bytes={downloaded}-"));
+        }
+        let response = request
             .send()
             .map_err(|e| CoreError::PackDownloadFailed(format!("HTTP request: {e}")))?;
 
-        if !response.status().is_success() {
+        let status = response.status();
+        let mut file = if downloaded > 0 && status == reqwest::StatusCode::PARTIAL_CONTENT {
+            tracing::info!("Resuming {} at byte {}", manifest.pack_id, downloaded);
+            std::fs::OpenOptions::new().append(true).open(&temp_path)?
+        } else if status.is_success() {
+            // Server ignored Range (200) or this is a fresh download — the
+            // file was truncated, so byte counting restarts from zero.
+            downloaded = 0;
+            std::fs::File::create(&temp_path)?
+        } else {
             return Err(CoreError::PackDownloadFailed(format!(
-                "HTTP {} for {}",
-                response.status(),
-                cdn_url
+                "HTTP {status} for {url}"
+            )));
+        };
+
+        // Stream the body to disk in bounded memory.
+        let mut reader = response;
+        if let Some(progress) = progress {
+            let mut buf = [0u8; 256 * 1024];
+            let total = manifest.total_size_bytes;
+            loop {
+                let n = std::io::Read::read(&mut reader, &mut buf)?;
+                if n == 0 {
+                    break;
+                }
+                file.write_all(&buf[..n])?;
+                downloaded += n as u64;
+                progress(downloaded, total);
+            }
+        } else {
+            std::io::copy(&mut reader, &mut file)?;
+        }
+        file.flush()?;
+        let size = file.metadata()?.len();
+
+        if manifest.total_size_bytes > 0 && size != manifest.total_size_bytes {
+            std::fs::remove_file(&temp_path).ok();
+            return Err(CoreError::PackDownloadFailed(format!(
+                "size mismatch for {}: expected {} bytes, got {}",
+                manifest.pack_id, manifest.total_size_bytes, size
             )));
         }
 
-        // Write to temp file
-        let mut file = std::fs::File::create(&temp_path)?;
-        let bytes = response
-            .bytes()
-            .map_err(|e| CoreError::PackDownloadFailed(format!("read body: {e}")))?;
-        std::io::Write::write_all(&mut file, &bytes)?;
+        // Per-chunk verification with one range re-fetch per bad chunk.
+        if !manifest.chunks.is_empty() {
+            self.verify_and_repair_chunks(&client, &url, &temp_path, manifest)?;
+        }
 
-        // Verify SHA-256
+        // Verify whole-pack SHA-256 (authoritative integrity check).
         let actual_hash = sha256_file(&temp_path)?;
         let expected_hash = manifest.content_sha256.to_lowercase();
         if actual_hash != expected_hash {
@@ -255,12 +347,9 @@ impl ModelManager {
             });
         }
 
-        // Rename temp to final
+        // Atomic rename temp → final
         std::fs::rename(&temp_path, &local_path)?;
 
-        // Add to cache
-        let size = u64::try_from(bytes.len())
-            .map_err(|_| CoreError::PackDownloadFailed("downloaded size overflow".into()))?;
         {
             let mut entries = self.entries.lock();
             entries.insert(
@@ -287,12 +376,88 @@ impl ModelManager {
         Ok(local_path)
     }
 
+    /// Verify each manifest chunk's SHA-256 over its byte range in the
+    /// downloaded file. On mismatch, re-fetch that chunk's byte range once
+    /// and patch the file in place.
+    ///
+    /// Chunk offsets are derived by ordering chunks by `index` and
+    /// accumulating `size_bytes` (chunks are contiguous and ordered).
+    #[cfg(not(target_arch = "wasm32"))]
+    fn verify_and_repair_chunks(
+        &self,
+        client: &reqwest::blocking::Client,
+        url: &str,
+        temp_path: &Path,
+        manifest: &ModelPackManifest,
+    ) -> Result<()> {
+        use std::io::{Seek, SeekFrom, Write};
+
+        let mut chunks: Vec<&crate::manifest::PackChunk> = manifest.chunks.iter().collect();
+        chunks.sort_by_key(|c| c.index);
+
+        let mut offset = 0u64;
+        for chunk in chunks {
+            let start = offset;
+            let end = offset + chunk.size_bytes;
+            offset = end;
+
+            if sha256_range(temp_path, start, chunk.size_bytes)? == chunk.sha256.to_lowercase() {
+                continue;
+            }
+
+            // Chunk corrupt — re-fetch just that byte range and patch.
+            tracing::warn!(
+                "Chunk {} of {} failed verification; re-fetching range {}-{}",
+                chunk.index,
+                manifest.pack_id,
+                start,
+                end - 1
+            );
+            let response = client
+                .get(url)
+                .header("Range", format!("bytes={start}-{}", end - 1))
+                .send()
+                .map_err(|e| CoreError::PackDownloadFailed(format!("chunk re-fetch: {e}")))?;
+            if response.status() != reqwest::StatusCode::PARTIAL_CONTENT {
+                return Err(CoreError::PackDownloadFailed(format!(
+                    "chunk re-fetch: server does not support ranges (HTTP {})",
+                    response.status()
+                )));
+            }
+            let bytes = response
+                .bytes()
+                .map_err(|e| CoreError::PackDownloadFailed(format!("chunk body: {e}")))?;
+            if bytes.len() as u64 != chunk.size_bytes {
+                return Err(CoreError::PackDownloadFailed(format!(
+                    "chunk re-fetch: expected {} bytes, got {}",
+                    chunk.size_bytes,
+                    bytes.len()
+                )));
+            }
+            let mut file = std::fs::OpenOptions::new().write(true).open(temp_path)?;
+            file.seek(SeekFrom::Start(start))?;
+            file.write_all(&bytes)?;
+
+            let actual = sha256_range(temp_path, start, chunk.size_bytes)?;
+            let expected = chunk.sha256.to_lowercase();
+            if actual != expected {
+                return Err(CoreError::ChunkHashMismatch { expected, actual });
+            }
+        }
+
+        Ok(())
+    }
+
     /// Evict least-recently-used packs until cache is under max_cache_bytes.
+    #[cfg(not(target_arch = "wasm32"))]
     fn evict_lru(&self) -> Result<()> {
         let mut entries = self.entries.lock();
 
         // Use saturating sum to prevent overflow
-        let total: u64 = entries.values().map(|e| e.size_bytes).fold(0u64, |acc, x| acc.saturating_add(x));
+        let total: u64 = entries
+            .values()
+            .map(|e| e.size_bytes)
+            .fold(0u64, |acc, x| acc.saturating_add(x));
         if total <= self.max_cache_bytes {
             return Ok(());
         }
@@ -300,7 +465,14 @@ impl ModelManager {
         // Sort by last_accessed (oldest first)
         let mut sorted: Vec<(String, Instant, u64, PathBuf)> = entries
             .iter()
-            .map(|(k, v)| (k.clone(), v.last_accessed, v.size_bytes, v.local_path.clone()))
+            .map(|(k, v)| {
+                (
+                    k.clone(),
+                    v.last_accessed,
+                    v.size_bytes,
+                    v.local_path.clone(),
+                )
+            })
             .collect();
         sorted.sort_by_key(|(_, accessed, _, _)| *accessed);
 
@@ -351,11 +523,7 @@ impl ModelManager {
 
     /// Get total cache size in bytes.
     pub fn cache_size(&self) -> u64 {
-        self.entries
-            .lock()
-            .values()
-            .map(|e| e.size_bytes)
-            .sum()
+        self.entries.lock().values().map(|e| e.size_bytes).sum()
     }
 
     /// Get the number of cached packs.
@@ -390,7 +558,30 @@ impl ModelManager {
     }
 }
 
+/// Compute SHA-256 over a byte range of a file.
+#[cfg(not(target_arch = "wasm32"))]
+fn sha256_range(path: &Path, start: u64, len: u64) -> Result<String> {
+    use std::io::{Read, Seek, SeekFrom};
+
+    let mut file = std::fs::File::open(path)?;
+    file.seek(SeekFrom::Start(start))?;
+    let mut hasher = Sha256::new();
+    let mut remaining = len;
+    let mut buffer = [0u8; 65536];
+    while remaining > 0 {
+        let want = remaining.min(buffer.len() as u64) as usize;
+        let n = file.read(&mut buffer[..want])?;
+        if n == 0 {
+            break;
+        }
+        hasher.update(&buffer[..n]);
+        remaining -= n as u64;
+    }
+    Ok(hex::encode(hasher.finalize()))
+}
+
 /// Compute SHA-256 hash of a file.
+#[cfg(not(target_arch = "wasm32"))]
 fn sha256_file(path: &Path) -> Result<String> {
     let mut hasher = Sha256::new();
     let mut file = std::fs::File::open(path)?;
@@ -484,7 +675,7 @@ mod tests {
         // Total: 300MB, max: 150MB → need to evict 2
         // Set max to a smaller value for testing
         {
-            let mut entries = manager.entries.lock();
+            let entries = manager.entries.lock();
             // Manually trigger eviction logic
             let total: u64 = entries.values().map(|e| e.size_bytes).sum();
             assert!(total > 150 * 1024 * 1024);
@@ -495,7 +686,10 @@ mod tests {
 
         // Should have evicted enough to be under 150MB
         let remaining = manager.cache_count();
-        assert!(remaining <= 1, "should have evicted to <= 1 packs, got {remaining}");
+        assert!(
+            remaining <= 1,
+            "should have evicted to <= 1 packs, got {remaining}"
+        );
     }
 
     #[test]

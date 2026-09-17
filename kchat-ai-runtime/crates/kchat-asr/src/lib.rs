@@ -27,6 +27,13 @@ pub mod onnx_session;
 
 pub mod transcribe;
 
+/// In-process whisper.cpp backend — preferred ASR path on mobile.
+#[cfg(feature = "whispercpp")]
+pub mod whispercpp;
+
+#[cfg(feature = "whispercpp")]
+pub use whispercpp::WhisperCppTranscriber;
+
 pub use backend::{
     select_whisper_backend, whisper_base_artifact_for, AudioTranscriber, MlxAppleSiliconProbe,
     SkipWhisperTranscriber, TranscriptionResult, TranscriptionSegment, WhisperBackend,

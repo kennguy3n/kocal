@@ -52,7 +52,18 @@ pub struct RetrievalResult {
     pub fts_score: f64,
     pub recency_score: f64,
     pub vector_score: f64,
+    /// Cross-encoder score when a reranker ran (High tier); 0 otherwise.
+    #[serde(default)]
+    pub rerank_score: f64,
 }
+
+/// RRF rank-fusion constant — standard value from the original paper
+/// (Cormack et al. 2009). Larger values flatten rank differences.
+const RRF_K: f64 = 60.0;
+
+/// Cap on missing/stale vectors re-embedded per query. Backfill is bounded
+/// so a cold index degrades gracefully instead of blocking retrieval.
+const BACKFILL_PER_QUERY: usize = 64;
 
 /// The retriever — orchestrates FTS, recency, and optional vector search.
 pub struct Retriever<'a> {
@@ -62,6 +73,8 @@ pub struct Retriever<'a> {
     tier: RetrievalTier,
     /// Optional embedding manager for Medium/High tier vector search
     embeddings: Option<&'a EmbeddingManager>,
+    /// Optional cross-encoder reranker for High tier (top-k only)
+    reranker: Option<&'a dyn crate::reranker::Reranker>,
 }
 
 impl<'a> Retriever<'a> {
@@ -72,6 +85,7 @@ impl<'a> Retriever<'a> {
             recency_half_life_secs: 30.0 * 24.0 * 60.0 * 60.0, // 30 days
             tier,
             embeddings: None,
+            reranker: None,
         }
     }
 
@@ -99,6 +113,13 @@ impl<'a> Retriever<'a> {
         self
     }
 
+    /// Attach a cross-encoder reranker for High tier — runs on the top
+    /// fused candidates only (bounded pool, never the full corpus).
+    pub fn with_reranker(mut self, reranker: &'a dyn crate::reranker::Reranker) -> Self {
+        self.reranker = Some(reranker);
+        self
+    }
+
     /// Retrieve evidence for a query.
     ///
     /// Authorization is checked three times:
@@ -116,110 +137,191 @@ impl<'a> Retriever<'a> {
 
         // Step 2: Compute query embedding for Medium/High tier
         let query_embedding = match (self.tier, &self.embeddings) {
-            (RetrievalTier::Medium | RetrievalTier::High, Some(embs))
-                if embs.is_available() =>
-            {
+            (RetrievalTier::Medium | RetrievalTier::High, Some(embs)) if embs.is_available() => {
                 embs.embed_query(query).ok()
             }
             _ => None,
         };
 
-        // Step 3: Dense vector search — scan all documents in allowed scopes.
-        // This finds documents that FTS misses (e.g., cross-language queries
-        // with no keyword overlap, or semantic paraphrases).
-        // Always run when embeddings are available — the results are merged
-        // with FTS results and sorted by fused score, so extra candidates
-        // from dense search only help. Passage embeddings are cached.
-        let mut dense_results: Vec<(EvidenceId, ScopeId, f64, i64)> = Vec::new();
-        if let Some(qe) = &query_embedding {
-            let candidates = self.store.list_evidence_in_scopes(filter, limit * 4)?;
-            for (eid, sid, _content, created_at) in candidates {
-                // Skip if already in FTS results
-                if fts_results.iter().any(|f| f.evidence_id == eid) {
-                    continue;
+        // Step 3: Dense vector search over PERSISTED embeddings.
+        // `evidence_vec` rows are written at index time; this path never
+        // decrypts or re-embeds already-indexed documents. Rows missing a
+        // current-model vector are backfilled in one bounded batch.
+        let embs = self.embeddings.filter(|e| e.is_available());
+        let model_tag = embs.and_then(|e| e.model_tag());
+
+        // evidence_id → vector, for all rows with a current-model vector
+        let mut stored_vecs: std::collections::HashMap<EvidenceId, (Vec<f32>, i64)> =
+            std::collections::HashMap::new();
+        if query_embedding.is_some() {
+            if let Some(tag) = &model_tag {
+                for (eid, vec, created_at) in
+                    self.store.vectors_in_scopes(filter, tag, limit * 8)?
+                {
+                    stored_vecs.insert(eid, (vec, created_at));
                 }
-                // Get the plaintext content via get_evidence (decrypts body)
-                let content = match self.store.get_evidence(eid) {
-                    Ok(Some(ev)) => ev.fts_content,
-                    _ => continue,
-                };
-                if let Ok(doc_emb) = self.embeddings.unwrap().embed_passage(&content) {
-                    let sim = cosine_similarity(qe, &doc_emb) as f64;
-                    if sim > 0.0 {
-                        dense_results.push((eid, sid, sim, created_at));
+            }
+
+            // Bounded backfill: embed evidence rows that have no current-model
+            // vector yet (new rows, or rows written by a stale model).
+            if let (Some(embs), Some(tag)) = (embs, &model_tag) {
+                let candidates = self.store.list_evidence_in_scopes(filter, limit * 4)?;
+                let missing: Vec<(EvidenceId, ScopeId)> = candidates
+                    .iter()
+                    .filter(|(eid, _, _, _)| !stored_vecs.contains_key(eid))
+                    .take(BACKFILL_PER_QUERY)
+                    .map(|(eid, sid, _, _)| (*eid, *sid))
+                    .collect();
+
+                if !missing.is_empty() {
+                    // Decrypt contents, then batch-embed.
+                    let mut texts: Vec<String> = Vec::with_capacity(missing.len());
+                    let mut indexed: Vec<(EvidenceId, ScopeId, i64)> = Vec::new();
+                    let created_map: std::collections::HashMap<EvidenceId, i64> = candidates
+                        .iter()
+                        .map(|(eid, _, _, ts)| (*eid, *ts))
+                        .collect();
+                    for (eid, sid) in &missing {
+                        if let Ok(Some(ev)) = self.store.get_evidence(*eid) {
+                            texts.push(ev.fts_content);
+                            indexed.push((*eid, *sid, created_map[eid]));
+                        }
+                    }
+                    let text_refs: Vec<&str> = texts.iter().map(|t| t.as_str()).collect();
+                    if let Ok(vecs) = embs.embed_passages(&text_refs) {
+                        for ((eid, sid, created_at), vec) in indexed.iter().zip(vecs) {
+                            let _ = self.store.insert_vector(*eid, *sid, &vec, tag);
+                            stored_vecs.insert(*eid, (vec, *created_at));
+                        }
                     }
                 }
             }
         }
 
-        // Step 4: Fuse scores
+        // Step 4: Rank fusion — Reciprocal Rank Fusion across FTS and dense
+        // rankings, with a bounded recency prior. RRF is calibration-free:
+        // it fuses *rank positions* rather than raw scores, so the BM25 and
+        // cosine scales can't dominate each other.
         let now = chrono::Utc::now().timestamp() as f64;
-        let mut results = Vec::with_capacity(fts_results.len() + dense_results.len());
+        let recency_of = |created_at: i64| {
+            let age = (now - created_at as f64).max(0.0);
+            (-age * (2.0_f64.ln()) / self.recency_half_life_secs).exp()
+        };
 
-        for fts in fts_results {
-            // Skip evidence from forgotten scopes (cryptographic forgetting)
+        // Dense ranking: sort stored vectors by cosine similarity to query.
+        let dense_rank: std::collections::HashMap<EvidenceId, (usize, f64, i64)> =
+            if let Some(qe) = &query_embedding {
+                let mut scored: Vec<(EvidenceId, f64, i64)> = stored_vecs
+                    .iter()
+                    .map(|(eid, (vec, ts))| (*eid, cosine_similarity(qe, vec) as f64, *ts))
+                    .collect();
+                scored.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+                scored
+                    .into_iter()
+                    .enumerate()
+                    .map(|(rank, (eid, sim, ts))| (eid, (rank, sim, ts)))
+                    .collect()
+            } else {
+                Default::default()
+            };
+
+        // Union of candidates from both rankings.
+        let mut results: std::collections::HashMap<EvidenceId, RetrievalResult> =
+            std::collections::HashMap::new();
+
+        for (rank, fts) in fts_results.iter().enumerate() {
             if self.store.is_scope_forgotten(fts.scope_id).unwrap_or(false) {
                 continue;
             }
-
-            // Normalize BM25 score (lower is better → invert and normalize)
             let fts_score = 1.0 / (1.0 + fts.bm25_score.abs());
+            let recency_score = recency_of(fts.created_at);
+            let (vector_score, rrf_dense) = dense_rank
+                .get(&fts.evidence_id)
+                .map(|(r, sim, _)| (*sim, 1.0 / (RRF_K + (*r + 1) as f64)))
+                .unwrap_or((0.0, 0.0));
+            let rrf_fts = 1.0 / (RRF_K + (rank + 1) as f64);
 
-            // Recency score: exponential decay
-            let age_secs = (now - fts.created_at as f64).max(0.0);
-            let recency_score = (-age_secs * (2.0_f64.ln()) / self.recency_half_life_secs).exp();
+            // RRF fusion + small recency prior; per-signal scores retained
+            // for observability/debugging.
+            let score = self.weights.fts * rrf_fts
+                + self.weights.vector * rrf_dense
+                + self.weights.recency * recency_score * 0.01;
 
-            // Vector score: cosine similarity between query and document embeddings
-            let vector_score: f64 = match (&query_embedding, &self.embeddings) {
-                (Some(qe), Some(embs)) if embs.is_available() => {
-                    // Fetch the evidence content to embed it
-                    match self.store.get_evidence(fts.evidence_id) {
-                        Ok(Some(evidence)) => {
-                            match embs.embed_passage(&evidence.fts_content) {
-                                Ok(doc_emb) => cosine_similarity(qe, &doc_emb) as f64,
-                                Err(_) => 0.0,
-                            }
-                        }
-                        _ => 0.0,
+            results.insert(
+                fts.evidence_id,
+                RetrievalResult {
+                    evidence_id: fts.evidence_id,
+                    score,
+                    fts_score,
+                    recency_score,
+                    vector_score,
+                    rerank_score: 0.0,
+                },
+            );
+        }
+
+        // Dense-only candidates (missed by FTS).
+        for (eid, (rank, sim, created_at)) in &dense_rank {
+            if results.contains_key(eid) {
+                continue;
+            }
+            let recency_score = recency_of(*created_at);
+            let rrf_dense = 1.0 / (RRF_K + (*rank + 1) as f64);
+            let score =
+                self.weights.vector * rrf_dense + self.weights.recency * recency_score * 0.01;
+            results.insert(
+                *eid,
+                RetrievalResult {
+                    evidence_id: *eid,
+                    score,
+                    fts_score: 0.0,
+                    recency_score,
+                    vector_score: *sim,
+                    rerank_score: 0.0,
+                },
+            );
+        }
+
+        let mut results: Vec<RetrievalResult> = results.into_values().collect();
+        results.sort_by(|a, b| {
+            b.score
+                .partial_cmp(&a.score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+
+        // High tier: cross-encoder rerank on the top fused candidates only.
+        // The pool is bounded (2× limit) so the reranker never scans the
+        // whole corpus; candidates whose content can't be decrypted are
+        // dropped from the rerank pool but keep their fused score.
+        if self.tier == RetrievalTier::High {
+            if let Some(reranker) = self.reranker {
+                let pool: Vec<RetrievalResult> = results.iter().take(limit * 2).cloned().collect();
+                let mut docs: Vec<String> = Vec::with_capacity(pool.len());
+                let mut kept: Vec<RetrievalResult> = Vec::with_capacity(pool.len());
+                for res in pool {
+                    if let Ok(Some(ev)) = self.store.get_evidence(res.evidence_id) {
+                        docs.push(ev.fts_content);
+                        kept.push(res);
                     }
                 }
-                _ => 0.0,
-            };
-
-            // Weighted fusion
-            let total = self.weights.fts * fts_score
-                + self.weights.recency * recency_score
-                + self.weights.vector * vector_score;
-
-            results.push(RetrievalResult {
-                evidence_id: fts.evidence_id,
-                score: total,
-                fts_score,
-                recency_score,
-                vector_score,
-            });
+                if let Ok(ranked) = reranker.rerank(query, &docs, limit) {
+                    let tail: Vec<RetrievalResult> =
+                        results.iter().skip(limit * 2).cloned().collect();
+                    results = ranked
+                        .into_iter()
+                        .filter_map(|(i, score)| {
+                            kept.get(i).map(|res| RetrievalResult {
+                                score,
+                                rerank_score: score,
+                                ..res.clone()
+                            })
+                        })
+                        .collect();
+                    results.extend(tail);
+                }
+            }
         }
 
-        // Add dense-only results (documents found by vector search but not FTS)
-        for (eid, sid, vec_score, created_at) in dense_results {
-            let age_secs = (now - created_at as f64).max(0.0);
-            let recency_score = (-age_secs * (2.0_f64.ln()) / self.recency_half_life_secs).exp();
-            // Dense-only results get fts_score=0 (no BM25 match)
-            let total = self.weights.recency * recency_score
-                + self.weights.vector * vec_score;
-            results.push(RetrievalResult {
-                evidence_id: eid,
-                score: total,
-                fts_score: 0.0,
-                recency_score,
-                vector_score: vec_score,
-            });
-        }
-
-        // Sort by score descending
-        results.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
-
-        // Truncate to limit
         results.truncate(limit);
 
         Ok(results)
@@ -272,8 +374,12 @@ mod tests {
         let store = make_store();
         let scope = ScopeId::new();
 
-        store.insert(&make_evidence(scope, "The quick brown fox", 0)).unwrap();
-        store.insert(&make_evidence(scope, "Hello world greeting", 3600)).unwrap();
+        store
+            .insert(&make_evidence(scope, "The quick brown fox", 0))
+            .unwrap();
+        store
+            .insert(&make_evidence(scope, "Hello world greeting", 3600))
+            .unwrap();
 
         let retriever = Retriever::new(&store, RetrievalTier::Low);
         let filter = ScopeFilter {
@@ -295,9 +401,13 @@ mod tests {
         let scope = ScopeId::new();
 
         // Old result
-        store.insert(&make_evidence(scope, "important hello message", 86400 * 30)).unwrap();
+        store
+            .insert(&make_evidence(scope, "important hello message", 86400 * 30))
+            .unwrap();
         // Recent result
-        store.insert(&make_evidence(scope, "hello recent message", 60)).unwrap();
+        store
+            .insert(&make_evidence(scope, "hello recent message", 60))
+            .unwrap();
 
         let retriever = Retriever::new(&store, RetrievalTier::Low);
         let filter = ScopeFilter {
@@ -320,8 +430,12 @@ mod tests {
         let scope1 = ScopeId::new();
         let scope2 = ScopeId::new();
 
-        store.insert(&make_evidence(scope1, "hello in scope 1", 0)).unwrap();
-        store.insert(&make_evidence(scope2, "hello in scope 2", 0)).unwrap();
+        store
+            .insert(&make_evidence(scope1, "hello in scope 1", 0))
+            .unwrap();
+        store
+            .insert(&make_evidence(scope2, "hello in scope 2", 0))
+            .unwrap();
 
         let retriever = Retriever::new(&store, RetrievalTier::Low);
         let filter = ScopeFilter {
@@ -335,5 +449,139 @@ mod tests {
         // Should only return results from scope1
         // (The FTS query filters by scope_id IN allowed_scopes)
         assert!(!results.is_empty(), "should have results from scope1");
+    }
+
+    /// Embedder that returns a constant unit vector and counts embed calls —
+    /// lets us assert persisted vectors are reused without re-embedding.
+    struct CountingEmbedder {
+        dim: usize,
+        calls: std::sync::Arc<std::sync::atomic::AtomicUsize>,
+    }
+
+    impl crate::embeddings::EmbeddingProvider for CountingEmbedder {
+        fn embed(&self, _text: &str) -> crate::embeddings::EmbeddingResult<Vec<f32>> {
+            self.calls
+                .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            let v = 1.0f32 / (self.dim as f32).sqrt();
+            Ok(vec![v; self.dim])
+        }
+        fn dimension(&self) -> usize {
+            self.dim
+        }
+        fn model_name(&self) -> &str {
+            "counting-embedder"
+        }
+    }
+
+    #[test]
+    fn test_persisted_vectors_avoid_reembedding() {
+        let store = make_store();
+        let scope = ScopeId::new();
+        let calls = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+
+        let embs =
+            crate::embeddings::EmbeddingManager::new().with_primary(Box::new(CountingEmbedder {
+                dim: 8,
+                calls: calls.clone(),
+            }));
+
+        // Two docs: "hello world" (FTS hit) and a semantically-related doc
+        // with no keyword overlap (dense-only candidate).
+        store
+            .insert(&make_evidence(scope, "hello world greeting", 0))
+            .unwrap();
+        let dense_only = make_evidence(scope, "xyzzy plugh thud", 0);
+        store.insert(&dense_only).unwrap();
+
+        // Pre-persist a vector for the dense-only doc (as embed-on-write would).
+        store
+            .insert_vector(
+                dense_only.id,
+                scope,
+                &[1.0f32 / 8f32.sqrt(); 8],
+                "counting-embedder",
+            )
+            .unwrap();
+
+        let filter = ScopeFilter {
+            allowed_scopes: vec![scope],
+            denied_scopes: vec![],
+            user_id: Uuid::new_v4(),
+            roles: vec![],
+        };
+        let retriever = Retriever::new(&store, RetrievalTier::Medium).with_embeddings(&embs);
+
+        let results = retriever.retrieve("hello", &filter, 10).unwrap();
+        assert!(!results.is_empty());
+        // Dense-only doc surfaced via its persisted vector (sim = 1.0)
+        let dense_hit = results.iter().find(|r| r.evidence_id == dense_only.id);
+        assert!(dense_hit.is_some(), "persisted vector doc should surface");
+        assert!(dense_hit.unwrap().vector_score > 0.9);
+        // Backfill embedded the unindexed FTS doc once; the persisted doc
+        // was NOT re-embedded. Calls: 1 query + 1 backfill = 2.
+        let after_first = calls.load(std::sync::atomic::Ordering::Relaxed);
+        assert_eq!(after_first, 2);
+
+        // Second query: all vectors persisted → only the query embedding.
+        let results2 = retriever.retrieve("hello again", &filter, 10).unwrap();
+        assert!(!results2.is_empty());
+        let after_second = calls.load(std::sync::atomic::Ordering::Relaxed);
+        assert_eq!(after_second - after_first, 1, "only query embed expected");
+    }
+
+    #[test]
+    fn test_backfill_indexes_missing_vectors() {
+        let store = make_store();
+        let scope = ScopeId::new();
+        store
+            .insert(&make_evidence(scope, "hello world greeting", 0))
+            .unwrap();
+
+        let embs =
+            crate::embeddings::EmbeddingManager::new().with_primary(Box::new(CountingEmbedder {
+                dim: 8,
+                calls: std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0)),
+            }));
+
+        let filter = ScopeFilter {
+            allowed_scopes: vec![scope],
+            denied_scopes: vec![],
+            user_id: Uuid::new_v4(),
+            roles: vec![],
+        };
+        let retriever = Retriever::new(&store, RetrievalTier::Medium).with_embeddings(&embs);
+        retriever.retrieve("hello", &filter, 10).unwrap();
+
+        // Backfill should have persisted the vector
+        let rows = store
+            .vectors_in_scopes(&filter, "counting-embedder", 10)
+            .unwrap();
+        assert_eq!(rows.len(), 1);
+    }
+
+    #[test]
+    fn test_high_tier_rerank() {
+        let store = make_store();
+        let scope = ScopeId::new();
+        store
+            .insert(&make_evidence(scope, "hello world greeting message", 0))
+            .unwrap();
+        store
+            .insert(&make_evidence(scope, "hello unrelated content", 0))
+            .unwrap();
+
+        let reranker = crate::reranker::MockReranker::new();
+        let retriever = Retriever::new(&store, RetrievalTier::High).with_reranker(&reranker);
+        let filter = ScopeFilter {
+            allowed_scopes: vec![scope],
+            denied_scopes: vec![],
+            user_id: Uuid::new_v4(),
+            roles: vec![],
+        };
+
+        let results = retriever.retrieve("hello world", &filter, 10).unwrap();
+        assert!(!results.is_empty());
+        // Reranker ran — top result carries its score
+        assert!(results[0].rerank_score > 0.0);
     }
 }

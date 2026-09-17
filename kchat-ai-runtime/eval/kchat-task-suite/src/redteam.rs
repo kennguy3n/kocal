@@ -588,8 +588,7 @@ mod tests {
         assert!(!se_cases.is_empty(), "no social-engineering cases");
         for case in &se_cases {
             assert!(
-                case.expected_action == Action::Warn
-                    || case.expected_action == Action::Redact,
+                case.expected_action == Action::Warn || case.expected_action == Action::Redact,
                 "social-engineering case {} should expect Warn or Redact, got {:?}",
                 case.id,
                 case.expected_action
@@ -643,11 +642,15 @@ mod tests {
     fn known_gap_cases_exist() {
         let suite = RedTeamSuite::new();
         let gap_cases: Vec<&RedTeamCase> = suite.cases.iter().filter(|c| c.known_gap).collect();
-        assert!(!gap_cases.is_empty(), "expected at least one known-gap case");
+        assert!(
+            !gap_cases.is_empty(),
+            "expected at least one known-gap case"
+        );
         // Known-gap cases should expect Allow in deterministic mode
         for case in &gap_cases {
             assert_eq!(
-                case.expected_action, Action::Allow,
+                case.expected_action,
+                Action::Allow,
                 "known-gap case {} should expect Allow in deterministic mode",
                 case.id
             );

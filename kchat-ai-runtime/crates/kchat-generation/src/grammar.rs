@@ -49,7 +49,9 @@ impl Grammar {
     /// Create a regex grammar.
     pub fn regex(pattern: impl Into<String>, max_tokens: usize) -> Self {
         Self {
-            grammar_type: GrammarType::Regex { pattern: pattern.into() },
+            grammar_type: GrammarType::Regex {
+                pattern: pattern.into(),
+            },
             max_tokens,
             stop_on_newline: false,
             stop_sequences: vec![],
@@ -59,7 +61,9 @@ impl Grammar {
     /// Create a Lark grammar.
     pub fn lark(grammar: impl Into<String>, max_tokens: usize) -> Self {
         Self {
-            grammar_type: GrammarType::Lark { grammar: grammar.into() },
+            grammar_type: GrammarType::Lark {
+                grammar: grammar.into(),
+            },
             max_tokens,
             stop_on_newline: false,
             stop_sequences: vec![],
@@ -267,8 +271,10 @@ impl Grammar {
                 }
             }),
             // FreeText slides skills — output is plain text, not JSON.
-            "slides_summarize_deck" | "slides_extract_speaker_notes"
-            | "slides_translate_deck" | "slides_key_takeaways" => {
+            "slides_summarize_deck"
+            | "slides_extract_speaker_notes"
+            | "slides_translate_deck"
+            | "slides_key_takeaways" => {
                 serde_json::json!({"type": "string"})
             }
             _ => serde_json::json!({"type": "object"}),
@@ -310,12 +316,8 @@ impl GrammarValidator {
         }
 
         match &grammar.grammar_type {
-            GrammarType::JsonSchema { schema } => {
-                Self::validate_json_schema(output, schema)
-            }
-            GrammarType::Regex { pattern } => {
-                Self::validate_regex(output, pattern)
-            }
+            GrammarType::JsonSchema { schema } => Self::validate_json_schema(output, schema),
+            GrammarType::Regex { pattern } => Self::validate_regex(output, pattern),
             GrammarType::Lark { grammar } => {
                 // Validate the grammar itself is well-formed
                 let lark = LarkGrammar::parse(grammar)?;
@@ -326,7 +328,8 @@ impl GrammarValidator {
                 // allowing unconstrained output.
                 Err(GrammarError::OutputValidationNotImplemented(
                     "Lark grammar output validation requires a full LALR parser; \
-                     use JSON Schema or regex constraints for production".into(),
+                     use JSON Schema or regex constraints for production"
+                        .into(),
                 ))
             }
             GrammarType::None => Ok(()),
@@ -336,8 +339,8 @@ impl GrammarValidator {
     /// Validate output against a JSON Schema (simplified).
     fn validate_json_schema(output: &str, schema: &Value) -> Result<(), GrammarError> {
         // Parse the output as JSON
-        let parsed: Value = serde_json::from_str(output)
-            .map_err(|e| GrammarError::InvalidJson(e.to_string()))?;
+        let parsed: Value =
+            serde_json::from_str(output).map_err(|e| GrammarError::InvalidJson(e.to_string()))?;
 
         // Check required fields
         if let Value::Object(schema_obj) = schema {
@@ -396,8 +399,8 @@ impl GrammarValidator {
 
         // Use RegexBuilder with size limits to prevent ReDoS
         let re = regex::RegexBuilder::new(pattern)
-            .size_limit(1 * 1024 * 1024)       // 1MB max compiled size
-            .dfa_size_limit(10 * 1024 * 1024)  // 10MB max DFA cache
+            .size_limit(1024 * 1024) // 1MB max compiled size
+            .dfa_size_limit(10 * 1024 * 1024) // 10MB max DFA cache
             .build()
             .map_err(|e| GrammarError::InvalidRegex(e.to_string()))?;
 
@@ -516,7 +519,7 @@ impl LarkGrammar {
             validate_name(&name).map_err(GrammarError::InvalidLark)?;
 
             // Uppercase names are terminals; lowercase are rules.
-            if name.chars().next().map_or(false, |c| c.is_ascii_uppercase()) {
+            if name.chars().next().is_some_and(|c| c.is_ascii_uppercase()) {
                 terminals.push(name.clone());
             } else {
                 rules.push(name.clone());
@@ -574,7 +577,11 @@ fn strip_comments(src: &str) -> Result<String, GrammarError> {
     while i < chars.len() {
         let c = chars[i];
         match c {
-            '"' | '\'' | '/' if c == '/' && i + 1 < chars.len() && (chars[i + 1] == '/' || chars[i + 1] == '*') => {
+            '"' | '\'' | '/'
+                if c == '/'
+                    && i + 1 < chars.len()
+                    && (chars[i + 1] == '/' || chars[i + 1] == '*') =>
+            {
                 // comment
                 if chars[i + 1] == '/' {
                     // line comment
@@ -624,16 +631,17 @@ fn strip_comments(src: &str) -> Result<String, GrammarError> {
                     i += 1;
                 }
                 if !closed {
-                    return Err(GrammarError::InvalidLark(
-                        format!("unterminated string literal starting with '{}'", quote),
-                    ));
+                    return Err(GrammarError::InvalidLark(format!(
+                        "unterminated string literal starting with '{}'",
+                        quote
+                    )));
                 }
             }
-            '/' => {
+            '/'
                 // Could be a regex literal `/.../` or a division/comment.
                 // In Lark, a lone `/` at the start of a production token is a
                 // regex terminal. We treat `/` followed by non-space as a regex.
-                if i + 1 < chars.len() && !chars[i + 1].is_whitespace() {
+                if i + 1 < chars.len() && !chars[i + 1].is_whitespace() => {
                     out.push(c);
                     i += 1;
                     let mut closed = false;
@@ -658,11 +666,7 @@ fn strip_comments(src: &str) -> Result<String, GrammarError> {
                             "unterminated regex literal".into(),
                         ));
                     }
-                } else {
-                    out.push(c);
-                    i += 1;
                 }
-            }
             _ => {
                 out.push(c);
                 i += 1;
@@ -926,7 +930,8 @@ mod tests {
             "steps": [
                 {"tool_id": "search", "action": "read", "arguments": {"query": "test"}}
             ]
-        }).to_string();
+        })
+        .to_string();
 
         assert!(GrammarValidator::validate(&output, &grammar).is_ok());
     }
@@ -1135,7 +1140,8 @@ mod tests {
         let registry = crate::skills::SkillRegistry::new();
         let skill = registry.get("create_seo_meta").unwrap();
         let grammar = Grammar::for_skill(skill).unwrap();
-        let valid_output = r#"{"title": "AI Writing Tools", "description": "Best AI tools for writing"}"#;
+        let valid_output =
+            r#"{"title": "AI Writing Tools", "description": "Best AI tools for writing"}"#;
         assert!(GrammarValidator::validate(valid_output, &grammar).is_ok());
     }
 

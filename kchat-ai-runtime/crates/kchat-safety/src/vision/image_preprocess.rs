@@ -26,9 +26,18 @@ const MAX_RESIZED_LONG_EDGE: u32 = 32_768;
 /// Errors raised by [`preprocess_image`].
 #[derive(Debug)]
 pub enum VisionImagePreprocessError {
-    DecodeFailed { reason: String },
-    EmptyImage { width: u32, height: u32 },
-    ImageTooLarge { width: u32, height: u32, reason: &'static str },
+    DecodeFailed {
+        reason: String,
+    },
+    EmptyImage {
+        width: u32,
+        height: u32,
+    },
+    ImageTooLarge {
+        width: u32,
+        height: u32,
+        reason: &'static str,
+    },
 }
 
 impl std::fmt::Display for VisionImagePreprocessError {
@@ -41,7 +50,11 @@ impl std::fmt::Display for VisionImagePreprocessError {
                 f,
                 "image preprocess: decoded image has empty dimensions {width}x{height}",
             ),
-            Self::ImageTooLarge { width, height, reason } => write!(
+            Self::ImageTooLarge {
+                width,
+                height,
+                reason,
+            } => write!(
                 f,
                 "image preprocess: decoded image {width}x{height} exceeds bound ({reason})",
             ),
@@ -58,7 +71,11 @@ fn round_half_even_u32(x: f64) -> u32 {
     let on_half = (fract - 0.5).abs() < f64::EPSILON * 4.0;
     let rounded = if on_half {
         let floor_i = floor as i64;
-        if floor_i % 2 == 0 { floor } else { floor + 1.0 }
+        if floor_i % 2 == 0 {
+            floor
+        } else {
+            floor + 1.0
+        }
     } else if fract < 0.5 {
         floor
     } else {
@@ -174,28 +191,40 @@ mod tests {
     #[test]
     fn preprocess_garbage_bytes_returns_decode_failed() {
         let err = preprocess_image(b"this is not a valid image").expect_err("decode must fail");
-        assert!(matches!(err, VisionImagePreprocessError::DecodeFailed { .. }));
+        assert!(matches!(
+            err,
+            VisionImagePreprocessError::DecodeFailed { .. }
+        ));
     }
 
     #[test]
     fn preprocess_portrait_image_center_crops_to_square() {
         let bytes = synthetic_png(256, 512);
         let tensor = preprocess_image(&bytes).expect("preprocess portrait");
-        assert_eq!(tensor.len(), 3 * MOBILECLIP_IMAGE_SIZE * MOBILECLIP_IMAGE_SIZE);
+        assert_eq!(
+            tensor.len(),
+            3 * MOBILECLIP_IMAGE_SIZE * MOBILECLIP_IMAGE_SIZE
+        );
     }
 
     #[test]
     fn preprocess_landscape_image_center_crops_to_square() {
         let bytes = synthetic_png(512, 256);
         let tensor = preprocess_image(&bytes).expect("preprocess landscape");
-        assert_eq!(tensor.len(), 3 * MOBILECLIP_IMAGE_SIZE * MOBILECLIP_IMAGE_SIZE);
+        assert_eq!(
+            tensor.len(),
+            3 * MOBILECLIP_IMAGE_SIZE * MOBILECLIP_IMAGE_SIZE
+        );
     }
 
     #[test]
     fn preprocess_smaller_than_target_upscales() {
         let bytes = synthetic_png(100, 100);
         let tensor = preprocess_image(&bytes).expect("preprocess upscale");
-        assert_eq!(tensor.len(), 3 * MOBILECLIP_IMAGE_SIZE * MOBILECLIP_IMAGE_SIZE);
+        assert_eq!(
+            tensor.len(),
+            3 * MOBILECLIP_IMAGE_SIZE * MOBILECLIP_IMAGE_SIZE
+        );
     }
 
     #[test]

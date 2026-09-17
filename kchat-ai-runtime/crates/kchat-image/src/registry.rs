@@ -113,7 +113,11 @@ impl ImageSearchRegistry {
         rate_limit: RateLimit,
     ) {
         let limiter = RateLimiter::new(rate_limit.per_hour);
-        self.providers.lock().push(ProviderEntry { provider, key, limiter });
+        self.providers.lock().push(ProviderEntry {
+            provider,
+            key,
+            limiter,
+        });
     }
 
     /// Number of registered providers.
@@ -237,9 +241,7 @@ impl ImageSearchRegistry {
     ) -> Result<ImageSearchResponse, ImageError> {
         let entry = {
             let providers = self.providers.lock();
-            let e = providers
-                .iter()
-                .find(|e| e.provider.id() == provider_id);
+            let e = providers.iter().find(|e| e.provider.id() == provider_id);
             if let Some(e) = e {
                 if !e.limiter.try_acquire() {
                     return Err(ImageError::RateLimited(e.provider.id(), 3600));
@@ -276,7 +278,7 @@ use crate::types::ImageResult;
 mod tests {
     use super::*;
     use crate::mock::MockProvider;
-    use crate::types::{ImageOrientation, ImageResult, License, Attribution};
+    use crate::types::{Attribution, ImageOrientation, ImageResult, License};
 
     fn fixture(id: &str, alt: &str, o: ImageOrientation) -> ImageResult {
         ImageResult {

@@ -175,7 +175,13 @@ mod tests {
         let user = UserId::new();
 
         log.record(AuditEntry::committed(task, tenant, user, "search"));
-        log.record(AuditEntry::denied(task, tenant, user, "delete", "permission_denied"));
+        log.record(AuditEntry::denied(
+            task,
+            tenant,
+            user,
+            "delete",
+            "permission_denied",
+        ));
 
         assert_eq!(log.len(), 2);
 

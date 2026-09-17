@@ -1,0 +1,8 @@
+{
+  "model": "/Users/Ken/workspaces/kocal/kchat-ai-runtime/eval/kchat-task-suite/../../manifest/packs/bonsai-1.7b-q1_0/Bonsai-1.7B-Q1_0.gguf",
+  "tier": "Low",
+  "cold_ttft_ms": 305,
+  "ttft_p50_ms": 176,
+  "decode_p50_tps": 31.0,
+  "tokens": 192
+}

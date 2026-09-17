@@ -13,7 +13,7 @@
 use hmac::{Hmac, Mac};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use sha2::{Digest, Sha256};
+use sha2::Sha256;
 use std::collections::HashMap;
 
 /// Signed manifest for a microapp extension.
@@ -127,7 +127,8 @@ impl ToolPlanValidator {
         }
         for tool in &manifest.tools {
             self.tools.insert(tool.tool_id.clone(), tool.clone());
-            self.manifests.insert(tool.tool_id.clone(), manifest.clone());
+            self.manifests
+                .insert(tool.tool_id.clone(), manifest.clone());
         }
         Ok(())
     }
@@ -143,12 +144,13 @@ impl ToolPlanValidator {
         let mut results = Vec::new();
 
         for (i, step) in plan.steps.iter().enumerate() {
-            let tool = self.tools.get(&step.tool_id).ok_or_else(|| {
-                ToolPlanError::ToolNotFound {
-                    step: i,
-                    tool_id: step.tool_id.clone(),
-                }
-            })?;
+            let tool =
+                self.tools
+                    .get(&step.tool_id)
+                    .ok_or_else(|| ToolPlanError::ToolNotFound {
+                        step: i,
+                        tool_id: step.tool_id.clone(),
+                    })?;
 
             // Validate arguments against JSON Schema
             self.validate_arguments(&step.arguments, &tool.arguments_schema, i)?;
@@ -465,10 +467,26 @@ mod tests {
     fn test_commit_token_roundtrip() {
         let validator = make_validator_with_secret();
         let args = json!({"query": "test"});
-        let token = validator.generate_commit_token("user1", "search_tool", &args, 9999999999, 1).unwrap();
-        assert!(validator.verify_commit_token(&token, "user1", "search_tool", &args, 9999999999, 1));
+        let token = validator
+            .generate_commit_token("user1", "search_tool", &args, 9999999999, 1)
+            .unwrap();
+        assert!(validator.verify_commit_token(
+            &token,
+            "user1",
+            "search_tool",
+            &args,
+            9999999999,
+            1
+        ));
         // Different actor should fail
-        assert!(!validator.verify_commit_token(&token, "user2", "search_tool", &args, 9999999999, 1));
+        assert!(!validator.verify_commit_token(
+            &token,
+            "user2",
+            "search_tool",
+            &args,
+            9999999999,
+            1
+        ));
     }
 
     #[test]
@@ -477,9 +495,18 @@ mod tests {
         let args = json!({"query": "test"});
         // Use a past expiry time (1 second after epoch)
         let past_expiry = 1;
-        let token = validator.generate_commit_token("user1", "search_tool", &args, past_expiry, 1).unwrap();
+        let token = validator
+            .generate_commit_token("user1", "search_tool", &args, past_expiry, 1)
+            .unwrap();
         // Should be rejected because expiry is in the past
-        assert!(!validator.verify_commit_token(&token, "user1", "search_tool", &args, past_expiry, 1));
+        assert!(!validator.verify_commit_token(
+            &token,
+            "user1",
+            "search_tool",
+            &args,
+            past_expiry,
+            1
+        ));
     }
 
     #[test]
@@ -487,9 +514,23 @@ mod tests {
         let validator = make_validator_with_secret();
         let args = json!({"query": "test"});
         // Malformed token (not valid hex)
-        assert!(!validator.verify_commit_token("not-hex", "user1", "search_tool", &args, 9999999999, 1));
+        assert!(!validator.verify_commit_token(
+            "not-hex",
+            "user1",
+            "search_tool",
+            &args,
+            9999999999,
+            1
+        ));
         // Wrong length token
-        assert!(!validator.verify_commit_token("abc123", "user1", "search_tool", &args, 9999999999, 1));
+        assert!(!validator.verify_commit_token(
+            "abc123",
+            "user1",
+            "search_tool",
+            &args,
+            9999999999,
+            1
+        ));
     }
 
     #[test]
@@ -505,37 +546,73 @@ mod tests {
     fn test_commit_token_wrong_tool_rejected() {
         let validator = make_validator_with_secret();
         let args = json!({"query": "test"});
-        let token = validator.generate_commit_token("user1", "search_tool", &args, 9999999999, 1).unwrap();
+        let token = validator
+            .generate_commit_token("user1", "search_tool", &args, 9999999999, 1)
+            .unwrap();
         // Same actor, different tool_id → should fail
-        assert!(!validator.verify_commit_token(&token, "user1", "delete_tool", &args, 9999999999, 1));
+        assert!(!validator.verify_commit_token(
+            &token,
+            "user1",
+            "delete_tool",
+            &args,
+            9999999999,
+            1
+        ));
     }
 
     #[test]
     fn test_commit_token_wrong_arguments_rejected() {
         let validator = make_validator_with_secret();
         let args = json!({"query": "test"});
-        let token = validator.generate_commit_token("user1", "search_tool", &args, 9999999999, 1).unwrap();
+        let token = validator
+            .generate_commit_token("user1", "search_tool", &args, 9999999999, 1)
+            .unwrap();
         // Different arguments → should fail (prevents argument swapping attacks)
         let wrong_args = json!({"query": "different"});
-        assert!(!validator.verify_commit_token(&token, "user1", "search_tool", &wrong_args, 9999999999, 1));
+        assert!(!validator.verify_commit_token(
+            &token,
+            "user1",
+            "search_tool",
+            &wrong_args,
+            9999999999,
+            1
+        ));
     }
 
     #[test]
     fn test_commit_token_wrong_version_rejected() {
         let validator = make_validator_with_secret();
         let args = json!({"query": "test"});
-        let token = validator.generate_commit_token("user1", "search_tool", &args, 9999999999, 1).unwrap();
+        let token = validator
+            .generate_commit_token("user1", "search_tool", &args, 9999999999, 1)
+            .unwrap();
         // Different artifact version → should fail (prevents replay on updated artifacts)
-        assert!(!validator.verify_commit_token(&token, "user1", "search_tool", &args, 9999999999, 2));
+        assert!(!validator.verify_commit_token(
+            &token,
+            "user1",
+            "search_tool",
+            &args,
+            9999999999,
+            2
+        ));
     }
 
     #[test]
     fn test_commit_token_wrong_expiry_rejected() {
         let validator = make_validator_with_secret();
         let args = json!({"query": "test"});
-        let token = validator.generate_commit_token("user1", "search_tool", &args, 9999999999, 1).unwrap();
+        let token = validator
+            .generate_commit_token("user1", "search_tool", &args, 9999999999, 1)
+            .unwrap();
         // Different expiry → should fail (prevents expiry extension attacks)
-        assert!(!validator.verify_commit_token(&token, "user1", "search_tool", &args, 8888888888, 1));
+        assert!(!validator.verify_commit_token(
+            &token,
+            "user1",
+            "search_tool",
+            &args,
+            8888888888,
+            1
+        ));
     }
 
     #[test]
@@ -554,7 +631,9 @@ mod tests {
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_secs();
-        let token = validator.generate_commit_token("user1", "search_tool", &args, now + 10, 1).unwrap();
+        let token = validator
+            .generate_commit_token("user1", "search_tool", &args, now + 10, 1)
+            .unwrap();
         // Valid now
         assert!(validator.verify_commit_token(&token, "user1", "search_tool", &args, now + 10, 1));
         // But not with a past expiry
@@ -593,7 +672,9 @@ mod tests {
                 ToolDefinition {
                     tool_id: "search_images".into(),
                     name: "Search Images".into(),
-                    description: "Search stock photo libraries (Pexels, Pixabay, Unsplash, Shutterstock)".into(),
+                    description:
+                        "Search stock photo libraries (Pexels, Pixabay, Unsplash, Shutterstock)"
+                            .into(),
                     arguments_schema: search_images_args,
                     side_effects: vec!["network".into()],
                     confirmation_class: "network".into(),
@@ -654,9 +735,17 @@ mod tests {
     #[test]
     fn test_image_search_tool_network_destinations_declared() {
         let manifest = make_image_manifest();
-        assert!(manifest.network_destinations.contains(&"api.pexels.com".to_string()));
-        assert!(manifest.network_destinations.contains(&"pixabay.com".to_string()));
-        assert!(manifest.network_destinations.contains(&"api.unsplash.com".to_string()));
-        assert!(manifest.network_destinations.contains(&"api.shutterstock.com".to_string()));
+        assert!(manifest
+            .network_destinations
+            .contains(&"api.pexels.com".to_string()));
+        assert!(manifest
+            .network_destinations
+            .contains(&"pixabay.com".to_string()));
+        assert!(manifest
+            .network_destinations
+            .contains(&"api.unsplash.com".to_string()));
+        assert!(manifest
+            .network_destinations
+            .contains(&"api.shutterstock.com".to_string()));
     }
 }

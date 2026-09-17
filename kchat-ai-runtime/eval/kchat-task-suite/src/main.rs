@@ -13,19 +13,24 @@
 //! - Generation: 100% grammar compliance, TTFT P95 ≤1.5s (medium)
 //! - Action: 100% ToolPlan validation, 100% artifact operation parsing
 
+// The eval harness keeps a toolkit of report fields and metric utilities
+// (mAP helpers, latency summaries, keyword checks) that are used
+// conditionally per suite — dead-code lints would flag intentional API.
+#![allow(dead_code)]
 
-mod eval_safety;
-mod eval_context;
-mod eval_generation;
+mod device_simulator;
 mod eval_action;
-mod eval_integration;
-mod eval_realworld;
+mod eval_common;
+mod eval_context;
 mod eval_device_profile;
+mod eval_generation;
+mod eval_integration;
 mod eval_perdevice;
+mod eval_realworld;
+mod eval_safety;
 mod eval_skills;
 mod eval_slides;
-mod eval_common;
-mod device_simulator;
+mod eval_smoke;
 mod redteam;
 mod report;
 
@@ -35,13 +40,17 @@ fn main() {
     let args: Vec<String> = std::env::args().collect();
     let realworld_mode = args.iter().any(|a| a == "--realworld" || a == "--real");
     let redteam_mode = args.iter().any(|a| a == "--redteam" || a == "--red");
-    let redteam_encoder_mode = args.iter().any(|a| a == "--redteam-encoder" || a == "--red-enc");
+    let redteam_encoder_mode = args
+        .iter()
+        .any(|a| a == "--redteam-encoder" || a == "--red-enc");
     let simulate_mode = args.iter().any(|a| a == "--simulate" || a == "--sim");
     let perdevice_mode = args.iter().any(|a| a == "--perdevice" || a == "--perdev");
     let compare_old = args.iter().any(|a| a == "--compare-old");
     let skills_mode = args.iter().any(|a| a == "--skills");
     let slides_mode = args.iter().any(|a| a == "--slides");
     let slides_images_mode = args.iter().any(|a| a == "--slides-images");
+    let smoke_mode = args.iter().any(|a| a == "--smoke");
+    let write_baseline = args.iter().any(|a| a == "--write-baseline");
 
     println!("kchat-task-suite: Evaluation harness for kchat-ai-runtime");
     if skills_mode {
@@ -55,8 +64,14 @@ fn main() {
     } else if realworld_mode {
         println!("Mode: REAL-WORLD (comprehensive datasets + model inference)");
     } else if redteam_mode || redteam_encoder_mode {
-        println!("Mode: RED-TEAM ({}adversarial attack suite)",
-            if redteam_encoder_mode { "encoder-escalation " } else { "" });
+        println!(
+            "Mode: RED-TEAM ({}adversarial attack suite)",
+            if redteam_encoder_mode {
+                "encoder-escalation "
+            } else {
+                ""
+            }
+        );
     } else if simulate_mode {
         println!("Mode: SIMULATE (device profile simulation)");
     } else {
@@ -88,6 +103,16 @@ fn main() {
         return;
     }
 
+    if smoke_mode {
+        let mut report = EvalReport::new();
+        report.add_suite(eval_smoke::run(write_baseline));
+        report.print();
+        if !report.all_passed() {
+            std::process::exit(1);
+        }
+        return;
+    }
+
     if simulate_mode {
         device_simulator::run();
         return;
@@ -112,9 +137,20 @@ fn main() {
         report.add_suite(suite_report);
 
         // Print per-category breakdown
-        let mode_label = if redteam_encoder_mode { " (Encoder Escalation)" } else { "" };
+        let mode_label = if redteam_encoder_mode {
+            " (Encoder Escalation)"
+        } else {
+            ""
+        };
         println!("Red-Team Category Breakdown{}", mode_label);
-        println!("---------------------------{}", if redteam_encoder_mode { "-----------------------" } else { "" });
+        println!(
+            "---------------------------{}",
+            if redteam_encoder_mode {
+                "-----------------------"
+            } else {
+                ""
+            }
+        );
         let mut categories: Vec<(&&str, &redteam::CategoryTally)> =
             summary.by_category.iter().collect();
         categories.sort_by_key(|(k, _)| *k);

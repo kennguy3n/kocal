@@ -54,7 +54,13 @@ macro_rules! id_type {
 id_type!(UserId, "Authenticated KChat user identifier.");
 id_type!(TenantId, "Tenant (workspace/organization) identifier.");
 id_type!(TaskId, "Unique AI task identifier for tracking and audit.");
-id_type!(ArtifactId, "Stable artifact node identifier (document/slide/sheet/base).");
+id_type!(
+    ArtifactId,
+    "Stable artifact node identifier (document/slide/sheet/base)."
+);
 id_type!(ModelPackId, "Signed model pack identifier.");
 id_type!(PolicyPackId, "Signed policy/skill pack identifier.");
-id_type!(ToolId, "Microapp tool identifier from a signed extension manifest.");
+id_type!(
+    ToolId,
+    "Microapp tool identifier from a signed extension manifest."
+);

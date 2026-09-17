@@ -90,7 +90,10 @@ impl ScopeFilter {
         if !scope.authorized_users.is_empty() && !scope.authorized_users.contains(&self.user_id) {
             // Check role authorization
             if scope.authorized_roles.is_empty()
-                || !scope.authorized_roles.iter().any(|r| self.roles.contains(r))
+                || !scope
+                    .authorized_roles
+                    .iter()
+                    .any(|r| self.roles.contains(r))
             {
                 return false;
             }

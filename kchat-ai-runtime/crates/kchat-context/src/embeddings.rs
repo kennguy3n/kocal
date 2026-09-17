@@ -36,6 +36,12 @@ pub trait EmbeddingProvider: Send + Sync {
     /// Embed a text and return its vector representation.
     fn embed(&self, text: &str) -> EmbeddingResult<Vec<f32>>;
 
+    /// Embed multiple texts. Default loops over [`Self::embed`]; providers
+    /// with a real batched path may override for throughput.
+    fn embed_batch(&self, texts: &[&str]) -> EmbeddingResult<Vec<Vec<f32>>> {
+        texts.iter().map(|t| self.embed(t)).collect()
+    }
+
     /// Get the dimensionality of the embedding vectors.
     fn dimension(&self) -> usize;
 
@@ -64,14 +70,62 @@ impl EmbeddingPrefix {
     }
 }
 
+/// Default capacity of the in-memory passage-embedding LRU (entries).
+/// 2048 × 384-dim f32 ≈ 3 MB — bounded memory on low-tier devices.
+const PASSAGE_CACHE_CAP: usize = 2048;
+
+/// Bounded LRU cache for passage embeddings (content hash → vector).
+///
+/// The persistent `evidence_vec` table is the durable store; this cache
+/// only covers vectors computed on demand for rows inserted before an
+/// embedder was attached (backfill) or produced by a different model.
+struct LruVecCache {
+    cap: usize,
+    map: std::collections::HashMap<u64, Vec<f32>>,
+    /// Most-recently-used order: front = oldest, back = newest.
+    order: std::collections::VecDeque<u64>,
+}
+
+impl LruVecCache {
+    fn new(cap: usize) -> Self {
+        Self {
+            cap,
+            map: std::collections::HashMap::new(),
+            order: std::collections::VecDeque::new(),
+        }
+    }
+
+    fn get(&mut self, key: u64) -> Option<Vec<f32>> {
+        let v = self.map.get(&key)?.clone();
+        self.order.retain(|&k| k != key);
+        self.order.push_back(key);
+        Some(v)
+    }
+
+    fn insert(&mut self, key: u64, value: Vec<f32>) {
+        if self.map.contains_key(&key) {
+            self.order.retain(|&k| k != key);
+        }
+        self.map.insert(key, value);
+        self.order.push_back(key);
+        while self.order.len() > self.cap {
+            if let Some(evict) = self.order.pop_front() {
+                self.map.remove(&evict);
+            }
+        }
+    }
+}
+
 /// Embedding manager — tries primary provider, falls back to secondary.
-/// Includes a passage embedding cache to avoid re-embedding the same
+/// Includes a bounded passage embedding cache to avoid re-embedding the same
 /// documents across multiple queries.
 pub struct EmbeddingManager {
     primary: Option<Box<dyn EmbeddingProvider>>,
     fallback: Option<Box<dyn EmbeddingProvider>>,
-    /// Cache of passage embeddings (content hash → embedding)
-    passage_cache: parking_lot::Mutex<std::collections::HashMap<u64, Vec<f32>>>,
+    /// Bounded LRU cache of passage embeddings (content hash → embedding).
+    /// Persistent storage lives in the `evidence_vec` table — this cache is
+    /// a hot-path shortcut only.
+    passage_cache: parking_lot::Mutex<LruVecCache>,
 }
 
 impl EmbeddingManager {
@@ -80,7 +134,7 @@ impl EmbeddingManager {
         Self {
             primary: None,
             fallback: None,
-            passage_cache: parking_lot::Mutex::new(std::collections::HashMap::new()),
+            passage_cache: parking_lot::Mutex::new(LruVecCache::new(PASSAGE_CACHE_CAP)),
         }
     }
 
@@ -147,15 +201,82 @@ impl EmbeddingManager {
         let key = hasher.finish();
 
         {
-            let cache = self.passage_cache.lock();
-            if let Some(emb) = cache.get(&key) {
-                return Ok(emb.clone());
+            let mut cache = self.passage_cache.lock();
+            if let Some(emb) = cache.get(key) {
+                return Ok(emb);
             }
         }
 
         let emb = self.embed(passage)?;
         self.passage_cache.lock().insert(key, emb.clone());
         Ok(emb)
+    }
+
+    /// Embed a batch of passages in one call — the batch-embed-on-write path
+    /// used when indexing evidence rows into `evidence_vec`. Results are
+    /// position-aligned with `passages`; the LRU cache is consulted first and
+    /// populated per passage.
+    pub fn embed_passages(&self, passages: &[&str]) -> EmbeddingResult<Vec<Vec<f32>>> {
+        use std::hash::{Hash, Hasher};
+        let hash = |p: &str| {
+            let mut h = std::collections::hash_map::DefaultHasher::new();
+            p.hash(&mut h);
+            h.finish()
+        };
+
+        let mut results: Vec<Option<Vec<f32>>> = Vec::with_capacity(passages.len());
+        let mut to_embed: Vec<(usize, &str)> = Vec::new();
+        {
+            let mut cache = self.passage_cache.lock();
+            for (i, passage) in passages.iter().enumerate() {
+                if let Some(emb) = cache.get(hash(passage)) {
+                    results.push(Some(emb));
+                } else {
+                    results.push(None);
+                    to_embed.push((i, passage));
+                }
+            }
+        }
+
+        if !to_embed.is_empty() {
+            let refs: Vec<&str> = to_embed.iter().map(|(_, p)| *p).collect();
+            let embedded = self.embed_batch(&refs)?;
+            debug_assert_eq!(embedded.len(), to_embed.len());
+            let mut cache = self.passage_cache.lock();
+            for ((i, passage), emb) in to_embed.iter().zip(embedded) {
+                cache.insert(hash(passage), emb.clone());
+                results[*i] = Some(emb);
+            }
+        }
+
+        results
+            .into_iter()
+            .map(|r| r.ok_or(EmbeddingError::NoProvider))
+            .collect()
+    }
+
+    /// Embed a batch of texts via the active provider (primary → fallback).
+    fn embed_batch(&self, texts: &[&str]) -> EmbeddingResult<Vec<Vec<f32>>> {
+        if let Some(p) = &self.primary {
+            match p.embed_batch(texts) {
+                Ok(v) => return Ok(v),
+                Err(e) => tracing::warn!("Primary batch embed failed: {}, trying fallback", e),
+            }
+        }
+        if let Some(f) = &self.fallback {
+            return f.embed_batch(texts);
+        }
+        Err(EmbeddingError::NoProvider)
+    }
+
+    /// Identity tag of the active embedding model — used to version rows in
+    /// the persistent `evidence_vec` table so vectors from a different model
+    /// are detected as stale and re-embedded.
+    pub fn model_tag(&self) -> Option<String> {
+        if let Some(p) = &self.primary {
+            return Some(p.model_name().to_string());
+        }
+        self.fallback.as_ref().map(|f| f.model_name().to_string())
     }
 }
 
@@ -207,8 +328,13 @@ impl OnnxEmbedder {
         quantization: kchat_encoder::Quantization,
         intra_threads: usize,
     ) -> EmbeddingResult<Self> {
-        let session = kchat_encoder::EncoderSession::new(model_path, tokenizer_path, quantization, intra_threads)
-            .map_err(|e| EmbeddingError::SessionError(e.to_string()))?;
+        let session = kchat_encoder::EncoderSession::new(
+            model_path,
+            tokenizer_path,
+            quantization,
+            intra_threads,
+        )
+        .map_err(|e| EmbeddingError::SessionError(e.to_string()))?;
         Ok(Self {
             session: std::sync::Arc::new(session),
         })
@@ -334,7 +460,8 @@ impl EmbeddingProvider for LlamaServerEmbedder {
         let url = format!("{}/embedding", self.server_url);
         let body = serde_json::json!({ "content": text });
 
-        let resp = self.client
+        let resp = self
+            .client
             .post(&url)
             .json(&body)
             .send()
@@ -406,7 +533,9 @@ impl EmbeddingProvider for LlamaServerEmbedder {
         };
 
         if pooled.is_empty() {
-            return Err(EmbeddingError::InferenceFailed("empty pooled embedding".into()));
+            return Err(EmbeddingError::InferenceFailed(
+                "empty pooled embedding".into(),
+            ));
         }
 
         let mut result = pooled;
@@ -420,6 +549,42 @@ impl EmbeddingProvider for LlamaServerEmbedder {
 
     fn model_name(&self) -> &str {
         &self.model_name
+    }
+}
+
+/// GGUF embedder — shares one in-process `GgufEncoderSession` (mmBERT via
+/// llama.cpp) across safety classification, embeddings, and reranking.
+/// Fully in-process: works on iOS/Android where subprocesses are disallowed.
+#[cfg(feature = "gguf-embeddings")]
+pub struct GgufEmbedder {
+    session: std::sync::Arc<kchat_encoder::GgufEncoderSession>,
+}
+
+#[cfg(feature = "gguf-embeddings")]
+impl GgufEmbedder {
+    /// Wrap a shared encoder session.
+    pub fn new(session: std::sync::Arc<kchat_encoder::GgufEncoderSession>) -> Self {
+        Self { session }
+    }
+}
+
+#[cfg(feature = "gguf-embeddings")]
+impl EmbeddingProvider for GgufEmbedder {
+    fn embed(&self, text: &str) -> EmbeddingResult<Vec<f32>> {
+        if text.trim().is_empty() {
+            return Err(EmbeddingError::InferenceFailed("empty input text".into()));
+        }
+        self.session
+            .embed(text)
+            .map_err(|e| EmbeddingError::InferenceFailed(format!("gguf embed: {e}")))
+    }
+
+    fn dimension(&self) -> usize {
+        self.session.dimension()
+    }
+
+    fn model_name(&self) -> &str {
+        self.session.model_name()
     }
 }
 
@@ -447,13 +612,14 @@ impl CachedEmbedding {
     /// Legacy v1 format has no magic — just dimension as first 4 bytes.
     /// v1 entries always start with a small u32 (dimension <= 4096), so
     /// the v2 magic (0x4B434532 = 1263369778) is easily distinguishable.
-
     /// Serialize to bytes for storage (v2 format with model metadata).
     pub fn to_bytes(&self) -> Vec<u8> {
         // v2 format: magic(4) + dim(4) + model_len(4) + model_bytes + version_len(4) + version_bytes + vector(dim*4)
         let model_bytes = self.model.as_bytes();
         let version_bytes = self.model_version.as_bytes();
-        let mut bytes = Vec::with_capacity(16 + model_bytes.len() + version_bytes.len() + self.vector.len() * 4);
+        let mut bytes = Vec::with_capacity(
+            16 + model_bytes.len() + version_bytes.len() + self.vector.len() * 4,
+        );
         bytes.extend_from_slice(&Self::V2_MAGIC.to_le_bytes());
         bytes.extend_from_slice(&(self.dimension as u32).to_le_bytes());
         bytes.extend_from_slice(&(model_bytes.len() as u32).to_le_bytes());
@@ -504,12 +670,14 @@ impl CachedEmbedding {
         if bytes.len() < version_start + version_len + dim * 4 {
             return None;
         }
-        let model_version = String::from_utf8(bytes[version_start..version_start + version_len].to_vec()).ok()?;
+        let model_version =
+            String::from_utf8(bytes[version_start..version_start + version_len].to_vec()).ok()?;
         let vec_start = version_start + version_len;
         let mut vector = Vec::with_capacity(dim);
         for i in 0..dim {
             let off = vec_start + i * 4;
-            let v = f32::from_le_bytes([bytes[off], bytes[off + 1], bytes[off + 2], bytes[off + 3]]);
+            let v =
+                f32::from_le_bytes([bytes[off], bytes[off + 1], bytes[off + 2], bytes[off + 3]]);
             vector.push(v);
         }
         Some(Self {
@@ -612,8 +780,7 @@ mod tests {
 
     #[test]
     fn test_embedding_manager_with_mock() {
-        let manager = EmbeddingManager::new()
-            .with_primary(Box::new(MockEmbedder::new(768)));
+        let manager = EmbeddingManager::new().with_primary(Box::new(MockEmbedder::new(768)));
         assert!(manager.is_available());
         assert_eq!(manager.dimension(), Some(768));
 
@@ -627,10 +794,16 @@ mod tests {
         struct FailingEmbedder;
         impl EmbeddingProvider for FailingEmbedder {
             fn embed(&self, _text: &str) -> EmbeddingResult<Vec<f32>> {
-                Err(EmbeddingError::InferenceFailed("intentional failure".into()))
+                Err(EmbeddingError::InferenceFailed(
+                    "intentional failure".into(),
+                ))
             }
-            fn dimension(&self) -> usize { 768 }
-            fn model_name(&self) -> &str { "failing" }
+            fn dimension(&self) -> usize {
+                768
+            }
+            fn model_name(&self) -> &str {
+                "failing"
+            }
         }
 
         let manager = EmbeddingManager::new()
@@ -643,16 +816,14 @@ mod tests {
 
     #[test]
     fn test_embed_query_with_prefix() {
-        let manager = EmbeddingManager::new()
-            .with_primary(Box::new(MockEmbedder::new(128)));
+        let manager = EmbeddingManager::new().with_primary(Box::new(MockEmbedder::new(128)));
         let vec = manager.embed_query("hello").unwrap();
         assert_eq!(vec.len(), 128);
     }
 
     #[test]
     fn test_embed_passage_with_prefix() {
-        let manager = EmbeddingManager::new()
-            .with_primary(Box::new(MockEmbedder::new(128)));
+        let manager = EmbeddingManager::new().with_primary(Box::new(MockEmbedder::new(128)));
         let vec = manager.embed_passage("hello world").unwrap();
         assert_eq!(vec.len(), 128);
     }
@@ -670,8 +841,8 @@ mod tests {
 
         // With our simple mock, this may not hold perfectly, but let's check
         // that similarity is in valid range
-        assert!(sim_hello_hi >= -1.0 && sim_hello_hi <= 1.0);
-        assert!(sim_hello_world >= -1.0 && sim_hello_world <= 1.0);
+        assert!((-1.0..=1.0).contains(&sim_hello_hi));
+        assert!((-1.0..=1.0).contains(&sim_hello_world));
     }
 
     #[test]
@@ -758,5 +929,29 @@ mod tests {
         assert_eq!(EmbeddingPrefix::Query.as_str(), "query: ");
         assert_eq!(EmbeddingPrefix::Passage.as_str(), "passage: ");
         assert_eq!(EmbeddingPrefix::None.as_str(), "");
+    }
+
+    #[test]
+    fn test_lru_cache_eviction() {
+        let mut cache = LruVecCache::new(2);
+        cache.insert(1, vec![1.0]);
+        cache.insert(2, vec![2.0]);
+        // Touch key 1 so key 2 becomes the eviction candidate
+        assert!(cache.get(1).is_some());
+        cache.insert(3, vec![3.0]);
+
+        assert!(cache.get(1).is_some(), "recently used survives");
+        assert!(cache.get(2).is_none(), "least recently used evicted");
+        assert!(cache.get(3).is_some());
+        assert_eq!(cache.map.len(), 2, "cache stays bounded");
+    }
+
+    #[test]
+    fn test_embed_passages_batch() {
+        let manager = EmbeddingManager::new().with_primary(Box::new(MockEmbedder::new(8)));
+        let out = manager.embed_passages(&["alpha", "beta", "alpha"]).unwrap();
+        assert_eq!(out.len(), 3);
+        // Same text → same (cached) vector
+        assert_eq!(out[0], out[2]);
     }
 }

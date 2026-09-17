@@ -10,11 +10,11 @@
 
 #![cfg(feature = "llamacpp")]
 
+use kchat_core::tier::DeviceTier;
 use kchat_generation::{
     BackendAdapter, BackendConfig, BackendType, GenerationConfig, Grammar, LlamaCppBackend,
     StreamHandle,
 };
-use kchat_core::tier::DeviceTier;
 use serde_json::json;
 use std::path::PathBuf;
 
@@ -27,14 +27,23 @@ fn model_path() -> Option<PathBuf> {
         PathBuf::from("../../manifest/packs"),
     ];
 
-    // Collect all available GGUF files
+    // Collect all available GGUF files (packs are subdirectories)
     let mut gguf_files: Vec<PathBuf> = Vec::new();
     for dir in &pack_dirs {
         if let Ok(entries) = std::fs::read_dir(dir) {
             for entry in entries.flatten() {
                 let path = entry.path();
-                if path.extension().map_or(false, |ext| ext == "gguf") {
+                if path.extension().is_some_and(|ext| ext == "gguf") {
                     gguf_files.push(path);
+                } else if path.is_dir() {
+                    if let Ok(sub) = std::fs::read_dir(&path) {
+                        for e in sub.flatten() {
+                            let p = e.path();
+                            if p.extension().is_some_and(|ext| ext == "gguf") {
+                                gguf_files.push(p);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -46,11 +55,20 @@ fn model_path() -> Option<PathBuf> {
     // Prefer standard quantization formats (Q4_K_M, Q8_0) that llama.cpp can reliably load.
     // Q2_0 ternary models may not be supported by all llama.cpp versions.
     gguf_files.sort_by_key(|p| {
-        let name = p.file_name().map_or(false, |n| n.to_str().map_or(false, |s| s.contains("Q4_K_M") || s.contains("Q8_0")));
-        if name { 0 } else { 1 }
+        let name = p.file_name().is_some_and(|n| {
+            n.to_str()
+                .is_some_and(|s| s.contains("Q4_K_M") || s.contains("Q8_0"))
+        });
+        if name {
+            0
+        } else {
+            1
+        }
     });
 
-    gguf_files.first().map(|p| p.canonicalize().unwrap_or_else(|_| p.clone()))
+    gguf_files
+        .first()
+        .map(|p| p.canonicalize().unwrap_or_else(|_| p.clone()))
 }
 
 #[test]
@@ -87,13 +105,13 @@ fn test_llamacpp_load_and_generate() {
 
     println!(
         "Generated: {:?} ({} tokens, {} ms TTFT, {:.1} tok/s)",
-        result.text,
-        result.completion_tokens,
-        result.ttft_ms,
-        result.tokens_per_second
+        result.text, result.completion_tokens, result.ttft_ms, result.tokens_per_second
     );
 
-    assert!(result.completion_tokens > 0, "should generate at least 1 token");
+    assert!(
+        result.completion_tokens > 0,
+        "should generate at least 1 token"
+    );
     assert!(!result.text.is_empty(), "text should not be empty");
     assert!(result.ttft_ms < 5000, "TTFT should be < 5s");
     assert!(result.tokens_per_second > 5.0, "should be > 5 tok/s");
@@ -190,7 +208,10 @@ fn test_llamacpp_json_schema_grammar() {
     };
 
     let result = backend
-        .generate(r#"Generate a JSON object with a "greeting" field."#, &gen_config)
+        .generate(
+            r#"Generate a JSON object with a "greeting" field."#,
+            &gen_config,
+        )
         .expect("grammar generation should succeed");
 
     println!("Grammar output: {:?}", result.text);
@@ -199,7 +220,11 @@ fn test_llamacpp_json_schema_grammar() {
     // Note: Grammar enforcement requires the `common` feature of llama-cpp-2,
     // which is enabled by `llamacpp-metal`/`llamacpp-vulkan`/`llamacpp-cuda`.
     // When running without those features, the output may not be valid JSON.
-    #[cfg(any(feature = "llamacpp-metal", feature = "llamacpp-vulkan", feature = "llamacpp-cuda"))]
+    #[cfg(any(
+        feature = "llamacpp-metal",
+        feature = "llamacpp-vulkan",
+        feature = "llamacpp-cuda"
+    ))]
     {
         // Try to extract JSON from the output (may be wrapped in markdown)
         let text = result.text.trim();
@@ -216,8 +241,72 @@ fn test_llamacpp_json_schema_grammar() {
 
         let parsed: serde_json::Value = serde_json::from_str(json_text.trim())
             .expect("output should be valid JSON: {json_text}");
-        assert!(parsed.get("greeting").is_some(), "should have greeting field");
+        assert!(
+            parsed.get("greeting").is_some(),
+            "should have greeting field"
+        );
     }
+
+    backend.unload().unwrap();
+}
+
+/// Exercises the persistent session's KV prefix reuse: sequential calls with
+/// shared and divergent prefixes must remain correct, and greedy decoding of
+/// the same prompt must be byte-identical across calls.
+#[test]
+fn test_llamacpp_prefix_reuse() {
+    let model_path = match model_path() {
+        Some(p) => p,
+        None => {
+            eprintln!("Skipping test: no model file found");
+            return;
+        }
+    };
+
+    let backend = LlamaCppBackend::new();
+    let config = BackendConfig::for_tier(
+        BackendType::LlamaCppMetal,
+        "test-gguf-model",
+        model_path.to_str().unwrap(),
+        DeviceTier::Low,
+        "macos",
+    );
+    backend.load(&config).expect("model should load");
+
+    let gen_config = GenerationConfig {
+        max_tokens: 16,
+        temperature: 0.0, // greedy — deterministic across calls
+        seed: 42,
+        ..Default::default()
+    };
+
+    let shared_prefix = "You are a helpful assistant. Answer concisely.";
+
+    // Call 1: establishes the cached prefix.
+    let prompt_a = format!("{shared_prefix} What is 2+2?");
+    let r1 = backend.generate(&prompt_a, &gen_config).expect("gen A");
+    assert!(r1.completion_tokens > 0);
+
+    // Call 2: identical prompt — full prefix reuse + generated-tail eviction.
+    let r2 = backend
+        .generate(&prompt_a, &gen_config)
+        .expect("gen A again");
+    assert_eq!(
+        r1.text, r2.text,
+        "greedy decode of identical prompt must be deterministic"
+    );
+
+    // Call 3: divergent suffix — shared prefix kept, tail re-prefilled.
+    let prompt_b = format!("{shared_prefix} Name a color.");
+    let r3 = backend.generate(&prompt_b, &gen_config).expect("gen B");
+    assert!(r3.completion_tokens > 0);
+    assert!(!r3.text.is_empty());
+
+    // Call 4: unrelated prompt — full re-prefill, still correct.
+    let r4 = backend
+        .generate("Zebra.", &gen_config)
+        .expect("gen unrelated");
+    assert!(r4.completion_tokens > 0);
 
     backend.unload().unwrap();
 }

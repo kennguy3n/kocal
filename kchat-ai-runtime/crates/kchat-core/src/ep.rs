@@ -335,8 +335,11 @@ impl ExecutionProviderSelector {
 /// feature and never ships in a release build.
 pub trait EpSelector: Send + Sync + std::fmt::Debug {
     /// Select an EP for the supplied platform/capabilities pair.
-    fn select_ep(&self, platform: Platform, capabilities: &EpDeviceCapabilities)
-        -> ExecutionProvider;
+    fn select_ep(
+        &self,
+        platform: Platform,
+        capabilities: &EpDeviceCapabilities,
+    ) -> ExecutionProvider;
 }
 
 impl EpSelector for ExecutionProviderSelector {
@@ -906,8 +909,10 @@ mod tests {
 
     #[test]
     fn ep_fallback_chain_ios_prefers_coreml() {
-        let chain =
-            EpFallbackChain::for_platform(Platform::Ios, &EpDeviceCapabilities::apple_silicon_ios());
+        let chain = EpFallbackChain::for_platform(
+            Platform::Ios,
+            &EpDeviceCapabilities::apple_silicon_ios(),
+        );
         assert_eq!(
             chain.as_slice(),
             &[ExecutionProvider::CoreMl, ExecutionProvider::Cpu]

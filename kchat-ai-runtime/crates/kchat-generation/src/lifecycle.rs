@@ -7,8 +7,8 @@
 use crate::backend::{BackendAdapter, BackendConfig, BackendError};
 use kchat_core::tier::DeviceTier;
 use parking_lot::Mutex;
-use std::time::{Duration, Instant};
 use serde::{Deserialize, Serialize};
+use std::time::{Duration, Instant};
 
 /// Current state of the model.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

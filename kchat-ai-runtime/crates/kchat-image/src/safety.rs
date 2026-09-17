@@ -50,10 +50,11 @@ pub fn is_safe(r: &ImageResult) -> bool {
         return false;
     }
     // Attribution required for Pixabay / Unsplash.
-    if r.license.requires_attribution() {
-        if r.attribution.photographer.is_empty() && r.attribution.source_url.is_empty() {
-            return false;
-        }
+    if r.license.requires_attribution()
+        && r.attribution.photographer.is_empty()
+        && r.attribution.source_url.is_empty()
+    {
+        return false;
     }
     // Blocklist on alt text (case-insensitive substring).
     let alt_lower = r.alt_text.to_lowercase();
@@ -87,7 +88,7 @@ fn is_private_url(url: &str) -> bool {
 
     // Check for literal IPv6 address in host.
     if host.starts_with('[') && host.ends_with(']') {
-        let inner = &host[1..host.len()-1];
+        let inner = &host[1..host.len() - 1];
         if let Ok(ip) = inner.parse::<std::net::Ipv6Addr>() {
             return is_private_ipv6(ip);
         }
@@ -112,7 +113,7 @@ fn extract_host(url: &str) -> Option<String> {
     let after_scheme = url.split("://").nth(1)?;
     // Take everything before the first / or : or ?.
     let host_end = after_scheme
-        .find(|c: char| c == '/' || c == ':' || c == '?' || c == '#')
+        .find(['/', ':', '?', '#'])
         .unwrap_or(after_scheme.len());
     let host = &after_scheme[..host_end];
     if host.is_empty() {
@@ -138,19 +139,33 @@ fn parse_ipv4(s: &str) -> Option<[u8; 4]> {
 fn is_private_ipv4(ip: [u8; 4]) -> bool {
     let [a, b, _c, _d] = ip;
     // 10.0.0.0/8
-    if a == 10 { return true; }
+    if a == 10 {
+        return true;
+    }
     // 172.16.0.0/12
-    if a == 172 && (16..=31).contains(&b) { return true; }
+    if a == 172 && (16..=31).contains(&b) {
+        return true;
+    }
     // 192.168.0.0/16
-    if a == 192 && b == 168 { return true; }
+    if a == 192 && b == 168 {
+        return true;
+    }
     // 127.0.0.0/8 (loopback)
-    if a == 127 { return true; }
+    if a == 127 {
+        return true;
+    }
     // 169.254.0.0/16 (link-local, includes AWS metadata 169.254.169.254)
-    if a == 169 && b == 254 { return true; }
+    if a == 169 && b == 254 {
+        return true;
+    }
     // 0.0.0.0/8
-    if a == 0 { return true; }
+    if a == 0 {
+        return true;
+    }
     // 100.64.0.0/10 (CGNAT)
-    if a == 100 && (64..=127).contains(&b) { return true; }
+    if a == 100 && (64..=127).contains(&b) {
+        return true;
+    }
     false
 }
 
@@ -212,7 +227,10 @@ mod tests {
     #[test]
     fn test_attribution_required_for_pixabay_license() {
         let r = make_result("a forest", License::FreeWithAttribution, "");
-        assert!(!is_safe(&r), "should drop unattributed Pixabay-style result");
+        assert!(
+            !is_safe(&r),
+            "should drop unattributed Pixabay-style result"
+        );
     }
 
     #[test]

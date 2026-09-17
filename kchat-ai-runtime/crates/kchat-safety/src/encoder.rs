@@ -50,8 +50,13 @@ impl OnnxEncoder {
         quantization: kchat_encoder::Quantization,
         intra_threads: usize,
     ) -> Result<Self, EncoderError> {
-        let session = kchat_encoder::EncoderSession::new(model_path, tokenizer_path, quantization, intra_threads)
-            .map_err(|e| EncoderError::InferenceFailed(format!("encoder session: {e}")))?;
+        let session = kchat_encoder::EncoderSession::new(
+            model_path,
+            tokenizer_path,
+            quantization,
+            intra_threads,
+        )
+        .map_err(|e| EncoderError::InferenceFailed(format!("encoder session: {e}")))?;
         Ok(Self {
             session: std::sync::Arc::new(session),
         })
@@ -72,6 +77,53 @@ impl EncoderAdapter for OnnxEncoder {
     }
 }
 
+/// GGUF safety encoder — wraps `GgufEncoderSession` (in-process llama.cpp
+/// embedding + safetensors classifier heads) as an [`EncoderAdapter`].
+///
+/// This is the primary encoder backend: mmBERT-small-Q4_K_M (~90MB) with the
+/// 17-category guardrail taxonomy, running fully in-process so it works on
+/// iOS/Android where subprocesses are not permitted.
+#[cfg(feature = "gguf-encoder")]
+pub struct GgufSafetyEncoder {
+    session: std::sync::Arc<kchat_encoder::GgufEncoderSession>,
+}
+
+#[cfg(feature = "gguf-encoder")]
+impl GgufSafetyEncoder {
+    /// Create a GGUF encoder — loads the model in-process via llama.cpp.
+    pub fn new(
+        model_path: &str,
+        heads_path: &str,
+        intra_threads: usize,
+    ) -> Result<Self, EncoderError> {
+        let session = kchat_encoder::GgufEncoderSession::new(model_path, heads_path, intra_threads)
+            .map_err(|e| EncoderError::InferenceFailed(format!("gguf encoder session: {e}")))?;
+        Ok(Self {
+            session: std::sync::Arc::new(session),
+        })
+    }
+
+    /// Wrap an already-loaded shared session — lets one mmBERT instance serve
+    /// safety classification, embeddings, and reranking simultaneously.
+    pub fn from_shared(session: std::sync::Arc<kchat_encoder::GgufEncoderSession>) -> Self {
+        Self { session }
+    }
+}
+
+#[cfg(feature = "gguf-encoder")]
+impl EncoderAdapter for GgufSafetyEncoder {
+    fn classify(&self, text: &str) -> Result<EncoderVerdict, EncoderError> {
+        let verdict = self
+            .session
+            .classify(text)
+            .map_err(|e| EncoderError::InferenceFailed(format!("gguf classify: {e}")))?;
+        Ok(EncoderVerdict {
+            category: verdict.category,
+            confidence: verdict.confidence,
+        })
+    }
+}
+
 /// Mock encoder for testing — returns a fixed category and confidence.
 pub struct MockEncoder {
     category: u32,
@@ -80,7 +132,10 @@ pub struct MockEncoder {
 
 impl MockEncoder {
     pub fn new(category: u32, confidence: f64) -> Self {
-        Self { category, confidence }
+        Self {
+            category,
+            confidence,
+        }
     }
 
     /// Create a mock encoder that always returns SAFE.

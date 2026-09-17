@@ -29,7 +29,11 @@ use kchat_core::tier::DeviceTier;
 ///
 /// All tiers now have generative models available (tier-appropriate sizes).
 /// On non-llamacpp builds, always returns the mock backend (for testing).
-pub fn select_backend(platform: &str, tier: DeviceTier, cpu_arch: &str) -> Option<Box<dyn BackendAdapter>> {
+pub fn select_backend(
+    platform: &str,
+    tier: DeviceTier,
+    cpu_arch: &str,
+) -> Option<Box<dyn BackendAdapter>> {
     let backend_type = BackendType::select(platform, tier, cpu_arch)?;
 
     // MLX backend takes priority when the mlx feature is enabled and the
@@ -44,12 +48,12 @@ pub fn select_backend(platform: &str, tier: DeviceTier, cpu_arch: &str) -> Optio
     #[cfg(feature = "llamacpp")]
     {
         let _ = backend_type; // selected inside LlamaCppBackend
-        return Some(Box::new(LlamaCppBackend::new()));
+        Some(Box::new(LlamaCppBackend::new()))
     }
 
     #[cfg(not(feature = "llamacpp"))]
     {
         let _ = backend_type;
-        return Some(Box::new(MockBackend::new()));
+        Some(Box::new(MockBackend::new()))
     }
 }

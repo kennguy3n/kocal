@@ -241,10 +241,7 @@ fn parse_scam_phrase_additions(yaml: &str) -> Vec<OverlayScamPhrase> {
                     Some(p) => p.to_string(),
                     None => continue,
                 };
-                let weight = entry
-                    .get("weight")
-                    .and_then(|v| v.as_f64())
-                    .unwrap_or(1.0);
+                let weight = entry.get("weight").and_then(|v| v.as_f64()).unwrap_or(1.0);
                 out.push(OverlayScamPhrase {
                     phrase,
                     weight,
@@ -381,7 +378,10 @@ mod tests {
         for name in embedded_community_names() {
             let yaml = embedded_community_overlay_yaml(name);
             assert!(yaml.is_some(), "community {name} should exist");
-            assert!(!yaml.unwrap().is_empty(), "community {name} should be non-empty");
+            assert!(
+                !yaml.unwrap().is_empty(),
+                "community {name} should be non-empty"
+            );
         }
     }
 
@@ -390,7 +390,10 @@ mod tests {
         for code in embedded_jurisdiction_codes() {
             let yaml = embedded_jurisdiction_overlay_yaml(code);
             assert!(yaml.is_some(), "jurisdiction {code} should exist");
-            assert!(!yaml.unwrap().is_empty(), "jurisdiction {code} should be non-empty");
+            assert!(
+                !yaml.unwrap().is_empty(),
+                "jurisdiction {code} should be non-empty"
+            );
         }
     }
 
@@ -399,7 +402,10 @@ mod tests {
         for code in embedded_jurisdiction_codes() {
             let yaml = embedded_jurisdiction_normalization_yaml(code);
             assert!(yaml.is_some(), "normalization for {code} should exist");
-            assert!(!yaml.unwrap().is_empty(), "normalization for {code} should be non-empty");
+            assert!(
+                !yaml.unwrap().is_empty(),
+                "normalization for {code} should be non-empty"
+            );
         }
     }
 
@@ -408,7 +414,10 @@ mod tests {
         for name in embedded_compiled_prompt_names() {
             let prompt = embedded_compiled_prompt(name);
             assert!(prompt.is_some(), "prompt {name} should exist");
-            assert!(!prompt.unwrap().is_empty(), "prompt {name} should be non-empty");
+            assert!(
+                !prompt.unwrap().is_empty(),
+                "prompt {name} should be non-empty"
+            );
         }
     }
 
@@ -474,21 +483,29 @@ mod tests {
     fn extract_jurisdiction_severity_floors_us() {
         let floors = extract_jurisdiction_severity_floors("us");
         assert!(!floors.is_empty(), "us should have severity floors");
-        assert!(floors.iter().any(|f| f.category == 1 && f.severity_floor == 5));
+        assert!(floors
+            .iter()
+            .any(|f| f.category == 1 && f.severity_floor == 5));
     }
 
     #[test]
     fn extract_community_prompt_suffix_gaming() {
         let suffix = extract_community_prompt_suffix("gaming");
         assert!(suffix.is_some(), "gaming should have a prompt suffix");
-        assert!(suffix.unwrap().to_lowercase().contains("gaming"), "suffix should mention gaming");
+        assert!(
+            suffix.unwrap().to_lowercase().contains("gaming"),
+            "suffix should mention gaming"
+        );
     }
 
     #[test]
     fn extract_jurisdiction_prompt_suffix_us() {
         let suffix = extract_jurisdiction_prompt_suffix("us");
         assert!(suffix.is_some(), "us should have a prompt suffix");
-        assert!(suffix.unwrap().contains("United States"), "suffix should mention US");
+        assert!(
+            suffix.unwrap().contains("United States"),
+            "suffix should mention US"
+        );
     }
 
     #[test]
@@ -513,12 +530,24 @@ mod tests {
         serde_yaml::from_str(yaml).expect("test_suite_template.yaml should parse")
     }
 
-    fn metrics_by_id(template: &serde_yaml::Value) -> std::collections::HashMap<String, serde_yaml::Value> {
-        let metrics = template.get("metrics").and_then(|v| v.as_sequence()).expect("metrics should be a sequence");
-        metrics.iter().map(|m| {
-            let id = m.get("id").and_then(|v| v.as_str()).expect("metric should have id").to_string();
-            (id, m.clone())
-        }).collect()
+    fn metrics_by_id(
+        template: &serde_yaml::Value,
+    ) -> std::collections::HashMap<String, serde_yaml::Value> {
+        let metrics = template
+            .get("metrics")
+            .and_then(|v| v.as_sequence())
+            .expect("metrics should be a sequence");
+        metrics
+            .iter()
+            .map(|m| {
+                let id = m
+                    .get("id")
+                    .and_then(|v| v.as_str())
+                    .expect("metric should have id")
+                    .to_string();
+                (id, m.clone())
+            })
+            .collect()
     }
 
     #[test]
@@ -535,9 +564,20 @@ mod tests {
     #[test]
     fn test_suite_template_required_top_level_keys() {
         let val = parse_template();
-        let required = ["schema_version", "test_suite_id", "metrics", "contracts", "coverage", "pack", "case_schema"];
+        let required = [
+            "schema_version",
+            "test_suite_id",
+            "metrics",
+            "contracts",
+            "coverage",
+            "pack",
+            "case_schema",
+        ];
         for key in &required {
-            assert!(val.get(*key).is_some(), "template missing top-level key: {key}");
+            assert!(
+                val.get(*key).is_some(),
+                "template missing top-level key: {key}"
+            );
         }
     }
 
@@ -553,10 +593,18 @@ mod tests {
         let val = parse_template();
         let metrics = metrics_by_id(&val);
         let expected = [
-            "child_safety_recall", "child_safety_precision", "privacy_leak_precision",
-            "scam_recall", "protected_speech_false_positive", "minority_language_false_positive",
-            "latency_p95_ms", "vision_child_safety_recall", "vision_nsfw_precision",
-            "vision_violence_recall", "vision_age_escalation_accuracy", "vision_deepfake_recall",
+            "child_safety_recall",
+            "child_safety_precision",
+            "privacy_leak_precision",
+            "scam_recall",
+            "protected_speech_false_positive",
+            "minority_language_false_positive",
+            "latency_p95_ms",
+            "vision_child_safety_recall",
+            "vision_nsfw_precision",
+            "vision_violence_recall",
+            "vision_age_escalation_accuracy",
+            "vision_deepfake_recall",
             "vision_benign_child_fp",
         ];
         for id in &expected {
@@ -585,10 +633,19 @@ mod tests {
         ];
         for (id, op, threshold) in expected {
             let m = &metrics[*id];
-            let actual_op = m.get("operator").and_then(|v| v.as_str()).expect("metric should have operator");
-            let actual_thr = m.get("threshold").and_then(|v| v.as_f64()).expect("metric should have threshold");
+            let actual_op = m
+                .get("operator")
+                .and_then(|v| v.as_str())
+                .expect("metric should have operator");
+            let actual_thr = m
+                .get("threshold")
+                .and_then(|v| v.as_f64())
+                .expect("metric should have threshold");
             assert_eq!(actual_op, *op, "metric {id} operator mismatch");
-            assert!((actual_thr - threshold).abs() < 1e-9, "metric {id} threshold mismatch: {actual_thr} vs {threshold}");
+            assert!(
+                (actual_thr - threshold).abs() < 1e-9,
+                "metric {id} threshold mismatch: {actual_thr} vs {threshold}"
+            );
         }
     }
 
@@ -605,10 +662,22 @@ mod tests {
     fn test_suite_template_contracts_reference_global_schemas() {
         let val = parse_template();
         let contracts = val.get("contracts").expect("contracts should exist");
-        let input_schema = contracts.get("input_schema").and_then(|v| v.as_str()).expect("input_schema should exist");
-        let output_schema = contracts.get("output_schema").and_then(|v| v.as_str()).expect("output_schema should exist");
-        assert!(input_schema.contains("local_signal_schema.json"), "input_schema should reference local_signal_schema.json");
-        assert!(output_schema.contains("output_schema.json"), "output_schema should reference output_schema.json");
+        let input_schema = contracts
+            .get("input_schema")
+            .and_then(|v| v.as_str())
+            .expect("input_schema should exist");
+        let output_schema = contracts
+            .get("output_schema")
+            .and_then(|v| v.as_str())
+            .expect("output_schema should exist");
+        assert!(
+            input_schema.contains("local_signal_schema.json"),
+            "input_schema should reference local_signal_schema.json"
+        );
+        assert!(
+            output_schema.contains("output_schema.json"),
+            "output_schema should reference output_schema.json"
+        );
     }
 
     #[test]
@@ -619,12 +688,22 @@ mod tests {
             .and_then(|v| v.get("per_category"))
             .and_then(|v| v.get("taxonomy_category_min_cases"))
             .expect("coverage.per_category.taxonomy_category_min_cases should exist");
-        let mapping = per_cat.as_mapping().expect("taxonomy_category_min_cases should be a mapping");
+        let mapping = per_cat
+            .as_mapping()
+            .expect("taxonomy_category_min_cases should be a mapping");
         for cat in 0u32..17 {
-            assert!(mapping.contains_key(&serde_yaml::Value::Number(serde_yaml::Number::from(cat as u64))),
-                "category {cat} must be in taxonomy_category_min_cases");
-            let count = mapping.get(&serde_yaml::Value::Number(serde_yaml::Number::from(cat as u64)))
-                .and_then(|v| v.as_u64()).expect("count should be a number");
+            assert!(
+                mapping.contains_key(&serde_yaml::Value::Number(serde_yaml::Number::from(
+                    cat as u64
+                ))),
+                "category {cat} must be in taxonomy_category_min_cases"
+            );
+            let count = mapping
+                .get(&serde_yaml::Value::Number(serde_yaml::Number::from(
+                    cat as u64,
+                )))
+                .and_then(|v| v.as_u64())
+                .expect("count should be a number");
             assert!(count >= 10, "category {cat} coverage {count} must be >= 10");
         }
     }
@@ -637,7 +716,10 @@ mod tests {
             .and_then(|v| v.get("vision_case_min_count"))
             .and_then(|v| v.as_u64());
         assert!(min_count.is_some(), "vision_case_min_count should exist");
-        assert!(*min_count.as_ref().unwrap() >= 1, "vision_case_min_count must be >= 1");
+        assert!(
+            *min_count.as_ref().unwrap() >= 1,
+            "vision_case_min_count must be >= 1"
+        );
     }
 
     #[test]
@@ -648,12 +730,19 @@ mod tests {
             .and_then(|v| v.get("protected_speech_contexts"))
             .and_then(|v| v.as_sequence())
             .expect("protected_speech_contexts should be a sequence");
-        let ctx_set: std::collections::HashSet<&str> = contexts.iter()
-            .filter_map(|v| v.as_str())
-            .collect();
-        let expected = ["QUOTED_SPEECH_CONTEXT", "NEWS_CONTEXT", "EDUCATION_CONTEXT", "COUNTERSPEECH_CONTEXT"];
+        let ctx_set: std::collections::HashSet<&str> =
+            contexts.iter().filter_map(|v| v.as_str()).collect();
+        let expected = [
+            "QUOTED_SPEECH_CONTEXT",
+            "NEWS_CONTEXT",
+            "EDUCATION_CONTEXT",
+            "COUNTERSPEECH_CONTEXT",
+        ];
         for e in &expected {
-            assert!(ctx_set.contains(*e), "protected_speech_contexts missing: {e}");
+            assert!(
+                ctx_set.contains(*e),
+                "protected_speech_contexts missing: {e}"
+            );
         }
     }
 
@@ -666,13 +755,13 @@ mod tests {
             .and_then(|v| v.get("confidences"))
             .and_then(|v| v.as_sequence())
             .expect("threshold_boundary_cases.confidences should be a sequence");
-        let conf_vals: Vec<f64> = confs.iter()
-            .filter_map(|v| v.as_f64())
-            .collect();
+        let conf_vals: Vec<f64> = confs.iter().filter_map(|v| v.as_f64()).collect();
         let expected = [0.44, 0.45, 0.62, 0.78, 0.85];
         for e in &expected {
-            assert!(conf_vals.iter().any(|c| (c - e).abs() < 1e-9), "threshold boundary confidences missing: {e}");
+            assert!(
+                conf_vals.iter().any(|c| (c - e).abs() < 1e-9),
+                "threshold boundary confidences missing: {e}"
+            );
         }
     }
 }
-

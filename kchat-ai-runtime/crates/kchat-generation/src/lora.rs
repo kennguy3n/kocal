@@ -5,17 +5,19 @@
 //! entirely different models. The swap takes <10ms.
 //!
 //! The system supports two adapter layouts:
+//!
 //! - **Task-based** (270 adapters): 18 tasks x 15 language slots (legacy).
 //!   Document tasks (12): summarize, translate, key_points, generate_doc,
-//!     generate_slides, edit_grammar, edit_style, edit_format, create_email,
-//!     create_social, create_pr, extract_info
+//!   generate_slides, edit_grammar, edit_style, edit_format, create_email,
+//!   create_social, create_pr, extract_info.
 //!   Chat-driven tasks (6): chat_catch_up, chat_create_tasks, chat_summarize,
-//!     chat_draft_reply, chat_context_qa, chat_meeting_notes
+//!   chat_draft_reply, chat_context_qa, chat_meeting_notes.
 //! - **Family-based** (75 adapters): 5 task-families x 15 language slots.
 //!   Families: extract_json, rewrite_grammar, summarize_catchup, doc_creative,
-//!     slides_deck
-//! Languages (10): en, vi, zh, ja, ko, es, ar, de, hi, fr
-//! Mixed-language (5): vi-en, zh-en, ja-en, ko-en, es-en
+//!   slides_deck.
+//!
+//! Languages (10): en, vi, zh, ja, ko, es, ar, de, hi, fr.
+//! Mixed-language (5): vi-en, zh-en, ja-en, ko-en, es-en.
 
 use parking_lot::Mutex;
 use std::collections::HashMap;
@@ -78,13 +80,64 @@ struct LoraState {
     last_swap_duration_ms: u64,
 }
 
+/// Hook that applies a LoRA swap to the active inference backend.
+///
+/// The runtime installs a hook that routes the swap into the real backend.
+/// [`BackendLoraHook`] bridges this to any [`crate::backend::BackendAdapter`];
+/// custom hooks can implement the trait directly.
+///
+/// Without a hook, `swap()` only updates bookkeeping state (test mode).
+pub trait LoraBackendHook: Send + Sync {
+    /// Attach the given adapter to the backend.
+    fn apply(&self, adapter: &LoraAdapter) -> Result<(), LoraError>;
+    /// Detach any active adapter from the backend.
+    fn detach(&self) -> Result<(), LoraError> {
+        Ok(())
+    }
+}
+
+/// Bridges [`LoraBackendHook`] to a shared [`crate::backend::BackendAdapter`].
+///
+/// Install on a manager that owns an `Arc<dyn BackendAdapter>`:
+///
+/// ```ignore
+/// let backend: Arc<dyn BackendAdapter> = ...;
+/// lora_manager.set_backend_hook(Box::new(BackendLoraHook::new(backend)));
+/// ```
+pub struct BackendLoraHook {
+    backend: std::sync::Arc<dyn crate::backend::BackendAdapter>,
+}
+
+impl BackendLoraHook {
+    /// Create a hook that applies adapters to the given backend.
+    pub fn new(backend: std::sync::Arc<dyn crate::backend::BackendAdapter>) -> Self {
+        Self { backend }
+    }
+}
+
+impl LoraBackendHook for BackendLoraHook {
+    fn apply(&self, adapter: &LoraAdapter) -> Result<(), LoraError> {
+        self.backend
+            .apply_lora(&adapter.path.to_string_lossy(), adapter.scale)
+            .map_err(|e| LoraError::LoadFailed(e.to_string()))
+    }
+
+    fn detach(&self) -> Result<(), LoraError> {
+        self.backend
+            .detach_lora()
+            .map_err(|e| LoraError::LoadFailed(e.to_string()))
+    }
+}
+
 /// LoRA manager — handles adapter registration, hot-swap, and detachment.
 ///
 /// The manager tracks available adapters and the currently-active adapter.
-/// When the llama.cpp backend is available, swapping calls into the backend's
-/// LoRA API. Without the backend, the manager still tracks state for testing.
+/// When a [`LoraBackendHook`] is installed, swaps are applied to the real
+/// inference backend; otherwise the manager tracks state only.
 pub struct LoraManager {
     state: Mutex<LoraState>,
+    /// Backend hook that performs the actual adapter swap.
+    hook: Mutex<Option<Box<dyn LoraBackendHook>>>,
 }
 
 impl LoraManager {
@@ -97,12 +150,21 @@ impl LoraManager {
                 last_swap_time: None,
                 last_swap_duration_ms: 0,
             }),
+            hook: Mutex::new(None),
         }
+    }
+
+    /// Install the backend hook invoked on `swap()`/`detach()`.
+    pub fn set_backend_hook(&self, hook: Box<dyn LoraBackendHook>) {
+        *self.hook.lock() = Some(hook);
     }
 
     /// Register an available adapter.
     pub fn register(&self, adapter: LoraAdapter) {
-        self.state.lock().available.insert(adapter.adapter_id.clone(), adapter);
+        self.state
+            .lock()
+            .available
+            .insert(adapter.adapter_id.clone(), adapter);
     }
 
     /// Register multiple adapters at once.
@@ -115,22 +177,31 @@ impl LoraManager {
 
     /// Hot-swap the current LoRA adapter.
     ///
-    /// In production with llama.cpp, this calls `LlamaModel::lora_adapter_init`
-    /// and `LlamaContext::set_adapter`. Without the backend, it just updates
-    /// the tracked state.
+    /// Applies the adapter to the inference backend via the installed
+    /// [`LoraBackendHook`]. Without a hook, it just updates the tracked state.
+    /// The tracked `current` adapter is only committed after the backend
+    /// apply succeeds — a failed swap leaves the previous adapter active.
     ///
     /// Returns the swap duration in milliseconds.
     pub fn swap(&self, adapter_id: &str) -> Result<u64, LoraError> {
         let start = Instant::now();
 
-        // Verify the adapter exists and update current atomically
-        {
-            let mut state = self.state.lock();
-            if !state.available.contains_key(adapter_id) {
-                return Err(LoraError::AdapterNotFound(adapter_id.into()));
-            }
-            state.current = Some(adapter_id.to_string());
+        let adapter = {
+            let state = self.state.lock();
+            state
+                .available
+                .get(adapter_id)
+                .cloned()
+                .ok_or_else(|| LoraError::AdapterNotFound(adapter_id.into()))?
+        };
+
+        // Apply to the real backend (if a hook is installed). On failure the
+        // tracked state is left unchanged — the previous adapter stays active.
+        if let Some(hook) = self.hook.lock().as_ref() {
+            hook.apply(&adapter)?;
         }
+
+        self.state.lock().current = Some(adapter_id.to_string());
 
         let duration_ms = start.elapsed().as_millis() as u64;
         {
@@ -149,13 +220,25 @@ impl LoraManager {
     }
 
     /// Detach the current adapter, reverting to the base model.
+    ///
+    /// The tracked state is cleared only after the backend detach succeeds;
+    /// on failure the adapter is still considered active.
     pub fn detach(&self) -> Result<(), LoraError> {
-        let mut state = self.state.lock();
-        if state.current.is_none() {
-            return Ok(()); // Already detached
+        let old = {
+            let state = self.state.lock();
+            match &state.current {
+                Some(id) => id.clone(),
+                None => return Ok(()), // Already detached
+            }
+        };
+
+        // Detach on the real backend (if a hook is installed).
+        if let Some(hook) = self.hook.lock().as_ref() {
+            hook.detach()?;
         }
-        let old = state.current.take();
-        tracing::info!("Detached LoRA adapter {:?}", old);
+
+        self.state.lock().current = None;
+        tracing::info!("Detached LoRA adapter {}", old);
         Ok(())
     }
 
@@ -254,12 +337,7 @@ impl LoraManager {
                 let task = parts[0].to_string();
                 let language = parts[1].to_string();
                 let adapter_id = LoraAdapter::make_id(&task, &language);
-                self.register(LoraAdapter::new(
-                    adapter_id,
-                    adapter_file,
-                    task,
-                    language,
-                ));
+                self.register(LoraAdapter::new(adapter_id, adapter_file, task, language));
                 count += 1;
             }
         }
@@ -368,9 +446,7 @@ pub fn task_to_family(task: &str) -> Option<&'static str> {
             Some(families::REWRITE_GRAMMAR)
         }
         // F3: summarize_catchup — summarization
-        "summarize" | "chat_summarize" | "chat_catch_up" => {
-            Some(families::SUMMARIZE_CATCHUP)
-        }
+        "summarize" | "chat_summarize" | "chat_catch_up" => Some(families::SUMMARIZE_CATCHUP),
         // F4: doc_creative — generation
         "generate_doc" | "create_email" | "create_social" | "create_pr" | "chat_draft_reply" => {
             Some(families::DOC_CREATIVE)
@@ -463,8 +539,7 @@ pub mod languages {
     pub const ES_EN: &str = "es-en";
 
     pub const ALL: &[&str] = &[
-        EN, VI, ZH, JA, KO, ES, AR, DE, HI, FR,
-        VI_EN, ZH_EN, JA_EN, KO_EN, ES_EN,
+        EN, VI, ZH, JA, KO, ES, AR, DE, HI, FR, VI_EN, ZH_EN, JA_EN, KO_EN, ES_EN,
     ];
 }
 
@@ -621,7 +696,12 @@ mod tests {
     fn test_resolver_falls_back_to_english() {
         let manager = LoraManager::new();
         // Register only English adapter for a task
-        manager.register(LoraAdapter::new("edit_grammar.en", "/path", "edit_grammar", "en"));
+        manager.register(LoraAdapter::new(
+            "edit_grammar.en",
+            "/path",
+            "edit_grammar",
+            "en",
+        ));
 
         let resolver = SkillLoRAResolver::new(&manager);
         let adapter_id = resolver.resolve("edit_grammar", "vi");
@@ -698,9 +778,17 @@ mod tests {
         let pack = tmp.path();
         let lora_dir = pack.join("lora");
         std::fs::create_dir_all(lora_dir.join("summarize.en")).unwrap();
-        std::fs::write(lora_dir.join("summarize.en").join("adapters.safetensors"), b"dummy").unwrap();
+        std::fs::write(
+            lora_dir.join("summarize.en").join("adapters.safetensors"),
+            b"dummy",
+        )
+        .unwrap();
         std::fs::create_dir_all(lora_dir.join("translate.vi")).unwrap();
-        std::fs::write(lora_dir.join("translate.vi").join("adapters.safetensors"), b"dummy").unwrap();
+        std::fs::write(
+            lora_dir.join("translate.vi").join("adapters.safetensors"),
+            b"dummy",
+        )
+        .unwrap();
 
         let manager = LoraManager::new();
         let count = manager.load_from_pack(pack);

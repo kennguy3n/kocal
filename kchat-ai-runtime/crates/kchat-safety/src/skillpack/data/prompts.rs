@@ -3,12 +3,10 @@
 //! These files are embedded from `files/prompts/`.
 
 /// `files/prompts/runtime_instruction.txt` — runtime instruction template.
-pub const RUNTIME_INSTRUCTION_TXT: &str =
-    include_str!("files/prompts/runtime_instruction.txt");
+pub const RUNTIME_INSTRUCTION_TXT: &str = include_str!("files/prompts/runtime_instruction.txt");
 
 /// `files/prompts/compiled_prompt_format.md` — compiled prompt format documentation.
-pub const COMPILED_PROMPT_FORMAT_MD: &str =
-    include_str!("files/prompts/compiled_prompt_format.md");
+pub const COMPILED_PROMPT_FORMAT_MD: &str = include_str!("files/prompts/compiled_prompt_format.md");
 
 /// Get a compiled prompt example by filename (without `.txt` extension).
 ///
@@ -256,17 +254,64 @@ pub fn compiled_prompt_names() -> &'static [&'static str] {
         "jurisdiction_strict_marketplace",
         "strict_adult_school",
         "strict_marketplace_workplace",
-        "country_ae", "country_ar", "country_at", "country_au", "country_bd",
-        "country_br", "country_ca", "country_ch", "country_cl", "country_co",
-        "country_cz", "country_de", "country_dk", "country_dz", "country_ec",
-        "country_eg", "country_es", "country_et", "country_fi", "country_fr",
-        "country_gb", "country_gh", "country_gr", "country_hu", "country_id",
-        "country_ie", "country_il", "country_in", "country_iq", "country_it",
-        "country_jp", "country_ke", "country_kr", "country_ma", "country_mx",
-        "country_my", "country_ng", "country_nl", "country_no", "country_nz",
-        "country_pe", "country_ph", "country_pk", "country_pl", "country_pt",
-        "country_ro", "country_ru", "country_sa", "country_se", "country_sg",
-        "country_th", "country_tr", "country_tw", "country_tz", "country_ua",
-        "country_us", "country_uy", "country_vn", "country_za",
+        "country_ae",
+        "country_ar",
+        "country_at",
+        "country_au",
+        "country_bd",
+        "country_br",
+        "country_ca",
+        "country_ch",
+        "country_cl",
+        "country_co",
+        "country_cz",
+        "country_de",
+        "country_dk",
+        "country_dz",
+        "country_ec",
+        "country_eg",
+        "country_es",
+        "country_et",
+        "country_fi",
+        "country_fr",
+        "country_gb",
+        "country_gh",
+        "country_gr",
+        "country_hu",
+        "country_id",
+        "country_ie",
+        "country_il",
+        "country_in",
+        "country_iq",
+        "country_it",
+        "country_jp",
+        "country_ke",
+        "country_kr",
+        "country_ma",
+        "country_mx",
+        "country_my",
+        "country_ng",
+        "country_nl",
+        "country_no",
+        "country_nz",
+        "country_pe",
+        "country_ph",
+        "country_pk",
+        "country_pl",
+        "country_pt",
+        "country_ro",
+        "country_ru",
+        "country_sa",
+        "country_se",
+        "country_sg",
+        "country_th",
+        "country_tr",
+        "country_tw",
+        "country_tz",
+        "country_ua",
+        "country_us",
+        "country_uy",
+        "country_vn",
+        "country_za",
     ]
 }

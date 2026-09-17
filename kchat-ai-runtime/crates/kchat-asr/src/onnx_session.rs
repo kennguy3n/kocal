@@ -407,7 +407,7 @@ pub const WHISPER_DEFAULT_ENCODER_FILENAME: &str = "encoder_model.onnx";
 #[cfg(feature = "onnx-runtime")]
 mod with_ort {
     use super::{
-        build_decoder_prefix, segments_from_tokens, argmax_language_token, argmax_next_token,
+        argmax_language_token, argmax_next_token, build_decoder_prefix, segments_from_tokens,
         WhisperSpecialTokens, WhisperTask, WHISPER_DECODER_CONTEXT_TOKENS,
         WHISPER_DEFAULT_DECODER_FILENAME, WHISPER_DEFAULT_ENCODER_FILENAME,
         WHISPER_DEFAULT_TOKENIZER_FILENAME, WHISPER_ENCODER_FRAMES, WHISPER_MAX_DECODE_TOKENS,
@@ -524,9 +524,7 @@ mod with_ort {
                 Some(DirectMLExecutionProvider::default().build())
             }
             kchat_core::ep::ExecutionProvider::MetalPerformanceShaders => None,
-            kchat_core::ep::ExecutionProvider::Cpu => {
-                Some(CPUExecutionProvider::default().build())
-            }
+            kchat_core::ep::ExecutionProvider::Cpu => Some(CPUExecutionProvider::default().build()),
         }
     }
 
@@ -538,23 +536,37 @@ mod with_ort {
         op: &'static str,
         intra_threads: usize,
     ) -> AsrResult<Session> {
-        let mut builder = ort::session::Session::builder()
-            .map_err(|e| AsrError::Ort { op, detail: format!("builder: {e}") })?;
+        let mut builder = ort::session::Session::builder().map_err(|e| AsrError::Ort {
+            op,
+            detail: format!("builder: {e}"),
+        })?;
         builder = builder
             .with_optimization_level(ort::session::builder::GraphOptimizationLevel::Level3)
-            .map_err(|e| AsrError::Ort { op, detail: format!("optimization: {e}") })?;
+            .map_err(|e| AsrError::Ort {
+                op,
+                detail: format!("optimization: {e}"),
+            })?;
         builder = builder
             .with_intra_threads(intra_threads)
-            .map_err(|e| AsrError::Ort { op, detail: format!("threads: {e}") })?;
+            .map_err(|e| AsrError::Ort {
+                op,
+                detail: format!("threads: {e}"),
+            })?;
         let ep_eps = build_ort_eps_for_host();
         if !ep_eps.is_empty() {
             builder = builder
                 .with_execution_providers(&ep_eps)
-                .map_err(|e| AsrError::Ort { op, detail: format!("ep selection: {e}") })?;
+                .map_err(|e| AsrError::Ort {
+                    op,
+                    detail: format!("ep selection: {e}"),
+                })?;
         }
         builder
             .commit_from_file(model_path)
-            .map_err(|e| AsrError::Ort { op, detail: format!("load model: {e}") })
+            .map_err(|e| AsrError::Ort {
+                op,
+                detail: format!("load model: {e}"),
+            })
     }
 
     // -----------------------------------------------------------------------
@@ -729,17 +741,12 @@ mod with_ort {
                     detail: "encoder run returned zero outputs".into(),
                 })?
                 .1;
-            let (shape, data) = out
-                .try_extract_tensor::<f32>()
-                .map_err(|e| AsrError::Ort {
-                    op: "whisper_encoder_output_extract",
-                    detail: e.to_string(),
-                })?;
+            let (shape, data) = out.try_extract_tensor::<f32>().map_err(|e| AsrError::Ort {
+                op: "whisper_encoder_output_extract",
+                detail: e.to_string(),
+            })?;
             // `shape: &Shape` derefs to `&[i64]`; `data: &[f32]`.
-            if shape.len() != 3
-                || shape[0] != 1
-                || shape[1] != WHISPER_ENCODER_FRAMES as i64
-            {
+            if shape.len() != 3 || shape[0] != 1 || shape[1] != WHISPER_ENCODER_FRAMES as i64 {
                 return Err(AsrError::Ort {
                     op: "whisper_encoder_output_shape",
                     detail: format!(
@@ -749,12 +756,13 @@ mod with_ort {
                 });
             }
             let d_model_dim = shape_inner_dim(shape)?;
-            let expected_len = WHISPER_ENCODER_FRAMES
-                .checked_mul(d_model_dim)
-                .ok_or_else(|| AsrError::Ort {
-                    op: "whisper_encoder_output_shape",
-                    detail: format!("encoder output shape overflow: {shape:?}"),
-                })?;
+            let expected_len =
+                WHISPER_ENCODER_FRAMES
+                    .checked_mul(d_model_dim)
+                    .ok_or_else(|| AsrError::Ort {
+                        op: "whisper_encoder_output_shape",
+                        detail: format!("encoder output shape overflow: {shape:?}"),
+                    })?;
             if data.len() != expected_len {
                 return Err(AsrError::Ort {
                     op: "whisper_encoder_output_shape",
@@ -817,12 +825,10 @@ mod with_ort {
                     detail: "decoder run returned zero outputs".into(),
                 })?
                 .1;
-            let (shape, data) = out
-                .try_extract_tensor::<f32>()
-                .map_err(|e| AsrError::Ort {
-                    op: "whisper_decoder_output_extract",
-                    detail: e.to_string(),
-                })?;
+            let (shape, data) = out.try_extract_tensor::<f32>().map_err(|e| AsrError::Ort {
+                op: "whisper_decoder_output_extract",
+                detail: e.to_string(),
+            })?;
             if shape.len() != 3
                 || shape[0] != 1
                 || shape[1] != prefix_len as i64
@@ -836,12 +842,12 @@ mod with_ort {
                     ),
                 });
             }
-            let total = prefix_len.checked_mul(self.vocab_size).ok_or_else(|| {
-                AsrError::Ort {
+            let total = prefix_len
+                .checked_mul(self.vocab_size)
+                .ok_or_else(|| AsrError::Ort {
                     op: "whisper_decoder_output_overflow",
                     detail: "prefix_len * vocab_size overflowed usize".into(),
-                }
-            })?;
+                })?;
             if data.len() != total {
                 return Err(AsrError::Ort {
                     op: "whisper_decoder_output_shape",
@@ -946,14 +952,15 @@ mod with_ort {
 
             // 4. Resolve the language token.
             let (language_token, detected_language) = if let Some(code) = self.language.as_deref() {
-                let id = self.special.language_token(code).ok_or_else(|| {
-                    AsrError::Tokenizer {
+                let id = self
+                    .special
+                    .language_token(code)
+                    .ok_or_else(|| AsrError::Tokenizer {
                         op: "whisper_transcribe_language",
                         detail: format!(
                             "pinned language `{code}` not exposed by the loaded Whisper vocab"
                         ),
-                    }
-                })?;
+                    })?;
                 (id, Some(code.to_string()))
             } else {
                 let id = self.detect_language(&hidden_tensor)?;
@@ -976,8 +983,7 @@ mod with_ort {
             let prefix_initial_len = prefix.len();
 
             // 6. Greedy decode loop.
-            let context_budget =
-                WHISPER_DECODER_CONTEXT_TOKENS.saturating_sub(prefix_initial_len);
+            let context_budget = WHISPER_DECODER_CONTEXT_TOKENS.saturating_sub(prefix_initial_len);
             let body_budget = self.max_decode_tokens.min(context_budget);
             let mut emitted: Vec<u32> = Vec::new();
             for _ in 0..body_budget {
@@ -1057,7 +1063,9 @@ mod with_ort {
 
     /// Resolve [`WhisperSpecialTokens`] from a loaded tokenizer's
     /// added-token table.
-    fn resolve_special_tokens(tokenizer: &tokenizers::Tokenizer) -> AsrResult<WhisperSpecialTokens> {
+    fn resolve_special_tokens(
+        tokenizer: &tokenizers::Tokenizer,
+    ) -> AsrResult<WhisperSpecialTokens> {
         let added: Vec<(String, u32)> = tokenizer
             .get_added_tokens_decoder()
             .into_iter()
@@ -1429,9 +1437,8 @@ mod tests {
         let timestamp_begin: u32 = 50_363;
         let end_of_text: u32 = 50_256;
         let stream = vec![timestamp_begin, timestamp_begin + 10, end_of_text];
-        let segments = segments_from_tokens(&stream, timestamp_begin, end_of_text, |_| {
-            String::new()
-        });
+        let segments =
+            segments_from_tokens(&stream, timestamp_begin, end_of_text, |_| String::new());
         assert!(segments.is_empty());
     }
 
@@ -1525,7 +1532,10 @@ mod tests {
         let timestamp_begin = 50_363;
         let added = synthetic_added_tokens(timestamp_begin);
         let s = WhisperSpecialTokens::resolve_from_added_tokens(&added).unwrap();
-        assert!(s.language_token("zz").is_none(), "zz must not be in the synthetic vocab");
+        assert!(
+            s.language_token("zz").is_none(),
+            "zz must not be in the synthetic vocab"
+        );
         assert!(s.language_token("en").is_some(), "en must be present");
     }
 
@@ -1534,11 +1544,8 @@ mod tests {
     #[cfg(not(feature = "onnx-runtime"))]
     #[test]
     fn stub_new_reports_feature_gate() {
-        let err = OnnxWhisperTranscriber::new(
-            &std::path::PathBuf::from("/nonexistent"),
-            2,
-        )
-        .unwrap_err();
+        let err =
+            OnnxWhisperTranscriber::new(&std::path::PathBuf::from("/nonexistent"), 2).unwrap_err();
         assert!(matches!(err, AsrError::Custom(_)));
     }
 

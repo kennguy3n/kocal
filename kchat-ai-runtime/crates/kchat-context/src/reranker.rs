@@ -70,8 +70,13 @@ impl CrossEncoderReranker {
         quantization: kchat_encoder::Quantization,
         intra_threads: usize,
     ) -> RerankerResult<Self> {
-        let session = kchat_encoder::EncoderSession::new(model_path, tokenizer_path, quantization, intra_threads)
-            .map_err(|e| RerankerError::InferenceFailed(format!("encoder session: {e}")))?;
+        let session = kchat_encoder::EncoderSession::new(
+            model_path,
+            tokenizer_path,
+            quantization,
+            intra_threads,
+        )
+        .map_err(|e| RerankerError::InferenceFailed(format!("encoder session: {e}")))?;
         Ok(Self {
             session: std::sync::Arc::new(session),
         })
@@ -89,6 +94,44 @@ impl Reranker for CrossEncoderReranker {
         let head = kchat_encoder::RerankHead::new(&self.session);
         head.rerank(query, documents, top_k)
             .map_err(|e| RerankerError::InferenceFailed(e.to_string()))
+    }
+
+    fn model_name(&self) -> &str {
+        self.session.model_name()
+    }
+}
+
+/// GGUF cross-encoder reranker — shares one in-process `GgufEncoderSession`
+/// (mmBERT via llama.cpp) with the safety and embedding planes.
+#[cfg(feature = "gguf-embeddings")]
+pub struct GgufReranker {
+    session: std::sync::Arc<kchat_encoder::GgufEncoderSession>,
+}
+
+#[cfg(feature = "gguf-embeddings")]
+impl GgufReranker {
+    /// Wrap a shared encoder session.
+    pub fn new(session: std::sync::Arc<kchat_encoder::GgufEncoderSession>) -> Self {
+        Self { session }
+    }
+}
+
+#[cfg(feature = "gguf-embeddings")]
+impl Reranker for GgufReranker {
+    fn rerank(
+        &self,
+        query: &str,
+        documents: &[String],
+        top_k: usize,
+    ) -> RerankerResult<Vec<(usize, f64)>> {
+        let scores = self
+            .session
+            .rerank_batch(query, documents)
+            .map_err(|e| RerankerError::InferenceFailed(format!("gguf rerank: {e}")))?;
+        let mut scored: Vec<(usize, f64)> = scores.into_iter().enumerate().collect();
+        scored.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+        scored.truncate(top_k);
+        Ok(scored)
     }
 
     fn model_name(&self) -> &str {

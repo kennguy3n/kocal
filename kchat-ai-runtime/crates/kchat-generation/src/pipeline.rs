@@ -321,8 +321,8 @@ pub fn find_contradictions(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::backends::MockBackend;
     use crate::backend::{BackendConfig, BackendType};
+    use crate::backends::MockBackend;
     use crate::skills::SkillRegistry;
     use kchat_core::tier::DeviceTier;
 
@@ -371,7 +371,9 @@ mod tests {
         let skill = get_skill("doc_find_contradictions");
         let pipeline = GenerationPipeline::new(&backend, &skill);
 
-        let result = pipeline.run_contradiction_check("The sky is blue. The sky is green.", None).unwrap();
+        let result = pipeline
+            .run_contradiction_check("The sky is blue. The sky is green.", None)
+            .unwrap();
         assert!(!result.text.is_empty());
     }
 
@@ -379,8 +381,7 @@ mod tests {
     fn test_pipeline_large_doc_multiple_chunks() {
         let backend = make_loaded_backend();
         let skill = get_skill("edit_translate_document");
-        let pipeline = GenerationPipeline::new(&backend, &skill)
-            .with_max_chunk_chars(50); // Force multiple chunks
+        let pipeline = GenerationPipeline::new(&backend, &skill).with_max_chunk_chars(50); // Force multiple chunks
 
         let doc = "# Section 1\nThis is the first section with some content.\n\n# Section 2\nThis is the second section with more content.";
         let result = pipeline.run(doc, "French", None).unwrap();
@@ -391,8 +392,7 @@ mod tests {
     fn test_pipeline_progress_callback() {
         let backend = make_loaded_backend();
         let skill = get_skill("edit_translate_document");
-        let pipeline = GenerationPipeline::new(&backend, &skill)
-            .with_max_chunk_chars(30);
+        let pipeline = GenerationPipeline::new(&backend, &skill).with_max_chunk_chars(30);
 
         let doc = "# A\nContent A.\n\n# B\nContent B.\n\n# C\nContent C.";
         let progress_count = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));

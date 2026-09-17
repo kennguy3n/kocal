@@ -8,9 +8,11 @@ authors.workspace = true
 [features]
 default = ["lexical"]
 lexical = []
-embeddings = ["dep:ort", "dep:tokenizers", "dep:ndarray"]
+embeddings = ["dep:ort", "dep:tokenizers", "dep:ndarray", "kchat-encoder/onnx-runtime"]
 connectors = ["dep:async-trait"]
 reranker = ["embeddings"]
+# In-process GGUF embeddings + reranking via shared GgufEncoderSession (mobile-safe)
+gguf-embeddings = ["kchat-encoder/gguf-runtime"]
 
 [dependencies]
 kchat-core = { path = "../kchat-core" }
@@ -55,3 +57,8 @@ getrandom = "0.2"
 
 [dev-dependencies]
 tempfile = "3"
+criterion = { workspace = true }
+
+[[bench]]
+name = "retrieval"
+harness = false

@@ -141,6 +141,13 @@ pub struct ModelPackManifest {
     pub kill_switch: bool,
     /// Rollback target pack ID
     pub rollback_target: Option<String>,
+
+    // --- Distribution ---
+    /// Direct download URL for the pack content (e.g. a HuggingFace
+    /// `resolve/` URL or CDN object). When empty, the model manager falls
+    /// back to the CDN URL scheme.
+    #[serde(default)]
+    pub download_url: String,
 }
 
 impl ModelPackManifest {
@@ -221,7 +228,10 @@ impl SignedManifest {
         }
 
         // 2. Pinned key equality — constant-time comparison to prevent timing attacks
-        if !constant_time_eq(self.signature.public_key.as_bytes(), pinned_public_key_hex.as_bytes()) {
+        if !constant_time_eq(
+            self.signature.public_key.as_bytes(),
+            pinned_public_key_hex.as_bytes(),
+        ) {
             return Err(CoreError::ManifestSignatureInvalid(
                 "public key does not match pinned key".into(),
             ));
@@ -264,7 +274,9 @@ impl SignedManifest {
         //    non-canonical encodings, small-order keys, and malleable signatures)
         verifying_key
             .verify_strict(&message, &signature)
-            .map_err(|e| CoreError::ManifestSignatureInvalid(format!("signature verification failed: {e}")))?;
+            .map_err(|e| {
+                CoreError::ManifestSignatureInvalid(format!("signature verification failed: {e}"))
+            })?;
 
         // 6. Verify all pack digests are non-null
         for pack in &self.packs {
@@ -275,23 +287,28 @@ impl SignedManifest {
         let mut seen_ids = std::collections::HashSet::new();
         for pack in &self.packs {
             if !seen_ids.insert(&pack.pack_id) {
-                return Err(CoreError::ManifestVerificationFailed(
-                    format!("duplicate pack_id: {}", pack.pack_id),
-                ));
+                return Err(CoreError::ManifestVerificationFailed(format!(
+                    "duplicate pack_id: {}",
+                    pack.pack_id
+                )));
             }
         }
 
         // 8. Verify packs have not expired (fail-closed on malformed timestamps)
         for pack in &self.packs {
             if !pack.expires_at.is_empty() {
-                let expires = chrono::DateTime::parse_from_rfc3339(&pack.expires_at)
-                    .map_err(|e| CoreError::ManifestVerificationFailed(
-                        format!("pack {} has malformed expires_at '{}': {}", pack.pack_id, pack.expires_at, e),
-                    ))?;
+                let expires =
+                    chrono::DateTime::parse_from_rfc3339(&pack.expires_at).map_err(|e| {
+                        CoreError::ManifestVerificationFailed(format!(
+                            "pack {} has malformed expires_at '{}': {}",
+                            pack.pack_id, pack.expires_at, e
+                        ))
+                    })?;
                 if expires.with_timezone(&chrono::Utc) < chrono::Utc::now() {
-                    return Err(CoreError::ManifestVerificationFailed(
-                        format!("pack {} expired at {}", pack.pack_id, pack.expires_at),
-                    ));
+                    return Err(CoreError::ManifestVerificationFailed(format!(
+                        "pack {} expired at {}",
+                        pack.pack_id, pack.expires_at
+                    )));
                 }
             }
         }
@@ -355,18 +372,16 @@ impl RuntimeManifest {
 
     /// Verify a downloaded chunk against its expected SHA-256.
     pub fn verify_chunk(&self, pack_id: &str, chunk_index: u32, data: &[u8]) -> Result<()> {
-        let pack = self.find_pack(pack_id).ok_or_else(|| {
-            CoreError::PackNotFound(format!("pack {pack_id} not in manifest"))
-        })?;
+        let pack = self
+            .find_pack(pack_id)
+            .ok_or_else(|| CoreError::PackNotFound(format!("pack {pack_id} not in manifest")))?;
 
         let chunk = pack
             .chunks
             .iter()
             .find(|c| c.index == chunk_index)
             .ok_or_else(|| {
-                CoreError::PackNotFound(format!(
-                    "chunk {chunk_index} not found in pack {pack_id}"
-                ))
+                CoreError::PackNotFound(format!("chunk {chunk_index} not found in pack {pack_id}"))
             })?;
 
         let mut hasher = Sha256::new();
@@ -385,9 +400,9 @@ impl RuntimeManifest {
 
     /// Verify a complete assembled pack against its content SHA-256.
     pub fn verify_pack(&self, pack_id: &str, data: &[u8]) -> Result<()> {
-        let pack = self.find_pack(pack_id).ok_or_else(|| {
-            CoreError::PackNotFound(format!("pack {pack_id} not in manifest"))
-        })?;
+        let pack = self
+            .find_pack(pack_id)
+            .ok_or_else(|| CoreError::PackNotFound(format!("pack {pack_id} not in manifest")))?;
 
         let mut hasher = Sha256::new();
         hasher.update(data);
@@ -431,7 +446,7 @@ fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ed25519_dalek::{SigningKey, Signer};
+    use ed25519_dalek::{Signer, SigningKey};
     use rand::rngs::OsRng;
 
     fn make_test_manifest() -> (SignedManifest, String, SigningKey) {
@@ -468,6 +483,7 @@ mod tests {
             rollout_cohort: "internal".into(),
             expires_at: "2027-01-01T00:00:00Z".into(),
             kill_switch: false,
+            download_url: String::new(),
             rollback_target: None,
         };
 
@@ -530,11 +546,8 @@ mod tests {
     #[test]
     fn test_chunk_verification() {
         let (manifest, pk_hex, _) = make_test_manifest();
-        let rt = RuntimeManifest::from_json(
-            &serde_json::to_vec(&manifest).unwrap(),
-            &pk_hex,
-        )
-        .unwrap();
+        let rt =
+            RuntimeManifest::from_json(&serde_json::to_vec(&manifest).unwrap(), &pk_hex).unwrap();
 
         // The test chunk has sha256 = "b"*64, so any real data won't match
         let data = vec![0u8; 1024];
@@ -551,11 +564,8 @@ mod tests {
         let sig = signing_key.sign(&message);
         manifest.signature.signature = hex::encode(sig.to_bytes());
 
-        let rt = RuntimeManifest::from_json(
-            &serde_json::to_vec(&manifest).unwrap(),
-            &pk_hex,
-        )
-        .unwrap();
+        let rt =
+            RuntimeManifest::from_json(&serde_json::to_vec(&manifest).unwrap(), &pk_hex).unwrap();
 
         assert_eq!(rt.available_packs().len(), 0);
     }

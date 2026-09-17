@@ -34,14 +34,14 @@ impl RiskCategory {
     /// Map to taxonomy category ID per kchat.guardrail.taxonomy.v1.
     pub fn as_u32(self) -> u32 {
         match self {
-            RiskCategory::ChildSafety => 1,    // CHILD_SAFETY
-            RiskCategory::SelfHarm => 2,       // SELF_HARM
-            RiskCategory::Violence => 3,       // VIOLENCE_THREAT
-            RiskCategory::HateSpeech => 6,     // HATE
-            RiskCategory::ScamFraud => 7,      // SCAM_FRAUD
-            RiskCategory::PrivateData => 9,    // PRIVATE_DATA
-            RiskCategory::Nsfw => 10,          // SEXUAL_ADULT
-            RiskCategory::Spam => 7,           // Map to SCAM_FRAUD (closest taxonomy match)
+            RiskCategory::ChildSafety => 1, // CHILD_SAFETY
+            RiskCategory::SelfHarm => 2,    // SELF_HARM
+            RiskCategory::Violence => 3,    // VIOLENCE_THREAT
+            RiskCategory::HateSpeech => 6,  // HATE
+            RiskCategory::ScamFraud => 7,   // SCAM_FRAUD
+            RiskCategory::PrivateData => 9, // PRIVATE_DATA
+            RiskCategory::Nsfw => 10,       // SEXUAL_ADULT
+            RiskCategory::Spam => 7,        // Map to SCAM_FRAUD (closest taxonomy match)
             RiskCategory::Custom(id) => id,
         }
     }
@@ -143,11 +143,16 @@ pub fn verify_policy_pack(
 
     // 2. Validate hex length BEFORE comparison to avoid timing leaks
     if pack.manifest.public_key.len() != 64 {
-        return Err(PolicyPackError::SignatureInvalid("public key hex must be 64 characters".into()));
+        return Err(PolicyPackError::SignatureInvalid(
+            "public key hex must be 64 characters".into(),
+        ));
     }
 
     // 3. Pinned key equality — constant-time comparison
-    if !constant_time_eq_bytes(pack.manifest.public_key.as_bytes(), pinned_public_key_hex.as_bytes()) {
+    if !constant_time_eq_bytes(
+        pack.manifest.public_key.as_bytes(),
+        pinned_public_key_hex.as_bytes(),
+    ) {
         return Err(PolicyPackError::KeyMismatch);
     }
 
@@ -155,7 +160,9 @@ pub fn verify_policy_pack(
     let pk_bytes = hex::decode(&pack.manifest.public_key)
         .map_err(|e| PolicyPackError::SignatureInvalid(format!("bad public key hex: {e}")))?;
     if pk_bytes.len() != 32 {
-        return Err(PolicyPackError::SignatureInvalid("public key must be 32 bytes".into()));
+        return Err(PolicyPackError::SignatureInvalid(
+            "public key must be 32 bytes".into(),
+        ));
     }
     let mut pk_arr = [0u8; 32];
     pk_arr.copy_from_slice(&pk_bytes);
@@ -164,12 +171,16 @@ pub fn verify_policy_pack(
 
     // 4. Parse signature — validate hex length before decoding
     if pack.manifest.signature.len() != 128 {
-        return Err(PolicyPackError::SignatureInvalid("signature hex must be 128 characters".into()));
+        return Err(PolicyPackError::SignatureInvalid(
+            "signature hex must be 128 characters".into(),
+        ));
     }
     let sig_bytes = hex::decode(&pack.manifest.signature)
         .map_err(|e| PolicyPackError::SignatureInvalid(format!("bad signature hex: {e}")))?;
     if sig_bytes.len() != 64 {
-        return Err(PolicyPackError::SignatureInvalid("signature must be 64 bytes".into()));
+        return Err(PolicyPackError::SignatureInvalid(
+            "signature must be 64 bytes".into(),
+        ));
     }
     let mut sig_arr = [0u8; 64];
     sig_arr.copy_from_slice(&sig_bytes);
@@ -239,7 +250,7 @@ pub fn severity_from_u8(level: u8) -> Severity {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ed25519_dalek::{SigningKey, Signer};
+    use ed25519_dalek::{Signer, SigningKey};
     use rand::rngs::OsRng;
 
     fn make_test_pack() -> (PolicyPack, String, SigningKey) {
@@ -311,7 +322,10 @@ mod tests {
         assert_eq!(parse_action("block"), crate::verdict::Action::Block);
         assert_eq!(parse_action("warn"), crate::verdict::Action::Warn);
         assert_eq!(parse_action("redact"), crate::verdict::Action::Redact);
-        assert_eq!(parse_action("require_consent"), crate::verdict::Action::RequireConsent);
+        assert_eq!(
+            parse_action("require_consent"),
+            crate::verdict::Action::RequireConsent
+        );
         assert_eq!(parse_action("unknown"), crate::verdict::Action::Allow);
     }
 

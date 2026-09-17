@@ -21,7 +21,10 @@ pub(crate) fn build_ort_eps_for_host() -> Vec<ort::execution_providers::Executio
         {
             (Platform::MacOs, kchat_core::ep::Arch::Aarch64)
         }
-        #[cfg(all(not(all(target_arch = "aarch64", any(target_os = "macos", target_os = "ios"))), target_os = "macos"))]
+        #[cfg(all(
+            not(all(target_arch = "aarch64", any(target_os = "macos", target_os = "ios"))),
+            target_os = "macos"
+        ))]
         {
             (Platform::MacOs, kchat_core::ep::Arch::X86_64)
         }
@@ -102,15 +105,11 @@ fn ep_to_ort_dispatch(
         kchat_core::ep::ExecutionProvider::CoreMl => {
             Some(CoreMLExecutionProvider::default().build())
         }
-        kchat_core::ep::ExecutionProvider::Nnapi => {
-            Some(NNAPIExecutionProvider::default().build())
-        }
+        kchat_core::ep::ExecutionProvider::Nnapi => Some(NNAPIExecutionProvider::default().build()),
         kchat_core::ep::ExecutionProvider::DirectMl => {
             Some(DirectMLExecutionProvider::default().build())
         }
         kchat_core::ep::ExecutionProvider::MetalPerformanceShaders => None,
-        kchat_core::ep::ExecutionProvider::Cpu => {
-            Some(CPUExecutionProvider::default().build())
-        }
+        kchat_core::ep::ExecutionProvider::Cpu => Some(CPUExecutionProvider::default().build()),
     }
 }

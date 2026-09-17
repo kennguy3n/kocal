@@ -14,7 +14,7 @@ model. The deterministic safety plane uses:
 - **Regex-based PII detection** — emails, phone numbers, SSN, credit cards, addresses
 - **Scam/URL detectors** — known scam patterns, suspicious URL heuristics
 - **Signed policy packs (Ed25519)** — community/jurisdiction-specific rules
-- **ONNX Runtime safety encoder** — INT8 (High tier, 270MB) or INT4 (Low/Medium, 90MB) quantized
+- **mmBERT safety encoder (GGUF)** — mmBERT-small Q4_K_M (~90MB) via llama.cpp, 17-category taxonomy
 - **Skill-pack system** — 17-category taxonomy, 0-5 severity rubric, 38 communities,
   62 jurisdictions, threshold policy (0.45/0.62/0.78/0.85)
 
@@ -85,7 +85,7 @@ Model output is always constrained to a valid format:
 │  │ • PII detect │  │ • FTS5 BM25 │  │ • MLX backend│  │   AST    │ │
 │  │ • Scam/URL   │  │ • Encrypted │  │ • LoRA swap  │  │ • ToolPlan│ │
 │  │ • Policy pkgs│  │   store     │  │ • Swarm inf  │  │ • RBAC    │ │
-│  │ • ONNX encdr │  │ • Embeddings│  │ • Grammar    │  │ • Commit │ │
+│  │ • GGUF encdr │  │ • Embeddings│  │ • Grammar    │  │ • Commit │ │
 │  │ • Vision     │  │ • Reranker  │  │   validation │  │   tokens │ │
 │  │ • Skill-pack │  │ • Provenance│  │ • Streaming  │  │ • Audit   │ │
 │  └──────┬───────┘  └──────┬──────┘  └──────┬───────┘  └─────┬─────┘ │
@@ -205,9 +205,10 @@ The foundation crate that all other crates depend on.
 - Injection detection: prompt injection, jailbreak attempts
 - Multilingual support: 14 languages + 13 mixed-lingual code-switch combos
 
-**ONNX Runtime Safety Encoder**:
-- INT8 quantized (High tier, 270MB)
-- INT4 quantized (Low/Medium tier, 90MB)
+**GGUF Safety Encoder** (mmBERT-small):
+- Q4_K_M quantized (~90MB, all tiers)
+- llama.cpp embedding backend (`gguf-runtime` feature); subprocess on
+  desktop, in-process engine on mobile
 - Escalation from deterministic → encoder → SLM
 
 **Skill-Pack System** (feature: `skill-pack`):
@@ -241,7 +242,7 @@ The foundation crate that all other crates depend on.
 - Scope-based access control (user/role authorization)
 
 **Retrieval Pipeline**:
-- Dense embeddings: kchat-encoder (XLM-RoBERTa-base) ONNX INT4 (90MB, 768-dim) on Low/Medium, INT8 (270MB) on High
+- Dense embeddings: kchat-encoder (mmBERT-small) GGUF Q4_K_M (~90MB, 384-dim) on all tiers
 - Fallback overlap scoring when embeddings unavailable
 - Cross-encoder reranker: kchat-encoder shared session (all tiers)
 - Recency boost for recent results
@@ -389,7 +390,7 @@ Input Message
     ▼
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
 │  NFKC           │────▶│  Deterministic   │────▶│  Safety Encoder │
-│  Normalization  │     │  Detectors       │     │  (ONNX INT4/8)  │
+│  Normalization  │     │  Detectors       │     │  (mmBERT GGUF)  │
 │                 │     │  • PII           │     │                 │
 │                 │     │  • Scam          │     │  Escalation     │
 │                 │     │  • URL risk      │     │  from det → enc │

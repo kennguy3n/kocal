@@ -83,7 +83,8 @@ impl EncoderSession {
 
         let mut tokenizer = tokenizers::Tokenizer::from_file(tokenizer_path)
             .map_err(|e| EncoderError::TokenizerError(format!("tokenizer: {e}")))?;
-        tokenizer.with_truncation(Some(tokenizers::TruncationParams {
+        tokenizer
+            .with_truncation(Some(tokenizers::TruncationParams {
                 max_length: crate::MAX_SEQ_LENGTH as usize,
                 strategy: tokenizers::TruncationStrategy::LongestFirst,
                 stride: 0,
@@ -163,11 +164,7 @@ impl EncoderSession {
     /// This is more efficient than calling `forward_pair` in a loop because it
     /// runs a single ONNX session call with all pairs padded to the same length.
     /// Returns a vector of rerank scores, one per pair.
-    pub fn forward_pair_batch(
-        &self,
-        query: &str,
-        documents: &[String],
-    ) -> EncoderResult<Vec<f64>> {
+    pub fn forward_pair_batch(&self, query: &str, documents: &[String]) -> EncoderResult<Vec<f64>> {
         if documents.is_empty() {
             return Ok(Vec::new());
         }
@@ -244,9 +241,7 @@ impl EncoderSession {
 
         // Fall back: extract hidden states and use CLS token first element as logit
         let hidden = self.extract_hidden_states(&outputs)?;
-        let scores: Vec<f64> = (0..batch_size)
-            .map(|i| hidden[[i, 0, 0]] as f64)
-            .collect();
+        let scores: Vec<f64> = (0..batch_size).map(|i| hidden[[i, 0, 0]] as f64).collect();
         Ok(scores)
     }
 
@@ -273,10 +268,14 @@ impl EncoderSession {
         let input_ids = &input_ids[..seq_len];
         let attention_mask = &attention_mask[..seq_len];
 
-        let input_ids_arr = Array2::from_shape_vec((1, seq_len), input_ids.iter().map(|&v| v as i64).collect())
-            .map_err(|e| EncoderError::InferenceFailed(format!("input_ids array: {e}")))?;
-        let attention_arr = Array2::from_shape_vec((1, seq_len), attention_mask.iter().map(|&v| v as i64).collect())
-            .map_err(|e| EncoderError::InferenceFailed(format!("attention array: {e}")))?;
+        let input_ids_arr =
+            Array2::from_shape_vec((1, seq_len), input_ids.iter().map(|&v| v as i64).collect())
+                .map_err(|e| EncoderError::InferenceFailed(format!("input_ids array: {e}")))?;
+        let attention_arr = Array2::from_shape_vec(
+            (1, seq_len),
+            attention_mask.iter().map(|&v| v as i64).collect(),
+        )
+        .map_err(|e| EncoderError::InferenceFailed(format!("attention array: {e}")))?;
 
         let input_ids_tensor = ort::value::Tensor::from_array(input_ids_arr)
             .map_err(|e| EncoderError::InferenceFailed(format!("input_ids tensor: {e}")))?;
@@ -312,8 +311,11 @@ impl EncoderSession {
             self.extract_hidden_states(&outputs)?
         } else {
             // Dummy empty hidden state — won't be used by any head.
-            ndarray::Array3::from_shape_vec((1, 1, crate::EMBEDDING_DIM), vec![0.0; crate::EMBEDDING_DIM])
-                .map_err(|e| EncoderError::InferenceFailed(format!("dummy hidden: {e}")))?
+            ndarray::Array3::from_shape_vec(
+                (1, 1, crate::EMBEDDING_DIM),
+                vec![0.0; crate::EMBEDDING_DIM],
+            )
+            .map_err(|e| EncoderError::InferenceFailed(format!("dummy hidden: {e}")))?
         };
 
         Ok(ForwardOutput {
@@ -472,7 +474,10 @@ fn build_ort_eps_for_host() -> Vec<ort::execution_providers::ExecutionProviderDi
         {
             (Platform::MacOs, kchat_core::ep::Arch::Aarch64)
         }
-        #[cfg(all(not(all(target_arch = "aarch64", any(target_os = "macos", target_os = "ios"))), target_os = "macos"))]
+        #[cfg(all(
+            not(all(target_arch = "aarch64", any(target_os = "macos", target_os = "ios"))),
+            target_os = "macos"
+        ))]
         {
             (Platform::MacOs, kchat_core::ep::Arch::X86_64)
         }
@@ -556,9 +561,7 @@ fn ep_to_ort_dispatch(
         kchat_core::ep::ExecutionProvider::CoreMl => {
             Some(CoreMLExecutionProvider::default().build())
         }
-        kchat_core::ep::ExecutionProvider::Nnapi => {
-            Some(NNAPIExecutionProvider::default().build())
-        }
+        kchat_core::ep::ExecutionProvider::Nnapi => Some(NNAPIExecutionProvider::default().build()),
         kchat_core::ep::ExecutionProvider::DirectMl => {
             Some(DirectMLExecutionProvider::default().build())
         }
@@ -566,8 +569,6 @@ fn ep_to_ort_dispatch(
             // MPS is not a standalone ort EP; CoreML subsumes it on Apple.
             None
         }
-        kchat_core::ep::ExecutionProvider::Cpu => {
-            Some(CPUExecutionProvider::default().build())
-        }
+        kchat_core::ep::ExecutionProvider::Cpu => Some(CPUExecutionProvider::default().build()),
     }
 }

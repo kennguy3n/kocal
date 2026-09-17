@@ -5,8 +5,8 @@
 //! falls back to attention-mask-weighted mean pooling and takes the first
 //! element as the relevance logit.
 
-use crate::EncoderResult;
 use crate::session::EncoderSession;
+use crate::EncoderResult;
 
 /// Reranking head — wraps a shared encoder session.
 pub struct RerankHead<'a> {
@@ -57,10 +57,7 @@ impl<'a> RerankHead<'a> {
         // Use batched inference for efficiency
         let scores = self.session.forward_pair_batch(query, documents)?;
 
-        let mut scored: Vec<(usize, f64)> = scores
-            .into_iter()
-            .enumerate()
-            .collect();
+        let mut scored: Vec<(usize, f64)> = scores.into_iter().enumerate().collect();
 
         scored.sort_by(|(_, a), (_, b)| b.partial_cmp(a).unwrap_or(std::cmp::Ordering::Equal));
         scored.truncate(top_k);

@@ -65,7 +65,11 @@ pub struct ArtifactAst {
 }
 
 impl ArtifactAst {
-    pub fn new(artifact_id: ArtifactId, artifact_type: ArtifactType, title: impl Into<String>) -> Self {
+    pub fn new(
+        artifact_id: ArtifactId,
+        artifact_type: ArtifactType,
+        title: impl Into<String>,
+    ) -> Self {
         let now = chrono::Utc::now();
         Self {
             artifact_id,
@@ -119,8 +123,16 @@ impl ArtifactAst {
         OperationValidator::validate(op, self)?;
 
         match op {
-            ArtifactOperation::ReplaceRange { node_id, expected_version, start, end, new_content } => {
-                let node = self.find_node_mut(*node_id).ok_or(ArtifactError::NodeNotFound)?;
+            ArtifactOperation::ReplaceRange {
+                node_id,
+                expected_version,
+                start,
+                end,
+                new_content,
+            } => {
+                let node = self
+                    .find_node_mut(*node_id)
+                    .ok_or(ArtifactError::NodeNotFound)?;
                 if node.version != *expected_version {
                     return Err(ArtifactError::StaleVersion {
                         expected: *expected_version,
@@ -128,9 +140,8 @@ impl ArtifactAst {
                     });
                 }
                 // Replace the range [start, end) with new_content
-                let mut new_text = String::with_capacity(
-                    node.content.len() - (*end - *start) + new_content.len(),
-                );
+                let mut new_text =
+                    String::with_capacity(node.content.len() - (*end - *start) + new_content.len());
                 new_text.push_str(&node.content[..*start]);
                 new_text.push_str(new_content);
                 new_text.push_str(&node.content[*end..]);
@@ -139,14 +150,22 @@ impl ArtifactAst {
                 self.version += 1;
                 self.updated_at = chrono::Utc::now();
             }
-            ArtifactOperation::InsertSlide { after_node, template_id, title, slots } => {
+            ArtifactOperation::InsertSlide {
+                after_node,
+                template_id,
+                title,
+                slots,
+            } => {
                 let new_node_id = ArtifactNodeId::new();
                 // Store template_id and slots as JSON content for the slide node.
                 let content = serde_json::to_string(&serde_json::json!({
                     "template_id": template_id,
                     "title": title,
                     "slots": slots,
-                })).map_err(|e| ArtifactError::InvalidFields(format!("JSON serialization failed: {e}")))?;
+                }))
+                .map_err(|e| {
+                    ArtifactError::InvalidFields(format!("JSON serialization failed: {e}"))
+                })?;
                 let new_node = ArtifactNode {
                     node_id: new_node_id,
                     node_type: "slide".into(),
@@ -157,7 +176,9 @@ impl ArtifactAst {
                 self.nodes.push(new_node);
                 if let Some(after) = after_node {
                     // Validate that after_node exists — reject orphaned references
-                    let node = self.find_node_mut(*after).ok_or(ArtifactError::NodeNotFound)?;
+                    let node = self
+                        .find_node_mut(*after)
+                        .ok_or(ArtifactError::NodeNotFound)?;
                     node.children.push(new_node_id);
                 } else {
                     self.root_nodes.push(new_node_id);
@@ -165,8 +186,15 @@ impl ArtifactAst {
                 self.version += 1;
                 self.updated_at = chrono::Utc::now();
             }
-            ArtifactOperation::UpdateSlide { node_id, expected_version, title, slots } => {
-                let node = self.find_node_mut(*node_id).ok_or(ArtifactError::NodeNotFound)?;
+            ArtifactOperation::UpdateSlide {
+                node_id,
+                expected_version,
+                title,
+                slots,
+            } => {
+                let node = self
+                    .find_node_mut(*node_id)
+                    .ok_or(ArtifactError::NodeNotFound)?;
                 if node.version != *expected_version {
                     return Err(ArtifactError::StaleVersion {
                         expected: *expected_version,
@@ -174,8 +202,8 @@ impl ArtifactAst {
                     });
                 }
                 // Parse existing content, update fields, re-serialize.
-                let mut parsed: serde_json::Value = serde_json::from_str(&node.content)
-                    .unwrap_or(serde_json::json!({}));
+                let mut parsed: serde_json::Value =
+                    serde_json::from_str(&node.content).unwrap_or(serde_json::json!({}));
                 if let Some(t) = title {
                     if let Some(obj) = parsed.as_object_mut() {
                         obj.insert("title".into(), serde_json::Value::String(t.clone()));
@@ -186,15 +214,21 @@ impl ArtifactAst {
                         obj.insert("slots".into(), s.clone());
                     }
                 }
-                node.content = serde_json::to_string(&parsed)
-                    .map_err(|e| ArtifactError::InvalidFields(format!("JSON serialization failed: {e}")))?;
+                node.content = serde_json::to_string(&parsed).map_err(|e| {
+                    ArtifactError::InvalidFields(format!("JSON serialization failed: {e}"))
+                })?;
                 node.version += 1;
                 self.version += 1;
                 self.updated_at = chrono::Utc::now();
             }
-            ArtifactOperation::ReorderSlide { node_id, after_node } => {
+            ArtifactOperation::ReorderSlide {
+                node_id,
+                after_node,
+            } => {
                 // Remove node_id from its current parent's children (or root).
-                let _ = self.find_node(*node_id).ok_or(ArtifactError::NodeNotFound)?;
+                let _ = self
+                    .find_node(*node_id)
+                    .ok_or(ArtifactError::NodeNotFound)?;
                 // Cycle detection: if after_node is a descendant of node_id,
                 // moving node_id under after_node would create a cycle.
                 if let Some(after) = after_node {
@@ -205,7 +239,8 @@ impl ArtifactAst {
                     }
                     if self.is_descendant(*node_id, *after) {
                         return Err(ArtifactError::InvalidFields(
-                            "cannot move a node under its own descendant (would create cycle)".into(),
+                            "cannot move a node under its own descendant (would create cycle)"
+                                .into(),
                         ));
                     }
                 }
@@ -217,7 +252,9 @@ impl ArtifactAst {
                 }
                 // Insert at new position.
                 if let Some(after) = after_node {
-                    let parent = self.find_node_mut(*after).ok_or(ArtifactError::NodeNotFound)?;
+                    let parent = self
+                        .find_node_mut(*after)
+                        .ok_or(ArtifactError::NodeNotFound)?;
                     parent.children.push(*node_id);
                 } else {
                     self.root_nodes.push(*node_id);
@@ -225,8 +262,15 @@ impl ArtifactAst {
                 self.version += 1;
                 self.updated_at = chrono::Utc::now();
             }
-            ArtifactOperation::SetSlideTemplate { node_id, expected_version, template_id, slots } => {
-                let node = self.find_node_mut(*node_id).ok_or(ArtifactError::NodeNotFound)?;
+            ArtifactOperation::SetSlideTemplate {
+                node_id,
+                expected_version,
+                template_id,
+                slots,
+            } => {
+                let node = self
+                    .find_node_mut(*node_id)
+                    .ok_or(ArtifactError::NodeNotFound)?;
                 if node.version != *expected_version {
                     return Err(ArtifactError::StaleVersion {
                         expected: *expected_version,
@@ -241,14 +285,24 @@ impl ArtifactAst {
                         .and_then(|v| v.as_str().map(|s| s.to_string()))
                         .unwrap_or_default(),
                     "slots": slots,
-                })).map_err(|e| ArtifactError::InvalidFields(format!("JSON serialization failed: {e}")))?;
+                }))
+                .map_err(|e| {
+                    ArtifactError::InvalidFields(format!("JSON serialization failed: {e}"))
+                })?;
                 node.content = content;
                 node.version += 1;
                 self.version += 1;
                 self.updated_at = chrono::Utc::now();
             }
-            ArtifactOperation::SetFormula { node_id, expected_version, formula, .. } => {
-                let node = self.find_node_mut(*node_id).ok_or(ArtifactError::NodeNotFound)?;
+            ArtifactOperation::SetFormula {
+                node_id,
+                expected_version,
+                formula,
+                ..
+            } => {
+                let node = self
+                    .find_node_mut(*node_id)
+                    .ok_or(ArtifactError::NodeNotFound)?;
                 if node.version != *expected_version {
                     return Err(ArtifactError::StaleVersion {
                         expected: *expected_version,
@@ -258,15 +312,24 @@ impl ArtifactAst {
                 // Formula must be a valid formula AST string (no macros/code).
                 // Use case-insensitive check to prevent bypass via "=MACRO()" etc.
                 if !check_formula(formula) {
-                    return Err(ArtifactError::InvalidFormula("formula contains forbidden keywords".into()));
+                    return Err(ArtifactError::InvalidFormula(
+                        "formula contains forbidden keywords".into(),
+                    ));
                 }
                 node.content = formula.clone();
                 node.version += 1;
                 self.version += 1;
                 self.updated_at = chrono::Utc::now();
             }
-            ArtifactOperation::UpdateRecord { node_id, expected_version, fields, .. } => {
-                let node = self.find_node_mut(*node_id).ok_or(ArtifactError::NodeNotFound)?;
+            ArtifactOperation::UpdateRecord {
+                node_id,
+                expected_version,
+                fields,
+                ..
+            } => {
+                let node = self
+                    .find_node_mut(*node_id)
+                    .ok_or(ArtifactError::NodeNotFound)?;
                 if node.version != *expected_version {
                     return Err(ArtifactError::StaleVersion {
                         expected: *expected_version,
@@ -274,8 +337,9 @@ impl ArtifactAst {
                     });
                 }
                 // Serialize fields as JSON content — return error on failure
-                node.content = serde_json::to_string(fields)
-                    .map_err(|e| ArtifactError::InvalidFields(format!("JSON serialization failed: {e}")))?;
+                node.content = serde_json::to_string(fields).map_err(|e| {
+                    ArtifactError::InvalidFields(format!("JSON serialization failed: {e}"))
+                })?;
                 node.version += 1;
                 self.version += 1;
                 self.updated_at = chrono::Utc::now();
@@ -353,7 +417,13 @@ impl OperationValidator {
     /// 100% of artifact operations must parse before execution.
     pub fn validate(op: &ArtifactOperation, ast: &ArtifactAst) -> Result<(), ArtifactError> {
         match op {
-            ArtifactOperation::ReplaceRange { node_id, expected_version, start, end, new_content } => {
+            ArtifactOperation::ReplaceRange {
+                node_id,
+                expected_version,
+                start,
+                end,
+                new_content,
+            } => {
                 let node = ast.find_node(*node_id).ok_or(ArtifactError::NodeNotFound)?;
                 if node.version != *expected_version {
                     return Err(ArtifactError::StaleVersion {
@@ -367,7 +437,12 @@ impl OperationValidator {
                 // No executable content
                 Self::check_no_executable(new_content)?;
             }
-            ArtifactOperation::InsertSlide { title, template_id, slots, .. } => {
+            ArtifactOperation::InsertSlide {
+                title,
+                template_id,
+                slots,
+                ..
+            } => {
                 Self::check_no_executable(title)?;
                 Self::validate_slide_template(template_id, slots)?;
             }
@@ -382,10 +457,16 @@ impl OperationValidator {
             ArtifactOperation::ReorderSlide { .. } => {
                 // No content to validate — just structural.
             }
-            ArtifactOperation::SetSlideTemplate { template_id, slots, .. } => {
+            ArtifactOperation::SetSlideTemplate {
+                template_id, slots, ..
+            } => {
                 Self::validate_slide_template(template_id, slots)?;
             }
-            ArtifactOperation::SetFormula { node_id, expected_version, formula } => {
+            ArtifactOperation::SetFormula {
+                node_id,
+                expected_version,
+                formula,
+            } => {
                 let node = ast.find_node(*node_id).ok_or(ArtifactError::NodeNotFound)?;
                 if node.version != *expected_version {
                     return Err(ArtifactError::StaleVersion {
@@ -395,7 +476,11 @@ impl OperationValidator {
                 }
                 Self::check_formula_method(formula)?;
             }
-            ArtifactOperation::UpdateRecord { node_id, expected_version, fields } => {
+            ArtifactOperation::UpdateRecord {
+                node_id,
+                expected_version,
+                fields,
+            } => {
                 let node = ast.find_node(*node_id).ok_or(ArtifactError::NodeNotFound)?;
                 if node.version != *expected_version {
                     return Err(ArtifactError::StaleVersion {
@@ -405,7 +490,9 @@ impl OperationValidator {
                 }
                 // Fields must be a JSON object
                 if !fields.is_object() {
-                    return Err(ArtifactError::InvalidFields("fields must be a JSON object".into()));
+                    return Err(ArtifactError::InvalidFields(
+                        "fields must be a JSON object".into(),
+                    ));
                 }
                 // Check string values for executable content
                 if let serde_json::Value::Object(map) = fields {
@@ -424,10 +511,19 @@ impl OperationValidator {
     fn check_no_executable(content: &str) -> Result<(), ArtifactError> {
         let lower = content.to_lowercase();
         let forbidden = [
-            "<script", "javascript:", "vbscript:", "onload=", "onerror=",
-            "eval(", "exec(", "system(", "subprocess",
-            "<!--macro", "<!--#include",
-            "file://", "data:text/html",
+            "<script",
+            "javascript:",
+            "vbscript:",
+            "onload=",
+            "onerror=",
+            "eval(",
+            "exec(",
+            "system(",
+            "subprocess",
+            "<!--macro",
+            "<!--#include",
+            "file://",
+            "data:text/html",
         ];
         for f in &forbidden {
             if lower.contains(f) {
@@ -442,14 +538,19 @@ impl OperationValidator {
         if check_formula(formula) {
             Ok(())
         } else {
-            Err(ArtifactError::InvalidFormula("formula contains forbidden keywords".into()))
+            Err(ArtifactError::InvalidFormula(
+                "formula contains forbidden keywords".into(),
+            ))
         }
     }
 
     /// Validate a slide template_id against the SlidesTemplateRegistry and
     /// check that slots conform to the template's schema. Also checks that
     /// image slots contain only query strings (no raw URLs).
-    fn validate_slide_template(template_id: &str, slots: &serde_json::Value) -> Result<(), ArtifactError> {
+    fn validate_slide_template(
+        template_id: &str,
+        slots: &serde_json::Value,
+    ) -> Result<(), ArtifactError> {
         let registry = &kchat_generation::TEMPLATE_REGISTRY;
         let template = registry.get(template_id).ok_or_else(|| {
             ArtifactError::InvalidFields(format!("unknown template_id: {}", template_id))
@@ -457,7 +558,9 @@ impl OperationValidator {
 
         // Slots must be a JSON object (or null for empty slots).
         if !slots.is_null() && !slots.is_object() {
-            return Err(ArtifactError::InvalidFields("slots must be a JSON object".into()));
+            return Err(ArtifactError::InvalidFields(
+                "slots must be a JSON object".into(),
+            ));
         }
 
         // Check no-executable in all string values within slots.
@@ -514,9 +617,23 @@ impl OperationValidator {
 fn check_formula(formula: &str) -> bool {
     let lower = formula.to_lowercase();
     let forbidden = [
-        "macro", "script", "exec", "system", "shell", "eval", "import", "require",
-        "hyperlink", "image", "query", "importxml", "importdata", "importrange",
-        "importhtml", "importfeed", "importjson",
+        "macro",
+        "script",
+        "exec",
+        "system",
+        "shell",
+        "eval",
+        "import",
+        "require",
+        "hyperlink",
+        "image",
+        "query",
+        "importxml",
+        "importdata",
+        "importrange",
+        "importhtml",
+        "importfeed",
+        "importjson",
     ];
     !forbidden.iter().any(|f| lower.contains(f))
 }
@@ -709,7 +826,10 @@ mod tests {
             slots: serde_json::json!({"title": "Orphan Slide"}),
         };
         // Should fail with NodeNotFound
-        assert!(matches!(ast.apply_operation(&op), Err(ArtifactError::NodeNotFound)));
+        assert!(matches!(
+            ast.apply_operation(&op),
+            Err(ArtifactError::NodeNotFound)
+        ));
     }
 
     #[test]
@@ -807,14 +927,16 @@ mod tests {
             template_id: "title".into(),
             title: "Slide A".into(),
             slots: serde_json::json!({"title": "Slide A"}),
-        }).unwrap();
+        })
+        .unwrap();
         let slide_a = ast.root_nodes[1];
         ast.apply_operation(&ArtifactOperation::InsertSlide {
             after_node: None,
             template_id: "title".into(),
             title: "Slide B".into(),
             slots: serde_json::json!({"title": "Slide B"}),
-        }).unwrap();
+        })
+        .unwrap();
         let slide_b = ast.root_nodes[2];
 
         // Reorder slide_b to be a child of first (the paragraph node)
@@ -841,7 +963,8 @@ mod tests {
             template_id: "title".into(),
             title: "My Slide".into(),
             slots: serde_json::json!({"title": "My Slide"}),
-        }).unwrap();
+        })
+        .unwrap();
         let slide_id = ast.root_nodes[1];
 
         // Change template to "bullet"

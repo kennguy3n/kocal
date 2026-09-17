@@ -76,9 +76,7 @@ pub trait AppleSiliconProbe {
 }
 
 /// Pure backend-selection function.
-pub fn select_whisper_backend<P: AppleSiliconProbe + ?Sized>(
-    probe: &P,
-) -> WhisperBackendReport {
+pub fn select_whisper_backend<P: AppleSiliconProbe + ?Sized>(probe: &P) -> WhisperBackendReport {
     #[cfg(all(target_arch = "aarch64", any(target_os = "macos", target_os = "ios")))]
     {
         if probe.mlx_available() {
@@ -181,8 +179,11 @@ pub struct TranscriptionResult {
 pub trait WhisperTranscriber: std::fmt::Debug + Send + Sync {
     /// Run Whisper inference over `audio_data` and return the
     /// transcription.
-    fn transcribe(&self, audio_data: &[u8], mime_type: &str)
-        -> Result<TranscriptionResult, AsrError>;
+    fn transcribe(
+        &self,
+        audio_data: &[u8],
+        mime_type: &str,
+    ) -> Result<TranscriptionResult, AsrError>;
 }
 
 /// Alias matching the task-spec name.
@@ -226,9 +227,7 @@ impl WhisperTranscriber for MockWhisperTranscriber {
         if !mime_type.starts_with("audio/") {
             return Err(AsrError::AudioDecode {
                 op: "transcribe",
-                detail: format!(
-                    "MockWhisperTranscriber rejects non-audio mime_type: {mime_type}"
-                ),
+                detail: format!("MockWhisperTranscriber rejects non-audio mime_type: {mime_type}"),
             });
         }
         let mut hasher = blake3::Hasher::new();

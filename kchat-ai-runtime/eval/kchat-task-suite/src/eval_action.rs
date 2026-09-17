@@ -6,8 +6,10 @@
 
 use crate::report::{EvalResult, SuiteReport};
 use kchat_action::artifact::{ArtifactAst, ArtifactNodeId, ArtifactOperation, ArtifactType};
-use kchat_action::toolplan::{ToolDefinition, ToolManifest, ToolPlan, ToolPlanStep, ToolPlanValidator};
 use kchat_action::auth::{AuthContext, ConfirmationClass, Permission, RbacBroker};
+use kchat_action::toolplan::{
+    ToolDefinition, ToolManifest, ToolPlan, ToolPlanStep, ToolPlanValidator,
+};
 use kchat_core::ids::ArtifactId;
 use serde_json::json;
 use std::collections::HashSet;
@@ -76,7 +78,10 @@ fn test_artifact_stale_version_rejected() -> EvalResult {
     if ast.apply_operation(&op).is_err() {
         EvalResult::pass("artifact_stale_version_rejected")
     } else {
-        EvalResult::fail("artifact_stale_version_rejected", "stale version was accepted")
+        EvalResult::fail(
+            "artifact_stale_version_rejected",
+            "stale version was accepted",
+        )
     }
 }
 
@@ -94,7 +99,10 @@ fn test_artifact_executable_rejected() -> EvalResult {
     if ast.apply_operation(&op).is_err() {
         EvalResult::pass("artifact_executable_rejected")
     } else {
-        EvalResult::fail("artifact_executable_rejected", "executable content was accepted")
+        EvalResult::fail(
+            "artifact_executable_rejected",
+            "executable content was accepted",
+        )
     }
 }
 
@@ -190,7 +198,10 @@ fn test_toolplan_missing_field() -> EvalResult {
     if validator.validate(&plan).is_err() {
         EvalResult::pass("toolplan_missing_field")
     } else {
-        EvalResult::fail("toolplan_missing_field", "plan with missing field was accepted")
+        EvalResult::fail(
+            "toolplan_missing_field",
+            "plan with missing field was accepted",
+        )
     }
 }
 
@@ -230,7 +241,10 @@ fn test_toolplan_type_mismatch() -> EvalResult {
     if validator.validate(&plan).is_err() {
         EvalResult::pass("toolplan_type_mismatch")
     } else {
-        EvalResult::fail("toolplan_type_mismatch", "plan with type mismatch was accepted")
+        EvalResult::fail(
+            "toolplan_type_mismatch",
+            "plan with type mismatch was accepted",
+        )
     }
 }
 
@@ -335,6 +349,9 @@ fn test_auth_step_up_required() -> EvalResult {
     if broker.requires_step_up_auth(ConfirmationClass::SensitiveAction) {
         EvalResult::pass("auth_step_up_required")
     } else {
-        EvalResult::fail("auth_step_up_required", "sensitive action does not require step-up auth")
+        EvalResult::fail(
+            "auth_step_up_required",
+            "sensitive action does not require step-up auth",
+        )
     }
 }

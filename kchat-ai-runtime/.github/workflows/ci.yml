@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings
+
+jobs:
+  fmt:
+    name: rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - run: cargo fmt --all -- --check
+
+  clippy:
+    name: clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo clippy --workspace --all-targets
+
+  test:
+    name: test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --workspace
+
+  feature-matrix:
+    name: features (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: bindings-mobile
+            os: ubuntu-latest
+            cmd: cargo build -p kchat-bindings --features mobile
+          - name: bindings-gguf-encoder
+            os: ubuntu-latest
+            cmd: cargo build -p kchat-bindings --features gguf-encoder
+          - name: safety-skill-pack
+            os: ubuntu-latest
+            cmd: cargo test -p kchat-safety --features skill-pack
+          - name: generation-mlx
+            os: macos-latest
+            cmd: cargo build -p kchat-generation --features mlx
+          - name: wasm
+            os: ubuntu-latest
+            cmd: |
+              rustup target add wasm32-unknown-unknown
+              cargo build -p kchat-wasm --target wasm32-unknown-unknown --release
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: ${{ matrix.cmd }}
+
+  llamacpp:
+    name: llamacpp (${{ matrix.feature }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - feature: llamacpp-metal
+            os: macos-latest
+          - feature: llamacpp-vulkan
+            os: ubuntu-latest
+          - feature: llamacpp
+            os: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Install Vulkan SDK (Ubuntu)
+        if: matrix.feature == 'llamacpp-vulkan'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libvulkan-dev glslc
+      - name: Build + test generation crate
+        run: cargo test -p kchat-generation --features ${{ matrix.feature }}

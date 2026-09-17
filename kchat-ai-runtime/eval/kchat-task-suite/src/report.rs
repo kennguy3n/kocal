@@ -29,7 +29,11 @@ impl EvalResult {
         }
     }
 
-    pub fn pass_with_meta(name: impl Into<String>, duration_ms: u64, meta: HashMap<String, String>) -> Self {
+    pub fn pass_with_meta(
+        name: impl Into<String>,
+        duration_ms: u64,
+        meta: HashMap<String, String>,
+    ) -> Self {
         Self {
             name: name.into(),
             status: EvalStatus::Pass,
@@ -47,7 +51,12 @@ impl EvalResult {
         }
     }
 
-    pub fn fail_with_meta(name: impl Into<String>, reason: impl Into<String>, duration_ms: u64, meta: HashMap<String, String>) -> Self {
+    pub fn fail_with_meta(
+        name: impl Into<String>,
+        reason: impl Into<String>,
+        duration_ms: u64,
+        meta: HashMap<String, String>,
+    ) -> Self {
         Self {
             name: name.into(),
             status: EvalStatus::Fail(reason.into()),
@@ -152,12 +161,14 @@ impl EvalReport {
             );
 
             for result in &suite.results {
-                let icon = match &result.status {
+                match &result.status {
                     EvalStatus::Pass => {
                         let meta_str = if result.metadata.is_empty() {
                             String::new()
                         } else {
-                            let items: Vec<String> = result.metadata.iter()
+                            let items: Vec<String> = result
+                                .metadata
+                                .iter()
                                 .map(|(k, v)| format!("{}={}", k, v))
                                 .collect();
                             format!(" [{}]", items.join(", "))
@@ -188,7 +199,11 @@ impl EvalReport {
             println!();
         }
 
-        let overall = if self.all_passed() { "ALL PASSED" } else { "FAILURES DETECTED" };
+        let overall = if self.all_passed() {
+            "ALL PASSED"
+        } else {
+            "FAILURES DETECTED"
+        };
         println!("Overall: {}", overall);
     }
 }

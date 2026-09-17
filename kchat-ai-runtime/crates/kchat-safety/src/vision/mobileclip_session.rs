@@ -55,51 +55,76 @@ pub struct MobileClipSession {
 
 impl MobileClipSession {
     /// Load from a filesystem path.
-    pub fn from_file(path: impl AsRef<Path>, intra_threads: usize) -> Result<Self, MobileClipSessionError> {
-        let mut builder = Session::builder()
-            .map_err(|e| MobileClipSessionError::LoadFailed { reason: format!("session builder: {e}") })?;
+    pub fn from_file(
+        path: impl AsRef<Path>,
+        intra_threads: usize,
+    ) -> Result<Self, MobileClipSessionError> {
+        let mut builder = Session::builder().map_err(|e| MobileClipSessionError::LoadFailed {
+            reason: format!("session builder: {e}"),
+        })?;
         builder = builder
             .with_optimization_level(GraphOptimizationLevel::Level3)
-            .map_err(|e| MobileClipSessionError::LoadFailed { reason: format!("set optimization level: {e}") })?;
-        builder = builder
-            .with_intra_threads(intra_threads)
-            .map_err(|e| MobileClipSessionError::LoadFailed { reason: format!("set intra threads: {e}") })?;
+            .map_err(|e| MobileClipSessionError::LoadFailed {
+                reason: format!("set optimization level: {e}"),
+            })?;
+        builder = builder.with_intra_threads(intra_threads).map_err(|e| {
+            MobileClipSessionError::LoadFailed {
+                reason: format!("set intra threads: {e}"),
+            }
+        })?;
         let ep_eps = build_ort_eps_for_host();
         if !ep_eps.is_empty() {
-            builder = builder
-                .with_execution_providers(&ep_eps)
-                .map_err(|e| MobileClipSessionError::LoadFailed { reason: format!("ep selection: {e}") })?;
+            builder = builder.with_execution_providers(&ep_eps).map_err(|e| {
+                MobileClipSessionError::LoadFailed {
+                    reason: format!("ep selection: {e}"),
+                }
+            })?;
         }
-        let session = builder
-            .commit_from_file(path.as_ref())
-            .map_err(|e| MobileClipSessionError::LoadFailed { reason: format!("commit from file: {e}") })?;
+        let session = builder.commit_from_file(path.as_ref()).map_err(|e| {
+            MobileClipSessionError::LoadFailed {
+                reason: format!("commit from file: {e}"),
+            }
+        })?;
         Self::wrap(session)
     }
 
     /// Load from in-memory bytes.
     pub fn from_bytes(bytes: &[u8], intra_threads: usize) -> Result<Self, MobileClipSessionError> {
-        let mut builder = Session::builder()
-            .map_err(|e| MobileClipSessionError::LoadFailed { reason: format!("session builder: {e}") })?;
+        let mut builder = Session::builder().map_err(|e| MobileClipSessionError::LoadFailed {
+            reason: format!("session builder: {e}"),
+        })?;
         builder = builder
             .with_optimization_level(GraphOptimizationLevel::Level3)
-            .map_err(|e| MobileClipSessionError::LoadFailed { reason: format!("set optimization level: {e}") })?;
-        builder = builder
-            .with_intra_threads(intra_threads)
-            .map_err(|e| MobileClipSessionError::LoadFailed { reason: format!("set intra threads: {e}") })?;
+            .map_err(|e| MobileClipSessionError::LoadFailed {
+                reason: format!("set optimization level: {e}"),
+            })?;
+        builder = builder.with_intra_threads(intra_threads).map_err(|e| {
+            MobileClipSessionError::LoadFailed {
+                reason: format!("set intra threads: {e}"),
+            }
+        })?;
         let ep_eps = build_ort_eps_for_host();
         if !ep_eps.is_empty() {
-            builder = builder
-                .with_execution_providers(&ep_eps)
-                .map_err(|e| MobileClipSessionError::LoadFailed { reason: format!("ep selection: {e}") })?;
+            builder = builder.with_execution_providers(&ep_eps).map_err(|e| {
+                MobileClipSessionError::LoadFailed {
+                    reason: format!("ep selection: {e}"),
+                }
+            })?;
         }
-        let session = builder
-            .commit_from_memory(bytes)
-            .map_err(|e| MobileClipSessionError::LoadFailed { reason: format!("commit from memory: {e}") })?;
+        let session =
+            builder
+                .commit_from_memory(bytes)
+                .map_err(|e| MobileClipSessionError::LoadFailed {
+                    reason: format!("commit from memory: {e}"),
+                })?;
         Self::wrap(session)
     }
 
     /// Run the image tower forward pass and return a 512-dim L2-normalised embedding.
-    pub fn embed_image(&self, preprocessed_chw: &[f32]) -> Result<Vec<f32>, MobileClipSessionError> {
+    pub fn embed_image(
+        &self,
+        preprocessed_chw: &[f32],
+    ) -> Result<Vec<f32>, MobileClipSessionError> {
         let expected_len = 3 * MOBILECLIP_IMAGE_SIZE * MOBILECLIP_IMAGE_SIZE;
         if preprocessed_chw.len() != expected_len {
             return Err(MobileClipSessionError::InvalidGraph {
@@ -162,7 +187,10 @@ impl MobileClipSession {
             .iter()
             .enumerate()
             .find_map(|(idx, out)| {
-                if out.name == "image_features" || out.name == "image_embeds" || out.name == "output" {
+                if out.name == "image_features"
+                    || out.name == "image_embeds"
+                    || out.name == "output"
+                {
                     Some(idx)
                 } else {
                     None
@@ -185,7 +213,10 @@ impl std::fmt::Debug for MobileClipSession {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("MobileClipSession")
             .field("image_input_name", &self.image_input_name)
-            .field("image_features_output_index", &self.image_features_output_index)
+            .field(
+                "image_features_output_index",
+                &self.image_features_output_index,
+            )
             .finish_non_exhaustive()
     }
 }
@@ -258,13 +289,19 @@ mod tests {
     #[test]
     fn validate_shape_rejects_wrong_batch() {
         let err = validate_image_features_shape(&[2, 256]).expect_err("must reject");
-        assert!(matches!(err, MobileClipSessionError::UnexpectedOutputShape { .. }));
+        assert!(matches!(
+            err,
+            MobileClipSessionError::UnexpectedOutputShape { .. }
+        ));
     }
 
     #[test]
     fn validate_shape_rejects_wrong_dim() {
         let err = validate_image_features_shape(&[1, 384]).expect_err("must reject");
-        assert!(matches!(err, MobileClipSessionError::UnexpectedOutputShape { .. }));
+        assert!(matches!(
+            err,
+            MobileClipSessionError::UnexpectedOutputShape { .. }
+        ));
     }
 
     #[test]
@@ -277,7 +314,8 @@ mod tests {
     #[test]
     #[ignore = "requires libonnxruntime.dylib installed"]
     fn from_file_missing_path_returns_load_failed() {
-        let err = MobileClipSession::from_file("/nonexistent/path/to/model.onnx", 0).expect_err("must fail");
+        let err = MobileClipSession::from_file("/nonexistent/path/to/model.onnx", 0)
+            .expect_err("must fail");
         assert!(matches!(err, MobileClipSessionError::LoadFailed { .. }));
     }
 }

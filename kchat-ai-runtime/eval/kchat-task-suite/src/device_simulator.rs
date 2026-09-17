@@ -8,7 +8,7 @@
 //! Usage: cargo run -p kchat-task-suite -- --simulate
 
 use crate::eval_device_profile::{all_profiles, select_model_for_tier_platform, DeviceProfile};
-use kchat_core::capability::{AppState, DeviceCapabilities, ThermalState};
+use kchat_core::capability::{AppState, ThermalState};
 use kchat_core::registry::{MinTier, ModelRegistry};
 use kchat_core::scheduler::{Scheduler, SchedulerConfig};
 use kchat_core::tier::{DeviceTier, TierBudget, TierSelection};
@@ -49,7 +49,16 @@ pub fn run() {
         total_pass,
         total_checks,
         (total_pass as f64 / total_checks as f64) * 100.0,
-        " ".repeat(80 - 47 - format!("{}/{} checks passed ({:.1}%)", total_pass, total_checks, (total_pass as f64 / total_checks as f64) * 100.0).len())
+        " ".repeat(
+            80 - 47
+                - format!(
+                    "{}/{} checks passed ({:.1}%)",
+                    total_pass,
+                    total_checks,
+                    (total_pass as f64 / total_checks as f64) * 100.0
+                )
+                .len()
+        )
     );
     println!("╚══════════════════════════════════════════════════════════════════════════════╝");
 }
@@ -65,9 +74,9 @@ fn simulate_profile(
     let mut checks = 0;
 
     let tier_color = match profile.expected_tier {
-        DeviceTier::High => "\x1b[32m", // green
+        DeviceTier::High => "\x1b[32m",   // green
         DeviceTier::Medium => "\x1b[33m", // yellow
-        DeviceTier::Low => "\x1b[31m", // red
+        DeviceTier::Low => "\x1b[31m",    // red
     };
     let reset = "\x1b[0m";
 
@@ -85,15 +94,11 @@ fn simulate_profile(
     // Hardware specs
     println!(
         "│  Platform:      {:<12}  CPU: {:<10} ({} cores, {:?} perf)",
-        profile.platform,
-        profile.cpu_arch,
-        profile.cpu_cores,
-        profile.performance_cores
+        profile.platform, profile.cpu_arch, profile.cpu_cores, profile.performance_cores
     );
     println!(
         "│  Memory:        {:>6} MB physical, {:>6} MB safe allocatable",
-        profile.physical_memory_mb,
-        profile.safe_allocatable_mb
+        profile.physical_memory_mb, profile.safe_allocatable_mb
     );
     println!(
         "│  GPU:           {:<12}  NPU: {:<12}",
@@ -113,7 +118,11 @@ fn simulate_profile(
         "│  Thermal:       {:<12}  App: {:<12}   Network: {}",
         format!("{:?}", profile.thermal_state),
         format!("{:?}", profile.app_state),
-        if profile.unmetered_network { "unmetered" } else { "metered" }
+        if profile.unmetered_network {
+            "unmetered"
+        } else {
+            "metered"
+        }
     );
 
     // --- Tier Selection ---
@@ -122,7 +131,9 @@ fn simulate_profile(
     let tier = TierSelection::select(&caps).unwrap_or(DeviceTier::Low);
     let tier_ok = tier == profile.expected_tier;
     checks += 1;
-    if tier_ok { pass += 1; }
+    if tier_ok {
+        pass += 1;
+    }
 
     let tier_str = format!("{:?}", tier);
     let expected_str = format!("{:?}", profile.expected_tier);
@@ -156,25 +167,23 @@ fn simulate_profile(
                 format!("safe_mb={} < 10000 → Low", safe_mb)
             }
         }
-        _ => format!("unknown platform → Low"),
+        _ => "unknown platform → Low".to_string(),
     };
     println!("│      └─ {}", threshold_info);
 
     // --- Model Selection ---
     println!("├──────────────────────────────────────────────────────────────────────────────┤");
     println!("│  MODEL SELECTION                                                             │");
-    let model = select_model_for_tier_platform(tier, profile.platform, &profile.cpu_arch);
+    let model = select_model_for_tier_platform(tier, profile.platform, profile.cpu_arch);
     let model_ok = model == profile.expected_model_pack;
     checks += 1;
-    if model_ok { pass += 1; }
+    if model_ok {
+        pass += 1;
+    }
 
     let model_str = model.unwrap_or("none (deterministic-only)");
     let status = if model_ok { "✓" } else { "✗" };
-    println!(
-        "│    {} Generative model: {}",
-        status,
-        model_str
-    );
+    println!("│    {} Generative model: {}", status, model_str);
 
     if let Some(pack_id) = model {
         if let Some(entry) = registry.find(pack_id) {
@@ -207,12 +216,23 @@ fn simulate_profile(
     if !embeddings.is_empty() || !safety.is_empty() {
         let mut available: Vec<String> = Vec::new();
         for e in &embeddings {
-            available.push(format!("{} ({}MB)", e.pack_id, e.size_bytes / (1024 * 1024)));
+            available.push(format!(
+                "{} ({}MB)",
+                e.pack_id,
+                e.size_bytes / (1024 * 1024)
+            ));
         }
         for s in &safety {
-            available.push(format!("{} ({}MB)", s.pack_id, s.size_bytes / (1024 * 1024)));
+            available.push(format!(
+                "{} ({}MB)",
+                s.pack_id,
+                s.size_bytes / (1024 * 1024)
+            ));
         }
-        println!("│      └─ Non-generative packs available: {}", available.join(", "));
+        println!(
+            "│      └─ Non-generative packs available: {}",
+            available.join(", ")
+        );
     }
 
     // --- Backend Selection ---
@@ -221,17 +241,20 @@ fn simulate_profile(
     let backend = BackendType::select(&caps.platform, tier, &caps.cpu_arch);
     let backend_ok = backend.map(|b| b.as_str()) == profile.expected_backend;
     checks += 1;
-    if backend_ok { pass += 1; }
+    if backend_ok {
+        pass += 1;
+    }
 
-    let backend_str = backend.map(|b| b.as_str().to_string()).unwrap_or("none".into());
+    let backend_str = backend
+        .map(|b| b.as_str().to_string())
+        .unwrap_or("none".into());
     let status = if backend_ok { "✓" } else { "✗" };
-    println!(
-        "│    {} Backend: {}",
-        status,
-        backend_str
-    );
+    println!("│    {} Backend: {}", status, backend_str);
     if backend.is_some() {
-        println!("│      └─ GPU acceleration: {:?} on {}", profile.gpu_backend, profile.platform);
+        println!(
+            "│      └─ GPU acceleration: {:?} on {}",
+            profile.gpu_backend, profile.platform
+        );
     } else {
         println!("│      └─ No generative backend (Low tier or no GPU)");
     }
@@ -245,32 +268,26 @@ fn simulate_profile(
         && budget.max_memory_bytes == tier.peak_memory_budget(profile.platform)
         && budget.max_perf_cores == tier.max_perf_cores();
     checks += 1;
-    if budget_ok { pass += 1; }
+    if budget_ok {
+        pass += 1;
+    }
 
     let status = if budget_ok { "✓" } else { "✗" };
     println!(
         "│    {} Context cap:    {:>6} tokens",
-        status,
-        budget.context_cap
+        status, budget.context_cap
     );
     println!(
         "│      Output range:    {}-{} tokens",
-        budget.output_token_range.0,
-        budget.output_token_range.1
+        budget.output_token_range.0, budget.output_token_range.1
     );
     println!(
         "│      Max memory:      {:>6} MB ({:.1} GB)",
         budget.max_memory_bytes / (1024 * 1024),
         budget.max_memory_bytes as f64 / (1024.0 * 1024.0 * 1024.0)
     );
-    println!(
-        "│      Max perf cores:  {}",
-        budget.max_perf_cores
-    );
-    println!(
-        "│      Idle unload:     {}s",
-        budget.idle_unload_secs
-    );
+    println!("│      Max perf cores:  {}", budget.max_perf_cores);
+    println!("│      Idle unload:     {}s", budget.idle_unload_secs);
 
     // --- Performance Targets ---
     println!("├──────────────────────────────────────────────────────────────────────────────┤");
@@ -282,10 +299,7 @@ fn simulate_profile(
     } else {
         tier.desktop_decode_p50_min()
     };
-    println!(
-        "│    TTFT P95 target:     {:>5} ms",
-        ttft
-    );
+    println!("│    TTFT P95 target:     {:>5} ms", ttft);
     println!(
         "│    Decode P50 min:      {:>5.1} tok/s ({})",
         decode,
@@ -306,7 +320,9 @@ fn simulate_profile(
 
     let mem_ok = peak <= safe_ai;
     checks += 1;
-    if mem_ok { pass += 1; }
+    if mem_ok {
+        pass += 1;
+    }
 
     let status = if mem_ok { "✓" } else { "✗" };
     println!(
@@ -331,13 +347,15 @@ fn simulate_profile(
 
     // Model fit check — unified architecture: all tiers use the same base model
     if model.is_some() {
-        let model_size = match (tier, &profile.platform[..], &profile.cpu_arch[..]) {
-            (_, "ios" | "macos", "aarch64") => 269_060_904,   // Bonsai 1.7B MLX 1-bit ~269MB
-            (_, _, _) => 248_302_272,                          // Bonsai 1.7B Q1_0 GGUF ~248MB
+        let model_size = match (tier, profile.platform, profile.cpu_arch) {
+            (_, "ios" | "macos", "aarch64") => 269_060_904, // Bonsai 1.7B MLX 1-bit ~269MB
+            (_, _, _) => 248_302_272,                       // Bonsai 1.7B Q1_0 GGUF ~248MB
         };
         let fits = model_size <= peak;
         checks += 1;
-        if fits { pass += 1; }
+        if fits {
+            pass += 1;
+        }
         let status = if fits { "✓" } else { "✗" };
         println!(
             "│    {} Model fits:        {} MB / {} MB budget",
@@ -356,14 +374,17 @@ fn simulate_profile(
         .unwrap_or(DeviceTier::Low);
     let critical_tier = TierSelection::select(&profile.with_thermal(ThermalState::Critical))
         .unwrap_or(DeviceTier::Low);
-    let fair_tier = TierSelection::select(&profile.with_thermal(ThermalState::Fair))
-        .unwrap_or(DeviceTier::Low);
+    let fair_tier =
+        TierSelection::select(&profile.with_thermal(ThermalState::Fair)).unwrap_or(DeviceTier::Low);
 
-    let thermal_ok = serious_tier == TierSelection::apply_thermal_downgrade_public(tier, ThermalState::Serious)
+    let thermal_ok = serious_tier
+        == TierSelection::apply_thermal_downgrade_public(tier, ThermalState::Serious)
         && critical_tier == DeviceTier::Low
         && fair_tier == tier;
     checks += 1;
-    if thermal_ok { pass += 1; }
+    if thermal_ok {
+        pass += 1;
+    }
 
     let status = if thermal_ok { "✓" } else { "✗" };
     println!("│    {} Thermal transitions:", status);
@@ -382,7 +403,9 @@ fn simulate_profile(
 
     let battery_ok = low_battery != tier || tier == DeviceTier::Low;
     checks += 1;
-    if battery_ok { pass += 1; }
+    if battery_ok {
+        pass += 1;
+    }
 
     let status = if battery_ok { "✓" } else { "✗" };
     println!("│    {} Battery transitions:", status);
@@ -393,14 +416,18 @@ fn simulate_profile(
 
     // Background transitions (mobile only)
     if profile.platform == "ios" || profile.platform == "android" {
-        let bg_tier = TierSelection::re_evaluate(tier, &profile.with_app_state(AppState::Background))
-            .unwrap_or(DeviceTier::Low);
-        let fg_tier = TierSelection::re_evaluate(tier, &profile.with_app_state(AppState::Foreground))
-            .unwrap_or(DeviceTier::Low);
+        let bg_tier =
+            TierSelection::re_evaluate(tier, &profile.with_app_state(AppState::Background))
+                .unwrap_or(DeviceTier::Low);
+        let fg_tier =
+            TierSelection::re_evaluate(tier, &profile.with_app_state(AppState::Foreground))
+                .unwrap_or(DeviceTier::Low);
 
         let bg_ok = bg_tier == DeviceTier::Low && fg_tier == tier;
         checks += 1;
-        if bg_ok { pass += 1; }
+        if bg_ok {
+            pass += 1;
+        }
 
         let status = if bg_ok { "✓" } else { "✗" };
         println!("│    {} Background transitions:", status);
@@ -419,7 +446,9 @@ fn simulate_profile(
 
     let sched_ok = job_result.is_ok() || (!requires_gen && job_result.is_err());
     checks += 1;
-    if sched_ok { pass += 1; }
+    if sched_ok {
+        pass += 1;
+    }
 
     let status = if sched_ok { "✓" } else { "✗" };
     match &job_result {
@@ -434,11 +463,7 @@ fn simulate_profile(
             );
         }
         Err(e) => {
-            println!(
-                "│    {} Job rejected: {}",
-                status,
-                e
-            );
+            println!("│    {} Job rejected: {}", status, e);
         }
     }
 
@@ -447,12 +472,18 @@ fn simulate_profile(
         let job2 = scheduler.request_job(&caps, requires_gen, peak);
         let concurrent_ok = job2.is_err();
         checks += 1;
-        if concurrent_ok { pass += 1; }
+        if concurrent_ok {
+            pass += 1;
+        }
         let status = if concurrent_ok { "✓" } else { "✗" };
         println!(
             "│    {} Concurrent job rejected: {}",
             status,
-            if concurrent_ok { "yes (max_concurrent=1)" } else { "no (BUG!)" }
+            if concurrent_ok {
+                "yes (max_concurrent=1)"
+            } else {
+                "no (BUG!)"
+            }
         );
         scheduler.complete_job();
     }
@@ -463,7 +494,9 @@ fn simulate_profile(
     let kill_result = scheduler2.request_job(&caps, requires_gen, peak);
     let kill_ok = kill_result.is_err();
     checks += 1;
-    if kill_ok { pass += 1; }
+    if kill_ok {
+        pass += 1;
+    }
     let status = if kill_ok { "✓" } else { "✗" };
     println!(
         "│    {} Kill switch blocks jobs: {}",
@@ -480,8 +513,10 @@ fn print_summary_table(profiles: &[DeviceProfile]) {
     println!("╔══════════════════════════════════════════════════════════════════════════════╗");
     println!("║  SUMMARY TABLE — All 12 Device Profiles                                      ║");
     println!("╠══════════════════════════════════════════════════════════════════════════════╣");
-    println!("║ {:<38} {:<8} {:<10} {:<14} {:<10} {:<8} ║",
-        "Device", "Tier", "Backend", "Model", "Ctx", "Mem(MB)");
+    println!(
+        "║ {:<38} {:<8} {:<10} {:<14} {:<10} {:<8} ║",
+        "Device", "Tier", "Backend", "Model", "Ctx", "Mem(MB)"
+    );
     println!("╠══════════════════════════════════════════════════════════════════════════════╣");
 
     for p in profiles {
@@ -490,7 +525,8 @@ fn print_summary_table(profiles: &[DeviceProfile]) {
         let backend = BackendType::select(&caps.platform, tier, &caps.cpu_arch)
             .map(|b| b.as_str().to_string())
             .unwrap_or("none".into());
-        let model = select_model_for_tier_platform(tier, &caps.platform, &caps.cpu_arch).unwrap_or("—");
+        let model =
+            select_model_for_tier_platform(tier, &caps.platform, &caps.cpu_arch).unwrap_or("—");
         let budget = TierBudget::for_tier(tier, p.platform);
 
         let tier_str = format!("{:?}", tier);
@@ -500,7 +536,8 @@ fn print_summary_table(profiles: &[DeviceProfile]) {
             p.name.to_string()
         };
 
-        println!("║ {:<38} {:<8} {:<10} {:<14} {:<10} {:>8} ║",
+        println!(
+            "║ {:<38} {:<8} {:<10} {:<14} {:<10} {:>8} ║",
             name,
             tier_str,
             backend,
@@ -516,19 +553,26 @@ fn print_transition_matrix(profiles: &[DeviceProfile]) {
     println!("\n╔══════════════════════════════════════════════════════════════════════════════╗");
     println!("║  TRANSITION MATRIX — Tier under Stress Conditions                            ║");
     println!("╠══════════════════════════════════════════════════════════════════════════════╣");
-    println!("║ {:<28} {:<8} {:<8} {:<8} {:<8} {:<10} {:<10} ║",
-        "Device", "Nominal", "Fair", "Serious", "Critical", "LowBatt", "Bgnd(mob)");
+    println!(
+        "║ {:<28} {:<8} {:<8} {:<8} {:<8} {:<10} {:<10} ║",
+        "Device", "Nominal", "Fair", "Serious", "Critical", "LowBatt", "Bgnd(mob)"
+    );
     println!("╠══════════════════════════════════════════════════════════════════════════════╣");
 
     for p in profiles {
         let caps = p.to_caps();
         let nominal = TierSelection::select(&caps).unwrap_or(DeviceTier::Low);
-        let fair = TierSelection::select(&p.with_thermal(ThermalState::Fair)).unwrap_or(DeviceTier::Low);
-        let serious = TierSelection::select(&p.with_thermal(ThermalState::Serious)).unwrap_or(DeviceTier::Low);
-        let critical = TierSelection::select(&p.with_thermal(ThermalState::Critical)).unwrap_or(DeviceTier::Low);
-        let low_batt = TierSelection::re_evaluate(nominal, &p.with_battery(10, false)).unwrap_or(DeviceTier::Low);
+        let fair =
+            TierSelection::select(&p.with_thermal(ThermalState::Fair)).unwrap_or(DeviceTier::Low);
+        let serious = TierSelection::select(&p.with_thermal(ThermalState::Serious))
+            .unwrap_or(DeviceTier::Low);
+        let critical = TierSelection::select(&p.with_thermal(ThermalState::Critical))
+            .unwrap_or(DeviceTier::Low);
+        let low_batt = TierSelection::re_evaluate(nominal, &p.with_battery(10, false))
+            .unwrap_or(DeviceTier::Low);
         let bgnd = if p.platform == "ios" || p.platform == "android" {
-            TierSelection::re_evaluate(nominal, &p.with_app_state(AppState::Background)).unwrap_or(DeviceTier::Low)
+            TierSelection::re_evaluate(nominal, &p.with_app_state(AppState::Background))
+                .unwrap_or(DeviceTier::Low)
         } else {
             nominal // N/A for desktop
         };
@@ -545,7 +589,8 @@ fn print_transition_matrix(profiles: &[DeviceProfile]) {
             "N/A".to_string()
         };
 
-        println!("║ {:<28} {:<8} {:<8} {:<8} {:<8} {:<10} {:<10} ║",
+        println!(
+            "║ {:<28} {:<8} {:<8} {:<8} {:<8} {:<10} {:<10} ║",
             name,
             format!("{:?}", nominal),
             format!("{:?}", fair),
@@ -562,8 +607,10 @@ fn print_scheduler_simulation(profiles: &[DeviceProfile]) {
     println!("\n╔══════════════════════════════════════════════════════════════════════════════╗");
     println!("║  SCHEDULER SIMULATION — Job Admission per Profile                            ║");
     println!("╠══════════════════════════════════════════════════════════════════════════════╣");
-    println!("║ {:<28} {:<8} {:<10} {:<10} {:<10} {:<14} ║",
-        "Device", "Tier", "Gen Job", "Det Job", "Kill Sw", "Concurrent");
+    println!(
+        "║ {:<28} {:<8} {:<10} {:<10} {:<10} {:<14} ║",
+        "Device", "Tier", "Gen Job", "Det Job", "Kill Sw", "Concurrent"
+    );
     println!("╠══════════════════════════════════════════════════════════════════════════════╣");
 
     for p in profiles {
@@ -575,24 +622,40 @@ fn print_scheduler_simulation(profiles: &[DeviceProfile]) {
         // Test generative job
         let sched1 = Scheduler::new(SchedulerConfig::default(), tier);
         let gen_result = sched1.request_job(&caps, true, peak);
-        let gen_str = if gen_result.is_ok() { "admit" } else { "reject" };
+        let gen_str = if gen_result.is_ok() {
+            "admit"
+        } else {
+            "reject"
+        };
 
         // Test deterministic job (non-generative)
         let sched2 = Scheduler::new(SchedulerConfig::default(), tier);
         let det_result = sched2.request_job(&caps, false, peak / 4);
-        let det_str = if det_result.is_ok() { "admit" } else { "reject" };
+        let det_str = if det_result.is_ok() {
+            "admit"
+        } else {
+            "reject"
+        };
 
         // Test kill switch
         let sched3 = Scheduler::new(SchedulerConfig::default(), tier);
         sched3.activate_kill_switch();
         let kill_result = sched3.request_job(&caps, requires_gen, peak);
-        let kill_str = if kill_result.is_err() { "blocked" } else { "LEAK!" };
+        let kill_str = if kill_result.is_err() {
+            "blocked"
+        } else {
+            "LEAK!"
+        };
 
         // Test concurrent
         let sched4 = Scheduler::new(SchedulerConfig::default(), tier);
         let _ = sched4.request_job(&caps, requires_gen, peak);
         let conc_result = sched4.request_job(&caps, requires_gen, peak);
-        let conc_str = if conc_result.is_err() { "rejected" } else { "LEAK!" };
+        let conc_str = if conc_result.is_err() {
+            "rejected"
+        } else {
+            "LEAK!"
+        };
 
         let name = if p.name.len() > 26 {
             format!("{}...", &p.name[..23])
@@ -600,7 +663,8 @@ fn print_scheduler_simulation(profiles: &[DeviceProfile]) {
             p.name.to_string()
         };
 
-        println!("║ {:<28} {:<8} {:<10} {:<10} {:<10} {:<14} ║",
+        println!(
+            "║ {:<28} {:<8} {:<10} {:<10} {:<10} {:<14} ║",
             name,
             format!("{:?}", tier),
             gen_str,

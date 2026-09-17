@@ -8,11 +8,11 @@
 
 use crate::encryption::{self};
 use crate::scope::{ScopeFilter, ScopeId};
-use rusqlite::{params, Connection};
+use parking_lot::Mutex;
+use rusqlite::{params, Connection, OptionalExtension};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use uuid::Uuid;
-use parking_lot::Mutex;
 
 /// Stable identifier for an evidence row.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -191,6 +191,21 @@ impl ContextStore {
                 tokenize = 'trigram'
             );
 
+            -- Persisted dense embeddings — one vector per evidence row,
+            -- AEAD-encrypted with the per-scope key. Unlike `evidence`,
+            -- this is derived cache data, so it is NOT append-only:
+            -- vectors may be refreshed when the encoder model changes.
+            -- Rows are hard-deleted when a scope is forgotten.
+            CREATE TABLE IF NOT EXISTS evidence_vec (
+                evidence_id     BLOB    PRIMARY KEY,
+                scope_id        BLOB    NOT NULL,
+                dim             INTEGER NOT NULL,
+                vec             BLOB    NOT NULL,
+                vec_nonce       BLOB    NOT NULL,
+                model_tag       TEXT    NOT NULL,
+                created_at      INTEGER NOT NULL
+            );
+
             -- Scopes table
             CREATE TABLE IF NOT EXISTS scopes (
                 id              BLOB    PRIMARY KEY,
@@ -212,11 +227,15 @@ impl ContextStore {
         let mut conn = self.conn.lock();
 
         // Encrypt the body with per-scope key
-        let scope_key = encryption::derive_scope_key(&self.master_key, &evidence.scope_id.0.as_bytes().to_vec())?;
+        let scope_key = encryption::derive_scope_key(
+            &self.master_key,
+            evidence.scope_id.0.as_bytes().as_ref(),
+        )?;
         let nonce = encryption::AeadNonce::try_from_bytes(&evidence.nonce)?;
         let aad = evidence.scope_id.0.as_bytes();
 
-        let encrypted = encryption::encrypt_aead(&scope_key, &nonce, evidence.fts_content.as_bytes(), aad)?;
+        let encrypted =
+            encryption::encrypt_aead(&scope_key, &nonce, evidence.fts_content.as_bytes(), aad)?;
 
         // Use a transaction so all 3 inserts succeed or fail atomically
         let tx = conn.transaction()?;
@@ -239,17 +258,251 @@ impl ContextStore {
         // Index in FTS (plaintext for search)
         tx.execute(
             "INSERT INTO evidence_fts (content, evidence_id, scope_id) VALUES (?1, ?2, ?3)",
-            params![evidence.fts_content, evidence.id.0.as_bytes(), evidence.scope_id.0.as_bytes()],
+            params![
+                evidence.fts_content,
+                evidence.id.0.as_bytes(),
+                evidence.scope_id.0.as_bytes()
+            ],
         )?;
 
         // Also index in CJK lane
         tx.execute(
             "INSERT INTO evidence_fts_cjk (content, evidence_id, scope_id) VALUES (?1, ?2, ?3)",
-            params![evidence.fts_content, evidence.id.0.as_bytes(), evidence.scope_id.0.as_bytes()],
+            params![
+                evidence.fts_content,
+                evidence.id.0.as_bytes(),
+                evidence.scope_id.0.as_bytes()
+            ],
         )?;
 
         tx.commit()?;
         Ok(())
+    }
+
+    /// Insert evidence and index its embedding in one call — the
+    /// embed-on-write path. If no embedding provider is available, the
+    /// evidence is still inserted; the vector is backfilled lazily by the
+    /// retriever on the next query.
+    pub fn insert_indexed(
+        &self,
+        evidence: &Evidence,
+        embeddings: &crate::embeddings::EmbeddingManager,
+    ) -> Result<(), StoreError> {
+        self.insert(evidence)?;
+        if let (Some(tag), Ok(vec)) = (
+            embeddings.model_tag(),
+            embeddings.embed_passage(&evidence.fts_content),
+        ) {
+            self.insert_vector(evidence.id, evidence.scope_id, &vec, &tag)?;
+        }
+        Ok(())
+    }
+
+    /// Insert a batch of evidence rows, embedding them in one provider call.
+    /// Falls back to per-row lazy backfill when no provider is available.
+    pub fn insert_batch_indexed(
+        &self,
+        evidence: &[Evidence],
+        embeddings: &crate::embeddings::EmbeddingManager,
+    ) -> Result<(), StoreError> {
+        for ev in evidence {
+            self.insert(ev)?;
+        }
+        if let Some(tag) = embeddings.model_tag() {
+            let texts: Vec<&str> = evidence.iter().map(|e| e.fts_content.as_str()).collect();
+            if let Ok(vecs) = embeddings.embed_passages(&texts) {
+                for (ev, vec) in evidence.iter().zip(vecs.iter()) {
+                    self.insert_vector(ev.id, ev.scope_id, vec, &tag)?;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// Persist a dense embedding for an evidence row.
+    ///
+    /// The vector is serialized as little-endian f32 and AEAD-encrypted with
+    /// the per-scope key — a forgotten scope's vectors become unrecoverable
+    /// (and are hard-deleted by `forget_scope`). `model_tag` records which
+    /// encoder produced the vector so callers can detect stale vectors after
+    /// a model upgrade.
+    pub fn insert_vector(
+        &self,
+        id: EvidenceId,
+        scope_id: ScopeId,
+        vector: &[f32],
+        model_tag: &str,
+    ) -> Result<(), StoreError> {
+        let conn = self.conn.lock();
+        let scope_key =
+            encryption::derive_scope_key(&self.master_key, scope_id.0.as_bytes().as_ref())?;
+        let nonce = encryption::AeadNonce::random()?;
+        let aad = scope_id.0.as_bytes();
+
+        let mut bytes = Vec::with_capacity(vector.len() * 4);
+        for v in vector {
+            bytes.extend_from_slice(&v.to_le_bytes());
+        }
+        let encrypted = encryption::encrypt_aead(&scope_key, &nonce, &bytes, aad)?;
+
+        conn.execute(
+            "INSERT OR REPLACE INTO evidence_vec
+             (evidence_id, scope_id, dim, vec, vec_nonce, model_tag, created_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            params![
+                id.0.as_bytes(),
+                scope_id.0.as_bytes(),
+                vector.len() as i64,
+                encrypted.ciphertext,
+                encrypted.nonce.0.as_slice(),
+                model_tag,
+                chrono::Utc::now().timestamp(),
+            ],
+        )?;
+        Ok(())
+    }
+
+    /// Load the persisted vector for an evidence row, if any.
+    /// Returns `(vector, model_tag)`.
+    pub fn get_vector(
+        &self,
+        id: EvidenceId,
+        scope_id: ScopeId,
+    ) -> Result<Option<(Vec<f32>, String)>, StoreError> {
+        let conn = self.conn.lock();
+        let mut stmt = conn.prepare(
+            "SELECT dim, vec, vec_nonce, model_tag FROM evidence_vec WHERE evidence_id = ?1",
+        )?;
+        let row = stmt
+            .query_row(params![id.0.as_bytes()], |row| {
+                Ok((
+                    row.get::<_, i64>(0)?,
+                    row.get::<_, Vec<u8>>(1)?,
+                    row.get::<_, Vec<u8>>(2)?,
+                    row.get::<_, String>(3)?,
+                ))
+            })
+            .optional()?;
+
+        let Some((dim, blob, nonce_bytes, model_tag)) = row else {
+            return Ok(None);
+        };
+
+        let scope_key =
+            encryption::derive_scope_key(&self.master_key, scope_id.0.as_bytes().as_ref())?;
+        let nonce = encryption::AeadNonce::try_from_bytes(&nonce_bytes)?;
+        let aad = scope_id.0.as_bytes();
+        let plain = encryption::decrypt_aead(&scope_key, &nonce, &blob, aad)?;
+
+        let dim = dim as usize;
+        if plain.len() != dim * 4 {
+            return Err(StoreError::Encryption(
+                encryption::CryptoError::DecryptionFailed("vector blob length mismatch".into()),
+            ));
+        }
+        let mut vec = Vec::with_capacity(dim);
+        for chunk in plain.chunks_exact(4) {
+            vec.push(f32::from_le_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]));
+        }
+        Ok(Some((vec, model_tag)))
+    }
+
+    /// Load all persisted vectors for the allowed scopes that were produced
+    /// by `model_tag`. Rows written by a different embedding model are
+    /// treated as stale and invisible — the caller re-embeds and upserts.
+    ///
+    /// Returns `(evidence_id, vector, created_at)` rows. Rows whose scope is
+    /// forgotten are hard-deleted, so this never returns them.
+    pub fn vectors_in_scopes(
+        &self,
+        filter: &ScopeFilter,
+        model_tag: &str,
+        limit: usize,
+    ) -> Result<Vec<(EvidenceId, Vec<f32>, i64)>, StoreError> {
+        let conn = self.conn.lock();
+
+        let scope_ids: Vec<Vec<u8>> = filter
+            .allowed_scopes
+            .iter()
+            .filter(|s| !filter.denied_scopes.contains(s))
+            .map(|s| s.0.as_bytes().to_vec())
+            .collect();
+        if scope_ids.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let placeholders: Vec<String> = (0..scope_ids.len()).map(|_| "?".to_string()).collect();
+        let sql = format!(
+            "SELECT evidence_id, scope_id, dim, vec, vec_nonce, created_at
+             FROM evidence_vec
+             WHERE scope_id IN ({})
+               AND model_tag = ?{}
+             LIMIT ?{}",
+            placeholders.join(", "),
+            scope_ids.len() + 1,
+            scope_ids.len() + 2
+        );
+
+        let mut params_vec: Vec<Box<dyn rusqlite::ToSql>> = Vec::new();
+        for s in &scope_ids {
+            params_vec.push(Box::new(s.clone()));
+        }
+        params_vec.push(Box::new(model_tag.to_string()));
+        params_vec.push(Box::new(limit as i64));
+        let params_refs: Vec<&dyn rusqlite::ToSql> =
+            params_vec.iter().map(|p| p.as_ref()).collect();
+
+        // Collect rows, then decrypt after releasing the statement (each
+        // scope key derivation is cheap; decryption errors on a single row
+        // are skipped rather than failing the whole scan).
+        let mut stmt = conn.prepare(&sql)?;
+        /// Raw row: (evidence_id, scope_id, dim, ciphertext, nonce, created_at)
+        type RawVecRow = (Vec<u8>, Vec<u8>, i64, Vec<u8>, Vec<u8>, i64);
+        let rows: Vec<RawVecRow> = stmt
+            .query_map(params_refs.as_slice(), |row| {
+                Ok((
+                    row.get::<_, Vec<u8>>(0)?,
+                    row.get::<_, Vec<u8>>(1)?,
+                    row.get::<_, i64>(2)?,
+                    row.get::<_, Vec<u8>>(3)?,
+                    row.get::<_, Vec<u8>>(4)?,
+                    row.get::<_, i64>(5)?,
+                ))
+            })?
+            .collect::<Result<_, _>>()?;
+        drop(stmt);
+        drop(conn);
+
+        let mut out = Vec::with_capacity(rows.len());
+        for (id_bytes, scope_bytes, dim, blob, nonce_bytes, created_at) in rows {
+            let Ok(eid) = Uuid::from_slice(&id_bytes) else {
+                continue;
+            };
+            let Ok(sid) = Uuid::from_slice(&scope_bytes) else {
+                continue;
+            };
+            let Ok(scope_key) = encryption::derive_scope_key(&self.master_key, &sid.as_bytes()[..])
+            else {
+                continue;
+            };
+            let Ok(nonce) = encryption::AeadNonce::try_from_bytes(&nonce_bytes) else {
+                continue;
+            };
+            let Ok(plain) = encryption::decrypt_aead(&scope_key, &nonce, &blob, sid.as_bytes())
+            else {
+                continue;
+            };
+            let dim = dim as usize;
+            if plain.len() != dim * 4 {
+                continue;
+            }
+            let mut vec = Vec::with_capacity(dim);
+            for chunk in plain.chunks_exact(4) {
+                vec.push(f32::from_le_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]));
+            }
+            out.push((EvidenceId(eid), vec, created_at));
+        }
+        Ok(out)
     }
 
     /// Search using FTS5 BM25 (lexical-only, works on all tiers).
@@ -297,16 +550,27 @@ impl ContextStore {
         }
         params_vec.push(Box::new(limit as i64));
 
-        let params_refs: Vec<&dyn rusqlite::ToSql> = params_vec.iter().map(|p| p.as_ref()).collect();
+        let params_refs: Vec<&dyn rusqlite::ToSql> =
+            params_vec.iter().map(|p| p.as_ref()).collect();
 
         let mut stmt = conn.prepare(&sql)?;
         let results = stmt.query_map(params_refs.as_slice(), |row| {
             let id_bytes: Vec<u8> = row.get(0)?;
             let scope_bytes: Vec<u8> = row.get(1)?;
-            let evidence_id = Uuid::from_slice(&id_bytes)
-                .map_err(|e| rusqlite::Error::FromSqlConversionFailure(16, rusqlite::types::Type::Blob, Box::new(e)))?;
-            let scope_id = Uuid::from_slice(&scope_bytes)
-                .map_err(|e| rusqlite::Error::FromSqlConversionFailure(16, rusqlite::types::Type::Blob, Box::new(e)))?;
+            let evidence_id = Uuid::from_slice(&id_bytes).map_err(|e| {
+                rusqlite::Error::FromSqlConversionFailure(
+                    16,
+                    rusqlite::types::Type::Blob,
+                    Box::new(e),
+                )
+            })?;
+            let scope_id = Uuid::from_slice(&scope_bytes).map_err(|e| {
+                rusqlite::Error::FromSqlConversionFailure(
+                    16,
+                    rusqlite::types::Type::Blob,
+                    Box::new(e),
+                )
+            })?;
             Ok(FTSResult {
                 evidence_id: EvidenceId(evidence_id),
                 scope_id: ScopeId(scope_id),
@@ -340,10 +604,20 @@ impl ContextStore {
         let cjk_results = cjk_stmt.query_map(params_refs.as_slice(), |row| {
             let id_bytes: Vec<u8> = row.get(0)?;
             let scope_bytes: Vec<u8> = row.get(1)?;
-            let evidence_id = Uuid::from_slice(&id_bytes)
-                .map_err(|e| rusqlite::Error::FromSqlConversionFailure(16, rusqlite::types::Type::Blob, Box::new(e)))?;
-            let scope_id = Uuid::from_slice(&scope_bytes)
-                .map_err(|e| rusqlite::Error::FromSqlConversionFailure(16, rusqlite::types::Type::Blob, Box::new(e)))?;
+            let evidence_id = Uuid::from_slice(&id_bytes).map_err(|e| {
+                rusqlite::Error::FromSqlConversionFailure(
+                    16,
+                    rusqlite::types::Type::Blob,
+                    Box::new(e),
+                )
+            })?;
+            let scope_id = Uuid::from_slice(&scope_bytes).map_err(|e| {
+                rusqlite::Error::FromSqlConversionFailure(
+                    16,
+                    rusqlite::types::Type::Blob,
+                    Box::new(e),
+                )
+            })?;
             Ok(FTSResult {
                 evidence_id: EvidenceId(evidence_id),
                 scope_id: ScopeId(scope_id),
@@ -354,7 +628,8 @@ impl ContextStore {
             })
         })?;
 
-        let mut seen_ids: std::collections::HashSet<Uuid> = collected.iter().map(|r| r.evidence_id.0).collect();
+        let mut seen_ids: std::collections::HashSet<Uuid> =
+            collected.iter().map(|r| r.evidence_id.0).collect();
         for r in cjk_results {
             let r = r?;
             if seen_ids.insert(r.evidence_id.0) {
@@ -377,14 +652,20 @@ impl ContextStore {
         let mut rows = stmt.query(params![id.0.as_bytes()])?;
         if let Some(row) = rows.next()? {
             let scope_bytes: Vec<u8> = row.get(1)?;
-            let scope_id = ScopeId(Uuid::from_slice(&scope_bytes)
-                .map_err(|e| rusqlite::Error::FromSqlConversionFailure(16, rusqlite::types::Type::Blob, Box::new(e)))?);
+            let scope_id = ScopeId(Uuid::from_slice(&scope_bytes).map_err(|e| {
+                rusqlite::Error::FromSqlConversionFailure(
+                    16,
+                    rusqlite::types::Type::Blob,
+                    Box::new(e),
+                )
+            })?);
 
             let body: Vec<u8> = row.get(3)?;
             let nonce_bytes: Vec<u8> = row.get(4)?;
 
             // Decrypt
-            let scope_key = encryption::derive_scope_key(&self.master_key, &scope_id.0.as_bytes().to_vec())?;
+            let scope_key =
+                encryption::derive_scope_key(&self.master_key, scope_id.0.as_bytes().as_ref())?;
             let nonce = encryption::AeadNonce::try_from_bytes(&nonce_bytes)?;
             let aad = scope_id.0.as_bytes();
             let plaintext = encryption::decrypt_aead(&scope_key, &nonce, &body, aad)?;
@@ -399,10 +680,11 @@ impl ContextStore {
                 importance: row.get(6)?,
                 language_tag: row.get(7)?,
                 created_at: row.get(8)?,
-                fts_content: String::from_utf8(plaintext)
-                    .map_err(|e| StoreError::Encryption(encryption::CryptoError::DecryptionFailed(
-                        format!("decrypted data is not valid UTF-8: {e}")
-                    )))?,
+                fts_content: String::from_utf8(plaintext).map_err(|e| {
+                    StoreError::Encryption(encryption::CryptoError::DecryptionFailed(format!(
+                        "decrypted data is not valid UTF-8: {e}"
+                    )))
+                })?,
             }));
         }
 
@@ -423,9 +705,19 @@ impl ContextStore {
             params![scope_id.0.as_bytes(), chrono::Utc::now().timestamp()],
         )?;
 
-        // Delete FTS index entries for this scope
+        // Delete FTS index entries for this scope (both tokenizers)
         tx.execute(
             "DELETE FROM evidence_fts WHERE scope_id = ?1",
+            params![scope_id.0.as_bytes()],
+        )?;
+        tx.execute(
+            "DELETE FROM evidence_fts_cjk WHERE scope_id = ?1",
+            params![scope_id.0.as_bytes()],
+        )?;
+
+        // Delete persisted vectors (allowed because tombstone now exists)
+        tx.execute(
+            "DELETE FROM evidence_vec WHERE scope_id = ?1",
             params![scope_id.0.as_bytes()],
         )?;
 
@@ -436,7 +728,10 @@ impl ContextStore {
         )?;
 
         tx.commit()?;
-        tracing::info!("Scope {} forgotten — evidence and FTS entries deleted", scope_id.0);
+        tracing::info!(
+            "Scope {} forgotten — evidence and FTS entries deleted",
+            scope_id.0
+        );
         Ok(())
     }
 
@@ -493,16 +788,27 @@ impl ContextStore {
         }
         params_vec.push(Box::new(limit as i64));
 
-        let params_refs: Vec<&dyn rusqlite::ToSql> = params_vec.iter().map(|p| p.as_ref()).collect();
+        let params_refs: Vec<&dyn rusqlite::ToSql> =
+            params_vec.iter().map(|p| p.as_ref()).collect();
 
         let mut stmt = conn.prepare(&sql)?;
         let results = stmt.query_map(params_refs.as_slice(), |row| {
             let id_bytes: Vec<u8> = row.get(0)?;
             let scope_bytes: Vec<u8> = row.get(1)?;
-            let evidence_id = Uuid::from_slice(&id_bytes)
-                .map_err(|e| rusqlite::Error::FromSqlConversionFailure(16, rusqlite::types::Type::Blob, Box::new(e)))?;
-            let scope_id = ScopeId(Uuid::from_slice(&scope_bytes)
-                .map_err(|e| rusqlite::Error::FromSqlConversionFailure(16, rusqlite::types::Type::Blob, Box::new(e)))?);
+            let evidence_id = Uuid::from_slice(&id_bytes).map_err(|e| {
+                rusqlite::Error::FromSqlConversionFailure(
+                    16,
+                    rusqlite::types::Type::Blob,
+                    Box::new(e),
+                )
+            })?;
+            let scope_id = ScopeId(Uuid::from_slice(&scope_bytes).map_err(|e| {
+                rusqlite::Error::FromSqlConversionFailure(
+                    16,
+                    rusqlite::types::Type::Blob,
+                    Box::new(e),
+                )
+            })?);
             let created_at: i64 = row.get(2)?;
             Ok((EvidenceId(evidence_id), scope_id, String::new(), created_at))
         })?;
@@ -584,10 +890,7 @@ mod tests {
     use super::*;
 
     fn make_store() -> ContextStore {
-        let config = ContextStoreConfig::for_low_tier(
-            "test_password".into(),
-            [42u8; 32],
-        );
+        let config = ContextStoreConfig::for_low_tier("test_password".into(), [42u8; 32]);
         ContextStore::open_in_memory(&config).unwrap()
     }
 
@@ -629,9 +932,15 @@ mod tests {
         let store = make_store();
         let scope = ScopeId::new();
 
-        store.insert(&make_evidence(scope, "The quick brown fox jumps")).unwrap();
-        store.insert(&make_evidence(scope, "Hello world from KChat")).unwrap();
-        store.insert(&make_evidence(scope, "Machine learning is fascinating")).unwrap();
+        store
+            .insert(&make_evidence(scope, "The quick brown fox jumps"))
+            .unwrap();
+        store
+            .insert(&make_evidence(scope, "Hello world from KChat"))
+            .unwrap();
+        store
+            .insert(&make_evidence(scope, "Machine learning is fascinating"))
+            .unwrap();
 
         let filter = ScopeFilter {
             allowed_scopes: vec![scope],
@@ -650,8 +959,12 @@ mod tests {
         let scope1 = ScopeId::new();
         let scope2 = ScopeId::new();
 
-        store.insert(&make_evidence(scope1, "private message in scope 1")).unwrap();
-        store.insert(&make_evidence(scope2, "private message in scope 2")).unwrap();
+        store
+            .insert(&make_evidence(scope1, "private message in scope 1"))
+            .unwrap();
+        store
+            .insert(&make_evidence(scope2, "private message in scope 2"))
+            .unwrap();
 
         // Filter only allows scope1
         let filter = ScopeFilter {
@@ -726,5 +1039,106 @@ mod tests {
             params![evidence.id.0.as_bytes()],
         );
         assert!(result.is_err(), "DELETE should be blocked by trigger");
+    }
+
+    #[test]
+    fn test_vector_persist_roundtrip() {
+        let store = make_store();
+        let scope = ScopeId::new();
+        let evidence = make_evidence(scope, "vector test content");
+        store.insert(&evidence).unwrap();
+
+        let vec = vec![0.5f32, -1.25, 3.75, 42.0];
+        store
+            .insert_vector(evidence.id, scope, &vec, "test-model-v1")
+            .unwrap();
+
+        let (loaded, tag) = store.get_vector(evidence.id, scope).unwrap().unwrap();
+        assert_eq!(loaded, vec);
+        assert_eq!(tag, "test-model-v1");
+    }
+
+    #[test]
+    fn test_vector_model_tag_staleness() {
+        let store = make_store();
+        let scope = ScopeId::new();
+        let evidence = make_evidence(scope, "content");
+        store.insert(&evidence).unwrap();
+
+        let filter = ScopeFilter {
+            allowed_scopes: vec![scope],
+            denied_scopes: vec![],
+            user_id: Uuid::new_v4(),
+            roles: vec![],
+        };
+
+        store
+            .insert_vector(evidence.id, scope, &[1.0, 0.0], "model-v1")
+            .unwrap();
+
+        // Current-model query sees it; other-model query does not
+        assert_eq!(
+            store
+                .vectors_in_scopes(&filter, "model-v1", 10)
+                .unwrap()
+                .len(),
+            1
+        );
+        assert!(store
+            .vectors_in_scopes(&filter, "model-v2", 10)
+            .unwrap()
+            .is_empty());
+
+        // Model upgrade: OR REPLACE rewrites the row under the new tag
+        store
+            .insert_vector(evidence.id, scope, &[0.0, 1.0], "model-v2")
+            .unwrap();
+        assert!(store
+            .vectors_in_scopes(&filter, "model-v1", 10)
+            .unwrap()
+            .is_empty());
+        let rows = store.vectors_in_scopes(&filter, "model-v2", 10).unwrap();
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].1, vec![0.0, 1.0]);
+    }
+
+    #[test]
+    fn test_forget_scope_deletes_vectors() {
+        let store = make_store();
+        let scope = ScopeId::new();
+        let evidence = make_evidence(scope, "sensitive");
+        store.insert(&evidence).unwrap();
+        store
+            .insert_vector(evidence.id, scope, &[1.0, 2.0], "m")
+            .unwrap();
+
+        store.forget_scope(scope).unwrap();
+
+        assert!(store.get_vector(evidence.id, scope).unwrap().is_none());
+        let filter = ScopeFilter {
+            allowed_scopes: vec![scope],
+            denied_scopes: vec![],
+            user_id: Uuid::new_v4(),
+            roles: vec![],
+        };
+        assert!(store
+            .vectors_in_scopes(&filter, "m", 10)
+            .unwrap()
+            .is_empty());
+    }
+
+    #[test]
+    fn test_insert_indexed_embeds_on_write() {
+        let store = make_store();
+        let scope = ScopeId::new();
+        let embs = crate::embeddings::EmbeddingManager::new()
+            .with_primary(Box::new(crate::embeddings::MockEmbedder::new(8)));
+
+        let evidence = make_evidence(scope, "indexed content");
+        store.insert_indexed(&evidence, &embs).unwrap();
+
+        let (vec, tag) = store.get_vector(evidence.id, scope).unwrap().unwrap();
+        assert_eq!(vec.len(), 8);
+        assert_eq!(tag, "mock-embedder");
     }
 }

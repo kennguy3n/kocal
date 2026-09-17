@@ -4,8 +4,8 @@
 //! `embedding` directly, uses that. Otherwise, falls back to attention-mask-
 //! weighted mean pooling over hidden states and L2 normalization.
 
-use crate::EncoderResult;
 use crate::session::EncoderSession;
+use crate::EncoderResult;
 
 /// Embedding head — wraps a shared encoder session.
 pub struct EmbedHead<'a> {

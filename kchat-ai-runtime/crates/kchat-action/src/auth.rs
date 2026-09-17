@@ -50,21 +50,24 @@ impl AuthContext {
 
     /// Check if the user has permission for a tool action.
     pub fn has_permission(&self, tool_id: &ToolId, action: &str) -> bool {
-        self.permissions.iter().any(|p| {
-            &p.tool_id == tool_id && p.actions.contains(action)
-        })
+        self.permissions
+            .iter()
+            .any(|p| &p.tool_id == tool_id && p.actions.contains(action))
     }
 
     /// Get the confirmation class for a tool.
     pub fn confirmation_class_for(&self, tool_id: &ToolId) -> Option<ConfirmationClass> {
-        self.permissions.iter().find(|p| &p.tool_id == tool_id).map(|p| p.confirmation_class)
+        self.permissions
+            .iter()
+            .find(|p| &p.tool_id == tool_id)
+            .map(|p| p.confirmation_class)
     }
 
     /// Check if the user has access to a data scope.
     pub fn has_data_scope(&self, tool_id: &ToolId, scope: &str) -> bool {
-        self.permissions.iter().any(|p| {
-            &p.tool_id == tool_id && p.data_scopes.contains(scope)
-        })
+        self.permissions
+            .iter()
+            .any(|p| &p.tool_id == tool_id && p.data_scopes.contains(scope))
     }
 }
 
@@ -106,9 +109,9 @@ impl RbacBroker {
                 self.role_permissions
                     .get(role)
                     .map(|perms| {
-                        perms.iter().any(|p| {
-                            &p.tool_id == tool_id && p.actions.contains(action)
-                        })
+                        perms
+                            .iter()
+                            .any(|p| &p.tool_id == tool_id && p.actions.contains(action))
                     })
                     .unwrap_or(false)
             });
@@ -128,9 +131,9 @@ impl RbacBroker {
                 self.role_permissions
                     .get(role)
                     .map(|perms| {
-                        perms.iter().any(|p| {
-                            &p.tool_id == tool_id && p.data_scopes.contains(data_scope)
-                        })
+                        perms
+                            .iter()
+                            .any(|p| &p.tool_id == tool_id && p.data_scopes.contains(data_scope))
                     })
                     .unwrap_or(false)
             });
@@ -149,7 +152,10 @@ impl RbacBroker {
             .or_else(|| {
                 auth.roles.iter().find_map(|role| {
                     self.role_permissions.get(role).and_then(|perms| {
-                        perms.iter().find(|p| &p.tool_id == tool_id).map(|p| p.confirmation_class)
+                        perms
+                            .iter()
+                            .find(|p| &p.tool_id == tool_id)
+                            .map(|p| p.confirmation_class)
                     })
                 })
             })
@@ -320,12 +326,15 @@ mod tests {
         let mut scopes = HashSet::new();
         scopes.insert("all".into());
 
-        broker.add_role_permissions("admin", vec![Permission {
-            tool_id,
-            actions,
-            data_scopes: scopes,
-            confirmation_class: ConfirmationClass::SensitiveAction,
-        }]);
+        broker.add_role_permissions(
+            "admin",
+            vec![Permission {
+                tool_id,
+                actions,
+                data_scopes: scopes,
+                confirmation_class: ConfirmationClass::SensitiveAction,
+            }],
+        );
 
         let auth = AuthContext {
             user_id: UserId::new(),
@@ -363,7 +372,8 @@ mod tests {
         };
 
         // Without step-up auth → should fail
-        let result = broker.reauthorize_full(&auth, &tool_id, "execute", "workspace_1", false, true);
+        let result =
+            broker.reauthorize_full(&auth, &tool_id, "execute", "workspace_1", false, true);
         assert!(matches!(result, Err(AuthError::StepUpAuthRequired { .. })));
 
         // With step-up auth → should succeed

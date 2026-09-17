@@ -83,8 +83,8 @@ pub fn adaptive_max_output(
     let system_tokens = estimate_tokens(system_prompt);
     let context_tokens = estimate_tokens(context_text);
     let overhead = TEMPLATE_OVERHEAD + SAFETY_MARGIN;
-    let available_for_output = total_context_tokens
-        .saturating_sub(system_tokens + context_tokens + overhead);
+    let available_for_output =
+        total_context_tokens.saturating_sub(system_tokens + context_tokens + overhead);
     available_for_output.min(desired_max_tokens).max(64)
 }
 
@@ -254,11 +254,7 @@ pub fn extract_outline_context(text: &str, max_chars: usize) -> String {
 ///
 /// Returns the nearest preceding heading and a window of characters
 /// before and after the position.
-pub fn get_local_context(
-    text: &str,
-    pos: usize,
-    max_chars: usize,
-) -> String {
+pub fn get_local_context(text: &str, pos: usize, max_chars: usize) -> String {
     let half = max_chars / 2;
     let start = pos.saturating_sub(half);
     let end = (pos + half).min(text.len());
@@ -545,7 +541,10 @@ mod tests {
     fn test_extract_outline_context_truncated() {
         let mut text = String::new();
         for i in 0..50 {
-            text.push_str(&format!("# Section {}\nThis is content for section {}.\n\n", i, i));
+            text.push_str(&format!(
+                "# Section {}\nThis is content for section {}.\n\n",
+                i, i
+            ));
         }
         let outline = extract_outline_context(&text, 200);
         assert!(outline.len() <= 200);

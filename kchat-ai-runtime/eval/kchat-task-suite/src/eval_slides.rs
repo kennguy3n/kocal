@@ -13,16 +13,13 @@
 //! real Pexels/Pixabay/Unsplash/Shutterstock APIs (always real — requires
 //! API keys in env vars).
 
-use crate::report::{EvalReport, EvalResult, SuiteReport};
+use crate::report::{EvalResult, SuiteReport};
 use kchat_generation::{
-    SkillPromptInput, SkillRegistry, SkillSurface, SlidesTemplateFamily,
-    SlidesTemplateRegistry,
+    SkillPromptInput, SkillRegistry, SkillSurface, SlidesTemplateFamily, SlidesTemplateRegistry,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::io::Write;
-use std::path::Path;
-use std::process::{Command, Stdio};
 use std::time::Instant;
 
 // ---------------------------------------------------------------------------
@@ -151,22 +148,36 @@ fn run_slides_quality_check(output: &str, check: &SlidesQualityCheck) -> f64 {
     match check.check_type.as_str() {
         "min_length" => {
             let min = check.min_chars.unwrap_or(0);
-            if output.len() >= min { 1.0 } else if min > 0 {
+            if output.len() >= min {
+                1.0
+            } else if min > 0 {
                 output.len() as f64 / min as f64
-            } else { 1.0 }
+            } else {
+                1.0
+            }
         }
         "max_length" => {
             let max = check.max_chars.unwrap_or(usize::MAX);
-            if output.len() <= max { 1.0 } else { 0.0 }
+            if output.len() <= max {
+                1.0
+            } else {
+                0.0
+            }
         }
         "coherent" => {
-            if output.is_empty() || output.len() <= 10 { 0.0 }
-            else if is_repeated(output) { 0.3 }
-            else { 1.0 }
+            if output.is_empty() || output.len() <= 10 {
+                0.0
+            } else if is_repeated(output) {
+                0.3
+            } else {
+                1.0
+            }
         }
         "json_schema_valid" => {
             let json_text = extract_json(output);
-            if json_text.is_empty() { return 0.0; }
+            if json_text.is_empty() {
+                return 0.0;
+            }
             match serde_json::from_str::<serde_json::Value>(&json_text) {
                 Ok(_) => 1.0,
                 Err(_) => 0.0,
@@ -174,7 +185,9 @@ fn run_slides_quality_check(output: &str, check: &SlidesQualityCheck) -> f64 {
         }
         "template_conformance" => {
             let json_text = extract_json(output);
-            if json_text.is_empty() { return 0.0; }
+            if json_text.is_empty() {
+                return 0.0;
+            }
             let parsed: serde_json::Value = match serde_json::from_str(&json_text) {
                 Ok(v) => v,
                 Err(_) => return 0.0,
@@ -182,36 +195,54 @@ fn run_slides_quality_check(output: &str, check: &SlidesQualityCheck) -> f64 {
             let registry = &kchat_generation::TEMPLATE_REGISTRY;
             // For single-slide output
             if let Some(tid) = parsed.get("template_id").and_then(|v| v.as_str()) {
-                if registry.get(tid).is_some() { 1.0 } else { 0.0 }
+                if registry.get(tid).is_some() {
+                    1.0
+                } else {
+                    0.0
+                }
             }
             // For deck output (array of slides)
             else if let Some(slides) = parsed.get("slides").and_then(|v| v.as_array()) {
-                if slides.is_empty() { return 0.0; }
-                let valid = slides.iter().filter(|s| {
-                    s.get("template_id")
-                        .and_then(|v| v.as_str())
-                        .map(|tid| registry.get(tid).is_some())
-                        .unwrap_or(false)
-                }).count();
+                if slides.is_empty() {
+                    return 0.0;
+                }
+                let valid = slides
+                    .iter()
+                    .filter(|s| {
+                        s.get("template_id")
+                            .and_then(|v| v.as_str())
+                            .map(|tid| registry.get(tid).is_some())
+                            .unwrap_or(false)
+                    })
+                    .count();
                 valid as f64 / slides.len() as f64
             }
             // For outline output
             else if let Some(outline) = parsed.get("outline").and_then(|v| v.as_array()) {
-                if outline.is_empty() { return 0.0; }
-                let valid = outline.iter().filter(|s| {
-                    s.get("template_id")
-                        .and_then(|v| v.as_str())
-                        .map(|tid| registry.get(tid).is_some())
-                        .unwrap_or(false)
-                }).count();
+                if outline.is_empty() {
+                    return 0.0;
+                }
+                let valid = outline
+                    .iter()
+                    .filter(|s| {
+                        s.get("template_id")
+                            .and_then(|v| v.as_str())
+                            .map(|tid| registry.get(tid).is_some())
+                            .unwrap_or(false)
+                    })
+                    .count();
                 valid as f64 / outline.len() as f64
-            } else { 0.0 }
+            } else {
+                0.0
+            }
         }
         // === NEW: Slot schema conformance — validates that slots match the
         // template's declared slot definitions (type, required fields). ===
         "slot_schema_conformance" => {
             let json_text = extract_json(output);
-            if json_text.is_empty() { return 0.0; }
+            if json_text.is_empty() {
+                return 0.0;
+            }
             let parsed: serde_json::Value = match serde_json::from_str(&json_text) {
                 Ok(v) => v,
                 Err(_) => return 0.0,
@@ -223,7 +254,9 @@ fn run_slides_quality_check(output: &str, check: &SlidesQualityCheck) -> f64 {
         // unique titles, no duplicate template_id sequences, and logical flow. ===
         "cross_slide_consistency" => {
             let json_text = extract_json(output);
-            if json_text.is_empty() { return 0.0; }
+            if json_text.is_empty() {
+                return 0.0;
+            }
             let parsed: serde_json::Value = match serde_json::from_str(&json_text) {
                 Ok(v) => v,
                 Err(_) => return 0.0,
@@ -235,7 +268,9 @@ fn run_slides_quality_check(output: &str, check: &SlidesQualityCheck) -> f64 {
         // for title content, chart template for data content). ===
         "template_selection_accuracy" => {
             let json_text = extract_json(output);
-            if json_text.is_empty() { return 0.0; }
+            if json_text.is_empty() {
+                return 0.0;
+            }
             let parsed: serde_json::Value = match serde_json::from_str(&json_text) {
                 Ok(v) => v,
                 Err(_) => return 0.0,
@@ -245,14 +280,14 @@ fn run_slides_quality_check(output: &str, check: &SlidesQualityCheck) -> f64 {
         }
         // === NEW: Semantic quality — checks for empty/placeholder text,
         // non-dictionary words, and content-topic relevance. ===
-        "semantic_quality" => {
-            check_semantic_quality(output)
-        }
+        "semantic_quality" => check_semantic_quality(output),
         // === NEW: Image search query relevance — checks that image queries
         // are specific, descriptive, and not generic. ===
         "image_query_relevance" => {
             let json_text = extract_json(output);
-            if json_text.is_empty() { return 0.0; }
+            if json_text.is_empty() {
+                return 0.0;
+            }
             let parsed: serde_json::Value = match serde_json::from_str(&json_text) {
                 Ok(v) => v,
                 Err(_) => return 0.0,
@@ -261,14 +296,14 @@ fn run_slides_quality_check(output: &str, check: &SlidesQualityCheck) -> f64 {
         }
         // === NEW: No executable content — ensures slide text doesn't
         // contain script tags, HTML, or code injection attempts. ===
-        "no_executable_content" => {
-            check_no_executable_content(output)
-        }
+        "no_executable_content" => check_no_executable_content(output),
         // === NEW: Deck structure validity — checks that deck has a title
         // slide as first slide, reasonable slide count, and no empty slides. ===
         "deck_structure_valid" => {
             let json_text = extract_json(output);
-            if json_text.is_empty() { return 0.0; }
+            if json_text.is_empty() {
+                return 0.0;
+            }
             let parsed: serde_json::Value = match serde_json::from_str(&json_text) {
                 Ok(v) => v,
                 Err(_) => return 0.0,
@@ -277,7 +312,9 @@ fn run_slides_quality_check(output: &str, check: &SlidesQualityCheck) -> f64 {
         }
         "bullet_count" => {
             let json_text = extract_json(output);
-            if json_text.is_empty() { return 0.0; }
+            if json_text.is_empty() {
+                return 0.0;
+            }
             let parsed: serde_json::Value = match serde_json::from_str(&json_text) {
                 Ok(v) => v,
                 Err(_) => return 0.0,
@@ -290,61 +327,99 @@ fn run_slides_quality_check(output: &str, check: &SlidesQualityCheck) -> f64 {
                 .unwrap_or(0);
             let min = check.min_bullets.unwrap_or(0);
             let max = check.max_bullets.unwrap_or(usize::MAX);
-            if bullets >= min && bullets <= max { 1.0 }
-            else if bullets < min && min > 0 { bullets as f64 / min as f64 }
-            else if max > 0 { max as f64 / bullets.max(1) as f64 }
-            else { 0.0 }
+            if bullets >= min && bullets <= max {
+                1.0
+            } else if bullets < min && min > 0 {
+                bullets as f64 / min as f64
+            } else if max > 0 {
+                max as f64 / bullets.max(1) as f64
+            } else {
+                0.0
+            }
         }
         "slot_count" => {
             let json_text = extract_json(output);
-            if json_text.is_empty() { return 0.0; }
+            if json_text.is_empty() {
+                return 0.0;
+            }
             let parsed: serde_json::Value = match serde_json::from_str(&json_text) {
                 Ok(v) => v,
                 Err(_) => return 0.0,
             };
-            let slide_count = parsed.get("slides").and_then(|s| s.as_array()).map(|a| a.len()).unwrap_or(1);
+            let slide_count = parsed
+                .get("slides")
+                .and_then(|s| s.as_array())
+                .map(|a| a.len())
+                .unwrap_or(1);
             let min = check.min_slots.unwrap_or(0);
             let max = check.max_slides.unwrap_or(usize::MAX);
-            if slide_count >= min && slide_count <= max { 1.0 }
-            else if slide_count < min && min > 0 { slide_count as f64 / min as f64 }
-            else if max > 0 { max as f64 / slide_count.max(1) as f64 }
-            else { 0.0 }
+            if slide_count >= min && slide_count <= max {
+                1.0
+            } else if slide_count < min && min > 0 {
+                slide_count as f64 / min as f64
+            } else if max > 0 {
+                max as f64 / slide_count.max(1) as f64
+            } else {
+                0.0
+            }
         }
         "chart_data_valid" => {
             let json_text = extract_json(output);
-            if json_text.is_empty() { return 0.0; }
+            if json_text.is_empty() {
+                return 0.0;
+            }
             let parsed: serde_json::Value = match serde_json::from_str(&json_text) {
                 Ok(v) => v,
                 Err(_) => return 0.0,
             };
-            let series = parsed.get("slots").and_then(|s| s.get("series")).or_else(|| parsed.get("series"));
+            let series = parsed
+                .get("slots")
+                .and_then(|s| s.get("series"))
+                .or_else(|| parsed.get("series"));
             if let Some(arr) = series.and_then(|s| s.as_array()) {
-                if arr.is_empty() { return 0.0; }
-                let valid = arr.iter().filter(|item| {
-                    item.get("label").and_then(|v| v.as_str()).is_some()
-                        && item.get("value").and_then(|v| v.as_f64()).is_some()
-                }).count();
+                if arr.is_empty() {
+                    return 0.0;
+                }
+                let valid = arr
+                    .iter()
+                    .filter(|item| {
+                        item.get("label").and_then(|v| v.as_str()).is_some()
+                            && item.get("value").and_then(|v| v.as_f64()).is_some()
+                    })
+                    .count();
                 valid as f64 / arr.len() as f64
-            } else { 0.0 }
+            } else {
+                0.0
+            }
         }
         "image_query_valid" => {
             let json_text = extract_json(output);
-            if json_text.is_empty() { return 0.0; }
+            if json_text.is_empty() {
+                return 0.0;
+            }
             let parsed: serde_json::Value = match serde_json::from_str(&json_text) {
                 Ok(v) => v,
                 Err(_) => return 0.0,
             };
             // For slides_add_image skill
             if let Some(q) = parsed.get("query").and_then(|v| v.as_str()) {
-                if q.is_empty() { return 0.0; }
-                if q.starts_with("http://") || q.starts_with("https://") { return 0.0; }
+                if q.is_empty() {
+                    return 0.0;
+                }
+                if q.starts_with("http://") || q.starts_with("https://") {
+                    return 0.0;
+                }
                 return 1.0;
             }
             // For slide with image slot
             if let Some(img) = parsed.get("slots").and_then(|s| s.get("image")) {
                 if let Some(q) = img.get("query").and_then(|v| v.as_str()) {
-                    if q.is_empty() { return 0.0; }
-                    if q.starts_with("http://") || q.starts_with("https://") { return 0.0; }
+                    if q.is_empty() {
+                        return 0.0;
+                    }
+                    if q.starts_with("http://") || q.starts_with("https://") {
+                        return 0.0;
+                    }
                     return 1.0;
                 }
             }
@@ -354,14 +429,20 @@ fn run_slides_quality_check(output: &str, check: &SlidesQualityCheck) -> f64 {
             let count = count_sentences(output);
             let min = check.min_sentences.unwrap_or(0);
             let max = check.max_sentences.unwrap_or(usize::MAX);
-            if count >= min && count <= max { 1.0 }
-            else if count < min { count as f64 / min as f64 }
-            else { max as f64 / count as f64 }
+            if count >= min && count <= max {
+                1.0
+            } else if count < min {
+                count as f64 / min as f64
+            } else {
+                max as f64 / count as f64
+            }
         }
         "language_script" => {
             if let Some(lang) = &check.language {
                 detect_language_score(output, lang)
-            } else { 1.0 }
+            } else {
+                1.0
+            }
         }
         _ => 1.0,
     }
@@ -373,7 +454,10 @@ fn run_slides_quality_check(output: &str, check: &SlidesQualityCheck) -> f64 {
 
 /// Check that slots conform to the template's declared slot schema.
 /// Validates that each required slot is present and has the correct type.
-fn check_slot_schema(parsed: &serde_json::Value, registry: &kchat_generation::SlidesTemplateRegistry) -> f64 {
+fn check_slot_schema(
+    parsed: &serde_json::Value,
+    registry: &kchat_generation::SlidesTemplateRegistry,
+) -> f64 {
     // Single slide
     if let Some(tid) = parsed.get("template_id").and_then(|v| v.as_str()) {
         if let Some(template) = registry.get(tid) {
@@ -384,7 +468,9 @@ fn check_slot_schema(parsed: &serde_json::Value, registry: &kchat_generation::Sl
     }
     // Deck
     if let Some(slides) = parsed.get("slides").and_then(|v| v.as_array()) {
-        if slides.is_empty() { return 0.0; }
+        if slides.is_empty() {
+            return 0.0;
+        }
         let mut total_score = 0.0;
         for slide in slides {
             if let Some(tid) = slide.get("template_id").and_then(|v| v.as_str()) {
@@ -400,7 +486,10 @@ fn check_slot_schema(parsed: &serde_json::Value, registry: &kchat_generation::Sl
 }
 
 /// Validate that slots match a template's slot definitions.
-fn validate_slots_against_template(slots: &serde_json::Value, template: &kchat_generation::SlidesTemplate) -> f64 {
+fn validate_slots_against_template(
+    slots: &serde_json::Value,
+    template: &kchat_generation::SlidesTemplate,
+) -> f64 {
     let slot_obj = match slots.as_object() {
         Some(o) => o,
         None => return 0.0,
@@ -413,22 +502,33 @@ fn validate_slots_against_template(slots: &serde_json::Value, template: &kchat_g
             // Check type conformance based on slot type
             let type_ok = match slot_def.slot_type {
                 // String types
-                kchat_generation::SlotType::TitleText | kchat_generation::SlotType::SubtitleText
-                | kchat_generation::SlotType::BodyText | kchat_generation::SlotType::QuoteText
-                | kchat_generation::SlotType::AttributionText | kchat_generation::SlotType::PersonName
-                | kchat_generation::SlotType::PersonRole | kchat_generation::SlotType::LabelText
-                | kchat_generation::SlotType::CaptionText | kchat_generation::SlotType::FooterText
-                | kchat_generation::SlotType::SectionLabel | kchat_generation::SlotType::StatLabel
-                | kchat_generation::SlotType::ImageQuery | kchat_generation::SlotType::ImageRef => value.is_string(),
+                kchat_generation::SlotType::TitleText
+                | kchat_generation::SlotType::SubtitleText
+                | kchat_generation::SlotType::BodyText
+                | kchat_generation::SlotType::QuoteText
+                | kchat_generation::SlotType::AttributionText
+                | kchat_generation::SlotType::PersonName
+                | kchat_generation::SlotType::PersonRole
+                | kchat_generation::SlotType::LabelText
+                | kchat_generation::SlotType::CaptionText
+                | kchat_generation::SlotType::FooterText
+                | kchat_generation::SlotType::SectionLabel
+                | kchat_generation::SlotType::StatLabel
+                | kchat_generation::SlotType::ImageQuery
+                | kchat_generation::SlotType::ImageRef => value.is_string(),
                 // Array types
-                kchat_generation::SlotType::BulletList | kchat_generation::SlotType::StepList
-                | kchat_generation::SlotType::DateList | kchat_generation::SlotType::NumberedList => value.is_array(),
+                kchat_generation::SlotType::BulletList
+                | kchat_generation::SlotType::StepList
+                | kchat_generation::SlotType::DateList
+                | kchat_generation::SlotType::NumberedList => value.is_array(),
                 // Numeric types
                 kchat_generation::SlotType::StatNumber => value.is_number() || value.is_string(),
                 // Chart series — object or array
                 kchat_generation::SlotType::ChartSeries => value.is_object() || value.is_array(),
             };
-            if type_ok { score += 1.0; }
+            if type_ok {
+                score += 1.0;
+            }
         }
     }
     score / total as f64
@@ -458,7 +558,7 @@ fn check_cross_slide_consistency(parsed: &serde_json::Value) -> f64 {
     let mut consecutive = 1;
     let mut max_consecutive = 1;
     for i in 1..slides.len() {
-        let prev_tid = slides[i-1].get("template_id").and_then(|v| v.as_str());
+        let prev_tid = slides[i - 1].get("template_id").and_then(|v| v.as_str());
         let curr_tid = slides[i].get("template_id").and_then(|v| v.as_str());
         if prev_tid.is_some() && prev_tid == curr_tid {
             consecutive += 1;
@@ -474,20 +574,35 @@ fn check_cross_slide_consistency(parsed: &serde_json::Value) -> f64 {
 }
 
 /// Check that template selection is appropriate for content type.
-fn check_template_selection_accuracy(parsed: &serde_json::Value, registry: &kchat_generation::SlidesTemplateRegistry) -> f64 {
+fn check_template_selection_accuracy(
+    parsed: &serde_json::Value,
+    registry: &kchat_generation::SlidesTemplateRegistry,
+) -> f64 {
     if let Some(tid) = parsed.get("template_id").and_then(|v| v.as_str()) {
         if let Some(template) = registry.get(tid) {
             // Check if title slide has title text
             if template.family == kchat_generation::SlidesTemplateFamily::Title {
-                if let Some(title) = parsed.get("slots").and_then(|s| s.get("title")).and_then(|v| v.as_str()) {
-                    if title.is_empty() { return 0.5; }
+                if let Some(title) = parsed
+                    .get("slots")
+                    .and_then(|s| s.get("title"))
+                    .and_then(|v| v.as_str())
+                {
+                    if title.is_empty() {
+                        return 0.5;
+                    }
                     return 1.0;
                 }
             }
             // Check if bullet slide has bullets
             if template.family == kchat_generation::SlidesTemplateFamily::Bullet {
-                if let Some(bullets) = parsed.get("slots").and_then(|s| s.get("bullets")).and_then(|b| b.as_array()) {
-                    if bullets.is_empty() { return 0.3; }
+                if let Some(bullets) = parsed
+                    .get("slots")
+                    .and_then(|s| s.get("bullets"))
+                    .and_then(|b| b.as_array())
+                {
+                    if bullets.is_empty() {
+                        return 0.3;
+                    }
                     return 1.0;
                 }
             }
@@ -500,10 +615,21 @@ fn check_template_selection_accuracy(parsed: &serde_json::Value, registry: &kcha
 
 /// Check semantic quality: no empty/placeholder text, no excessive repetition.
 fn check_semantic_quality(output: &str) -> f64 {
-    if output.is_empty() { return 0.0; }
+    if output.is_empty() {
+        return 0.0;
+    }
     let mut score: f64 = 1.0;
     // Check for placeholder text
-    let placeholders = ["lorem ipsum", "placeholder", "todo", "tbd", "xxx", "fill in", "[text]", "your text here"];
+    let placeholders = [
+        "lorem ipsum",
+        "placeholder",
+        "todo",
+        "tbd",
+        "xxx",
+        "fill in",
+        "[text]",
+        "your text here",
+    ];
     let lower = output.to_lowercase();
     for p in &placeholders {
         if lower.contains(p) {
@@ -519,7 +645,10 @@ fn check_semantic_quality(output: &str) -> f64 {
         score -= 0.2;
     }
     // Check for only whitespace/punctuation
-    if output.chars().all(|c| c.is_whitespace() || c.is_ascii_punctuation()) {
+    if output
+        .chars()
+        .all(|c| c.is_whitespace() || c.is_ascii_punctuation())
+    {
         score = 0.0;
     }
     score.max(0.0f64)
@@ -527,14 +656,23 @@ fn check_semantic_quality(output: &str) -> f64 {
 
 /// Check image query relevance: specific, descriptive, not generic.
 fn check_image_query_relevance(parsed: &serde_json::Value) -> f64 {
-    let query = parsed.get("query").and_then(|v| v.as_str())
-        .or_else(|| parsed.get("slots").and_then(|s| s.get("image")).and_then(|i| i.get("query")).and_then(|v| v.as_str()));
+    let query = parsed.get("query").and_then(|v| v.as_str()).or_else(|| {
+        parsed
+            .get("slots")
+            .and_then(|s| s.get("image"))
+            .and_then(|i| i.get("query"))
+            .and_then(|v| v.as_str())
+    });
     if let Some(q) = query {
-        if q.is_empty() { return 0.0; }
+        if q.is_empty() {
+            return 0.0;
+        }
         let mut score: f64 = 1.0;
         // Penalize very short queries (1-2 words may be too generic)
         let word_count = q.split_whitespace().count();
-        if word_count < 2 { score -= 0.3; }
+        if word_count < 2 {
+            score -= 0.3;
+        }
         // Penalize queries that are just "image" or "photo"
         let lower = q.to_lowercase();
         if lower == "image" || lower == "photo" || lower == "picture" || lower == "icon" {
@@ -557,12 +695,29 @@ fn check_image_query_relevance(parsed: &serde_json::Value) -> f64 {
 fn check_no_executable_content(output: &str) -> f64 {
     let lower = output.to_lowercase();
     let dangerous_patterns = [
-        "<script", "javascript:", "onerror=", "onload=", "onclick=",
-        "<iframe", "<embed", "<object", "eval(", "document.cookie",
-        "window.location", "<svg onload", "data:text/html",
+        "<script",
+        "javascript:",
+        "onerror=",
+        "onload=",
+        "onclick=",
+        "<iframe",
+        "<embed",
+        "<object",
+        "eval(",
+        "document.cookie",
+        "window.location",
+        "<svg onload",
+        "data:text/html",
     ];
-    let violations = dangerous_patterns.iter().filter(|p| lower.contains(*p)).count();
-    if violations == 0 { 1.0 } else { 0.0 }
+    let violations = dangerous_patterns
+        .iter()
+        .filter(|p| lower.contains(*p))
+        .count();
+    if violations == 0 {
+        1.0
+    } else {
+        0.0
+    }
 }
 
 /// Check deck structure: has title slide, reasonable count, no empty slides.
@@ -571,22 +726,39 @@ fn check_deck_structure(parsed: &serde_json::Value) -> f64 {
         Some(s) => s,
         None => return 0.5, // Not a deck
     };
-    if slides.is_empty() { return 0.0; }
+    if slides.is_empty() {
+        return 0.0;
+    }
     let mut score: f64 = 1.0;
     // Check slide count is reasonable (3-20)
-    if slides.len() < 3 { score -= 0.2; }
-    if slides.len() > 20 { score -= 0.3; }
+    if slides.len() < 3 {
+        score -= 0.2;
+    }
+    if slides.len() > 20 {
+        score -= 0.3;
+    }
     // Check for empty slides (no title and no slots)
-    let empty_count = slides.iter().filter(|s| {
-        s.get("title").and_then(|v| v.as_str()).map(|t| t.is_empty()).unwrap_or(true)
-            && s.get("slots").map(|slots| slots.as_object().map(|o| o.is_empty()).unwrap_or(true)).unwrap_or(true)
-    }).count();
+    let empty_count = slides
+        .iter()
+        .filter(|s| {
+            s.get("title")
+                .and_then(|v| v.as_str())
+                .map(|t| t.is_empty())
+                .unwrap_or(true)
+                && s.get("slots")
+                    .map(|slots| slots.as_object().map(|o| o.is_empty()).unwrap_or(true))
+                    .unwrap_or(true)
+        })
+        .count();
     if empty_count > 0 {
         score -= 0.3 * empty_count as f64 / slides.len() as f64;
     }
     // Check first slide is a title slide (heuristic: has "title" in template_id)
     if let Some(first) = slides.first() {
-        let first_tid = first.get("template_id").and_then(|v| v.as_str()).unwrap_or("");
+        let first_tid = first
+            .get("template_id")
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
         if !first_tid.contains("title") && !first_tid.starts_with("title") {
             // Not necessarily wrong, but slightly penalize
             score -= 0.1;
@@ -623,7 +795,10 @@ fn load_slides_dataset() -> anyhow::Result<SlidesEvalDataset> {
             Err(e) => last_err = Some(e),
         }
     }
-    Err(anyhow::anyhow!("failed to read slides dataset: {:?}", last_err))
+    Err(anyhow::anyhow!(
+        "failed to read slides dataset: {:?}",
+        last_err
+    ))
 }
 
 fn load_image_dataset() -> anyhow::Result<ImageSearchDataset> {
@@ -643,7 +818,10 @@ fn load_image_dataset() -> anyhow::Result<ImageSearchDataset> {
             Err(e) => last_err = Some(e),
         }
     }
-    Err(anyhow::anyhow!("failed to read image dataset: {:?}", last_err))
+    Err(anyhow::anyhow!(
+        "failed to read image dataset: {:?}",
+        last_err
+    ))
 }
 
 // ---------------------------------------------------------------------------
@@ -660,7 +838,12 @@ pub fn run_mock() {
 
     let dataset = match load_slides_dataset() {
         Ok(d) => {
-            println!("Dataset: {} v{} ({} test cases)", d.name, d.version, d.test_cases.len());
+            println!(
+                "Dataset: {} v{} ({} test cases)",
+                d.name,
+                d.version,
+                d.test_cases.len()
+            );
             d
         }
         Err(e) => {
@@ -673,9 +856,11 @@ pub fn run_mock() {
 
     let registry = SkillRegistry::new();
     let template_registry = &kchat_generation::TEMPLATE_REGISTRY;
-    println!("Template registry: {} templates across {} families",
+    println!(
+        "Template registry: {} templates across {} families",
         template_registry.len(),
-        count_template_families(template_registry));
+        count_template_families(template_registry)
+    );
     println!();
 
     let mut results: Vec<SlidesResult> = Vec::new();
@@ -685,12 +870,15 @@ pub fn run_mock() {
     let slides_skills = registry.by_surface(SkillSurface::Slides);
     println!("Slides skills in registry: {}", slides_skills.len());
     for skill in &slides_skills {
-        println!("  • {} — {} ({:?})", skill.id, skill.label, skill.grammar_type);
+        println!(
+            "  • {} — {} ({:?})",
+            skill.id, skill.label, skill.grammar_type
+        );
     }
     println!();
 
     // Verify all 210 templates exist
-    let family_counts = count_templates_by_family(&template_registry);
+    let family_counts = count_templates_by_family(template_registry);
     for (family, count) in &family_counts {
         println!("  {} family: {} templates", family.label(), count);
     }
@@ -728,7 +916,10 @@ pub fn run_mock() {
             _ => skill.surface,
         };
         if skill.surface != expected_surface {
-            errors.push(format!("surface mismatch: expected {:?}, got {:?}", expected_surface, skill.surface));
+            errors.push(format!(
+                "surface mismatch: expected {:?}, got {:?}",
+                expected_surface, skill.surface
+            ));
         }
 
         // 3. Build prompt (validates prompt construction)
@@ -762,9 +953,16 @@ pub fn run_mock() {
         // so we use a more generous multiplier (20×) for slides surface skills.
         let prompt_tokens = kchat_generation::estimate_tokens_text(&prompt.system)
             + kchat_generation::estimate_tokens_text(&prompt.user);
-        let budget_multiplier = if skill.surface == SkillSurface::Slides { 20 } else { 3 };
+        let budget_multiplier = if skill.surface == SkillSurface::Slides {
+            20
+        } else {
+            3
+        };
         if prompt_tokens > skill.max_tokens as usize * budget_multiplier {
-            errors.push(format!("prompt tokens ({}) exceed {}× max_tokens ({})", prompt_tokens, budget_multiplier, skill.max_tokens));
+            errors.push(format!(
+                "prompt tokens ({}) exceed {}× max_tokens ({})",
+                prompt_tokens, budget_multiplier, skill.max_tokens
+            ));
         }
         checks_detail.push(("token_budget".into(), 1.0));
 
@@ -776,7 +974,10 @@ pub fn run_mock() {
             _ => "FreeText",
         };
         if format!("{:?}", skill.grammar_type) != expected_grammar {
-            errors.push(format!("grammar type mismatch: expected {}, got {:?}", expected_grammar, skill.grammar_type));
+            errors.push(format!(
+                "grammar type mismatch: expected {}, got {:?}",
+                expected_grammar, skill.grammar_type
+            ));
         }
         checks_detail.push(("grammar_type".into(), 1.0));
 
@@ -797,10 +998,12 @@ pub fn run_mock() {
             checks_detail.push((check.check_type.clone(), score));
         }
 
-        let passed = errors.is_empty()
-            && checks_detail.iter().all(|(_, s)| *s >= 0.7);
-        let quality_score = if checks_detail.is_empty() { 1.0 }
-            else { checks_detail.iter().map(|(_, s)| s).sum::<f64>() / checks_detail.len() as f64 };
+        let passed = errors.is_empty() && checks_detail.iter().all(|(_, s)| *s >= 0.7);
+        let quality_score = if checks_detail.is_empty() {
+            1.0
+        } else {
+            checks_detail.iter().map(|(_, s)| s).sum::<f64>() / checks_detail.len() as f64
+        };
 
         results.push(SlidesResult {
             case_id: tc.id.clone(),
@@ -810,7 +1013,11 @@ pub fn run_mock() {
             quality_score,
             checks_detail,
             duration_ms: start.elapsed().as_millis() as u64,
-            error: if errors.is_empty() { None } else { Some(errors.join("; ")) },
+            error: if errors.is_empty() {
+                None
+            } else {
+                Some(errors.join("; "))
+            },
         });
 
         if passed {
@@ -826,24 +1033,40 @@ pub fn run_mock() {
     let passed = results.iter().filter(|r| r.passed).count();
     let avg_quality = if total > 0 {
         results.iter().map(|r| r.quality_score).sum::<f64>() / total as f64
-    } else { 0.0 };
+    } else {
+        0.0
+    };
     // In mock mode, quality_score reflects structural validation (skill exists,
     // prompt builds, grammar type matches, token budget) — not model output quality.
-    println!("Total: {} | Passed: {} | Failed: {} | Structural Validation: {:.2}", total, passed, total - passed, avg_quality);
+    println!(
+        "Total: {} | Passed: {} | Failed: {} | Structural Validation: {:.2}",
+        total,
+        passed,
+        total - passed,
+        avg_quality
+    );
 
     // Per-skill breakdown
     let mut by_skill: HashMap<String, (usize, usize)> = HashMap::new();
     for r in &results {
         let entry = by_skill.entry(r.skill_id.clone()).or_insert((0, 0));
         entry.0 += 1;
-        if r.passed { entry.1 += 1; }
+        if r.passed {
+            entry.1 += 1;
+        }
     }
     println!();
     println!("Per-skill breakdown:");
     let mut skill_vec: Vec<_> = by_skill.iter().collect();
     skill_vec.sort_by_key(|(_, (t, _))| *t);
     for (skill_id, (total, passed)) in &skill_vec {
-        println!("  {:<30} {}/{} ({:.0}%)", skill_id, passed, total, *passed as f64 / *total as f64 * 100.0);
+        println!(
+            "  {:<30} {}/{} ({:.0}%)",
+            skill_id,
+            passed,
+            total,
+            *passed as f64 / *total as f64 * 100.0
+        );
     }
 
     // Per-tier breakdown
@@ -851,27 +1074,45 @@ pub fn run_mock() {
     for r in &results {
         let entry = by_tier.entry(r.tier.clone()).or_insert((0, 0));
         entry.0 += 1;
-        if r.passed { entry.1 += 1; }
+        if r.passed {
+            entry.1 += 1;
+        }
     }
     println!();
     println!("Per-tier breakdown:");
     let mut tier_vec: Vec<_> = by_tier.iter().collect();
     tier_vec.sort();
     for (tier, (total, passed)) in &tier_vec {
-        println!("  {:<10} {}/{} ({:.0}%)", tier, passed, total, *passed as f64 / *total as f64 * 100.0);
+        println!(
+            "  {:<10} {}/{} ({:.0}%)",
+            tier,
+            passed,
+            total,
+            *passed as f64 / *total as f64 * 100.0
+        );
     }
 
     println!();
     let status = if suite.passed() { "PASS" } else { "FAIL" };
-    println!("[{}] {} — {}/{} passed ({:.1}%, required: {:.1}%)",
-        status, suite.suite_name, suite.pass_count(), suite.total_count(),
-        suite.pass_rate() * 100.0, suite.required_pass_rate * 100.0);
+    println!(
+        "[{}] {} — {}/{} passed ({:.1}%, required: {:.1}%)",
+        status,
+        suite.suite_name,
+        suite.pass_count(),
+        suite.total_count(),
+        suite.pass_rate() * 100.0,
+        suite.required_pass_rate * 100.0
+    );
     println!();
 
     if passed == total {
         println!("✓ All {} slides mock eval cases passed", total);
     } else {
-        println!("✗ {}/{} slides mock eval cases failed", total - passed, total);
+        println!(
+            "✗ {}/{} slides mock eval cases failed",
+            total - passed,
+            total
+        );
     }
 }
 
@@ -924,7 +1165,12 @@ pub fn run_realworld() {
 
     let dataset = match load_slides_dataset() {
         Ok(d) => {
-            println!("Dataset: {} v{} ({} test cases)", d.name, d.version, d.test_cases.len());
+            println!(
+                "Dataset: {} v{} ({} test cases)",
+                d.name,
+                d.version,
+                d.test_cases.len()
+            );
             d
         }
         Err(e) => {
@@ -935,7 +1181,8 @@ pub fn run_realworld() {
     .clone();
     println!();
 
-    let llama_url = std::env::var("LLAMA_SERVER_URL").unwrap_or_else(|_| "http://127.0.0.1:18888".into());
+    let llama_url =
+        std::env::var("LLAMA_SERVER_URL").unwrap_or_else(|_| "http://127.0.0.1:18888".into());
     println!("LLM endpoint: {}", llama_url);
     println!();
 
@@ -944,17 +1191,23 @@ pub fn run_realworld() {
     let mut suite = SuiteReport::new("Slides Skill Eval (Real)", 0.75);
 
     // Limit to a sample for real mode (full 880 would take too long)
-    let sample_size = std::env::var("SLIDES_EVAL_SAMPLE").ok()
+    let sample_size = std::env::var("SLIDES_EVAL_SAMPLE")
+        .ok()
         .and_then(|s| s.parse::<usize>().ok())
         .unwrap_or(60);
     let test_cases: Vec<&SlidesTestCase> = if dataset.test_cases.len() > sample_size {
         // Sample evenly across the dataset
         let step = dataset.test_cases.len() / sample_size;
-        (0..sample_size).map(|i| &dataset.test_cases[i * step]).collect()
+        (0..sample_size)
+            .map(|i| &dataset.test_cases[i * step])
+            .collect()
     } else {
         dataset.test_cases.iter().collect()
     };
-    println!("Running {} sampled test cases (use SLIDES_EVAL_SAMPLE to adjust)...", test_cases.len());
+    println!(
+        "Running {} sampled test cases (use SLIDES_EVAL_SAMPLE to adjust)...",
+        test_cases.len()
+    );
     println!();
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -978,11 +1231,18 @@ pub fn run_realworld() {
         };
 
         let prompt_input = SkillPromptInput {
-            input: if !tc.input.selection.is_empty() { &tc.input.selection }
-                else if !tc.input.variant_context.is_empty() { &tc.input.variant_context }
-                else { &tc.input.document },
-            context: if !tc.input.document.is_empty() { &tc.input.document }
-                else { &tc.input.variant_context },
+            input: if !tc.input.selection.is_empty() {
+                &tc.input.selection
+            } else if !tc.input.variant_context.is_empty() {
+                &tc.input.variant_context
+            } else {
+                &tc.input.document
+            },
+            context: if !tc.input.document.is_empty() {
+                &tc.input.document
+            } else {
+                &tc.input.variant_context
+            },
             keywords: &tc.input.keywords,
             variant_context: tc.variant.as_deref().unwrap_or(""),
             tier: None,
@@ -1013,8 +1273,11 @@ pub fn run_realworld() {
             checks_detail.push((check.check_type.clone(), score));
         }
 
-        let quality_score = if checks_detail.is_empty() { 1.0 }
-            else { checks_detail.iter().map(|(_, s)| s).sum::<f64>() / checks_detail.len() as f64 };
+        let quality_score = if checks_detail.is_empty() {
+            1.0
+        } else {
+            checks_detail.iter().map(|(_, s)| s).sum::<f64>() / checks_detail.len() as f64
+        };
         let passed = quality_score >= 0.7;
 
         results.push(SlidesResult {
@@ -1047,16 +1310,26 @@ pub fn run_realworld() {
     let passed = results.iter().filter(|r| r.passed).count();
     let avg_quality = if total > 0 {
         results.iter().map(|r| r.quality_score).sum::<f64>() / total as f64
-    } else { 0.0 };
+    } else {
+        0.0
+    };
     println!("─── Real Model Results ───");
-    println!("Total: {} | Passed: {} | Failed: {} | Avg Quality: {:.2}", total, passed, total - passed, avg_quality);
+    println!(
+        "Total: {} | Passed: {} | Failed: {} | Avg Quality: {:.2}",
+        total,
+        passed,
+        total - passed,
+        avg_quality
+    );
 
     // Per-skill breakdown
     let mut by_skill: HashMap<String, (usize, usize, f64)> = HashMap::new();
     for r in &results {
         let entry = by_skill.entry(r.skill_id.clone()).or_insert((0, 0, 0.0));
         entry.0 += 1;
-        if r.passed { entry.1 += 1; }
+        if r.passed {
+            entry.1 += 1;
+        }
         entry.2 += r.quality_score;
     }
     println!();
@@ -1065,20 +1338,37 @@ pub fn run_realworld() {
     skill_vec.sort_by_key(|(_, (t, _, _))| *t);
     for (skill_id, (total, passed, quality_sum)) in &skill_vec {
         let avg_q = quality_sum / *total as f64;
-        println!("  {:<30} {}/{} ({:.0}%) avg_q={:.2}", skill_id, passed, total, *passed as f64 / *total as f64 * 100.0, avg_q);
+        println!(
+            "  {:<30} {}/{} ({:.0}%) avg_q={:.2}",
+            skill_id,
+            passed,
+            total,
+            *passed as f64 / *total as f64 * 100.0,
+            avg_q
+        );
     }
 
     println!();
     let status = if suite.passed() { "PASS" } else { "FAIL" };
-    println!("[{}] {} — {}/{} passed ({:.1}%, required: {:.1}%)",
-        status, suite.suite_name, suite.pass_count(), suite.total_count(),
-        suite.pass_rate() * 100.0, suite.required_pass_rate * 100.0);
+    println!(
+        "[{}] {} — {}/{} passed ({:.1}%, required: {:.1}%)",
+        status,
+        suite.suite_name,
+        suite.pass_count(),
+        suite.total_count(),
+        suite.pass_rate() * 100.0,
+        suite.required_pass_rate * 100.0
+    );
     println!();
 
     if passed == total {
         println!("✓ All {} slides real eval cases passed", total);
     } else {
-        println!("✗ {}/{} slides real eval cases failed", total - passed, total);
+        println!(
+            "✗ {}/{} slides real eval cases failed",
+            total - passed,
+            total
+        );
     }
 }
 
@@ -1098,12 +1388,16 @@ fn call_llama(url: &str, system: &str, user: &str, max_tokens: u32) -> anyhow::R
         .build()?;
 
     let resp = client
-        .post(&format!("{}/v1/chat/completions", url))
+        .post(format!("{}/v1/chat/completions", url))
         .json(&payload)
         .send()?;
 
     if !resp.status().is_success() {
-        anyhow::bail!("HTTP {}: {}", resp.status(), resp.text().unwrap_or_default());
+        anyhow::bail!(
+            "HTTP {}: {}",
+            resp.status(),
+            resp.text().unwrap_or_default()
+        );
     }
 
     let body: serde_json::Value = resp.json()?;
@@ -1131,7 +1425,12 @@ pub fn run_image_search() {
 
     let dataset = match load_image_dataset() {
         Ok(d) => {
-            println!("Dataset: {} v{} ({} test cases)", d.name, d.version, d.test_cases.len());
+            println!(
+                "Dataset: {} v{} ({} test cases)",
+                d.name,
+                d.version,
+                d.test_cases.len()
+            );
             d
         }
         Err(e) => {
@@ -1143,7 +1442,12 @@ pub fn run_image_search() {
     println!();
 
     // Check which API keys are available
-    let env_vars = ["PEXELS_API_KEY", "PIXABAY_API_KEY", "UNSPLASH_ACCESS_KEY", "SHUTTERSTOCK_API_TOKEN"];
+    let env_vars = [
+        "PEXELS_API_KEY",
+        "PIXABAY_API_KEY",
+        "UNSPLASH_ACCESS_KEY",
+        "SHUTTERSTOCK_API_TOKEN",
+    ];
     println!("API key status:");
     for var in &env_vars {
         let set = std::env::var(var).map(|v| !v.is_empty()).unwrap_or(false);
@@ -1236,44 +1540,72 @@ pub fn run_image_search() {
         }
 
         let status = if passed { "✓" } else { "✗" };
-        println!("  {} {:<8} {:<40} results={:<3} ({}ms)",
-            status, tc.provider, tc.query.chars().take(40).collect::<String>(),
-            result_count, start.elapsed().as_millis());
+        println!(
+            "  {} {:<8} {:<40} results={:<3} ({}ms)",
+            status,
+            tc.provider,
+            tc.query.chars().take(40).collect::<String>(),
+            result_count,
+            start.elapsed().as_millis()
+        );
     }
 
     println!();
     println!("─── Image Search Results ───");
     let total = results.len();
     let passed = results.iter().filter(|r| r.passed).count();
-    println!("Total: {} | Passed: {} | Failed: {} | Pass Rate: {:.1}%",
-        total, passed, total - passed, passed as f64 / total as f64 * 100.0);
+    println!(
+        "Total: {} | Passed: {} | Failed: {} | Pass Rate: {:.1}%",
+        total,
+        passed,
+        total - passed,
+        passed as f64 / total as f64 * 100.0
+    );
 
     // Per-provider breakdown
     let mut by_provider: HashMap<String, (usize, usize)> = HashMap::new();
     for r in &results {
         let entry = by_provider.entry(r.provider.clone()).or_insert((0, 0));
         entry.0 += 1;
-        if r.passed { entry.1 += 1; }
+        if r.passed {
+            entry.1 += 1;
+        }
     }
     println!();
     println!("Per-provider breakdown:");
     let mut prov_vec: Vec<_> = by_provider.iter().collect();
     prov_vec.sort();
     for (provider, (total, passed)) in &prov_vec {
-        println!("  {:<15} {}/{} ({:.0}%)", provider, passed, total, *passed as f64 / *total as f64 * 100.0);
+        println!(
+            "  {:<15} {}/{} ({:.0}%)",
+            provider,
+            passed,
+            total,
+            *passed as f64 / *total as f64 * 100.0
+        );
     }
 
     println!();
     let status = if suite.passed() { "PASS" } else { "FAIL" };
-    println!("[{}] {} — {}/{} passed ({:.1}%, required: {:.1}%)",
-        status, suite.suite_name, suite.pass_count(), suite.total_count(),
-        suite.pass_rate() * 100.0, suite.required_pass_rate * 100.0);
+    println!(
+        "[{}] {} — {}/{} passed ({:.1}%, required: {:.1}%)",
+        status,
+        suite.suite_name,
+        suite.pass_count(),
+        suite.total_count(),
+        suite.pass_rate() * 100.0,
+        suite.required_pass_rate * 100.0
+    );
     println!();
 
     if passed == total {
         println!("✓ All {} image search eval cases passed", total);
     } else {
-        println!("✗ {}/{} image search eval cases failed", total - passed, total);
+        println!(
+            "✗ {}/{} image search eval cases failed",
+            total - passed,
+            total
+        );
     }
 }
 
@@ -1294,7 +1626,11 @@ mod tests {
         assert!(dataset.is_ok(), "slides dataset should load");
         let ds = dataset.unwrap();
         assert!(!ds.test_cases.is_empty());
-        assert!(ds.test_cases.len() >= 800, "expected at least 800 test cases, got {}", ds.test_cases.len());
+        assert!(
+            ds.test_cases.len() >= 800,
+            "expected at least 800 test cases, got {}",
+            ds.test_cases.len()
+        );
     }
 
     #[test]
@@ -1303,16 +1639,27 @@ mod tests {
         assert!(dataset.is_ok(), "image dataset should load");
         let ds = dataset.unwrap();
         assert!(!ds.test_cases.is_empty());
-        assert!(ds.test_cases.len() >= 70, "expected at least 70 image test cases, got {}", ds.test_cases.len());
+        assert!(
+            ds.test_cases.len() >= 70,
+            "expected at least 70 image test cases, got {}",
+            ds.test_cases.len()
+        );
     }
 
     #[test]
     fn test_template_conformance_check_recognizes_valid_template() {
         let check = SlidesQualityCheck {
             check_type: "template_conformance".into(),
-            min_chars: None, max_chars: None, min_bullets: None, max_bullets: None,
-            min_slots: None, max_slides: None, template_id: None,
-            min_sentences: None, max_sentences: None, language: None,
+            min_chars: None,
+            max_chars: None,
+            min_bullets: None,
+            max_bullets: None,
+            min_slots: None,
+            max_slides: None,
+            template_id: None,
+            min_sentences: None,
+            max_sentences: None,
+            language: None,
         };
         let output = r#"{"template_id": "title", "title": "Test", "slots": {"title": "Test"}}"#;
         let score = run_slides_quality_check(output, &check);
@@ -1323,9 +1670,16 @@ mod tests {
     fn test_template_conformance_check_rejects_invalid_template() {
         let check = SlidesQualityCheck {
             check_type: "template_conformance".into(),
-            min_chars: None, max_chars: None, min_bullets: None, max_bullets: None,
-            min_slots: None, max_slides: None, template_id: None,
-            min_sentences: None, max_sentences: None, language: None,
+            min_chars: None,
+            max_chars: None,
+            min_bullets: None,
+            max_bullets: None,
+            min_slots: None,
+            max_slides: None,
+            template_id: None,
+            min_sentences: None,
+            max_sentences: None,
+            language: None,
         };
         let output = r#"{"template_id": "nonexistent", "title": "Test"}"#;
         let score = run_slides_quality_check(output, &check);
@@ -1336,9 +1690,16 @@ mod tests {
     fn test_image_query_valid_check() {
         let check = SlidesQualityCheck {
             check_type: "image_query_valid".into(),
-            min_chars: None, max_chars: None, min_bullets: None, max_bullets: None,
-            min_slots: None, max_slides: None, template_id: None,
-            min_sentences: None, max_sentences: None, language: None,
+            min_chars: None,
+            max_chars: None,
+            min_bullets: None,
+            max_bullets: None,
+            min_slots: None,
+            max_slides: None,
+            template_id: None,
+            min_sentences: None,
+            max_sentences: None,
+            language: None,
         };
         // Valid query
         let output = r#"{"query": "mountain landscape", "orientation": "landscape"}"#;
@@ -1352,12 +1713,19 @@ mod tests {
     fn test_bullet_count_check() {
         let check = SlidesQualityCheck {
             check_type: "bullet_count".into(),
-            min_chars: None, max_chars: None,
-            min_bullets: Some(2), max_bullets: Some(8),
-            min_slots: None, max_slides: None, template_id: None,
-            min_sentences: None, max_sentences: None, language: None,
+            min_chars: None,
+            max_chars: None,
+            min_bullets: Some(2),
+            max_bullets: Some(8),
+            min_slots: None,
+            max_slides: None,
+            template_id: None,
+            min_sentences: None,
+            max_sentences: None,
+            language: None,
         };
-        let output = r#"{"template_id": "bullet", "title": "Test", "slots": {"bullets": ["a", "b", "c"]}}"#;
+        let output =
+            r#"{"template_id": "bullet", "title": "Test", "slots": {"bullets": ["a", "b", "c"]}}"#;
         assert_eq!(run_slides_quality_check(output, &check), 1.0);
     }
 
@@ -1365,9 +1733,16 @@ mod tests {
     fn test_chart_data_valid_check() {
         let check = SlidesQualityCheck {
             check_type: "chart_data_valid".into(),
-            min_chars: None, max_chars: None, min_bullets: None, max_bullets: None,
-            min_slots: None, max_slides: None, template_id: None,
-            min_sentences: None, max_sentences: None, language: None,
+            min_chars: None,
+            max_chars: None,
+            min_bullets: None,
+            max_bullets: None,
+            min_slots: None,
+            max_slides: None,
+            template_id: None,
+            min_sentences: None,
+            max_sentences: None,
+            language: None,
         };
         let output = r#"{"template_id": "bar_chart", "title": "Sales", "slots": {"series": [{"label": "Q1", "value": 100}, {"label": "Q2", "value": 200}]}}"#;
         assert_eq!(run_slides_quality_check(output, &check), 1.0);

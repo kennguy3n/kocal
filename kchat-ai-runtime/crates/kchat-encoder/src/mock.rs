@@ -44,7 +44,10 @@ pub struct MockSafetyHead {
 
 impl MockSafetyHead {
     pub fn new(category: u32, confidence: f64) -> Self {
-        Self { category, confidence }
+        Self {
+            category,
+            confidence,
+        }
     }
 
     pub fn safe() -> Self {

@@ -12,13 +12,21 @@ use parking_lot::Mutex;
 /// A mock backend that returns deterministic output.
 pub struct MockBackend {
     loaded: Mutex<bool>,
+    /// Tracks the last LoRA path applied (for tests observing swap wiring).
+    lora: Mutex<Option<String>>,
 }
 
 impl MockBackend {
     pub fn new() -> Self {
         Self {
             loaded: Mutex::new(false),
+            lora: Mutex::new(None),
         }
+    }
+
+    /// The currently-applied LoRA path, if any (test introspection).
+    pub fn active_lora(&self) -> Option<String> {
+        self.lora.lock().clone()
     }
 }
 
@@ -104,6 +112,19 @@ impl BackendAdapter for MockBackend {
 
     fn backend_type(&self) -> BackendType {
         BackendType::LlamaCppCpu
+    }
+
+    fn apply_lora(&self, adapter_path: &str, _scale: f32) -> Result<(), BackendError> {
+        if !self.is_loaded() {
+            return Err(BackendError::NotLoaded);
+        }
+        *self.lora.lock() = Some(adapter_path.to_string());
+        Ok(())
+    }
+
+    fn detach_lora(&self) -> Result<(), BackendError> {
+        *self.lora.lock() = None;
+        Ok(())
     }
 }
 

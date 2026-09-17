@@ -182,19 +182,15 @@ pub struct SkillDef {
 /// Grammar constraint type for a skill.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum SkillGrammarType {
     /// No constraint — free text output.
+    #[default]
     FreeText,
     /// JSON Schema constraint (schema is built dynamically).
     JsonSchema,
     /// Regex constraint (pattern is built dynamically).
     Regex,
-}
-
-impl Default for SkillGrammarType {
-    fn default() -> Self {
-        SkillGrammarType::FreeText
-    }
 }
 
 // ---------------------------------------------------------------------------
@@ -640,7 +636,10 @@ impl SkillRegistry {
 
     /// Get skills by surface.
     pub fn by_surface(&self, surface: SkillSurface) -> Vec<&SkillDef> {
-        self.skills.iter().filter(|s| s.surface == surface).collect()
+        self.skills
+            .iter()
+            .filter(|s| s.surface == surface)
+            .collect()
     }
 
     /// Get skills by group.
@@ -655,7 +654,10 @@ impl SkillRegistry {
 
     /// Get all one-click skills.
     pub fn one_click_skills(&self) -> Vec<&SkillDef> {
-        self.skills.iter().filter(|s| s.mode == SkillMode::OneClick).collect()
+        self.skills
+            .iter()
+            .filter(|s| s.mode == SkillMode::OneClick)
+            .collect()
     }
 
     /// Get all skills that need additional input.
@@ -668,7 +670,10 @@ impl SkillRegistry {
 
     /// Get all multi-step skills.
     pub fn multi_step_skills(&self) -> Vec<&SkillDef> {
-        self.skills.iter().filter(|s| s.mode == SkillMode::MultiStep).collect()
+        self.skills
+            .iter()
+            .filter(|s| s.mode == SkillMode::MultiStep)
+            .collect()
     }
 
     /// Get all deterministic skills (no LLM needed).
@@ -702,19 +707,47 @@ pub fn estimate_tokens(text: &str) -> usize {
     if text.is_empty() {
         return 0;
     }
-    (text.len() + 2) / 3
+    text.len().div_ceil(3)
 }
 
 /// Supported languages for translation skills. Used to validate that
 /// the variant_context is a recognized language name before injecting
 /// it into a prompt (prevents prompt injection via arbitrary variant text).
 const SUPPORTED_LANGUAGES: &[&str] = &[
-    "english", "spanish", "french", "german", "italian", "portuguese",
-    "dutch", "russian", "japanese", "chinese", "korean", "vietnamese",
-    "thai", "indonesian", "hindi", "arabic", "turkish", "polish",
-    "swedish", "norwegian", "danish", "finnish", "czech", "hungarian",
-    "romanian", "greek", "hebrew", "bengali", "malay", "filipino",
-    "tagalog", "urdu", "persian", "ukrainian",
+    "english",
+    "spanish",
+    "french",
+    "german",
+    "italian",
+    "portuguese",
+    "dutch",
+    "russian",
+    "japanese",
+    "chinese",
+    "korean",
+    "vietnamese",
+    "thai",
+    "indonesian",
+    "hindi",
+    "arabic",
+    "turkish",
+    "polish",
+    "swedish",
+    "norwegian",
+    "danish",
+    "finnish",
+    "czech",
+    "hungarian",
+    "romanian",
+    "greek",
+    "hebrew",
+    "bengali",
+    "malay",
+    "filipino",
+    "tagalog",
+    "urdu",
+    "persian",
+    "ukrainian",
 ];
 
 /// Validate that a string is a recognized language name.
@@ -912,7 +945,6 @@ fn all_skills() -> Vec<SkillDef> {
             min_tier: SkillTier::High,
             deterministic: false,
         },
-
         // === Edit Surface (13 skills) ========================================
         SkillDef {
             id: "edit_fix_grammar".into(),
@@ -952,9 +984,21 @@ fn all_skills() -> Vec<SkillDef> {
             stop: vec!["<|im_end|>".into()],
             response_prefix: None,
             sub_variants: vec![
-                SkillSubVariant { id: "clarity".into(), label: "Clarity".into(), context: "for clarity and readability".into() },
-                SkillSubVariant { id: "concise".into(), label: "Concise".into(), context: "to be more concise".into() },
-                SkillSubVariant { id: "engaging".into(), label: "Engaging".into(), context: "to be more engaging".into() },
+                SkillSubVariant {
+                    id: "clarity".into(),
+                    label: "Clarity".into(),
+                    context: "for clarity and readability".into(),
+                },
+                SkillSubVariant {
+                    id: "concise".into(),
+                    label: "Concise".into(),
+                    context: "to be more concise".into(),
+                },
+                SkillSubVariant {
+                    id: "engaging".into(),
+                    label: "Engaging".into(),
+                    context: "to be more engaging".into(),
+                },
             ],
             needs_topic: false,
             supports_keywords: false,
@@ -980,12 +1024,36 @@ fn all_skills() -> Vec<SkillDef> {
             stop: vec!["<|im_end|>".into()],
             response_prefix: None,
             sub_variants: vec![
-                SkillSubVariant { id: "professional".into(), label: "Professional".into(), context: "in a professional tone".into() },
-                SkillSubVariant { id: "casual".into(), label: "Casual".into(), context: "in a casual, friendly tone".into() },
-                SkillSubVariant { id: "confident".into(), label: "Confident".into(), context: "in a confident, assertive tone".into() },
-                SkillSubVariant { id: "friendly".into(), label: "Friendly".into(), context: "in a warm, friendly tone".into() },
-                SkillSubVariant { id: "persuasive".into(), label: "Persuasive".into(), context: "in a persuasive tone".into() },
-                SkillSubVariant { id: "empathetic".into(), label: "Empathetic".into(), context: "in an empathetic tone".into() },
+                SkillSubVariant {
+                    id: "professional".into(),
+                    label: "Professional".into(),
+                    context: "in a professional tone".into(),
+                },
+                SkillSubVariant {
+                    id: "casual".into(),
+                    label: "Casual".into(),
+                    context: "in a casual, friendly tone".into(),
+                },
+                SkillSubVariant {
+                    id: "confident".into(),
+                    label: "Confident".into(),
+                    context: "in a confident, assertive tone".into(),
+                },
+                SkillSubVariant {
+                    id: "friendly".into(),
+                    label: "Friendly".into(),
+                    context: "in a warm, friendly tone".into(),
+                },
+                SkillSubVariant {
+                    id: "persuasive".into(),
+                    label: "Persuasive".into(),
+                    context: "in a persuasive tone".into(),
+                },
+                SkillSubVariant {
+                    id: "empathetic".into(),
+                    label: "Empathetic".into(),
+                    context: "in an empathetic tone".into(),
+                },
             ],
             needs_topic: false,
             supports_keywords: false,
@@ -1083,12 +1151,36 @@ fn all_skills() -> Vec<SkillDef> {
             stop: vec!["<|im_end|>".into()],
             response_prefix: None,
             sub_variants: vec![
-                SkillSubVariant { id: "spanish".into(), label: "Spanish".into(), context: "Spanish".into() },
-                SkillSubVariant { id: "french".into(), label: "French".into(), context: "French".into() },
-                SkillSubVariant { id: "german".into(), label: "German".into(), context: "German".into() },
-                SkillSubVariant { id: "japanese".into(), label: "Japanese".into(), context: "Japanese".into() },
-                SkillSubVariant { id: "chinese".into(), label: "Chinese".into(), context: "Chinese".into() },
-                SkillSubVariant { id: "vietnamese".into(), label: "Vietnamese".into(), context: "Vietnamese".into() },
+                SkillSubVariant {
+                    id: "spanish".into(),
+                    label: "Spanish".into(),
+                    context: "Spanish".into(),
+                },
+                SkillSubVariant {
+                    id: "french".into(),
+                    label: "French".into(),
+                    context: "French".into(),
+                },
+                SkillSubVariant {
+                    id: "german".into(),
+                    label: "German".into(),
+                    context: "German".into(),
+                },
+                SkillSubVariant {
+                    id: "japanese".into(),
+                    label: "Japanese".into(),
+                    context: "Japanese".into(),
+                },
+                SkillSubVariant {
+                    id: "chinese".into(),
+                    label: "Chinese".into(),
+                    context: "Chinese".into(),
+                },
+                SkillSubVariant {
+                    id: "vietnamese".into(),
+                    label: "Vietnamese".into(),
+                    context: "Vietnamese".into(),
+                },
             ],
             needs_topic: false,
             supports_keywords: false,
@@ -1114,12 +1206,36 @@ fn all_skills() -> Vec<SkillDef> {
             stop: vec!["<|im_end|>".into()],
             response_prefix: None,
             sub_variants: vec![
-                SkillSubVariant { id: "spanish".into(), label: "Spanish".into(), context: "Spanish".into() },
-                SkillSubVariant { id: "french".into(), label: "French".into(), context: "French".into() },
-                SkillSubVariant { id: "german".into(), label: "German".into(), context: "German".into() },
-                SkillSubVariant { id: "japanese".into(), label: "Japanese".into(), context: "Japanese".into() },
-                SkillSubVariant { id: "chinese".into(), label: "Chinese".into(), context: "Chinese".into() },
-                SkillSubVariant { id: "vietnamese".into(), label: "Vietnamese".into(), context: "Vietnamese".into() },
+                SkillSubVariant {
+                    id: "spanish".into(),
+                    label: "Spanish".into(),
+                    context: "Spanish".into(),
+                },
+                SkillSubVariant {
+                    id: "french".into(),
+                    label: "French".into(),
+                    context: "French".into(),
+                },
+                SkillSubVariant {
+                    id: "german".into(),
+                    label: "German".into(),
+                    context: "German".into(),
+                },
+                SkillSubVariant {
+                    id: "japanese".into(),
+                    label: "Japanese".into(),
+                    context: "Japanese".into(),
+                },
+                SkillSubVariant {
+                    id: "chinese".into(),
+                    label: "Chinese".into(),
+                    context: "Chinese".into(),
+                },
+                SkillSubVariant {
+                    id: "vietnamese".into(),
+                    label: "Vietnamese".into(),
+                    context: "Vietnamese".into(),
+                },
             ],
             needs_topic: false,
             supports_keywords: false,
@@ -1251,7 +1367,6 @@ fn all_skills() -> Vec<SkillDef> {
             min_tier: SkillTier::Low,
             deterministic: false,
         },
-
         // === Create Surface (13 skills) ======================================
         SkillDef {
             id: "create_brainstorm".into(),
@@ -1435,9 +1550,21 @@ fn all_skills() -> Vec<SkillDef> {
             stop: vec!["<|im_end|>".into()],
             response_prefix: None,
             sub_variants: vec![
-                SkillSubVariant { id: "professional".into(), label: "Professional".into(), context: "professional".into() },
-                SkillSubVariant { id: "casual".into(), label: "Casual".into(), context: "casual".into() },
-                SkillSubVariant { id: "persuasive".into(), label: "Persuasive".into(), context: "persuasive".into() },
+                SkillSubVariant {
+                    id: "professional".into(),
+                    label: "Professional".into(),
+                    context: "professional".into(),
+                },
+                SkillSubVariant {
+                    id: "casual".into(),
+                    label: "Casual".into(),
+                    context: "casual".into(),
+                },
+                SkillSubVariant {
+                    id: "persuasive".into(),
+                    label: "Persuasive".into(),
+                    context: "persuasive".into(),
+                },
             ],
             needs_topic: true,
             supports_keywords: false,
@@ -1535,9 +1662,21 @@ fn all_skills() -> Vec<SkillDef> {
             stop: vec!["<|im_end|>".into()],
             response_prefix: None,
             sub_variants: vec![
-                SkillSubVariant { id: "twitter".into(), label: "Twitter/X".into(), context: "Twitter/X (short, punchy, max 280 chars)".into() },
-                SkillSubVariant { id: "linkedin".into(), label: "LinkedIn".into(), context: "LinkedIn (professional, engaging)".into() },
-                SkillSubVariant { id: "instagram".into(), label: "Instagram".into(), context: "Instagram (casual, with emojis)".into() },
+                SkillSubVariant {
+                    id: "twitter".into(),
+                    label: "Twitter/X".into(),
+                    context: "Twitter/X (short, punchy, max 280 chars)".into(),
+                },
+                SkillSubVariant {
+                    id: "linkedin".into(),
+                    label: "LinkedIn".into(),
+                    context: "LinkedIn (professional, engaging)".into(),
+                },
+                SkillSubVariant {
+                    id: "instagram".into(),
+                    label: "Instagram".into(),
+                    context: "Instagram (casual, with emojis)".into(),
+                },
             ],
             needs_topic: true,
             supports_keywords: true,
@@ -1573,7 +1712,6 @@ fn all_skills() -> Vec<SkillDef> {
             min_tier: SkillTier::Low,
             deterministic: false,
         },
-
         // === Slides Surface (12 skills) ======================================
         SkillDef {
             id: "slides_generate_deck".into(),
@@ -1805,12 +1943,36 @@ fn all_skills() -> Vec<SkillDef> {
             stop: vec!["<|im_end|>".into()],
             response_prefix: None,
             sub_variants: vec![
-                SkillSubVariant { id: "spanish".into(), label: "Spanish".into(), context: "Spanish".into() },
-                SkillSubVariant { id: "french".into(), label: "French".into(), context: "French".into() },
-                SkillSubVariant { id: "german".into(), label: "German".into(), context: "German".into() },
-                SkillSubVariant { id: "japanese".into(), label: "Japanese".into(), context: "Japanese".into() },
-                SkillSubVariant { id: "chinese".into(), label: "Chinese".into(), context: "Chinese".into() },
-                SkillSubVariant { id: "vietnamese".into(), label: "Vietnamese".into(), context: "Vietnamese".into() },
+                SkillSubVariant {
+                    id: "spanish".into(),
+                    label: "Spanish".into(),
+                    context: "Spanish".into(),
+                },
+                SkillSubVariant {
+                    id: "french".into(),
+                    label: "French".into(),
+                    context: "French".into(),
+                },
+                SkillSubVariant {
+                    id: "german".into(),
+                    label: "German".into(),
+                    context: "German".into(),
+                },
+                SkillSubVariant {
+                    id: "japanese".into(),
+                    label: "Japanese".into(),
+                    context: "Japanese".into(),
+                },
+                SkillSubVariant {
+                    id: "chinese".into(),
+                    label: "Chinese".into(),
+                    context: "Chinese".into(),
+                },
+                SkillSubVariant {
+                    id: "vietnamese".into(),
+                    label: "Vietnamese".into(),
+                    context: "Vietnamese".into(),
+                },
             ],
             needs_topic: false,
             supports_keywords: false,
@@ -2173,7 +2335,11 @@ mod tests {
     fn test_all_skills_have_stop_sequences() {
         let registry = SkillRegistry::new();
         for skill in registry.all() {
-            assert!(!skill.stop.is_empty(), "skill {} has no stop sequences", skill.id);
+            assert!(
+                !skill.stop.is_empty(),
+                "skill {} has no stop sequences",
+                skill.id
+            );
         }
     }
 

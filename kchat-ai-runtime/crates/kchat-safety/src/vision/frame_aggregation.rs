@@ -119,7 +119,10 @@ pub fn aggregate_frame_verdicts_smoothed<'a>(
     }
 
     // 1. Critical-severity override
-    if verdicts.iter().any(|v| v.severity >= config.critical_severity) {
+    if verdicts
+        .iter()
+        .any(|v| v.severity >= config.critical_severity)
+    {
         return aggregate_frame_verdicts(verdicts);
     }
 
@@ -203,7 +206,10 @@ mod tests {
     #[test]
     fn empty_input_is_error() {
         let verdicts: Vec<FrameVerdict> = Vec::new();
-        assert_eq!(aggregate_frame_verdicts(&verdicts).unwrap_err(), FrameAggregationError::Empty);
+        assert_eq!(
+            aggregate_frame_verdicts(&verdicts).unwrap_err(),
+            FrameAggregationError::Empty
+        );
     }
 
     #[test]
@@ -287,21 +293,27 @@ mod tests {
     #[test]
     fn smoothed_benign_majority_demotes_drift() {
         let verdicts = clip(8, 6, 2, FrameCategory::Violence);
-        let winner = aggregate_frame_verdicts_smoothed(&verdicts, &TemporalSmoothingConfig::default()).unwrap();
+        let winner =
+            aggregate_frame_verdicts_smoothed(&verdicts, &TemporalSmoothingConfig::default())
+                .unwrap();
         assert_eq!(winner.category, FrameCategory::Safe);
     }
 
     #[test]
     fn smoothed_harmful_majority_escalates() {
         let verdicts = clip(4, 25, 2, FrameCategory::Violence);
-        let winner = aggregate_frame_verdicts_smoothed(&verdicts, &TemporalSmoothingConfig::default()).unwrap();
+        let winner =
+            aggregate_frame_verdicts_smoothed(&verdicts, &TemporalSmoothingConfig::default())
+                .unwrap();
         assert_eq!(winner.category, FrameCategory::Violence);
     }
 
     #[test]
     fn smoothed_single_drift_below_floor_stays_safe() {
         let verdicts = clip(4, 1, 2, FrameCategory::Violence);
-        let winner = aggregate_frame_verdicts_smoothed(&verdicts, &TemporalSmoothingConfig::default()).unwrap();
+        let winner =
+            aggregate_frame_verdicts_smoothed(&verdicts, &TemporalSmoothingConfig::default())
+                .unwrap();
         assert_eq!(winner.category, FrameCategory::Safe);
     }
 
@@ -309,7 +321,9 @@ mod tests {
     fn smoothed_critical_severity_bypasses_vote() {
         let mut verdicts = clip(8, 0, 0, FrameCategory::Safe);
         verdicts.push(frame(8, 5, FrameCategory::ChildSafety));
-        let winner = aggregate_frame_verdicts_smoothed(&verdicts, &TemporalSmoothingConfig::default()).unwrap();
+        let winner =
+            aggregate_frame_verdicts_smoothed(&verdicts, &TemporalSmoothingConfig::default())
+                .unwrap();
         assert_eq!(winner.category, FrameCategory::ChildSafety);
         assert_eq!(winner.severity, 5);
     }

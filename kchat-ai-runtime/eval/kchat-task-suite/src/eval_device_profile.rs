@@ -424,12 +424,16 @@ pub fn select_model_for_tier(tier: DeviceTier) -> Option<&'static str> {
     select_model_for_tier_platform(tier, "", "aarch64")
 }
 /// Platform- and arch-aware model selection.
-pub fn select_model_for_tier_platform(_tier: DeviceTier, platform: &str, cpu_arch: &str) -> Option<&'static str> {
+pub fn select_model_for_tier_platform(
+    _tier: DeviceTier,
+    platform: &str,
+    cpu_arch: &str,
+) -> Option<&'static str> {
     let is_apple_silicon = (platform == "ios" || platform == "macos") && cpu_arch == "aarch64";
     if is_apple_silicon {
-        Some("bonsai-1.7b-mlx-1bit")      // Bonsai 1.7B MLX 1-bit, ~269MB + LoRA
+        Some("bonsai-1.7b-mlx-1bit") // Bonsai 1.7B MLX 1-bit, ~269MB + LoRA
     } else {
-        Some("bonsai-1.7b-q1_0")          // Bonsai 1.7B Q1_0 GGUF, ~248MB + LoRA (all tiers)
+        Some("bonsai-1.7b-q1_0") // Bonsai 1.7B Q1_0 GGUF, ~248MB + LoRA (all tiers)
     }
 }
 
@@ -598,11 +602,7 @@ fn test_tier_selection(p: &DeviceProfile) -> EvalResult {
                 let mut meta = HashMap::new();
                 meta.insert("tier".into(), format!("{:?}", tier));
                 meta.insert("safe_mb".into(), format!("{}", p.safe_allocatable_mb));
-                EvalResult::pass_with_meta(
-                    format!("tier_select: {}", p.name),
-                    0,
-                    meta,
-                )
+                EvalResult::pass_with_meta(format!("tier_select: {}", p.name), 0, meta)
             } else {
                 EvalResult::fail(
                     format!("tier_select: {}", p.name),
@@ -629,7 +629,10 @@ fn test_model_selection(p: &DeviceProfile, registry: &ModelRegistry) -> EvalResu
                 if !entry.min_tier.satisfied_by(tier_to_min_tier(tier)) {
                     return EvalResult::fail(
                         format!("model_select: {}", p.name),
-                        format!("model {} min_tier not satisfied by device tier {:?}", pack_id, tier),
+                        format!(
+                            "model {} min_tier not satisfied by device tier {:?}",
+                            pack_id, tier
+                        ),
                     );
                 }
             } else {
@@ -653,7 +656,8 @@ fn test_backend_selection(p: &DeviceProfile) -> EvalResult {
     let tier = TierSelection::select(&caps).unwrap_or(DeviceTier::Low);
 
     // Use the real BackendType::select API from kchat-generation
-    let backend = BackendType::select(&caps.platform, tier, &caps.cpu_arch).map(|b| b.as_str().to_string());
+    let backend =
+        BackendType::select(&caps.platform, tier, &caps.cpu_arch).map(|b| b.as_str().to_string());
 
     let expected = p.expected_backend.map(|s| s.to_string());
 
@@ -795,11 +799,7 @@ fn test_performance_targets(p: &DeviceProfile) -> EvalResult {
         let mut meta = HashMap::new();
         meta.insert("ttft_p95_ms".into(), format!("{}", ttft_target));
         meta.insert("decode_p50_min".into(), format!("{:.1}", decode_min));
-        EvalResult::pass_with_meta(
-            format!("perf_targets: {}", p.name),
-            0,
-            meta,
-        )
+        EvalResult::pass_with_meta(format!("perf_targets: {}", p.name), 0, meta)
     } else {
         EvalResult::fail(format!("perf_targets: {}", p.name), errors.join("; "))
     }
@@ -826,9 +826,9 @@ fn test_memory_budget(p: &DeviceProfile) -> EvalResult {
     // Unified architecture: all tiers use the same base model
     // - Apple Silicon: bonsai-1.7b-mlx-1bit (~269MB)
     // - Other platforms: bonsai-1.7b-q1_0 (~248MB)
-    let model_size = match (tier, &p.platform[..], &p.cpu_arch[..]) {
-        (_, "ios" | "macos", "aarch64") => 269_060_904,   // Bonsai 1.7B MLX 1-bit ~269MB
-        (_, _, _) => 248_302_272,                          // Bonsai 1.7B Q1_0 GGUF ~248MB
+    let model_size = match (tier, p.platform, p.cpu_arch) {
+        (_, "ios" | "macos", "aarch64") => 269_060_904, // Bonsai 1.7B MLX 1-bit ~269MB
+        (_, _, _) => 248_302_272,                       // Bonsai 1.7B Q1_0 GGUF ~248MB
     };
     if model_size > peak_budget {
         errors.push(format!(
@@ -839,11 +839,11 @@ fn test_memory_budget(p: &DeviceProfile) -> EvalResult {
     }
 
     // Check total model footprint (generative + vision + encoder + ASR + video) fits within budget
-    let encoder_size: u64 = 151_698_944;  // mmbert-safety-q4_k_m (145MB, used on all tiers)
-    let vision_size: u64 = 37_561_169;                            // mobileclip-s2-int8 visual encoder (runtime, all tiers)
+    let encoder_size: u64 = 151_698_944; // mmbert-safety-q4_k_m (145MB, used on all tiers)
+    let vision_size: u64 = 37_561_169; // mobileclip-s2-int8 visual encoder (runtime, all tiers)
     let asr_size: u64 = match tier {
-        DeviceTier::Low => 32_904_983,                         // whisper-tiny (encoder ONNX, ~33MB)
-        DeviceTier::Medium | DeviceTier::High => 82_468_069,   // whisper-base (encoder ONNX, ~82MB)
+        DeviceTier::Low => 32_904_983, // whisper-tiny (encoder ONNX, ~33MB)
+        DeviceTier::Medium | DeviceTier::High => 82_468_069, // whisper-base (encoder ONNX, ~82MB)
     };
     // mobileclip-s2-int8 visual encoder (~37MB runtime) handles both image and video on all tiers
     // No separate video model needed — same ONNX session processes video frames
@@ -875,11 +875,7 @@ fn test_memory_budget(p: &DeviceProfile) -> EvalResult {
         let mut meta = HashMap::new();
         meta.insert("peak_mb".into(), format!("{}", peak_budget / (1024 * 1024)));
         meta.insert("safe_ai_mb".into(), format!("{}", safe_ai / (1024 * 1024)));
-        EvalResult::pass_with_meta(
-            format!("memory_budget: {}", p.name),
-            0,
-            meta,
-        )
+        EvalResult::pass_with_meta(format!("memory_budget: {}", p.name), 0, meta)
     } else {
         EvalResult::fail(format!("memory_budget: {}", p.name), errors.join("; "))
     }
@@ -889,8 +885,8 @@ fn test_thermal_transition(p: &DeviceProfile) -> EvalResult {
     let nominal_tier = TierSelection::select(&p.to_caps()).unwrap_or(DeviceTier::Low);
 
     // Serious thermal → downgrade once
-    let serious_tier = TierSelection::select(&p.with_thermal(ThermalState::Serious))
-        .unwrap_or(DeviceTier::Low);
+    let serious_tier =
+        TierSelection::select(&p.with_thermal(ThermalState::Serious)).unwrap_or(DeviceTier::Low);
     let expected_serious = match nominal_tier {
         DeviceTier::High => DeviceTier::Medium,
         DeviceTier::Medium => DeviceTier::Low,
@@ -898,12 +894,12 @@ fn test_thermal_transition(p: &DeviceProfile) -> EvalResult {
     };
 
     // Critical thermal → always Low
-    let critical_tier = TierSelection::select(&p.with_thermal(ThermalState::Critical))
-        .unwrap_or(DeviceTier::Low);
+    let critical_tier =
+        TierSelection::select(&p.with_thermal(ThermalState::Critical)).unwrap_or(DeviceTier::Low);
 
     // Fair thermal → same as nominal
-    let fair_tier = TierSelection::select(&p.with_thermal(ThermalState::Fair))
-        .unwrap_or(DeviceTier::Low);
+    let fair_tier =
+        TierSelection::select(&p.with_thermal(ThermalState::Fair)).unwrap_or(DeviceTier::Low);
 
     let mut errors = Vec::new();
     if serious_tier != expected_serious {
@@ -933,10 +929,8 @@ fn test_battery_transition(p: &DeviceProfile) -> EvalResult {
     let nominal_tier = TierSelection::select(&p.to_caps()).unwrap_or(DeviceTier::Low);
 
     // Low battery + not charging → downgrade once
-    let low_battery_tier = TierSelection::re_evaluate(
-        nominal_tier,
-        &p.with_battery(10, false),
-    ).unwrap_or(DeviceTier::Low);
+    let low_battery_tier = TierSelection::re_evaluate(nominal_tier, &p.with_battery(10, false))
+        .unwrap_or(DeviceTier::Low);
 
     let expected_low = match nominal_tier {
         DeviceTier::High => DeviceTier::Medium,
@@ -945,16 +939,12 @@ fn test_battery_transition(p: &DeviceProfile) -> EvalResult {
     };
 
     // Low battery + charging → no downgrade
-    let charging_tier = TierSelection::re_evaluate(
-        nominal_tier,
-        &p.with_battery(10, true),
-    ).unwrap_or(DeviceTier::Low);
+    let charging_tier = TierSelection::re_evaluate(nominal_tier, &p.with_battery(10, true))
+        .unwrap_or(DeviceTier::Low);
 
     // Full battery + not charging → no downgrade
-    let full_battery_tier = TierSelection::re_evaluate(
-        nominal_tier,
-        &p.with_battery(90, false),
-    ).unwrap_or(DeviceTier::Low);
+    let full_battery_tier = TierSelection::re_evaluate(nominal_tier, &p.with_battery(90, false))
+        .unwrap_or(DeviceTier::Low);
 
     let mut errors = Vec::new();
     if low_battery_tier != expected_low {
@@ -987,23 +977,16 @@ fn test_background_transition(p: &DeviceProfile) -> EvalResult {
     let nominal_tier = TierSelection::select(&p.to_caps()).unwrap_or(DeviceTier::Low);
 
     // Background on mobile → always Low
-    let bg_tier = TierSelection::re_evaluate(
-        nominal_tier,
-        &p.with_app_state(AppState::Background),
-    ).unwrap_or(DeviceTier::Low);
+    let bg_tier = TierSelection::re_evaluate(nominal_tier, &p.with_app_state(AppState::Background))
+        .unwrap_or(DeviceTier::Low);
 
     // Foreground → same as nominal
-    let fg_tier = TierSelection::re_evaluate(
-        nominal_tier,
-        &p.with_app_state(AppState::Foreground),
-    ).unwrap_or(DeviceTier::Low);
+    let fg_tier = TierSelection::re_evaluate(nominal_tier, &p.with_app_state(AppState::Foreground))
+        .unwrap_or(DeviceTier::Low);
 
     let mut errors = Vec::new();
     if bg_tier != DeviceTier::Low {
-        errors.push(format!(
-            "background: expected Low, got {:?}",
-            bg_tier
-        ));
+        errors.push(format!("background: expected Low, got {:?}", bg_tier));
     }
     if fg_tier != nominal_tier {
         errors.push(format!(
@@ -1015,7 +998,10 @@ fn test_background_transition(p: &DeviceProfile) -> EvalResult {
     if errors.is_empty() {
         EvalResult::pass(format!("background_transition: {}", p.name))
     } else {
-        EvalResult::fail(format!("background_transition: {}", p.name), errors.join("; "))
+        EvalResult::fail(
+            format!("background_transition: {}", p.name),
+            errors.join("; "),
+        )
     }
 }
 
@@ -1049,7 +1035,10 @@ fn test_scheduler_admission(p: &DeviceProfile) -> EvalResult {
     if errors.is_empty() {
         EvalResult::pass(format!("scheduler_admission: {}", p.name))
     } else {
-        EvalResult::fail(format!("scheduler_admission: {}", p.name), errors.join("; "))
+        EvalResult::fail(
+            format!("scheduler_admission: {}", p.name),
+            errors.join("; "),
+        )
     }
 }
 
@@ -1262,13 +1251,22 @@ fn test_output_token_ranges() -> EvalResult {
     let mut errors = Vec::new();
 
     if DeviceTier::Low.output_cap() != (64, 192) {
-        errors.push(format!("Low output cap {:?} != (64, 192)", DeviceTier::Low.output_cap()));
+        errors.push(format!(
+            "Low output cap {:?} != (64, 192)",
+            DeviceTier::Low.output_cap()
+        ));
     }
     if DeviceTier::Medium.output_cap() != (256, 512) {
-        errors.push(format!("Medium output cap {:?} != (256, 512)", DeviceTier::Medium.output_cap()));
+        errors.push(format!(
+            "Medium output cap {:?} != (256, 512)",
+            DeviceTier::Medium.output_cap()
+        ));
     }
     if DeviceTier::High.output_cap() != (512, 1024) {
-        errors.push(format!("High output cap {:?} != (512, 1024)", DeviceTier::High.output_cap()));
+        errors.push(format!(
+            "High output cap {:?} != (512, 1024)",
+            DeviceTier::High.output_cap()
+        ));
     }
 
     if errors.is_empty() {
@@ -1286,15 +1284,15 @@ fn test_safe_ai_budget(p: &DeviceProfile) -> EvalResult {
     if safe_ai == expected {
         let mut meta = HashMap::new();
         meta.insert("safe_ai_mb".into(), format!("{}", safe_ai / (1024 * 1024)));
-        EvalResult::pass_with_meta(
-            format!("safe_ai_budget: {}", p.name),
-            0,
-            meta,
-        )
+        EvalResult::pass_with_meta(format!("safe_ai_budget: {}", p.name), 0, meta)
     } else {
         EvalResult::fail(
             format!("safe_ai_budget: {}", p.name),
-            format!("expected {}MB, got {}MB", expected / (1024 * 1024), safe_ai / (1024 * 1024)),
+            format!(
+                "expected {}MB, got {}MB",
+                expected / (1024 * 1024),
+                safe_ai / (1024 * 1024)
+            ),
         )
     }
 }
@@ -1311,7 +1309,10 @@ fn test_re_evaluate_consistency(p: &DeviceProfile) -> EvalResult {
     } else {
         EvalResult::fail(
             format!("re_evaluate: {}", p.name),
-            format!("initial {:?}, re-evaluated {:?} (should match)", initial_tier, re_evaluated),
+            format!(
+                "initial {:?}, re-evaluated {:?} (should match)",
+                initial_tier, re_evaluated
+            ),
         )
     }
 }
@@ -1319,7 +1320,10 @@ fn test_re_evaluate_consistency(p: &DeviceProfile) -> EvalResult {
 fn test_registry_finds_model_for_high_tier(registry: &ModelRegistry) -> EvalResult {
     let results = registry.find_for_task("summarize", MinTier::High);
     if results.is_empty() {
-        EvalResult::fail("registry_high_tier_model", "no summarize models found for High tier")
+        EvalResult::fail(
+            "registry_high_tier_model",
+            "no summarize models found for High tier",
+        )
     } else {
         let mut meta = HashMap::new();
         meta.insert("count".into(), format!("{}", results.len()));
@@ -1329,7 +1333,10 @@ fn test_registry_finds_model_for_high_tier(registry: &ModelRegistry) -> EvalResu
         if results.len() != 2 {
             EvalResult::fail(
                 "registry_high_tier_model",
-                format!("expected 2 generative models for High tier, got {}", results.len()),
+                format!(
+                    "expected 2 generative models for High tier, got {}",
+                    results.len()
+                ),
             )
         } else {
             EvalResult::pass_with_meta("registry_high_tier_model", 0, meta)
@@ -1383,11 +1390,17 @@ fn test_registry_finds_no_model_for_low_tier(registry: &ModelRegistry) -> EvalRe
 fn test_registry_finds_embedding_for_medium(registry: &ModelRegistry) -> EvalResult {
     let results = registry.find_for_task("embed", MinTier::Medium);
     if results.is_empty() {
-        EvalResult::fail("registry_embedding_medium", "no embedding models found for Medium tier")
+        EvalResult::fail(
+            "registry_embedding_medium",
+            "no embedding models found for Medium tier",
+        )
     } else {
         let mut meta = HashMap::new();
         meta.insert("pack_id".into(), results[0].pack_id.clone());
-        meta.insert("size_mb".into(), format!("{}", results[0].size_bytes / (1024 * 1024)));
+        meta.insert(
+            "size_mb".into(),
+            format!("{}", results[0].size_bytes / (1024 * 1024)),
+        );
         EvalResult::pass_with_meta("registry_embedding_medium", 0, meta)
     }
 }
@@ -1395,17 +1408,30 @@ fn test_registry_finds_embedding_for_medium(registry: &ModelRegistry) -> EvalRes
 fn test_registry_finds_safety_for_medium(registry: &ModelRegistry) -> EvalResult {
     let results = registry.find_for_task("safety", MinTier::Medium);
     if results.is_empty() {
-        EvalResult::fail("registry_safety_medium", "no safety models found for Medium tier")
+        EvalResult::fail(
+            "registry_safety_medium",
+            "no safety models found for Medium tier",
+        )
     } else {
         let mut meta = HashMap::new();
         meta.insert("count".into(), format!("{}", results.len()));
-        meta.insert("pack_ids".into(), results.iter().map(|e| e.pack_id.as_str()).collect::<Vec<_>>().join(", "));
+        meta.insert(
+            "pack_ids".into(),
+            results
+                .iter()
+                .map(|e| e.pack_id.as_str())
+                .collect::<Vec<_>>()
+                .join(", "),
+        );
         // Medium tier finds 1 safety model:
         // mmbert-safety-q4_k_m (Low tier, qualifies for Medium)
         if results.len() != 1 {
             EvalResult::fail(
                 "registry_safety_medium",
-                format!("expected 1 safety model for Medium tier, got {}", results.len()),
+                format!(
+                    "expected 1 safety model for Medium tier, got {}",
+                    results.len()
+                ),
             )
         } else {
             EvalResult::pass_with_meta("registry_safety_medium", 0, meta)
@@ -1424,7 +1450,10 @@ fn test_vision_model_selection(p: &DeviceProfile, registry: &ModelRegistry) -> E
                 if !entry.min_tier.satisfied_by(tier_to_min_tier(tier)) {
                     return EvalResult::fail(
                         format!("vision_select: {}", p.name),
-                        format!("vision model {} min_tier not satisfied by device tier {:?}", pack_id, tier),
+                        format!(
+                            "vision model {} min_tier not satisfied by device tier {:?}",
+                            pack_id, tier
+                        ),
                     );
                 }
             } else {
@@ -1454,7 +1483,10 @@ fn test_asr_model_selection(p: &DeviceProfile, registry: &ModelRegistry) -> Eval
                 if !entry.min_tier.satisfied_by(tier_to_min_tier(tier)) {
                     return EvalResult::fail(
                         format!("asr_select: {}", p.name),
-                        format!("ASR model {} min_tier not satisfied by device tier {:?}", pack_id, tier),
+                        format!(
+                            "ASR model {} min_tier not satisfied by device tier {:?}",
+                            pack_id, tier
+                        ),
                     );
                 }
             } else {
@@ -1483,7 +1515,10 @@ fn test_safety_model_selection(p: &DeviceProfile, registry: &ModelRegistry) -> E
             if !entry.min_tier.satisfied_by(tier_to_min_tier(tier)) {
                 return EvalResult::fail(
                     format!("safety_select: {}", p.name),
-                    format!("safety model {} min_tier not satisfied by device tier {:?}", selected, tier),
+                    format!(
+                        "safety model {} min_tier not satisfied by device tier {:?}",
+                        selected, tier
+                    ),
                 );
             }
         } else {
@@ -1512,7 +1547,10 @@ fn test_video_model_selection(p: &DeviceProfile, registry: &ModelRegistry) -> Ev
                 if !entry.min_tier.satisfied_by(tier_to_min_tier(tier)) {
                     return EvalResult::fail(
                         format!("video_select: {}", p.name),
-                        format!("video model {} min_tier not satisfied by device tier {:?}", pack_id, tier),
+                        format!(
+                            "video model {} min_tier not satisfied by device tier {:?}",
+                            pack_id, tier
+                        ),
                     );
                 }
             } else {

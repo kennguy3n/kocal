@@ -8,8 +8,8 @@
 
 use crate::report::{EvalReport, EvalResult, SuiteReport};
 use kchat_generation::{
-    estimate_tokens_text, Grammar, SkillDef, SkillGrammarType, SkillLoRAResolver,
-    SkillPromptInput, SkillRegistry, SkillSurface, SkillTier,
+    estimate_tokens_text, Grammar, SkillDef, SkillGrammarType, SkillLoRAResolver, SkillPromptInput,
+    SkillRegistry, SkillSurface, SkillTier,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -128,13 +128,21 @@ fn run_skill_quality_check(output: &str, check: &SkillQualityCheck) -> f64 {
     match check.check_type.as_str() {
         "min_length" => {
             let min = check.min_chars.unwrap_or(0);
-            if output.len() >= min { 1.0 } else if min > 0 {
+            if output.len() >= min {
+                1.0
+            } else if min > 0 {
                 output.len() as f64 / min as f64
-            } else { 1.0 }
+            } else {
+                1.0
+            }
         }
         "max_length" => {
             let max = check.max_chars.unwrap_or(usize::MAX);
-            if output.len() <= max { 1.0 } else { 0.0 }
+            if output.len() <= max {
+                1.0
+            } else {
+                0.0
+            }
         }
         "contains_keyword" => {
             if let Some(keywords) = &check.keywords {
@@ -145,93 +153,151 @@ fn run_skill_quality_check(output: &str, check: &SkillQualityCheck) -> f64 {
                     }
                 }
                 0.0
-            } else { 0.0 }
+            } else {
+                0.0
+            }
         }
         "not_contains" => {
             if let Some(forbidden) = &check.not_contains {
                 let lower = output.to_lowercase();
-                let violations = forbidden.iter().filter(|k| lower.contains(&k.to_lowercase())).count();
-                if violations == 0 { 1.0 } else {
+                let violations = forbidden
+                    .iter()
+                    .filter(|k| lower.contains(&k.to_lowercase()))
+                    .count();
+                if violations == 0 {
+                    1.0
+                } else {
                     1.0 - (violations as f64 / forbidden.len().max(1) as f64)
                 }
-            } else { 1.0 }
+            } else {
+                1.0
+            }
         }
         "json_schema_valid" => {
             let json_text = extract_json(output);
-            if json_text.is_empty() { return 0.0; }
+            if json_text.is_empty() {
+                return 0.0;
+            }
             let parsed: serde_json::Value = match serde_json::from_str(&json_text) {
                 Ok(v) => v,
                 Err(_) => return 0.0,
             };
             if let Some(schema) = &check.schema {
-                if validate_json_schema(&parsed, schema) { 1.0 } else { 0.5 }
-            } else { 1.0 }
+                if validate_json_schema(&parsed, schema) {
+                    1.0
+                } else {
+                    0.5
+                }
+            } else {
+                1.0
+            }
         }
         "regex_match" => {
             if let Some(pattern) = &check.pattern {
                 regex::Regex::new(pattern)
                     .map(|re| if re.is_match(output) { 1.0 } else { 0.0 })
                     .unwrap_or(0.0)
-            } else { 0.0 }
+            } else {
+                0.0
+            }
         }
         "coherent" => {
-            if output.is_empty() || output.len() <= 10 { 0.0 }
-            else if is_repeated(output) { 0.3 }
-            else { 1.0 }
+            if output.is_empty() || output.len() <= 10 {
+                0.0
+            } else if is_repeated(output) {
+                0.3
+            } else {
+                1.0
+            }
         }
         "sentence_count" => {
             let count = count_sentences(output);
             let min = check.min_sentences.unwrap_or(0);
             let max = check.max_sentences.unwrap_or(usize::MAX);
-            if count >= min && count <= max { 1.0 }
-            else if count < min { count as f64 / min as f64 }
-            else { max as f64 / count as f64 }
+            if count >= min && count <= max {
+                1.0
+            } else if count < min {
+                count as f64 / min as f64
+            } else {
+                max as f64 / count as f64
+            }
         }
         "language_script" => {
             if let Some(lang) = &check.language {
                 detect_language_score(output, lang)
-            } else { 1.0 }
+            } else {
+                1.0
+            }
         }
         "min_words" => {
             let min = check.min_words.unwrap_or(0);
             let words = output.split_whitespace().count();
-            if words >= min { 1.0 } else if min > 0 { words as f64 / min as f64 } else { 1.0 }
+            if words >= min {
+                1.0
+            } else if min > 0 {
+                words as f64 / min as f64
+            } else {
+                1.0
+            }
         }
         "multi_check" => {
             if let Some(sub_checks) = &check.checks {
-                if sub_checks.is_empty() { return 1.0; }
+                if sub_checks.is_empty() {
+                    return 1.0;
+                }
                 let total = sub_checks.len() as f64;
-                let sum: f64 = sub_checks.iter().map(|c| run_skill_quality_check(output, c)).sum();
+                let sum: f64 = sub_checks
+                    .iter()
+                    .map(|c| run_skill_quality_check(output, c))
+                    .sum();
                 sum / total
-            } else { 1.0 }
+            } else {
+                1.0
+            }
         }
         "markdown_structure" => check_markdown_structure(output),
         "no_input_echo" => {
             if let Some(input) = &check.input_text {
                 check_no_input_echo(output, input)
-            } else { 1.0 }
+            } else {
+                1.0
+            }
         }
         "tone_match" => {
             if let Some(tone) = &check.expected_tone {
                 check_tone_match(output, tone)
-            } else { 1.0 }
+            } else {
+                1.0
+            }
         }
         "length_delta" => {
             if let Some(ratio) = &check.expected_ratio {
                 if let Some(input) = &check.input_text {
                     check_length_delta(output, input, ratio)
-                } else { 1.0 }
-            } else { 1.0 }
+                } else {
+                    1.0
+                }
+            } else {
+                1.0
+            }
         }
         "json_field_count" => {
             if let Some(fields) = &check.expected_fields {
                 check_json_field_count(output, fields)
-            } else { 1.0 }
+            } else {
+                1.0
+            }
         }
         "heading_count" => {
             let min = check.min_headings.unwrap_or(0);
             let count = count_markdown_headings(output);
-            if count >= min { 1.0 } else if min > 0 { count as f64 / min as f64 } else { 1.0 }
+            if count >= min {
+                1.0
+            } else if min > 0 {
+                count as f64 / min as f64
+            } else {
+                1.0
+            }
         }
         _ => 1.0,
     }
@@ -263,10 +329,10 @@ fn extract_json(text: &str) -> String {
             trimmed = trimmed[..pos].trim();
         }
     }
-    if trimmed.starts_with('{') || trimmed.starts_with('[') {
-        if serde_json::from_str::<serde_json::Value>(trimmed).is_ok() {
-            return trimmed.to_string();
-        }
+    if (trimmed.starts_with('{') || trimmed.starts_with('['))
+        && serde_json::from_str::<serde_json::Value>(trimmed).is_ok()
+    {
+        return trimmed.to_string();
     }
     for (i, c) in trimmed.char_indices() {
         if c == '{' || c == '[' {
@@ -284,13 +350,29 @@ fn find_json_end(s: &str) -> Result<usize, ()> {
     let mut in_string = false;
     let mut escape = false;
     for (i, c) in s.char_indices() {
-        if escape { escape = false; continue; }
-        if c == '\\' && in_string { escape = true; continue; }
-        if c == '"' { in_string = !in_string; continue; }
-        if in_string { continue; }
+        if escape {
+            escape = false;
+            continue;
+        }
+        if c == '\\' && in_string {
+            escape = true;
+            continue;
+        }
+        if c == '"' {
+            in_string = !in_string;
+            continue;
+        }
+        if in_string {
+            continue;
+        }
         match c {
             '{' | '[' => depth += 1,
-            '}' | ']' => { depth -= 1; if depth == 0 { return Ok(i + 1); } }
+            '}' | ']' => {
+                depth -= 1;
+                if depth == 0 {
+                    return Ok(i + 1);
+                }
+            }
             _ => {}
         }
     }
@@ -298,7 +380,10 @@ fn find_json_end(s: &str) -> Result<usize, ()> {
 }
 
 fn validate_json_schema(value: &serde_json::Value, schema: &serde_json::Value) -> bool {
-    let schema_obj = match schema.as_object() { Some(o) => o, None => return true };
+    let schema_obj = match schema.as_object() {
+        Some(o) => o,
+        None => return true,
+    };
     if let Some(schema_type) = schema_obj.get("type").and_then(|v| v.as_str()) {
         let type_ok = match schema_type {
             "object" => value.is_object(),
@@ -310,16 +395,22 @@ fn validate_json_schema(value: &serde_json::Value, schema: &serde_json::Value) -
             "null" => value.is_null(),
             _ => true,
         };
-        if !type_ok { return false; }
+        if !type_ok {
+            return false;
+        }
     }
     if let Some(required) = schema_obj.get("required").and_then(|v| v.as_array()) {
         if let Some(obj) = value.as_object() {
             for req in required {
                 if let Some(field) = req.as_str() {
-                    if !obj.contains_key(field) { return false; }
+                    if !obj.contains_key(field) {
+                        return false;
+                    }
                 }
             }
-        } else { return false; }
+        } else {
+            return false;
+        }
     }
     if let (Some(properties), Some(obj)) = (
         schema_obj.get("properties").and_then(|v| v.as_object()),
@@ -327,15 +418,17 @@ fn validate_json_schema(value: &serde_json::Value, schema: &serde_json::Value) -
     ) {
         for (key, prop_schema) in properties {
             if let Some(field_val) = obj.get(key) {
-                if !validate_json_schema(field_val, prop_schema) { return false; }
+                if !validate_json_schema(field_val, prop_schema) {
+                    return false;
+                }
             }
         }
     }
-    if let (Some(items_schema), Some(arr)) = (
-        schema_obj.get("items"), value.as_array(),
-    ) {
+    if let (Some(items_schema), Some(arr)) = (schema_obj.get("items"), value.as_array()) {
         for item in arr {
-            if !validate_json_schema(item, items_schema) { return false; }
+            if !validate_json_schema(item, items_schema) {
+                return false;
+            }
         }
     }
     // Check maxLength for strings
@@ -343,14 +436,18 @@ fn validate_json_schema(value: &serde_json::Value, schema: &serde_json::Value) -
         schema_obj.get("maxLength").and_then(|v| v.as_u64()),
         value.as_str(),
     ) {
-        if s.len() as u64 > max_len { return false; }
+        if s.len() as u64 > max_len {
+            return false;
+        }
     }
     true
 }
 
 fn is_repeated(text: &str) -> bool {
     let words: Vec<&str> = text.split_whitespace().collect();
-    if words.len() < 10 { return false; }
+    if words.len() < 10 {
+        return false;
+    }
     let unique: std::collections::HashSet<&str> = words.iter().copied().collect();
     let ratio = unique.len() as f64 / words.len() as f64;
     ratio < 0.2
@@ -358,18 +455,26 @@ fn is_repeated(text: &str) -> bool {
 
 fn count_sentences(text: &str) -> usize {
     let trimmed = text.trim();
-    if trimmed.is_empty() { return 0; }
+    if trimmed.is_empty() {
+        return 0;
+    }
     let mut count = 0;
     let chars: Vec<char> = trimmed.chars().collect();
     for (i, &c) in chars.iter().enumerate() {
         if c == '.' || c == '!' || c == '?' || c == '。' || c == '！' || c == '？' {
             let is_end = i + 1 >= chars.len()
                 || chars[i + 1].is_whitespace()
-                || chars[i + 1] == '.' || chars[i + 1] == '!' || chars[i + 1] == '?';
-            if is_end { count += 1; }
+                || chars[i + 1] == '.'
+                || chars[i + 1] == '!'
+                || chars[i + 1] == '?';
+            if is_end {
+                count += 1;
+            }
         }
     }
-    if count == 0 && !trimmed.is_empty() { count = 1; }
+    if count == 0 && !trimmed.is_empty() {
+        count = 1;
+    }
     count
 }
 
@@ -385,9 +490,13 @@ fn detect_language_score(text: &str, expected: &str) -> f64 {
     for c in text.chars() {
         if c.is_ascii_alphabetic() || c == ' ' || c.is_ascii_punctuation() || c.is_ascii_digit() {
             latin += 1;
-        } else if (c as u32 >= 0x4E00 && c as u32 <= 0x9FFF) || (c as u32 >= 0x3400 && c as u32 <= 0x4DBF) {
+        } else if (c as u32 >= 0x4E00 && c as u32 <= 0x9FFF)
+            || (c as u32 >= 0x3400 && c as u32 <= 0x4DBF)
+        {
             cjk += 1;
-        } else if (c as u32 >= 0x3040 && c as u32 <= 0x309F) || (c as u32 >= 0x30A0 && c as u32 <= 0x30FF) {
+        } else if (c as u32 >= 0x3040 && c as u32 <= 0x309F)
+            || (c as u32 >= 0x30A0 && c as u32 <= 0x30FF)
+        {
             kana += 1;
         } else if c as u32 >= 0xAC00 && c as u32 <= 0xD7AF {
             hangul += 1;
@@ -402,9 +511,15 @@ fn detect_language_score(text: &str, expected: &str) -> f64 {
         }
     }
     let total = latin + cjk + kana + hangul + arabic + devanagari + thai + other;
-    if total == 0 { return 0.0; }
+    if total == 0 {
+        return 0.0;
+    }
     let score_for = |count: u32| -> f64 {
-        if count == 0 { 0.0 } else { count as f64 / total as f64 }
+        if count == 0 {
+            0.0
+        } else {
+            count as f64 / total as f64
+        }
     };
     match expected {
         "latin" => score_for(latin),
@@ -421,7 +536,9 @@ fn detect_language_score(text: &str, expected: &str) -> f64 {
 
 fn check_markdown_structure(output: &str) -> f64 {
     let lines: Vec<&str> = output.lines().collect();
-    if lines.is_empty() || output.trim().is_empty() { return 0.0; }
+    if lines.is_empty() || output.trim().is_empty() {
+        return 0.0;
+    }
     let mut score = 0.0;
     let mut has_heading = false;
     let mut has_paragraph = false;
@@ -431,105 +548,218 @@ fn check_markdown_structure(output: &str) -> f64 {
         let trimmed = line.trim_start();
         if trimmed.starts_with('#') {
             let level = trimmed.chars().take_while(|c| *c == '#').count();
-            if level <= 6 { has_heading = true; heading_levels.push(level); }
+            if level <= 6 {
+                has_heading = true;
+                heading_levels.push(level);
+            }
         }
         if trimmed.starts_with("- ") || trimmed.starts_with("* ") || trimmed.starts_with("+ ") {
             has_list = true;
         }
-        if !trimmed.is_empty() && !trimmed.starts_with('#') && !trimmed.starts_with('-')
-            && !trimmed.starts_with('*') && !trimmed.starts_with('+')
-            && !trimmed.starts_with("```") && !trimmed.starts_with('|')
+        if !trimmed.is_empty()
+            && !trimmed.starts_with('#')
+            && !trimmed.starts_with('-')
+            && !trimmed.starts_with('*')
+            && !trimmed.starts_with('+')
+            && !trimmed.starts_with("```")
+            && !trimmed.starts_with('|')
         {
             has_paragraph = true;
         }
     }
-    if has_heading { score += 0.4; }
-    if has_paragraph { score += 0.3; }
-    if has_list { score += 0.15; }
-    if score > 1.0 { 1.0 } else { score }
+    if has_heading {
+        score += 0.4;
+    }
+    if has_paragraph {
+        score += 0.3;
+    }
+    if has_list {
+        score += 0.15;
+    }
+    if score > 1.0 {
+        1.0
+    } else {
+        score
+    }
 }
 
 fn check_no_input_echo(output: &str, input_text: &str) -> f64 {
-    if input_text.is_empty() || input_text.len() < 20 { return 1.0; }
+    if input_text.is_empty() || input_text.len() < 20 {
+        return 1.0;
+    }
     let output_lower = output.to_lowercase();
     let input_lower = input_text.to_lowercase();
     let input_words: Vec<&str> = input_lower.split_whitespace().collect();
-    if input_words.len() < 5 { return 1.0; }
+    if input_words.len() < 5 {
+        return 1.0;
+    }
     let window_size = 5.min(input_words.len());
     let mut echo_count = 0;
     let mut total_windows = 0;
     for i in 0..=input_words.len().saturating_sub(window_size) {
         let window = input_words[i..i + window_size].join(" ");
         total_windows += 1;
-        if output_lower.contains(&window) { echo_count += 1; }
+        if output_lower.contains(&window) {
+            echo_count += 1;
+        }
     }
-    if total_windows == 0 { return 1.0; }
+    if total_windows == 0 {
+        return 1.0;
+    }
     1.0 - (echo_count as f64 / total_windows as f64)
 }
 
 fn check_tone_match(output: &str, expected_tone: &str) -> f64 {
     let lower = output.to_lowercase();
-    let mut score = 0.5;
-    match expected_tone {
+    let score = match expected_tone {
         "professional" => {
-            let prof_markers = ["dear", "regards", "sincerely", "furthermore", "however", "therefore", "pursuant", "respectfully"];
-            let casual_markers = ["gonna", "wanna", "hey", "cheers", "no biggie", "lol", "btw", "yeah"];
+            let prof_markers = [
+                "dear",
+                "regards",
+                "sincerely",
+                "furthermore",
+                "however",
+                "therefore",
+                "pursuant",
+                "respectfully",
+            ];
+            let casual_markers = [
+                "gonna",
+                "wanna",
+                "hey",
+                "cheers",
+                "no biggie",
+                "lol",
+                "btw",
+                "yeah",
+            ];
             let p = prof_markers.iter().filter(|m| lower.contains(*m)).count();
             let c = casual_markers.iter().filter(|m| lower.contains(*m)).count();
-            score = 0.5 + p as f64 * 0.1 - c as f64 * 0.2;
+            0.5 + p as f64 * 0.1 - c as f64 * 0.2
         }
         "casual" => {
-            let casual_markers = ["hey", "thanks", "cheers", "sounds good", "let me know", "no worries"];
-            let formal_markers = ["pursuant", "aforementioned", "forthwith", "hereby", "wherewith"];
+            let casual_markers = [
+                "hey",
+                "thanks",
+                "cheers",
+                "sounds good",
+                "let me know",
+                "no worries",
+            ];
+            let formal_markers = [
+                "pursuant",
+                "aforementioned",
+                "forthwith",
+                "hereby",
+                "wherewith",
+            ];
             let c = casual_markers.iter().filter(|m| lower.contains(*m)).count();
             let f = formal_markers.iter().filter(|m| lower.contains(*m)).count();
-            score = 0.5 + c as f64 * 0.15 - f as f64 * 0.2;
+            0.5 + c as f64 * 0.15 - f as f64 * 0.2
         }
         "confident" => {
-            let conf_markers = ["will", "certainly", "definitely", "absolutely", "committed", "ensure", "guarantee"];
-            let hes_markers = ["maybe", "perhaps", "might", "not sure", "i think", "possibly", "i guess"];
+            let conf_markers = [
+                "will",
+                "certainly",
+                "definitely",
+                "absolutely",
+                "committed",
+                "ensure",
+                "guarantee",
+            ];
+            let hes_markers = [
+                "maybe", "perhaps", "might", "not sure", "i think", "possibly", "i guess",
+            ];
             let c = conf_markers.iter().filter(|m| lower.contains(*m)).count();
             let h = hes_markers.iter().filter(|m| lower.contains(*m)).count();
-            score = 0.5 + c as f64 * 0.15 - h as f64 * 0.2;
+            0.5 + c as f64 * 0.15 - h as f64 * 0.2
         }
         "friendly" => {
-            let friend_markers = ["hope", "great", "wonderful", "happy", "looking forward", "pleased", "warm"];
-            let cold_markers = ["must", "required", "immediately", "consequences", "failure", "unacceptable"];
+            let friend_markers = [
+                "hope",
+                "great",
+                "wonderful",
+                "happy",
+                "looking forward",
+                "pleased",
+                "warm",
+            ];
+            let cold_markers = [
+                "must",
+                "required",
+                "immediately",
+                "consequences",
+                "failure",
+                "unacceptable",
+            ];
             let f = friend_markers.iter().filter(|m| lower.contains(*m)).count();
             let c = cold_markers.iter().filter(|m| lower.contains(*m)).count();
-            score = 0.5 + f as f64 * 0.15 - c as f64 * 0.2;
+            0.5 + f as f64 * 0.15 - c as f64 * 0.2
         }
         "persuasive" => {
-            let markers = ["imagine", "benefit", "opportunity", "exclusive", "limited", "don't miss", "act now", "value", "advantage"];
+            let markers = [
+                "imagine",
+                "benefit",
+                "opportunity",
+                "exclusive",
+                "limited",
+                "don't miss",
+                "act now",
+                "value",
+                "advantage",
+            ];
             let count = markers.iter().filter(|m| lower.contains(*m)).count();
-            score = 0.5 + count as f64 * 0.1;
+            0.5 + count as f64 * 0.1
         }
         "empathetic" => {
-            let markers = ["understand", "appreciate", "recognize", "sorry", "challenging", "difficult", "support", "care"];
+            let markers = [
+                "understand",
+                "appreciate",
+                "recognize",
+                "sorry",
+                "challenging",
+                "difficult",
+                "support",
+                "care",
+            ];
             let count = markers.iter().filter(|m| lower.contains(*m)).count();
-            score = 0.5 + count as f64 * 0.1;
+            0.5 + count as f64 * 0.1
         }
-        _ => score = 1.0,
-    }
-    if score < 0.0 { 0.0 } else if score > 1.0 { 1.0 } else { score }
+        _ => 1.0,
+    };
+    score.clamp(0.0, 1.0)
 }
 
 fn check_length_delta(output: &str, input_text: &str, expected_ratio: &str) -> f64 {
     let input_len = input_text.chars().count();
     let output_len = output.chars().count();
-    if input_len == 0 { return 1.0; }
+    if input_len == 0 {
+        return 1.0;
+    }
     match expected_ratio {
         "longer" => {
             if output_len > input_len {
                 let ratio = output_len as f64 / input_len as f64;
-                if ratio >= 1.5 { 1.0 } else { ratio / 1.5 }
-            } else { 0.0 }
+                if ratio >= 1.5 {
+                    1.0
+                } else {
+                    ratio / 1.5
+                }
+            } else {
+                0.0
+            }
         }
         "shorter" => {
             if output_len < input_len {
                 let ratio = output_len as f64 / input_len as f64;
-                if ratio <= 0.7 { 1.0 } else { (1.0 - ratio) / 0.3 }
-            } else { 0.0 }
+                if ratio <= 0.7 {
+                    1.0
+                } else {
+                    (1.0 - ratio) / 0.3
+                }
+            } else {
+                0.0
+            }
         }
         _ => 1.0,
     }
@@ -537,12 +767,21 @@ fn check_length_delta(output: &str, input_text: &str, expected_ratio: &str) -> f
 
 fn check_json_field_count(output: &str, expected_fields: &[String]) -> f64 {
     let json_text = extract_json(output);
-    if json_text.is_empty() { return 0.0; }
+    if json_text.is_empty() {
+        return 0.0;
+    }
     let parsed: serde_json::Value = match serde_json::from_str(&json_text) {
-        Ok(v) => v, Err(_) => return 0.0,
+        Ok(v) => v,
+        Err(_) => return 0.0,
     };
-    let obj = match parsed.as_object() { Some(o) => o, None => return 0.0 };
-    let found = expected_fields.iter().filter(|f| obj.contains_key(*f)).count();
+    let obj = match parsed.as_object() {
+        Some(o) => o,
+        None => return 0.0,
+    };
+    let found = expected_fields
+        .iter()
+        .filter(|f| obj.contains_key(*f))
+        .count();
     found as f64 / expected_fields.len() as f64
 }
 
@@ -560,7 +799,9 @@ fn clean_output(text: &str) -> String {
     while let (Some(start), Some(end)) = (result.find("<think>"), result.find("</think>")) {
         if end > start {
             result = format!("{}{}", &result[..start], &result[end + 8..]);
-        } else { break; }
+        } else {
+            break;
+        }
     }
     if result.trim_start().starts_with("<think>") {
         if let Some(end) = result.find("</think>") {
@@ -615,26 +856,47 @@ fn build_prompt_input(tc: &SkillTestCase) -> SkillPromptInput<'_> {
     // - Topic scope: variant_context → input, document → context (create skills)
     let (input, context) = match tc.scope.as_str() {
         "selection" => {
-            let inp = if !tc.input.selection.is_empty() { tc.input.selection.as_str() } else { "" };
+            let inp = if !tc.input.selection.is_empty() {
+                tc.input.selection.as_str()
+            } else {
+                ""
+            };
             (inp, tc.input.document.as_str())
         }
         "cursor" => {
-            let ctx = if !tc.input.cursor_context.is_empty() { tc.input.cursor_context.as_str() }
-                else { tc.input.document.as_str() };
-            let inp = if !tc.input.variant_context.is_empty() { tc.input.variant_context.as_str() } else { "" };
+            let ctx = if !tc.input.cursor_context.is_empty() {
+                tc.input.cursor_context.as_str()
+            } else {
+                tc.input.document.as_str()
+            };
+            let inp = if !tc.input.variant_context.is_empty() {
+                tc.input.variant_context.as_str()
+            } else {
+                ""
+            };
             (inp, ctx)
         }
         "document" | "section" => {
-            let ctx = if !tc.input.document.is_empty() { tc.input.document.as_str() }
-                else { tc.input.cursor_context.as_str() };
-            let inp = if !tc.input.variant_context.is_empty() { tc.input.variant_context.as_str() }
-                else if !tc.input.selection.is_empty() { tc.input.selection.as_str() }
-                else { "" };
+            let ctx = if !tc.input.document.is_empty() {
+                tc.input.document.as_str()
+            } else {
+                tc.input.cursor_context.as_str()
+            };
+            let inp = if !tc.input.variant_context.is_empty() {
+                tc.input.variant_context.as_str()
+            } else if !tc.input.selection.is_empty() {
+                tc.input.selection.as_str()
+            } else {
+                ""
+            };
             (inp, ctx)
         }
         "topic" => {
-            let inp = if !tc.input.variant_context.is_empty() { tc.input.variant_context.as_str() }
-                else { tc.input.selection.as_str() };
+            let inp = if !tc.input.variant_context.is_empty() {
+                tc.input.variant_context.as_str()
+            } else {
+                tc.input.selection.as_str()
+            };
             (inp, tc.input.document.as_str())
         }
         _ => ("", ""),
@@ -764,7 +1026,7 @@ fn generate_mock_output(skill: &SkillDef, tc: &SkillTestCase) -> String {
                 "doc_summarize" => {
                     let mut points = Vec::new();
                     if !required_keywords.is_empty() {
-                        for (i, kw) in required_keywords.iter().take(3).enumerate() {
+                        for kw in required_keywords.iter().take(3) {
                             points.push(format!("- Key point about {}: important detail regarding {}.", kw, kw));
                         }
                     }
@@ -848,7 +1110,7 @@ fn generate_mock_output(skill: &SkillDef, tc: &SkillTestCase) -> String {
                     // If keywords are required (e.g. translated words), include them
                     if !required_keywords.is_empty() {
                         let kw_list: Vec<String> = required_keywords.iter()
-                            .map(|k| format!("{}", k))
+                            .map(|k| k.to_string())
                             .collect();
                         let result = format!("Bản dịch: {}.", kw_list.join(", "));
                         pad_to_min(&result, min_chars)
@@ -909,7 +1171,7 @@ fn generate_mock_output(skill: &SkillDef, tc: &SkillTestCase) -> String {
                     result
                 }
                 "create_write_section" => {
-                    let mut result = format!("This section covers the requested topic in detail. ");
+                    let mut result = "This section covers the requested topic in detail. ".to_string();
                     if !required_keywords.is_empty() {
                         result.push_str(&format!("It addresses {} ", keyword_str));
                     }
@@ -990,16 +1252,23 @@ fn generate_mock_output(skill: &SkillDef, tc: &SkillTestCase) -> String {
 }
 
 fn generate_multilingual_mock(
-    skill: &SkillDef,
+    _skill: &SkillDef,
     _tc: &SkillTestCase,
     lang: &str,
     keywords: &[String],
     min_chars: usize,
 ) -> String {
-    let kw = if keywords.is_empty() { "" } else { &keywords[0] };
+    let kw = if keywords.is_empty() {
+        ""
+    } else {
+        &keywords[0]
+    };
     let result = match lang {
         "cjk" => {
-            format!("这是一段{}的翻译内容。原文的主要意思已经准确传达，保持了原文的语调和风格。", if kw.is_empty() { "中文" } else { kw })
+            format!(
+                "这是一段{}的翻译内容。原文的主要意思已经准确传达，保持了原文的语调和风格。",
+                if kw.is_empty() { "中文" } else { kw }
+            )
         }
         "kana" => {
             format!("これは{}の翻訳内容です。原文の主要な意味が正確に伝えられ、元のトーンとスタイルが維持されています。", if kw.is_empty() { "日本語" } else { kw })
@@ -1014,14 +1283,31 @@ fn generate_multilingual_mock(
             format!("هذا هو المحتوى المترجم لـ {}. تم نقل المعنى الرئيسي للنص الأصلي بدقة مع الحفاظ على النبرة والأسلوب الأصليين.", if kw.is_empty() { "العربية" } else { kw })
         }
         "devanagari" => {
-            format!("यह {} का अनुवादित सामग्री है। मूल पाठ का मुख्य अर्थ सटीक रूप से传达 किया गया है।", if kw.is_empty() { "हिंदी" } else { kw })
+            format!(
+                "यह {} का अनुवादित सामग्री है। मूल पाठ का मुख्य अर्थ सटीक रूप से传达 किया गया है।",
+                if kw.is_empty() { "हिंदी" } else { kw }
+            )
         }
         "thai" => {
-            format!("นี่คือเนื้อหาที่แปลแล้วของ{} ความหมายหลักของข้อความต้นฉบับถูกถ่ายทอดอย่างแม่นยำ", if kw.is_empty() { "ภาษาไทย" } else { kw })
+            format!(
+                "นี่คือเนื้อหาที่แปลแล้วของ{} ความหมายหลักของข้อความต้นฉบับถูกถ่ายทอดอย่างแม่นยำ",
+                if kw.is_empty() {
+                    "ภาษาไทย"
+                } else {
+                    kw
+                }
+            )
         }
         _ => {
-            let suffix = if kw.is_empty() { String::new() } else { format!(" regarding {}", kw) };
-            format!("This is the translated text. The main meaning has been accurately conveyed{}.", suffix)
+            let suffix = if kw.is_empty() {
+                String::new()
+            } else {
+                format!(" regarding {}", kw)
+            };
+            format!(
+                "This is the translated text. The main meaning has been accurately conveyed{}.",
+                suffix
+            )
         }
     };
     pad_to_min(&result, min_chars)
@@ -1058,7 +1344,12 @@ pub fn run_mock() {
 
     let dataset = match load_dataset() {
         Ok(d) => {
-            println!("Dataset: {} v{} ({} test cases)", d.name, d.version, d.test_cases.len());
+            println!(
+                "Dataset: {} v{} ({} test cases)",
+                d.name,
+                d.version,
+                d.test_cases.len()
+            );
             d
         }
         Err(e) => {
@@ -1110,7 +1401,10 @@ pub fn run_mock() {
             _ => skill.surface,
         };
         if skill.surface != expected_surface {
-            errors.push(format!("surface mismatch: expected {:?}, got {:?}", expected_surface, skill.surface));
+            errors.push(format!(
+                "surface mismatch: expected {:?}, got {:?}",
+                expected_surface, skill.surface
+            ));
             checks_passed = false;
         }
 
@@ -1127,7 +1421,7 @@ pub fn run_mock() {
         }
 
         // 4. Grammar constraint — Grammar::for_skill returns expected type
-        let grammar = Grammar::for_skill(&skill);
+        let grammar = Grammar::for_skill(skill);
         let grammar_ok = match (&skill.grammar_type, tc.grammar_type.as_str()) {
             (SkillGrammarType::FreeText, "free_text") => true,
             (SkillGrammarType::JsonSchema, "json_schema") => grammar.is_some(),
@@ -1170,35 +1464,40 @@ pub fn run_mock() {
         }
 
         // 7. Generate mock output and run quality checks
-        let mock_output = generate_mock_output(&skill, tc);
+        let mock_output = generate_mock_output(skill, tc);
 
         // For no_input_echo and length_delta, inject the input text
         let mut enriched_checks = tc.quality_checks.clone();
         for check in &mut enriched_checks {
-            if check.check_type == "no_input_echo" || check.check_type == "length_delta" {
-                if check.input_text.is_none() {
-                    let input_for_echo = if !tc.input.selection.is_empty() {
-                        &tc.input.selection
-                    } else if !tc.input.cursor_context.is_empty() {
-                        &tc.input.cursor_context
-                    } else if !tc.input.document.is_empty() {
-                        &tc.input.document
-                    } else {
-                        &tc.input.variant_context
-                    };
-                    check.input_text = Some(input_for_echo.clone());
-                }
+            if (check.check_type == "no_input_echo" || check.check_type == "length_delta")
+                && check.input_text.is_none()
+            {
+                let input_for_echo = if !tc.input.selection.is_empty() {
+                    &tc.input.selection
+                } else if !tc.input.cursor_context.is_empty() {
+                    &tc.input.cursor_context
+                } else if !tc.input.document.is_empty() {
+                    &tc.input.document
+                } else {
+                    &tc.input.variant_context
+                };
+                check.input_text = Some(input_for_echo.clone());
             }
         }
 
         let (quality_score, checks_detail) = run_all_quality_checks(&mock_output, &enriched_checks);
         let quality_pass = quality_score >= 0.7;
         if !quality_pass {
-            let failed_checks: Vec<String> = checks_detail.iter()
+            let failed_checks: Vec<String> = checks_detail
+                .iter()
                 .filter(|(_, s)| *s < 0.7)
                 .map(|(t, s)| format!("{}={:.2}", t, s))
                 .collect();
-            errors.push(format!("quality checks failed: {} (score={:.2})", failed_checks.join(", "), quality_score));
+            errors.push(format!(
+                "quality checks failed: {} (score={:.2})",
+                failed_checks.join(", "),
+                quality_score
+            ));
             checks_passed = false;
         }
 
@@ -1215,7 +1514,12 @@ pub fn run_mock() {
             suite.add(EvalResult::pass_with_meta(&tc.id, duration_ms, meta));
         } else {
             let reason = errors.join("; ");
-            suite.add(EvalResult::fail_with_meta(&tc.id, &reason, duration_ms, meta));
+            suite.add(EvalResult::fail_with_meta(
+                &tc.id,
+                &reason,
+                duration_ms,
+                meta,
+            ));
         }
 
         results.push(SkillResult {
@@ -1226,7 +1530,11 @@ pub fn run_mock() {
             quality_score,
             checks_detail,
             duration_ms,
-            error: if errors.is_empty() { None } else { Some(errors.join("; ")) },
+            error: if errors.is_empty() {
+                None
+            } else {
+                Some(errors.join("; "))
+            },
         });
     }
 
@@ -1251,9 +1559,14 @@ struct SkillServerHandle {
 impl SkillServerHandle {
     fn check_health(url: &str) -> bool {
         let output = Command::new("curl")
-            .arg("-s").arg("-o").arg("/dev/null").arg("-w").arg("%{http_code}")
-            .arg("--connect-timeout").arg("2")
-            .arg(&format!("{}/health", url))
+            .arg("-s")
+            .arg("-o")
+            .arg("/dev/null")
+            .arg("-w")
+            .arg("%{http_code}")
+            .arg("--connect-timeout")
+            .arg("2")
+            .arg(format!("{}/health", url))
             .output();
         match output {
             Ok(o) => String::from_utf8_lossy(&o.stdout).trim() == "200",
@@ -1263,7 +1576,9 @@ impl SkillServerHandle {
 
     fn wait_until_ready(url: &str, timeout_secs: u64) -> bool {
         for _ in 0..(timeout_secs * 2) {
-            if Self::check_health(url) { return true; }
+            if Self::check_health(url) {
+                return true;
+            }
             std::thread::sleep(std::time::Duration::from_millis(500));
         }
         false
@@ -1281,7 +1596,11 @@ fn start_skill_server() -> Result<SkillServerHandle, String> {
         if SkillServerHandle::check_health(&url) {
             return Ok(SkillServerHandle {
                 child: Command::new("echo").spawn().map_err(|e| e.to_string())?,
-                port: url.rsplit(':').next().and_then(|p| p.parse().ok()).unwrap_or(18888),
+                port: url
+                    .rsplit(':')
+                    .next()
+                    .and_then(|p| p.parse().ok())
+                    .unwrap_or(18888),
             });
         }
     }
@@ -1308,12 +1627,18 @@ fn start_skill_server() -> Result<SkillServerHandle, String> {
 
     let port: u16 = 18888;
     let child = Command::new(&llama_server)
-        .arg("-m").arg(&model_path)
-        .arg("--host").arg("127.0.0.1")
-        .arg("--port").arg(port.to_string())
-        .arg("-c").arg("4096")
-        .arg("-ngl").arg("99")
-        .arg("-t").arg("4")
+        .arg("-m")
+        .arg(&model_path)
+        .arg("--host")
+        .arg("127.0.0.1")
+        .arg("--port")
+        .arg(port.to_string())
+        .arg("-c")
+        .arg("4096")
+        .arg("-ngl")
+        .arg("99")
+        .arg("-t")
+        .arg("4")
         .arg("--no-webui")
         .stdout(Stdio::null())
         .stderr(Stdio::null())
@@ -1322,7 +1647,10 @@ fn start_skill_server() -> Result<SkillServerHandle, String> {
 
     let url = format!("http://127.0.0.1:{}", port);
     if !SkillServerHandle::wait_until_ready(&url, 60) {
-        return Err(format!("llama-server did not become ready on port {}", port));
+        return Err(format!(
+            "llama-server did not become ready on port {}",
+            port
+        ));
     }
 
     Ok(SkillServerHandle { child, port })
@@ -1363,12 +1691,18 @@ fn send_skill_completion(
     }
 
     let output = Command::new("curl")
-        .arg("-s").arg("-X").arg("POST")
-        .arg(&format!("{}/completion", server_url))
-        .arg("-H").arg("Content-Type: application/json")
-        .arg("-d").arg(body.to_string())
-        .arg("--connect-timeout").arg("10")
-        .arg("--max-time").arg("180")
+        .arg("-s")
+        .arg("-X")
+        .arg("POST")
+        .arg(format!("{}/completion", server_url))
+        .arg("-H")
+        .arg("Content-Type: application/json")
+        .arg("-d")
+        .arg(body.to_string())
+        .arg("--connect-timeout")
+        .arg("10")
+        .arg("--max-time")
+        .arg("180")
         .output()
         .map_err(|e| format!("curl failed: {}", e))?;
 
@@ -1379,22 +1713,44 @@ fn send_skill_completion(
     let resp: serde_json::Value =
         serde_json::from_slice(&output.stdout).map_err(|e| format!("parse error: {}", e))?;
 
-    let content = resp.get("content").and_then(|v| v.as_str()).unwrap_or("").to_string();
-    let tokens_predicted = resp.get("tokens_predicted").and_then(|v| v.as_u64()).unwrap_or(0) as u32;
+    let content = resp
+        .get("content")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string();
+    let tokens_predicted = resp
+        .get("tokens_predicted")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(0) as u32;
 
     let (prompt_ms, predicted_ms) = if let Some(timings) = resp.get("timings") {
         (
-            timings.get("prompt_ms").and_then(|v| v.as_f64()).unwrap_or(0.0),
-            timings.get("predicted_ms").and_then(|v| v.as_f64()).unwrap_or(0.0),
+            timings
+                .get("prompt_ms")
+                .and_then(|v| v.as_f64())
+                .unwrap_or(0.0),
+            timings
+                .get("predicted_ms")
+                .and_then(|v| v.as_f64())
+                .unwrap_or(0.0),
         )
     } else {
         (
-            resp.get("prompt_ms").and_then(|v| v.as_f64()).unwrap_or(0.0),
-            resp.get("predicted_ms").and_then(|v| v.as_f64()).unwrap_or(0.0),
+            resp.get("prompt_ms")
+                .and_then(|v| v.as_f64())
+                .unwrap_or(0.0),
+            resp.get("predicted_ms")
+                .and_then(|v| v.as_f64())
+                .unwrap_or(0.0),
         )
     };
 
-    Ok(SkillCompletionResponse { content, tokens_predicted, prompt_ms, predicted_ms })
+    Ok(SkillCompletionResponse {
+        content,
+        tokens_predicted,
+        prompt_ms,
+        predicted_ms,
+    })
 }
 
 pub fn run_realworld() {
@@ -1407,7 +1763,12 @@ pub fn run_realworld() {
 
     let dataset = match load_dataset() {
         Ok(d) => {
-            println!("Dataset: {} v{} ({} test cases)", d.name, d.version, d.test_cases.len());
+            println!(
+                "Dataset: {} v{} ({} test cases)",
+                d.name,
+                d.version,
+                d.test_cases.len()
+            );
             d
         }
         Err(e) => {
@@ -1447,7 +1808,12 @@ pub fn run_realworld() {
     println!();
 
     for (idx, tc) in dataset.test_cases.iter().enumerate() {
-        print!("\r  Case {:>3}/{} [{:<25}] ", idx + 1, dataset.test_cases.len(), &tc.id[..tc.id.len().min(25)]);
+        print!(
+            "\r  Case {:>3}/{} [{:<25}] ",
+            idx + 1,
+            dataset.test_cases.len(),
+            &tc.id[..tc.id.len().min(25)]
+        );
         std::io::stdout().flush().ok();
 
         let start = Instant::now();
@@ -1483,8 +1849,7 @@ pub fn run_realworld() {
         let effective_max = skill.effective_max_tokens(tier_enum) as u32;
 
         // Get grammar schema if applicable
-        let schema = tc.quality_checks.iter()
-            .find_map(|c| c.schema.as_ref());
+        let schema = tc.quality_checks.iter().find_map(|c| c.schema.as_ref());
 
         let response = send_skill_completion(
             &server_url,
@@ -1504,23 +1869,24 @@ pub fn run_realworld() {
                 // Enrich checks with input text for no_input_echo / length_delta
                 let mut enriched_checks = tc.quality_checks.clone();
                 for check in &mut enriched_checks {
-                    if check.check_type == "no_input_echo" || check.check_type == "length_delta" {
-                        if check.input_text.is_none() {
-                            let input_for_echo = if !tc.input.selection.is_empty() {
-                                &tc.input.selection
-                            } else if !tc.input.cursor_context.is_empty() {
-                                &tc.input.cursor_context
-                            } else if !tc.input.document.is_empty() {
-                                &tc.input.document
-                            } else {
-                                &tc.input.variant_context
-                            };
-                            check.input_text = Some(input_for_echo.clone());
-                        }
+                    if (check.check_type == "no_input_echo" || check.check_type == "length_delta")
+                        && check.input_text.is_none()
+                    {
+                        let input_for_echo = if !tc.input.selection.is_empty() {
+                            &tc.input.selection
+                        } else if !tc.input.cursor_context.is_empty() {
+                            &tc.input.cursor_context
+                        } else if !tc.input.document.is_empty() {
+                            &tc.input.document
+                        } else {
+                            &tc.input.variant_context
+                        };
+                        check.input_text = Some(input_for_echo.clone());
                     }
                 }
 
-                let (quality_score, checks_detail) = run_all_quality_checks(&output_clean, &enriched_checks);
+                let (quality_score, checks_detail) =
+                    run_all_quality_checks(&output_clean, &enriched_checks);
                 let quality_threshold = match tc.tier.as_str() {
                     "low" => 0.6,
                     "medium" => 0.7,
@@ -1534,22 +1900,41 @@ pub fn run_realworld() {
                 meta.insert("quality".into(), format!("{:.2}", quality_score));
                 meta.insert("tokens".into(), resp.tokens_predicted.to_string());
                 meta.insert("ttft_ms".into(), (resp.prompt_ms as u64).to_string());
-                meta.insert("decode_tps".into(), format!("{:.1}",
-                    if resp.predicted_ms > 0.0 { resp.tokens_predicted as f64 * 1000.0 / resp.predicted_ms } else { 0.0 }));
+                meta.insert(
+                    "decode_tps".into(),
+                    format!(
+                        "{:.1}",
+                        if resp.predicted_ms > 0.0 {
+                            resp.tokens_predicted as f64 * 1000.0 / resp.predicted_ms
+                        } else {
+                            0.0
+                        }
+                    ),
+                );
 
                 if passed {
                     suite.add(EvalResult::pass_with_meta(&tc.id, duration_ms, meta));
                 } else {
-                    let failed_checks: Vec<String> = checks_detail.iter()
+                    let failed_checks: Vec<String> = checks_detail
+                        .iter()
                         .filter(|(_, s)| *s < 0.7)
                         .map(|(t, s)| format!("{}={:.2}", t, s))
                         .collect();
                     let reason = if output_clean.is_empty() {
                         "empty output".to_string()
                     } else {
-                        format!("quality={:.2} failed: {}", quality_score, failed_checks.join(","))
+                        format!(
+                            "quality={:.2} failed: {}",
+                            quality_score,
+                            failed_checks.join(",")
+                        )
                     };
-                    suite.add(EvalResult::fail_with_meta(&tc.id, &reason, duration_ms, meta));
+                    suite.add(EvalResult::fail_with_meta(
+                        &tc.id,
+                        &reason,
+                        duration_ms,
+                        meta,
+                    ));
                 }
 
                 results.push(SkillResult {
@@ -1608,11 +1993,17 @@ fn print_skill_summary(results: &[SkillResult]) {
     let mut skills: Vec<(String, Vec<&SkillResult>)> = by_skill.into_iter().collect();
     skills.sort_by_key(|(sid, _)| sid.clone());
 
-    println!("SKILL EVAL SUITE — {} cases across {} skills",
-        results.len(), skills.len());
+    println!(
+        "SKILL EVAL SUITE — {} cases across {} skills",
+        results.len(),
+        skills.len()
+    );
     println!("═══════════════════════════════════════════════════════════════════════════════");
     println!();
-    println!("{:<30} {:>5}  {:>6}  {:>8}  {:>8}", "Skill", "Cases", "Pass", "Quality", "Errors");
+    println!(
+        "{:<30} {:>5}  {:>6}  {:>8}  {:>8}",
+        "Skill", "Cases", "Pass", "Quality", "Errors"
+    );
     println!("───────────────────────────────────────────────────────────────────────────────");
 
     let mut total_cases = 0usize;
@@ -1623,10 +2014,14 @@ fn print_skill_summary(results: &[SkillResult]) {
     for (skill_id, skill_results) in &skills {
         let total = skill_results.len();
         let passed = skill_results.iter().filter(|r| r.passed).count();
-        let avg_quality: f64 = skill_results.iter().map(|r| r.quality_score).sum::<f64>() / total as f64;
+        let avg_quality: f64 =
+            skill_results.iter().map(|r| r.quality_score).sum::<f64>() / total as f64;
         let errors = skill_results.iter().filter(|r| r.error.is_some()).count();
 
-        println!("{:<30} {:>5}  {:>3}/{:<3} {:>8.2}  {:>8}", skill_id, total, passed, total, avg_quality, errors);
+        println!(
+            "{:<30} {:>5}  {:>3}/{:<3} {:>8.2}  {:>8}",
+            skill_id, total, passed, total, avg_quality, errors
+        );
 
         total_cases += total;
         total_passed += passed;
@@ -1635,31 +2030,53 @@ fn print_skill_summary(results: &[SkillResult]) {
     }
 
     println!("───────────────────────────────────────────────────────────────────────────────");
-    let overall_quality = if total_cases > 0 { total_quality / total_cases as f64 } else { 0.0 };
-    let pass_rate = if total_cases > 0 { total_passed as f64 / total_cases as f64 * 100.0 } else { 0.0 };
-    println!("{:<30} {:>5}  {:>3}/{:<3} {:>8.2}  {:>8}",
-        "OVERALL", total_cases, total_passed, total_cases, overall_quality, total_errors);
+    let overall_quality = if total_cases > 0 {
+        total_quality / total_cases as f64
+    } else {
+        0.0
+    };
+    let pass_rate = if total_cases > 0 {
+        total_passed as f64 / total_cases as f64 * 100.0
+    } else {
+        0.0
+    };
+    println!(
+        "{:<30} {:>5}  {:>3}/{:<3} {:>8.2}  {:>8}",
+        "OVERALL", total_cases, total_passed, total_cases, overall_quality, total_errors
+    );
     println!();
-    println!("Pass Rate: {:.1}%  |  Avg Quality: {:.2}  |  Failed: {}",
-        pass_rate, overall_quality, total_cases - total_passed);
+    println!(
+        "Pass Rate: {:.1}%  |  Avg Quality: {:.2}  |  Failed: {}",
+        pass_rate,
+        overall_quality,
+        total_cases - total_passed
+    );
     println!();
 
     // Per-tier breakdown
     println!("PER-TIER BREAKDOWN");
     println!("───────────────────────────────────────────────────────────────────────────────");
-    println!("{:<30} {:>6}  {:>8}  {:>8}", "Tier", "Pass", "Quality", "Failures");
+    println!(
+        "{:<30} {:>6}  {:>8}  {:>8}",
+        "Tier", "Pass", "Quality", "Failures"
+    );
     println!("───────────────────────────────────────────────────────────────────────────────");
 
     for tier_name in &["low", "medium", "high"] {
-        let tier_results: Vec<&SkillResult> = results.iter().filter(|r| &r.tier == tier_name).collect();
+        let tier_results: Vec<&SkillResult> =
+            results.iter().filter(|r| &r.tier == tier_name).collect();
         if tier_results.is_empty() {
             continue;
         }
         let total = tier_results.len();
         let passed = tier_results.iter().filter(|r| r.passed).count();
-        let avg_quality: f64 = tier_results.iter().map(|r| r.quality_score).sum::<f64>() / total as f64;
+        let avg_quality: f64 =
+            tier_results.iter().map(|r| r.quality_score).sum::<f64>() / total as f64;
         let failures = total - passed;
-        println!("{:<30} {:>3}/{:<3} {:>8.2}  {:>8}", tier_name, passed, total, avg_quality, failures);
+        println!(
+            "{:<30} {:>3}/{:<3} {:>8.2}  {:>8}",
+            tier_name, passed, total, avg_quality, failures
+        );
     }
     println!();
 
@@ -1671,27 +2088,58 @@ fn print_skill_summary(results: &[SkillResult]) {
     if has_tier_variants {
         println!("TIER DEGRADATION (skills tested at multiple tiers)");
         println!("───────────────────────────────────────────────────────────────────────────────");
-        println!("{:<30} {:>6}  {:>6}  {:>6}", "Skill", "Low", "Medium", "High");
+        println!(
+            "{:<30} {:>6}  {:>6}  {:>6}",
+            "Skill", "Low", "Medium", "High"
+        );
         println!("───────────────────────────────────────────────────────────────────────────────");
 
         for (skill_id, skill_results) in &skills {
-            let tiers: std::collections::HashSet<&str> = skill_results.iter().map(|r| r.tier.as_str()).collect();
+            let tiers: std::collections::HashSet<&str> =
+                skill_results.iter().map(|r| r.tier.as_str()).collect();
             if tiers.len() < 2 {
                 continue;
             }
 
-            let low_pass = skill_results.iter().filter(|r| r.tier == "low").filter(|r| r.passed).count();
+            let low_pass = skill_results
+                .iter()
+                .filter(|r| r.tier == "low")
+                .filter(|r| r.passed)
+                .count();
             let low_total = skill_results.iter().filter(|r| r.tier == "low").count();
-            let med_pass = skill_results.iter().filter(|r| r.tier == "medium").filter(|r| r.passed).count();
+            let med_pass = skill_results
+                .iter()
+                .filter(|r| r.tier == "medium")
+                .filter(|r| r.passed)
+                .count();
             let med_total = skill_results.iter().filter(|r| r.tier == "medium").count();
-            let high_pass = skill_results.iter().filter(|r| r.tier == "high").filter(|r| r.passed).count();
+            let high_pass = skill_results
+                .iter()
+                .filter(|r| r.tier == "high")
+                .filter(|r| r.passed)
+                .count();
             let high_total = skill_results.iter().filter(|r| r.tier == "high").count();
 
-            let low_str = if low_total > 0 { format!("{}/{}", low_pass, low_total) } else { "—".to_string() };
-            let med_str = if med_total > 0 { format!("{}/{}", med_pass, med_total) } else { "—".to_string() };
-            let high_str = if high_total > 0 { format!("{}/{}", high_pass, high_total) } else { "—".to_string() };
+            let low_str = if low_total > 0 {
+                format!("{}/{}", low_pass, low_total)
+            } else {
+                "—".to_string()
+            };
+            let med_str = if med_total > 0 {
+                format!("{}/{}", med_pass, med_total)
+            } else {
+                "—".to_string()
+            };
+            let high_str = if high_total > 0 {
+                format!("{}/{}", high_pass, high_total)
+            } else {
+                "—".to_string()
+            };
 
-            println!("{:<30} {:>6}  {:>6}  {:>6}", skill_id, low_str, med_str, high_str);
+            println!(
+                "{:<30} {:>6}  {:>6}  {:>6}",
+                skill_id, low_str, med_str, high_str
+            );
         }
         println!();
     }

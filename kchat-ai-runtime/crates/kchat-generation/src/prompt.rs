@@ -165,13 +165,7 @@ impl PromptTemplateRegistry {
                 crate::skills::SkillScope::Selection => vec!["selection".into()],
                 crate::skills::SkillScope::Cursor => vec!["context".into()],
                 crate::skills::SkillScope::Section => vec!["input".into(), "context".into()],
-                crate::skills::SkillScope::Document => {
-                    if skill.use_outline_context {
-                        vec!["context".into()]
-                    } else {
-                        vec!["context".into()]
-                    }
-                }
+                crate::skills::SkillScope::Document => vec!["context".into()],
                 crate::skills::SkillScope::Topic => {
                     let mut s = vec!["input".into()];
                     if skill.supports_keywords {
@@ -184,12 +178,8 @@ impl PromptTemplateRegistry {
                 }
             };
 
-            let template = PromptTemplate::new(
-                format!("skill_{}", skill.id),
-                "1.0.0",
-                template_str,
-                slots,
-            );
+            let template =
+                PromptTemplate::new(format!("skill_{}", skill.id), "1.0.0", template_str, slots);
             let id = self.register(template);
             ids.push(id);
         }
@@ -232,12 +222,8 @@ mod tests {
 
     #[test]
     fn test_missing_slot_error() {
-        let template = PromptTemplate::new(
-            "test",
-            "1.0.0",
-            "{{a}} {{b}}",
-            vec!["a".into(), "b".into()],
-        );
+        let template =
+            PromptTemplate::new("test", "1.0.0", "{{a}} {{b}}", vec!["a".into(), "b".into()]);
 
         let mut slots = HashMap::new();
         slots.insert("a".into(), "hello".into());
@@ -282,7 +268,9 @@ mod tests {
         assert!(registry.get_by_name("skill_edit_fix_grammar").is_some());
         assert!(registry.get_by_name("skill_doc_summarize").is_some());
         assert!(registry.get_by_name("skill_create_seo_meta").is_some());
-        assert!(registry.get_by_name("skill_edit_translate_document").is_some());
+        assert!(registry
+            .get_by_name("skill_edit_translate_document")
+            .is_some());
     }
 
     #[test]
@@ -306,7 +294,11 @@ mod tests {
         let skills = crate::skills::SkillRegistry::new();
         for skill in skills.all() {
             let name = format!("skill_{}", skill.id);
-            assert!(registry.get_by_name(&name).is_some(), "missing template for skill {}", skill.id);
+            assert!(
+                registry.get_by_name(&name).is_some(),
+                "missing template for skill {}",
+                skill.id
+            );
         }
     }
 }

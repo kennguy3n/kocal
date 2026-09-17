@@ -21,36 +21,22 @@ pub enum DeviceTier {
 }
 
 impl DeviceTier {
-    /// Maximum active context window in tokens (mobile defaults).
+    /// Maximum active context window in tokens.
     /// Use `context_cap_for_platform` for platform-aware values.
     pub fn context_cap(self) -> usize {
         match self {
-            DeviceTier::Low => 1024,
-            DeviceTier::Medium => 2048,
-            DeviceTier::High => 4096,
+            DeviceTier::Low => 4096,
+            DeviceTier::Medium => 8192,
+            DeviceTier::High => 16384,
         }
     }
 
-    /// Platform-aware context cap.
-    /// iOS: Low 1K, Medium 2K, High 4K (MLX FP16 KV cache, tight budgets).
-    /// Android: Low 2K, Medium 4K, High 8K (llama.cpp Q8 KV cache, efficient).
-    /// Desktop: Low 2K, Medium 4K, High 16K (generous memory budgets).
+    /// Platform-aware context cap: 4K / 8K / 16K by tier on all platforms.
+    /// The Q8_0 KV cache used by the llama.cpp backend keeps the memory cost
+    /// modest even at 16K (~1-2GB for a 4B-class model).
     pub fn context_cap_for_platform(self, platform: &str) -> usize {
-        match self {
-            DeviceTier::Low => match platform {
-                "ios" => 1024,
-                _ => 2048,
-            },
-            DeviceTier::Medium => match platform {
-                "ios" => 2048,
-                _ => 4096,
-            },
-            DeviceTier::High => match platform {
-                "ios" => 4096,
-                "macos" | "windows" => 16384,
-                _ => 8192,
-            },
-        }
+        let _ = platform;
+        self.context_cap()
     }
 
     /// Maximum output tokens per task.
@@ -192,19 +178,16 @@ impl TierSelection {
     /// Re-evaluate tier before each job using free memory, thermal, battery,
     /// and background status. Downgrade immediately after allocation failure,
     /// repeated slow TTFT, critical thermal events, or OS termination signals.
-    pub fn re_evaluate(
-        current: DeviceTier,
-        caps: &DeviceCapabilities,
-    ) -> Result<DeviceTier> {
+    pub fn re_evaluate(current: DeviceTier, caps: &DeviceCapabilities) -> Result<DeviceTier> {
         // Always apply thermal state
         let tier = Self::apply_thermal_downgrade(current, caps.thermal_state);
 
         // Background → no generative on mobile
-        if caps.platform == "ios" || caps.platform == "android" {
-            if caps.app_state != crate::capability::AppState::Foreground {
-                // In background, only allow low tier (deterministic-only effectively)
-                return Ok(DeviceTier::Low);
-            }
+        if (caps.platform == "ios" || caps.platform == "android")
+            && caps.app_state != crate::capability::AppState::Foreground
+        {
+            // In background, only allow low tier (deterministic-only effectively)
+            return Ok(DeviceTier::Low);
         }
 
         // Battery below 15% and not charging → downgrade by one level
@@ -259,10 +242,7 @@ impl TierSelection {
 
     /// Check if a predicted peak memory exceeds 70% of the currently safe AI budget.
     /// If so, the task must be rejected or rerouted before allocation.
-    pub fn check_memory_budget(
-        predicted_peak_bytes: u64,
-        caps: &DeviceCapabilities,
-    ) -> Result<()> {
+    pub fn check_memory_budget(predicted_peak_bytes: u64, caps: &DeviceCapabilities) -> Result<()> {
         let threshold = caps.safe_ai_budget();
         if predicted_peak_bytes > threshold {
             return Err(CoreError::MemoryBudgetExceeded {
@@ -356,9 +336,9 @@ mod tests {
 
     #[test]
     fn test_context_caps() {
-        assert_eq!(DeviceTier::Low.context_cap(), 1024);
-        assert_eq!(DeviceTier::Medium.context_cap(), 2048);
-        assert_eq!(DeviceTier::High.context_cap(), 4096);
+        assert_eq!(DeviceTier::Low.context_cap(), 4096);
+        assert_eq!(DeviceTier::Medium.context_cap(), 8192);
+        assert_eq!(DeviceTier::High.context_cap(), 16384);
     }
 
     #[test]

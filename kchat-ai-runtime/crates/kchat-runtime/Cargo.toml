@@ -1,0 +1,30 @@
+[package]
+name = "kchat-runtime"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "KChat runtime orchestrator — composes safety, retrieval, skills, LoRA, grammar-constrained generation, and memory into a single entry point"
+
+[dependencies]
+kchat-core = { path = "../kchat-core" }
+kchat-generation = { path = "../kchat-generation" }
+kchat-context = { path = "../kchat-context" }
+kchat-safety = { path = "../kchat-safety" }
+kchat-action = { path = "../kchat-action" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+tokio = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+blake3 = "1"
+parking_lot = { workspace = true }
+
+[dev-dependencies]
+criterion = { workspace = true }
+
+[[bench]]
+name = "orchestrator"
+harness = false

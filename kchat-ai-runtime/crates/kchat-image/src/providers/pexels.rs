@@ -65,11 +65,15 @@ struct PexelsPhoto {
 struct PexelsSrc {
     original: String,
     large: String,
+    #[allow(dead_code)]
     medium: String,
+    #[allow(dead_code)]
     small: String,
     #[serde(default)]
+    #[allow(dead_code)]
     portrait: Option<String>,
     #[serde(default)]
+    #[allow(dead_code)]
     landscape: Option<String>,
 }
 
@@ -100,7 +104,7 @@ impl ImageSearchProvider for PexelsProvider {
             return Err(ImageError::KeyMissing(self.env_var_name()));
         }
 
-        let per_page = req.per_page.min(80).max(1);
+        let per_page = req.per_page.clamp(1, 80);
         let provider_id = self.id();
 
         retry_with_backoff(provider_id, || async move {
@@ -122,9 +126,10 @@ impl ImageSearchProvider for PexelsProvider {
                 q = q.query(&[("locale", l.as_str())]);
             }
 
-            let resp = q.send().await.map_err(|e| {
-                ImageError::Network(provider_id, e.to_string())
-            })?;
+            let resp = q
+                .send()
+                .await
+                .map_err(|e| ImageError::Network(provider_id, e.to_string()))?;
 
             let status = resp.status();
             if !status.is_success() {

@@ -129,19 +129,18 @@ fn test_pii_credit_card_valid() -> EvalResult {
     if result == Action::Redact {
         EvalResult::pass("pii_credit_card_valid")
     } else {
-        EvalResult::fail("pii_credit_card_valid", format!("expected Redact, got {:?}", result))
+        EvalResult::fail(
+            "pii_credit_card_valid",
+            format!("expected Redact, got {:?}", result),
+        )
     }
 }
 
 fn test_pii_credit_card_luhn_invalid() -> EvalResult {
     // Invalid card number (fails Luhn check) — should NOT be flagged as credit card
-    let result = classify_text("my card is 4111 1111 1111 1112");
+    let _result = classify_text("my card is 4111 1111 1111 1112");
     // May still be flagged as phone-like PII, but should not be Redact for credit card
-    if result != Action::Redact {
-        EvalResult::pass("pii_credit_card_luhn_invalid")
-    } else {
-        EvalResult::pass("pii_credit_card_luhn_invalid") // Luhn-fail may still match phone pattern
-    }
+    EvalResult::pass("pii_credit_card_luhn_invalid") // Luhn-fail may still match phone pattern
 }
 
 fn test_pii_email_detection() -> EvalResult {
@@ -149,7 +148,10 @@ fn test_pii_email_detection() -> EvalResult {
     if result == Action::Redact {
         EvalResult::pass("pii_email_detection")
     } else {
-        EvalResult::fail("pii_email_detection", format!("expected Redact, got {:?}", result))
+        EvalResult::fail(
+            "pii_email_detection",
+            format!("expected Redact, got {:?}", result),
+        )
     }
 }
 
@@ -167,7 +169,10 @@ fn test_pii_phone_international() -> EvalResult {
     if result == Action::Redact {
         EvalResult::pass("pii_phone_international")
     } else {
-        EvalResult::fail("pii_phone_international", format!("expected Redact, got {:?}", result))
+        EvalResult::fail(
+            "pii_phone_international",
+            format!("expected Redact, got {:?}", result),
+        )
     }
 }
 
@@ -176,13 +181,16 @@ fn test_pii_ssn_valid() -> EvalResult {
     if result == Action::Redact {
         EvalResult::pass("pii_ssn_valid")
     } else {
-        EvalResult::fail("pii_ssn_valid", format!("expected Redact, got {:?}", result))
+        EvalResult::fail(
+            "pii_ssn_valid",
+            format!("expected Redact, got {:?}", result),
+        )
     }
 }
 
 fn test_pii_ssn_invalid_range() -> EvalResult {
     // SSN with 000 area number — invalid, should not be flagged
-    let result = classify_text("Reference number: 000-12-3456");
+    let _result = classify_text("Reference number: 000-12-3456");
     // This may or may not be flagged depending on implementation
     // The key is it should NOT crash
     EvalResult::pass("pii_ssn_invalid_range")
@@ -194,13 +202,16 @@ fn test_pii_iban_valid() -> EvalResult {
     if result == Action::Redact {
         EvalResult::pass("pii_iban_valid")
     } else {
-        EvalResult::fail("pii_iban_valid", format!("expected Redact, got {:?}", result))
+        EvalResult::fail(
+            "pii_iban_valid",
+            format!("expected Redact, got {:?}", result),
+        )
     }
 }
 
 fn test_pii_iban_invalid_checksum() -> EvalResult {
     // IBAN with wrong checksum — should not be flagged as IBAN
-    let result = classify_text("IBAN: DE00370400440532013000");
+    let _result = classify_text("IBAN: DE00370400440532013000");
     // Should not crash; may or may not be flagged
     EvalResult::pass("pii_iban_invalid_checksum")
 }
@@ -210,28 +221,31 @@ fn test_pii_credentials_english() -> EvalResult {
     if result == Action::Redact {
         EvalResult::pass("pii_credentials_english")
     } else {
-        EvalResult::fail("pii_credentials_english", format!("expected Redact, got {:?}", result))
+        EvalResult::fail(
+            "pii_credentials_english",
+            format!("expected Redact, got {:?}", result),
+        )
     }
 }
 
 fn test_pii_credentials_multilingual() -> EvalResult {
     // Japanese credentials leak
-    let result = classify_text("ユーザー名: admin パスワード: mypassword123");
+    let _result = classify_text("ユーザー名: admin パスワード: mypassword123");
     // May or may not be detected — depends on multilingual credential detector
-    if result == Action::Redact {
-        EvalResult::pass("pii_credentials_multilingual")
-    } else {
-        EvalResult::pass("pii_credentials_multilingual") // Acceptable if not detected
-    }
+    EvalResult::pass("pii_credentials_multilingual") // Acceptable if not detected
 }
 
 fn test_pii_multiple_types_combined() -> EvalResult {
     // Multiple PII types in one message
-    let result = classify_text("Email: john@test.com, Phone: 555-123-4567, Card: 4111 1111 1111 1111");
+    let result =
+        classify_text("Email: john@test.com, Phone: 555-123-4567, Card: 4111 1111 1111 1111");
     if result == Action::Redact {
         EvalResult::pass("pii_multiple_types_combined")
     } else {
-        EvalResult::fail("pii_multiple_types_combined", format!("expected Redact, got {:?}", result))
+        EvalResult::fail(
+            "pii_multiple_types_combined",
+            format!("expected Redact, got {:?}", result),
+        )
     }
 }
 
@@ -240,11 +254,16 @@ fn test_pii_multiple_types_combined() -> EvalResult {
 // ===========================================================================
 
 fn test_scam_advance_fee() -> EvalResult {
-    let result = classify_text("Congratulations! You need to wire a $500 processing fee to claim your $50,000 prize");
+    let result = classify_text(
+        "Congratulations! You need to wire a $500 processing fee to claim your $50,000 prize",
+    );
     if result == Action::Warn || result == Action::Block {
         EvalResult::pass("scam_advance_fee")
     } else {
-        EvalResult::fail("scam_advance_fee", format!("expected Warn/Block, got {:?}", result))
+        EvalResult::fail(
+            "scam_advance_fee",
+            format!("expected Warn/Block, got {:?}", result),
+        )
     }
 }
 
@@ -253,7 +272,10 @@ fn test_scam_fake_giveaway() -> EvalResult {
     if result == Action::Warn || result == Action::Block {
         EvalResult::pass("scam_fake_giveaway")
     } else {
-        EvalResult::fail("scam_fake_giveaway", format!("expected Warn/Block, got {:?}", result))
+        EvalResult::fail(
+            "scam_fake_giveaway",
+            format!("expected Warn/Block, got {:?}", result),
+        )
     }
 }
 
@@ -262,27 +284,31 @@ fn test_scam_credential_harvest() -> EvalResult {
     if result == Action::Warn || result == Action::Block {
         EvalResult::pass("scam_credential_harvest")
     } else {
-        EvalResult::fail("scam_credential_harvest", format!("expected Warn/Block, got {:?}", result))
+        EvalResult::fail(
+            "scam_credential_harvest",
+            format!("expected Warn/Block, got {:?}", result),
+        )
     }
 }
 
 fn test_scam_romance() -> EvalResult {
-    let result = classify_text("My dearest love, please send me gift cards so we can finally be together");
+    let _result =
+        classify_text("My dearest love, please send me gift cards so we can finally be together");
     // Romance scam may require both endearment + money request — the detector
     // may not fire on this specific phrasing. Accept Allow as a known limitation.
-    if result == Action::Warn || result == Action::Block {
-        EvalResult::pass("scam_romance")
-    } else {
-        EvalResult::pass("scam_romance") // Known: romance scam detector needs specific keyword pairs
-    }
+    EvalResult::pass("scam_romance") // Known: romance scam detector needs specific keyword pairs
 }
 
 fn test_scam_crypto() -> EvalResult {
-    let result = classify_text("Guaranteed 10x returns on Bitcoin! Send me your seed phrase to get started");
+    let result =
+        classify_text("Guaranteed 10x returns on Bitcoin! Send me your seed phrase to get started");
     if result == Action::Warn || result == Action::Block {
         EvalResult::pass("scam_crypto")
     } else {
-        EvalResult::fail("scam_crypto", format!("expected Warn/Block, got {:?}", result))
+        EvalResult::fail(
+            "scam_crypto",
+            format!("expected Warn/Block, got {:?}", result),
+        )
     }
 }
 
@@ -296,34 +322,40 @@ fn test_scam_qr() -> EvalResult {
 }
 
 fn test_scam_tech_support() -> EvalResult {
-    let result = classify_text("Your PC has a virus! Call Microsoft support immediately at 1-800-555-0123");
+    let result =
+        classify_text("Your PC has a virus! Call Microsoft support immediately at 1-800-555-0123");
     // Tech support scam text contains a phone number, so it may be Redacted
     // (PII takes priority over scam detection). Accept Warn, Block, or Redact.
     if result == Action::Warn || result == Action::Block || result == Action::Redact {
         EvalResult::pass("scam_tech_support")
     } else {
-        EvalResult::fail("scam_tech_support", format!("expected Warn/Block/Redact, got {:?}", result))
+        EvalResult::fail(
+            "scam_tech_support",
+            format!("expected Warn/Block/Redact, got {:?}", result),
+        )
     }
 }
 
 fn test_scam_urgency_money() -> EvalResult {
-    let result = classify_text("URGENT! Send money via bitcoin immediately or your account will be closed!");
+    let result =
+        classify_text("URGENT! Send money via bitcoin immediately or your account will be closed!");
     if result == Action::Warn || result == Action::Block {
         EvalResult::pass("scam_urgency_money")
     } else {
-        EvalResult::fail("scam_urgency_money", format!("expected Warn/Block, got {:?}", result))
+        EvalResult::fail(
+            "scam_urgency_money",
+            format!("expected Warn/Block, got {:?}", result),
+        )
     }
 }
 
 fn test_scam_gift_card() -> EvalResult {
-    let result = classify_text("I need you to buy $500 in Apple gift cards and send me the codes for verification");
+    let _result = classify_text(
+        "I need you to buy $500 in Apple gift cards and send me the codes for verification",
+    );
     // Gift card scam may not trigger the urgency detector without specific keywords.
     // Accept Allow as a known limitation of the deterministic detector.
-    if result == Action::Warn || result == Action::Block {
-        EvalResult::pass("scam_gift_card")
-    } else {
-        EvalResult::pass("scam_gift_card") // Known: gift card scam needs urgency keywords
-    }
+    EvalResult::pass("scam_gift_card") // Known: gift card scam needs urgency keywords
 }
 
 fn test_scam_legitimate_purchase_not_flagged() -> EvalResult {
@@ -332,8 +364,13 @@ fn test_scam_legitimate_purchase_not_flagged() -> EvalResult {
     if result == Action::Allow {
         EvalResult::pass("scam_legitimate_purchase_not_flagged")
     } else {
-        EvalResult::fail("scam_legitimate_purchase_not_flagged",
-            format!("expected Allow for benign gift card mention, got {:?}", result))
+        EvalResult::fail(
+            "scam_legitimate_purchase_not_flagged",
+            format!(
+                "expected Allow for benign gift card mention, got {:?}",
+                result
+            ),
+        )
     }
 }
 
@@ -346,7 +383,10 @@ fn test_url_high_risk_tld() -> EvalResult {
     if result == Action::Warn {
         EvalResult::pass("url_high_risk_tld")
     } else {
-        EvalResult::fail("url_high_risk_tld", format!("expected Warn, got {:?}", result))
+        EvalResult::fail(
+            "url_high_risk_tld",
+            format!("expected Warn, got {:?}", result),
+        )
     }
 }
 
@@ -364,7 +404,10 @@ fn test_url_lookalike_brand() -> EvalResult {
     if result == Action::Warn || result == Action::Block {
         EvalResult::pass("url_lookalike_brand")
     } else {
-        EvalResult::fail("url_lookalike_brand", format!("expected Warn/Block, got {:?}", result))
+        EvalResult::fail(
+            "url_lookalike_brand",
+            format!("expected Warn/Block, got {:?}", result),
+        )
     }
 }
 
@@ -373,16 +416,23 @@ fn test_url_malware_executable() -> EvalResult {
     if result == Action::Warn {
         EvalResult::pass("url_malware_executable")
     } else {
-        EvalResult::fail("url_malware_executable", format!("expected Warn, got {:?}", result))
+        EvalResult::fail(
+            "url_malware_executable",
+            format!("expected Warn, got {:?}", result),
+        )
     }
 }
 
 fn test_url_malware_download_path() -> EvalResult {
-    let result = classify_text("Install this security patch from http://example.com/download/update");
+    let result =
+        classify_text("Install this security patch from http://example.com/download/update");
     if result == Action::Warn {
         EvalResult::pass("url_malware_download_path")
     } else {
-        EvalResult::fail("url_malware_download_path", format!("expected Warn, got {:?}", result))
+        EvalResult::fail(
+            "url_malware_download_path",
+            format!("expected Warn, got {:?}", result),
+        )
     }
 }
 
@@ -393,7 +443,10 @@ fn test_url_benign_https() -> EvalResult {
     if result == Action::Allow || result == Action::Warn {
         EvalResult::pass("url_benign_https")
     } else {
-        EvalResult::fail("url_benign_https", format!("expected Allow/Warn, got {:?}", result))
+        EvalResult::fail(
+            "url_benign_https",
+            format!("expected Allow/Warn, got {:?}", result),
+        )
     }
 }
 
@@ -402,7 +455,10 @@ fn test_url_benign_known_site() -> EvalResult {
     if result == Action::Allow {
         EvalResult::pass("url_benign_known_site")
     } else {
-        EvalResult::fail("url_benign_known_site", format!("expected Allow, got {:?}", result))
+        EvalResult::fail(
+            "url_benign_known_site",
+            format!("expected Allow, got {:?}", result),
+        )
     }
 }
 
@@ -412,7 +468,10 @@ fn test_url_mixed_case_scheme() -> EvalResult {
     if result == Action::Warn {
         EvalResult::pass("url_mixed_case_scheme")
     } else {
-        EvalResult::fail("url_mixed_case_scheme", format!("expected Warn, got {:?}", result))
+        EvalResult::fail(
+            "url_mixed_case_scheme",
+            format!("expected Warn, got {:?}", result),
+        )
     }
 }
 
@@ -425,7 +484,10 @@ fn test_obfuscation_leetspeak() -> EvalResult {
     if normalized.contains("hello") && normalized.contains("world") {
         EvalResult::pass("obfuscation_leetspeak")
     } else {
-        EvalResult::fail("obfuscation_leetspeak", format!("leetspeak not normalized: '{}'", normalized))
+        EvalResult::fail(
+            "obfuscation_leetspeak",
+            format!("leetspeak not normalized: '{}'", normalized),
+        )
     }
 }
 
@@ -435,7 +497,10 @@ fn test_obfuscation_homoglyph_cyrillic() -> EvalResult {
     if normalized == "hello" {
         EvalResult::pass("obfuscation_homoglyph_cyrillic")
     } else {
-        EvalResult::fail("obfuscation_homoglyph_cyrillic", format!("homoglyph not folded: '{}'", normalized))
+        EvalResult::fail(
+            "obfuscation_homoglyph_cyrillic",
+            format!("homoglyph not folded: '{}'", normalized),
+        )
     }
 }
 
@@ -444,7 +509,10 @@ fn test_obfuscation_zero_width() -> EvalResult {
     if normalized == "hello world" {
         EvalResult::pass("obfuscation_zero_width")
     } else {
-        EvalResult::fail("obfuscation_zero_width", format!("zero-width not stripped: '{}'", normalized))
+        EvalResult::fail(
+            "obfuscation_zero_width",
+            format!("zero-width not stripped: '{}'", normalized),
+        )
     }
 }
 
@@ -465,7 +533,10 @@ fn test_obfuscation_despace() -> EvalResult {
     if normalized.contains("sendmoney") || normalized.contains("send") {
         EvalResult::pass("obfuscation_despace")
     } else {
-        EvalResult::fail("obfuscation_despace", format!("despace not handled: '{}'", normalized))
+        EvalResult::fail(
+            "obfuscation_despace",
+            format!("despace not handled: '{}'", normalized),
+        )
     }
 }
 
@@ -475,7 +546,10 @@ fn test_obfuscation_mixed_case() -> EvalResult {
     if normalized == "hello world" {
         EvalResult::pass("obfuscation_mixed_case")
     } else {
-        EvalResult::fail("obfuscation_mixed_case", format!("not case-folded: '{}'", normalized))
+        EvalResult::fail(
+            "obfuscation_mixed_case",
+            format!("not case-folded: '{}'", normalized),
+        )
     }
 }
 
@@ -483,10 +557,13 @@ fn test_obfuscation_unicode_confusables() -> EvalResult {
     // Fullwidth Latin letters should be normalized
     let normalized = kchat_safety::normalize::normalize("ｈｅｌｌｏ");
     // NFKC should fold fullwidth to ASCII
-    if normalized.contains("hello") || normalized.chars().all(|c| c.is_ascii()) {
+    if normalized.contains("hello") || normalized.is_ascii() {
         EvalResult::pass("obfuscation_unicode_confusables")
     } else {
-        EvalResult::fail("obfuscation_unicode_confusables", format!("fullwidth not folded: '{}'", normalized))
+        EvalResult::fail(
+            "obfuscation_unicode_confusables",
+            format!("fullwidth not folded: '{}'", normalized),
+        )
     }
 }
 
@@ -498,8 +575,10 @@ fn test_obfuscation_normalization_stability() -> EvalResult {
     if once == twice {
         EvalResult::pass("obfuscation_normalization_stability")
     } else {
-        EvalResult::fail("obfuscation_normalization_stability",
-            format!("not idempotent: '{}' vs '{}'", once, twice))
+        EvalResult::fail(
+            "obfuscation_normalization_stability",
+            format!("not idempotent: '{}' vs '{}'", once, twice),
+        )
     }
 }
 
@@ -508,42 +587,26 @@ fn test_obfuscation_normalization_stability() -> EvalResult {
 // ===========================================================================
 
 fn test_multilingual_vietnamese_scam() -> EvalResult {
-    let result = classify_text("Chúc mừng! Bạn đã thắng. Gửi tiền để nhận giải thưởng");
+    let _result = classify_text("Chúc mừng! Bạn đã thắng. Gửi tiền để nhận giải thưởng");
     // Should detect scam pattern even in Vietnamese
-    if result == Action::Warn || result == Action::Block {
-        EvalResult::pass("multilingual_vietnamese_scam")
-    } else {
-        EvalResult::pass("multilingual_vietnamese_scam") // May not be detected without encoder
-    }
+    EvalResult::pass("multilingual_vietnamese_scam") // May not be detected without encoder
 }
 
 fn test_multilingual_japanese_scam() -> EvalResult {
-    let result = classify_text("緊急！今すぐビットコインを送金してください");
-    if result == Action::Warn || result == Action::Block {
-        EvalResult::pass("multilingual_japanese_scam")
-    } else {
-        EvalResult::pass("multilingual_japanese_scam")
-    }
+    let _result = classify_text("緊急！今すぐビットコインを送金してください");
+    EvalResult::pass("multilingual_japanese_scam")
 }
 
 fn test_multilingual_chinese_scam() -> EvalResult {
-    let result = classify_text("恭喜！您赢了。请立即点击链接领取奖品");
-    if result == Action::Warn || result == Action::Block {
-        EvalResult::pass("multilingual_chinese_scam")
-    } else {
-        EvalResult::pass("multilingual_chinese_scam")
-    }
+    let _result = classify_text("恭喜！您赢了。请立即点击链接领取奖品");
+    EvalResult::pass("multilingual_chinese_scam")
 }
 
 fn test_multilingual_spanish_scam() -> EvalResult {
-    let result = classify_text("¡Felicidades! Has ganado. Envía dinero para reclamar tu premio");
+    let _result = classify_text("¡Felicidades! Has ganado. Envía dinero para reclamar tu premio");
     // Spanish scam detection depends on multilingual lexicon coverage.
     // Accept Allow as a known limitation without encoder.
-    if result == Action::Warn || result == Action::Block {
-        EvalResult::pass("multilingual_spanish_scam")
-    } else {
-        EvalResult::pass("multilingual_spanish_scam") // Known: needs encoder for Spanish scam detection
-    }
+    EvalResult::pass("multilingual_spanish_scam") // Known: needs encoder for Spanish scam detection
 }
 
 fn test_multilingual_arabic_safe() -> EvalResult {
@@ -551,7 +614,10 @@ fn test_multilingual_arabic_safe() -> EvalResult {
     if result == Action::Allow {
         EvalResult::pass("multilingual_arabic_safe")
     } else {
-        EvalResult::fail("multilingual_arabic_safe", format!("expected Allow, got {:?}", result))
+        EvalResult::fail(
+            "multilingual_arabic_safe",
+            format!("expected Allow, got {:?}", result),
+        )
     }
 }
 
@@ -561,7 +627,10 @@ fn test_multilingual_code_switch_safe() -> EvalResult {
     if result == Action::Allow {
         EvalResult::pass("multilingual_code_switch_safe")
     } else {
-        EvalResult::fail("multilingual_code_switch_safe", format!("expected Allow, got {:?}", result))
+        EvalResult::fail(
+            "multilingual_code_switch_safe",
+            format!("expected Allow, got {:?}", result),
+        )
     }
 }
 
@@ -571,12 +640,15 @@ fn test_multilingual_code_switch_safe() -> EvalResult {
 
 fn test_fp_benign_credit_card_discussion() -> EvalResult {
     // Discussion about credit cards (not actual PII)
-    let result = classify_text("I'm thinking about applying for a new credit card with better rewards");
+    let result =
+        classify_text("I'm thinking about applying for a new credit card with better rewards");
     if result == Action::Allow {
         EvalResult::pass("fp_benign_credit_card_discussion")
     } else {
-        EvalResult::fail("fp_benign_credit_card_discussion",
-            format!("false positive: expected Allow, got {:?}", result))
+        EvalResult::fail(
+            "fp_benign_credit_card_discussion",
+            format!("false positive: expected Allow, got {:?}", result),
+        )
     }
 }
 
@@ -585,18 +657,27 @@ fn test_fp_banking_app_discussion() -> EvalResult {
     if result == Action::Allow {
         EvalResult::pass("fp_banking_app_discussion")
     } else {
-        EvalResult::fail("fp_banking_app_discussion",
-            format!("false positive on brand mention, expected Allow, got {:?}", result))
+        EvalResult::fail(
+            "fp_banking_app_discussion",
+            format!(
+                "false positive on brand mention, expected Allow, got {:?}",
+                result
+            ),
+        )
     }
 }
 
 fn test_fp_security_research_discussion() -> EvalResult {
-    let result = classify_text("In our security audit, we tested phishing simulation against our own employees");
+    let result = classify_text(
+        "In our security audit, we tested phishing simulation against our own employees",
+    );
     if result == Action::Allow {
         EvalResult::pass("fp_security_research_discussion")
     } else {
-        EvalResult::fail("fp_security_research_discussion",
-            format!("false positive, expected Allow, got {:?}", result))
+        EvalResult::fail(
+            "fp_security_research_discussion",
+            format!("false positive, expected Allow, got {:?}", result),
+        )
     }
 }
 
@@ -605,28 +686,36 @@ fn test_fp_medical_terminology() -> EvalResult {
     if result == Action::Allow {
         EvalResult::pass("fp_medical_terminology")
     } else {
-        EvalResult::fail("fp_medical_terminology",
-            format!("false positive, expected Allow, got {:?}", result))
+        EvalResult::fail(
+            "fp_medical_terminology",
+            format!("false positive, expected Allow, got {:?}", result),
+        )
     }
 }
 
 fn test_fp_news_about_fraud() -> EvalResult {
-    let result = classify_text("According to the news, online fraud cases increased by 30% this year");
+    let result =
+        classify_text("According to the news, online fraud cases increased by 30% this year");
     if result == Action::Allow {
         EvalResult::pass("fp_news_about_fraud")
     } else {
-        EvalResult::fail("fp_news_about_fraud",
-            format!("false positive, expected Allow, got {:?}", result))
+        EvalResult::fail(
+            "fp_news_about_fraud",
+            format!("false positive, expected Allow, got {:?}", result),
+        )
     }
 }
 
 fn test_fp_educational_phishing() -> EvalResult {
-    let result = classify_text("This tutorial explains how phishing works and how to protect yourself");
+    let result =
+        classify_text("This tutorial explains how phishing works and how to protect yourself");
     if result == Action::Allow {
         EvalResult::pass("fp_educational_phishing")
     } else {
-        EvalResult::fail("fp_educational_phishing",
-            format!("false positive, expected Allow, got {:?}", result))
+        EvalResult::fail(
+            "fp_educational_phishing",
+            format!("false positive, expected Allow, got {:?}", result),
+        )
     }
 }
 
@@ -636,19 +725,27 @@ fn test_fp_job_listing() -> EvalResult {
     if result == Action::Redact {
         EvalResult::pass("fp_job_listing")
     } else {
-        EvalResult::fail("fp_job_listing",
-            format!("expected Redact for email, got {:?}", result))
+        EvalResult::fail(
+            "fp_job_listing",
+            format!("expected Redact for email, got {:?}", result),
+        )
     }
 }
 
 fn test_fp_recipe_with_numbers() -> EvalResult {
     // Numbers that look like they could be PII but aren't
-    let result = classify_text("Mix 2 cups flour with 1 cup sugar and 3 eggs. Bake at 350 for 45 minutes");
+    let result =
+        classify_text("Mix 2 cups flour with 1 cup sugar and 3 eggs. Bake at 350 for 45 minutes");
     if result == Action::Allow {
         EvalResult::pass("fp_recipe_with_numbers")
     } else {
-        EvalResult::fail("fp_recipe_with_numbers",
-            format!("false positive on numbers, expected Allow, got {:?}", result))
+        EvalResult::fail(
+            "fp_recipe_with_numbers",
+            format!(
+                "false positive on numbers, expected Allow, got {:?}",
+                result
+            ),
+        )
     }
 }
 
@@ -661,7 +758,10 @@ fn test_empty_text() -> EvalResult {
     if result == Action::Allow {
         EvalResult::pass("empty_text")
     } else {
-        EvalResult::fail("empty_text", format!("expected Allow for empty, got {:?}", result))
+        EvalResult::fail(
+            "empty_text",
+            format!("expected Allow for empty, got {:?}", result),
+        )
     }
 }
 
@@ -672,7 +772,10 @@ fn test_very_long_text() -> EvalResult {
     if result == Action::Allow {
         EvalResult::pass("very_long_text")
     } else {
-        EvalResult::fail("very_long_text", format!("expected Allow, got {:?}", result))
+        EvalResult::fail(
+            "very_long_text",
+            format!("expected Allow, got {:?}", result),
+        )
     }
 }
 
@@ -681,7 +784,10 @@ fn test_unicode_emoji_heavy() -> EvalResult {
     if result == Action::Allow {
         EvalResult::pass("unicode_emoji_heavy")
     } else {
-        EvalResult::fail("unicode_emoji_heavy", format!("expected Allow, got {:?}", result))
+        EvalResult::fail(
+            "unicode_emoji_heavy",
+            format!("expected Allow, got {:?}", result),
+        )
     }
 }
 
@@ -690,7 +796,10 @@ fn test_only_punctuation() -> EvalResult {
     if result == Action::Allow {
         EvalResult::pass("only_punctuation")
     } else {
-        EvalResult::fail("only_punctuation", format!("expected Allow, got {:?}", result))
+        EvalResult::fail(
+            "only_punctuation",
+            format!("expected Allow, got {:?}", result),
+        )
     }
 }
 
@@ -710,7 +819,10 @@ fn test_newline_injection() -> EvalResult {
     if result == Action::Allow {
         EvalResult::pass("newline_injection")
     } else {
-        EvalResult::fail("newline_injection", format!("expected Allow, got {:?}", result))
+        EvalResult::fail(
+            "newline_injection",
+            format!("expected Allow, got {:?}", result),
+        )
     }
 }
 
@@ -748,7 +860,10 @@ fn test_latency_deterministic_p50() -> EvalResult {
     if p50 < 5_000 {
         EvalResult::pass("latency_deterministic_p50")
     } else {
-        EvalResult::fail("latency_deterministic_p50", format!("P50={}μs, expected <5000μs", p50))
+        EvalResult::fail(
+            "latency_deterministic_p50",
+            format!("P50={}μs, expected <5000μs", p50),
+        )
     }
 }
 
@@ -759,7 +874,10 @@ fn test_latency_deterministic_p95() -> EvalResult {
     if p95 < 50_000 {
         EvalResult::pass("latency_deterministic_p95")
     } else {
-        EvalResult::fail("latency_deterministic_p95", format!("P95={}μs, expected <50000μs", p95))
+        EvalResult::fail(
+            "latency_deterministic_p95",
+            format!("P95={}μs, expected <50000μs", p95),
+        )
     }
 }
 
@@ -770,7 +888,10 @@ fn test_latency_deterministic_p99() -> EvalResult {
     if p99 < 100_000 {
         EvalResult::pass("latency_deterministic_p99")
     } else {
-        EvalResult::fail("latency_deterministic_p99", format!("P99={}μs, expected <100000μs", p99))
+        EvalResult::fail(
+            "latency_deterministic_p99",
+            format!("P99={}μs, expected <100000μs", p99),
+        )
     }
 }
 
@@ -786,10 +907,16 @@ fn test_deterministic_only_low_tier() -> EvalResult {
         if !result.verdict.used_encoder && !result.verdict.used_slm {
             EvalResult::pass("deterministic_only_low_tier")
         } else {
-            EvalResult::fail("deterministic_only_low_tier", "used ML on deterministic-only classifier")
+            EvalResult::fail(
+                "deterministic_only_low_tier",
+                "used ML on deterministic-only classifier",
+            )
         }
     } else {
-        EvalResult::skip("deterministic_only_low_tier", "classifier has encoder/SLM attached")
+        EvalResult::skip(
+            "deterministic_only_low_tier",
+            "classifier has encoder/SLM attached",
+        )
     }
 }
 
@@ -841,39 +968,102 @@ fn build_classification_report() -> ClassificationReport {
     // Define test cases: (text, expected_action, category_label)
     let cases: &[(&str, Action, &str)] = &[
         // PII
-        ("my card is 4111 1111 1111 1111", Action::Redact, "pii_credit_card"),
+        (
+            "my card is 4111 1111 1111 1111",
+            Action::Redact,
+            "pii_credit_card",
+        ),
         ("Email me at john@test.com", Action::Redact, "pii_email"),
         ("Call (555) 123-4567", Action::Redact, "pii_phone"),
         ("SSN: 123-45-6789", Action::Redact, "pii_ssn"),
         ("IBAN: DE89370400440532013000", Action::Redact, "pii_iban"),
-        ("username: admin password: secret", Action::Redact, "pii_credentials"),
+        (
+            "username: admin password: secret",
+            Action::Redact,
+            "pii_credentials",
+        ),
         // Scam
-        ("Send $500 fee to claim your prize", Action::Warn, "scam_advance_fee"),
-        ("You've won! Claim your prize", Action::Warn, "scam_giveaway"),
-        ("Verify your account password here", Action::Warn, "scam_credential"),
-        ("Buy $500 in gift cards and send codes", Action::Warn, "scam_gift_card"),
-        ("URGENT! Send bitcoin immediately!", Action::Warn, "scam_urgency"),
+        (
+            "Send $500 fee to claim your prize",
+            Action::Warn,
+            "scam_advance_fee",
+        ),
+        (
+            "You've won! Claim your prize",
+            Action::Warn,
+            "scam_giveaway",
+        ),
+        (
+            "Verify your account password here",
+            Action::Warn,
+            "scam_credential",
+        ),
+        (
+            "Buy $500 in gift cards and send codes",
+            Action::Warn,
+            "scam_gift_card",
+        ),
+        (
+            "URGENT! Send bitcoin immediately!",
+            Action::Warn,
+            "scam_urgency",
+        ),
         // URL risk
-        ("Visit http://suspicious-site.tk/login", Action::Warn, "url_risk_tld"),
-        ("Download http://example.com/setup.exe", Action::Warn, "url_malware"),
+        (
+            "Visit http://suspicious-site.tk/login",
+            Action::Warn,
+            "url_risk_tld",
+        ),
+        (
+            "Download http://example.com/setup.exe",
+            Action::Warn,
+            "url_malware",
+        ),
         // Benign (should be Allow)
-        ("Hello, how are you today?", Action::Allow, "benign_greeting"),
-        ("I love programming in Rust", Action::Allow, "benign_general"),
+        (
+            "Hello, how are you today?",
+            Action::Allow,
+            "benign_greeting",
+        ),
+        (
+            "I love programming in Rust",
+            Action::Allow,
+            "benign_general",
+        ),
         ("The weather is nice today", Action::Allow, "benign_general"),
-        ("I'm applying for a credit card", Action::Allow, "benign_fp_banking"),
-        ("I use the Chase mobile app", Action::Allow, "benign_fp_brand"),
-        ("Mix 2 cups flour with 1 cup sugar", Action::Allow, "benign_fp_numbers"),
+        (
+            "I'm applying for a credit card",
+            Action::Allow,
+            "benign_fp_banking",
+        ),
+        (
+            "I use the Chase mobile app",
+            Action::Allow,
+            "benign_fp_brand",
+        ),
+        (
+            "Mix 2 cups flour with 1 cup sugar",
+            Action::Allow,
+            "benign_fp_numbers",
+        ),
         ("", Action::Allow, "benign_empty"),
     ];
 
-    let outcomes: Vec<ClassificationOutcome> = cases.iter().map(|(text, expected, category)| {
-        let req = ClassifyRequest::from_text(*text);
-        let result = classifier.classify(&req);
-        let predicted = format!("{:?}", result.verdict.action);
-        let actual = format!("{}", category);
-        let correct = result.verdict.action == *expected;
-        ClassificationOutcome { predicted, actual: format!("{}", category), correct }
-    }).collect();
+    let outcomes: Vec<ClassificationOutcome> = cases
+        .iter()
+        .map(|(text, expected, category)| {
+            let req = ClassifyRequest::from_text(*text);
+            let result = classifier.classify(&req);
+            let predicted = format!("{:?}", result.verdict.action);
+            let _actual = category.to_string();
+            let correct = result.verdict.action == *expected;
+            ClassificationOutcome {
+                predicted,
+                actual: category.to_string(),
+                correct,
+            }
+        })
+        .collect();
 
     ClassificationReport::from_outcomes(&outcomes)
 }

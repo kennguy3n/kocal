@@ -53,14 +53,44 @@ pub fn community_overlay_yaml(name: &str) -> Option<&'static str> {
 /// List all community overlay names.
 pub fn community_names() -> &'static [&'static str] {
     &[
-        "adult_only", "book_club", "cooking", "creative_arts", "dating",
-        "education_higher", "emergency_response", "environmental", "family",
-        "fitness", "gaming", "health_support", "hobbyist", "journalism",
-        "language_learning", "legal_support", "lgbtq_support", "marketplace",
-        "mental_health", "music", "neighborhood", "nonprofit", "open_source",
-        "parenting", "pet_owners", "photography", "political", "religious",
-        "school", "science", "seniors", "sports", "startup", "tech_support",
-        "travel", "veterans", "volunteer", "workplace",
+        "adult_only",
+        "book_club",
+        "cooking",
+        "creative_arts",
+        "dating",
+        "education_higher",
+        "emergency_response",
+        "environmental",
+        "family",
+        "fitness",
+        "gaming",
+        "health_support",
+        "hobbyist",
+        "journalism",
+        "language_learning",
+        "legal_support",
+        "lgbtq_support",
+        "marketplace",
+        "mental_health",
+        "music",
+        "neighborhood",
+        "nonprofit",
+        "open_source",
+        "parenting",
+        "pet_owners",
+        "photography",
+        "political",
+        "religious",
+        "school",
+        "science",
+        "seniors",
+        "sports",
+        "startup",
+        "tech_support",
+        "travel",
+        "veterans",
+        "volunteer",
+        "workplace",
     ]
 }
 
@@ -75,14 +105,19 @@ mod tests {
 
     fn find_rule(overlay: &serde_yaml::Value, category: u64) -> Option<serde_yaml::Value> {
         let rules = overlay.get("rules")?.as_sequence()?;
-        rules.iter().find(|r| {
-            r.get("category").and_then(|v| v.as_u64()) == Some(category)
-        }).cloned()
+        rules
+            .iter()
+            .find(|r| r.get("category").and_then(|v| v.as_u64()) == Some(category))
+            .cloned()
     }
 
     const REQUIRED_KEYS: &[&str] = &[
-        "skill_id", "parent", "schema_version", "signers",
-        "community_profile", "rules",
+        "skill_id",
+        "parent",
+        "schema_version",
+        "signers",
+        "community_profile",
+        "rules",
     ];
     const REQUIRED_PROFILE_KEYS: &[&str] = &["kind", "age_mode", "visibility", "set_by"];
     const VALID_AGE_MODES: &[&str] = &["minor_present", "mixed_age", "adult_only"];
@@ -101,7 +136,10 @@ mod tests {
         for name in community_names() {
             let val = parse_overlay(name);
             for key in REQUIRED_KEYS {
-                assert!(val.get(*key).is_some(), "{name} missing required key: {key}");
+                assert!(
+                    val.get(*key).is_some(),
+                    "{name} missing required key: {key}"
+                );
             }
         }
     }
@@ -111,7 +149,11 @@ mod tests {
         for name in community_names() {
             let val = parse_overlay(name);
             let parent = val.get("parent").and_then(|v| v.as_str());
-            assert_eq!(parent, Some("kchat.global.guardrail.baseline"), "{name} parent mismatch");
+            assert_eq!(
+                parent,
+                Some("kchat.global.guardrail.baseline"),
+                "{name} parent mismatch"
+            );
         }
     }
 
@@ -130,8 +172,12 @@ mod tests {
             let val = parse_overlay(name);
             let signers = val.get("signers").and_then(|v| v.as_sequence());
             assert!(signers.is_some(), "{name} signers should be a sequence");
-            let signer_strs: Vec<&str> = signers.unwrap().iter().filter_map(|v| v.as_str()).collect();
-            assert!(signer_strs.contains(&"trust_and_safety"), "{name} must include trust_and_safety signer");
+            let signer_strs: Vec<&str> =
+                signers.unwrap().iter().filter_map(|v| v.as_str()).collect();
+            assert!(
+                signer_strs.contains(&"trust_and_safety"),
+                "{name} must include trust_and_safety signer"
+            );
         }
     }
 
@@ -139,9 +185,14 @@ mod tests {
     fn all_communities_profile_has_required_fields() {
         for name in community_names() {
             let val = parse_overlay(name);
-            let profile = val.get("community_profile").expect(&format!("{name} should have community_profile"));
+            let profile = val
+                .get("community_profile")
+                .expect(&format!("{name} should have community_profile"));
             for key in REQUIRED_PROFILE_KEYS {
-                assert!(profile.get(*key).is_some(), "{name} community_profile missing: {key}");
+                assert!(
+                    profile.get(*key).is_some(),
+                    "{name} community_profile missing: {key}"
+                );
             }
         }
     }
@@ -155,7 +206,10 @@ mod tests {
                 .and_then(|v| v.get("age_mode"))
                 .and_then(|v| v.as_str())
                 .expect(&format!("{name} should have age_mode"));
-            assert!(VALID_AGE_MODES.contains(&age_mode), "{name} has invalid age_mode: {age_mode}");
+            assert!(
+                VALID_AGE_MODES.contains(&age_mode),
+                "{name} has invalid age_mode: {age_mode}"
+            );
         }
     }
 
@@ -163,9 +217,18 @@ mod tests {
     fn all_communities_skill_id_format() {
         for name in community_names() {
             let val = parse_overlay(name);
-            let skill_id = val.get("skill_id").and_then(|v| v.as_str()).expect(&format!("{name} should have skill_id"));
-            assert!(skill_id.starts_with("kchat.community."), "{name} skill_id should start with kchat.community.");
-            assert!(skill_id.ends_with(".guardrail.v1"), "{name} skill_id should end with .guardrail.v1");
+            let skill_id = val
+                .get("skill_id")
+                .and_then(|v| v.as_str())
+                .expect(&format!("{name} should have skill_id"));
+            assert!(
+                skill_id.starts_with("kchat.community."),
+                "{name} skill_id should start with kchat.community."
+            );
+            assert!(
+                skill_id.ends_with(".guardrail.v1"),
+                "{name} skill_id should end with .guardrail.v1"
+            );
         }
     }
 
@@ -173,12 +236,18 @@ mod tests {
     fn all_communities_rule_categories_in_taxonomy_range() {
         for name in community_names() {
             let val = parse_overlay(name);
-            let rules = val.get("rules").and_then(|v| v.as_sequence()).expect(&format!("{name} rules should be a sequence"));
+            let rules = val
+                .get("rules")
+                .and_then(|v| v.as_sequence())
+                .expect(&format!("{name} rules should be a sequence"));
             for rule in rules {
                 let cat = rule.get("category").and_then(|v| v.as_u64());
                 assert!(cat.is_some(), "{name}: rule.category must be an integer");
                 let cat = cat.unwrap();
-                assert!(cat <= 16, "{name}: rule.category={cat} outside 0..16 taxonomy range");
+                assert!(
+                    cat <= 16,
+                    "{name}: rule.category={cat} outside 0..16 taxonomy range"
+                );
             }
         }
     }
@@ -187,16 +256,25 @@ mod tests {
     fn all_communities_rule_actions_valid() {
         for name in community_names() {
             let val = parse_overlay(name);
-            let rules = val.get("rules").and_then(|v| v.as_sequence()).expect(&format!("{name} rules should be a sequence"));
+            let rules = val
+                .get("rules")
+                .and_then(|v| v.as_sequence())
+                .expect(&format!("{name} rules should be a sequence"));
             for rule in rules {
                 if let Some(action) = rule.get("action").and_then(|v| v.as_str()) {
-                    assert!(VALID_ACTIONS.contains(&action), "{name}: invalid action: {action}");
+                    assert!(
+                        VALID_ACTIONS.contains(&action),
+                        "{name}: invalid action: {action}"
+                    );
                 }
                 if let Some(rule_set) = rule.get("rule_set").and_then(|v| v.as_sequence()) {
                     for sub in rule_set {
                         let action = sub.get("action").and_then(|v| v.as_str());
                         if let Some(a) = action {
-                            assert!(VALID_ACTIONS.contains(&a), "{name}: invalid sub-rule action: {a}");
+                            assert!(
+                                VALID_ACTIONS.contains(&a),
+                                "{name}: invalid sub-rule action: {a}"
+                            );
                         }
                     }
                 }
@@ -214,7 +292,10 @@ mod tests {
     #[test]
     fn school_age_mode_minor_present_and_blocks_sexual_adult() {
         let val = parse_overlay("school");
-        let age_mode = val.get("community_profile").and_then(|v| v.get("age_mode")).and_then(|v| v.as_str());
+        let age_mode = val
+            .get("community_profile")
+            .and_then(|v| v.get("age_mode"))
+            .and_then(|v| v.as_str());
         assert_eq!(age_mode, Some("minor_present"));
         let sexual = find_rule(&val, 10).expect("school must define a SEXUAL_ADULT rule");
         let action = sexual.get("action").and_then(|v| v.as_str());
@@ -224,7 +305,10 @@ mod tests {
     #[test]
     fn adult_only_age_mode() {
         let val = parse_overlay("adult_only");
-        let age_mode = val.get("community_profile").and_then(|v| v.get("age_mode")).and_then(|v| v.as_str());
+        let age_mode = val
+            .get("community_profile")
+            .and_then(|v| v.get("age_mode"))
+            .and_then(|v| v.as_str());
         assert_eq!(age_mode, Some("adult_only"));
     }
 
@@ -240,28 +324,48 @@ mod tests {
     fn workplace_has_scam_links_counter() {
         let val = parse_overlay("workplace");
         let counters = val.get("group_risk_counters").and_then(|v| v.as_sequence());
-        assert!(counters.is_some(), "workplace should have group_risk_counters");
-        let ids: Vec<&str> = counters.unwrap().iter()
+        assert!(
+            counters.is_some(),
+            "workplace should have group_risk_counters"
+        );
+        let ids: Vec<&str> = counters
+            .unwrap()
+            .iter()
             .filter_map(|c| c.get("counter_id").and_then(|v| v.as_str()))
             .collect();
-        assert!(ids.contains(&"group_scam_links_24h"), "workplace should have group_scam_links_24h counter");
+        assert!(
+            ids.contains(&"group_scam_links_24h"),
+            "workplace should have group_scam_links_24h counter"
+        );
     }
 
     #[test]
     fn marketplace_tightens_scam_and_illegal_goods() {
         let val = parse_overlay("marketplace");
         let scam = find_rule(&val, 7).expect("marketplace must define SCAM_FRAUD rule");
-        assert_eq!(scam.get("action").and_then(|v| v.as_str()), Some("strong_warn"));
+        assert_eq!(
+            scam.get("action").and_then(|v| v.as_str()),
+            Some("strong_warn")
+        );
         let illegal = find_rule(&val, 12).expect("marketplace must define ILLEGAL_GOODS rule");
-        assert_eq!(illegal.get("action").and_then(|v| v.as_str()), Some("strong_warn"));
+        assert_eq!(
+            illegal.get("action").and_then(|v| v.as_str()),
+            Some("strong_warn")
+        );
         let drugs = find_rule(&val, 11).expect("marketplace must define DRUGS_WEAPONS rule");
-        assert_eq!(drugs.get("action").and_then(|v| v.as_str()), Some("strong_warn"));
+        assert_eq!(
+            drugs.get("action").and_then(|v| v.as_str()),
+            Some("strong_warn")
+        );
     }
 
     #[test]
     fn political_tightens_civic_misinfo() {
         let val = parse_overlay("political");
-        let age_mode = val.get("community_profile").and_then(|v| v.get("age_mode")).and_then(|v| v.as_str());
+        let age_mode = val
+            .get("community_profile")
+            .and_then(|v| v.get("age_mode"))
+            .and_then(|v| v.as_str());
         assert_eq!(age_mode, Some("adult_only"));
         let civic = find_rule(&val, 14).expect("political must define MISINFORMATION_CIVIC rule");
         assert_eq!(civic.get("action").and_then(|v| v.as_str()), Some("warn"));
@@ -272,84 +376,141 @@ mod tests {
         let val = parse_overlay("gaming");
         let counters = val.get("group_risk_counters").and_then(|v| v.as_sequence());
         assert!(counters.is_some(), "gaming should have group_risk_counters");
-        let ids: Vec<&str> = counters.unwrap().iter()
+        let ids: Vec<&str> = counters
+            .unwrap()
+            .iter()
             .filter_map(|c| c.get("counter_id").and_then(|v| v.as_str()))
             .collect();
-        assert!(ids.contains(&"group_violence_threats_7d"), "gaming should have group_violence_threats_7d counter");
+        assert!(
+            ids.contains(&"group_violence_threats_7d"),
+            "gaming should have group_violence_threats_7d counter"
+        );
     }
 
     #[test]
     fn family_age_mode_mixed_and_strong_warn_sexual_adult() {
         let val = parse_overlay("family");
-        let age_mode = val.get("community_profile").and_then(|v| v.get("age_mode")).and_then(|v| v.as_str());
+        let age_mode = val
+            .get("community_profile")
+            .and_then(|v| v.get("age_mode"))
+            .and_then(|v| v.as_str());
         assert_eq!(age_mode, Some("mixed_age"));
         let sex = find_rule(&val, 10).expect("family must define SEXUAL_ADULT rule");
-        assert_eq!(sex.get("action").and_then(|v| v.as_str()), Some("strong_warn"));
+        assert_eq!(
+            sex.get("action").and_then(|v| v.as_str()),
+            Some("strong_warn")
+        );
     }
 
     #[test]
     fn dating_age_mode_adult_only() {
         let val = parse_overlay("dating");
-        let age_mode = val.get("community_profile").and_then(|v| v.get("age_mode")).and_then(|v| v.as_str());
+        let age_mode = val
+            .get("community_profile")
+            .and_then(|v| v.get("age_mode"))
+            .and_then(|v| v.as_str());
         assert_eq!(age_mode, Some("adult_only"));
         let sex = find_rule(&val, 10).expect("dating must define SEXUAL_ADULT rule");
-        assert_eq!(sex.get("action").and_then(|v| v.as_str()), Some("label_only"));
+        assert_eq!(
+            sex.get("action").and_then(|v| v.as_str()),
+            Some("label_only")
+        );
         let scam = find_rule(&val, 7).expect("dating must define SCAM_FRAUD rule");
-        assert_eq!(scam.get("action").and_then(|v| v.as_str()), Some("strong_warn"));
+        assert_eq!(
+            scam.get("action").and_then(|v| v.as_str()),
+            Some("strong_warn")
+        );
     }
 
     #[test]
     fn mental_health_loosens_self_harm_for_peer_support() {
         let val = parse_overlay("mental_health");
-        let age_mode = val.get("community_profile").and_then(|v| v.get("age_mode")).and_then(|v| v.as_str());
+        let age_mode = val
+            .get("community_profile")
+            .and_then(|v| v.get("age_mode"))
+            .and_then(|v| v.as_str());
         assert_eq!(age_mode, Some("adult_only"));
         let sh = find_rule(&val, 2).expect("mental_health must define SELF_HARM rule");
-        assert_eq!(sh.get("action").and_then(|v| v.as_str()), Some("label_only"));
+        assert_eq!(
+            sh.get("action").and_then(|v| v.as_str()),
+            Some("label_only")
+        );
     }
 
     #[test]
     fn journalism_loosens_extremism_for_news_context() {
         let val = parse_overlay("journalism");
-        let age_mode = val.get("community_profile").and_then(|v| v.get("age_mode")).and_then(|v| v.as_str());
+        let age_mode = val
+            .get("community_profile")
+            .and_then(|v| v.get("age_mode"))
+            .and_then(|v| v.as_str());
         assert_eq!(age_mode, Some("adult_only"));
         let ext = find_rule(&val, 4).expect("journalism must define EXTREMISM rule");
-        assert_eq!(ext.get("action").and_then(|v| v.as_str()), Some("label_only"));
+        assert_eq!(
+            ext.get("action").and_then(|v| v.as_str()),
+            Some("label_only")
+        );
     }
 
     #[test]
     fn seniors_tightens_scam() {
         let val = parse_overlay("seniors");
-        let age_mode = val.get("community_profile").and_then(|v| v.get("age_mode")).and_then(|v| v.as_str());
+        let age_mode = val
+            .get("community_profile")
+            .and_then(|v| v.get("age_mode"))
+            .and_then(|v| v.as_str());
         assert_eq!(age_mode, Some("adult_only"));
         let scam = find_rule(&val, 7).expect("seniors must define SCAM_FRAUD rule");
-        assert_eq!(scam.get("action").and_then(|v| v.as_str()), Some("strong_warn"));
+        assert_eq!(
+            scam.get("action").and_then(|v| v.as_str()),
+            Some("strong_warn")
+        );
         let pii = find_rule(&val, 9).expect("seniors must define PRIVATE_DATA rule");
-        assert_eq!(pii.get("action").and_then(|v| v.as_str()), Some("strong_warn"));
+        assert_eq!(
+            pii.get("action").and_then(|v| v.as_str()),
+            Some("strong_warn")
+        );
     }
 
     #[test]
     fn religious_tightens_hate() {
         let val = parse_overlay("religious");
         let hate = find_rule(&val, 6).expect("religious must define HATE rule");
-        assert_eq!(hate.get("action").and_then(|v| v.as_str()), Some("strong_warn"));
+        assert_eq!(
+            hate.get("action").and_then(|v| v.as_str()),
+            Some("strong_warn")
+        );
     }
 
     #[test]
     fn lgbtq_support_strengthens_hate_and_harassment() {
         let val = parse_overlay("lgbtq_support");
-        let age_mode = val.get("community_profile").and_then(|v| v.get("age_mode")).and_then(|v| v.as_str());
+        let age_mode = val
+            .get("community_profile")
+            .and_then(|v| v.get("age_mode"))
+            .and_then(|v| v.as_str());
         assert_eq!(age_mode, Some("adult_only"));
         let hate = find_rule(&val, 6).expect("lgbtq_support must define HATE rule");
-        assert_eq!(hate.get("action").and_then(|v| v.as_str()), Some("strong_warn"));
+        assert_eq!(
+            hate.get("action").and_then(|v| v.as_str()),
+            Some("strong_warn")
+        );
         let har = find_rule(&val, 5).expect("lgbtq_support must define HARASSMENT rule");
-        assert_eq!(har.get("action").and_then(|v| v.as_str()), Some("strong_warn"));
+        assert_eq!(
+            har.get("action").and_then(|v| v.as_str()),
+            Some("strong_warn")
+        );
     }
 
     #[test]
     fn emergency_response_tightens_health_misinformation() {
         let val = parse_overlay("emergency_response");
-        let health = find_rule(&val, 13).expect("emergency_response must define MISINFORMATION_HEALTH rule");
-        assert_eq!(health.get("action").and_then(|v| v.as_str()), Some("strong_warn"));
+        let health =
+            find_rule(&val, 13).expect("emergency_response must define MISINFORMATION_HEALTH rule");
+        assert_eq!(
+            health.get("action").and_then(|v| v.as_str()),
+            Some("strong_warn")
+        );
     }
 
     #[test]

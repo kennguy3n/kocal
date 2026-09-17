@@ -53,6 +53,7 @@ struct ShutterstockSearchResponse {
 struct ShutterstockImage {
     id: String,
     #[serde(default)]
+    #[allow(dead_code)]
     aspect_ratio: Option<f32>,
     #[serde(default)]
     description: Option<String>,
@@ -110,7 +111,7 @@ impl ImageSearchProvider for ShutterstockProvider {
             return Err(ImageError::KeyMissing(self.env_var_name()));
         }
 
-        let per_page = req.per_page.min(100).max(1);
+        let per_page = req.per_page.clamp(1, 100);
         let provider_id = self.id();
 
         retry_with_backoff(provider_id, || async move {
@@ -210,10 +211,7 @@ impl ImageSearchProvider for ShutterstockProvider {
                                 "https://www.shutterstock.com/g/{}",
                                 img.contributor.id
                             ),
-                            source_url: format!(
-                                "https://www.shutterstock.com/image/{}",
-                                img.id
-                            ),
+                            source_url: format!("https://www.shutterstock.com/image/{}", img.id),
                         },
                         license,
                         color: None,
@@ -224,7 +222,11 @@ impl ImageSearchProvider for ShutterstockProvider {
             Ok(ImageSearchResponse {
                 results,
                 total: parsed.total_count,
-                page: if parsed.page == 0 { req.page } else { parsed.page },
+                page: if parsed.page == 0 {
+                    req.page
+                } else {
+                    parsed.page
+                },
                 per_page: if parsed.per_page == 0 {
                     per_page
                 } else {

@@ -41,6 +41,7 @@ impl Default for UnsplashProvider {
 #[derive(Debug, Deserialize)]
 struct UnsplashSearchResponse {
     total: u64,
+    #[allow(dead_code)]
     total_pages: u64,
     results: Vec<UnsplashPhoto>,
 }
@@ -64,9 +65,11 @@ struct UnsplashPhoto {
 #[derive(Debug, Deserialize)]
 struct UnsplashUrls {
     regular: String,
+    #[allow(dead_code)]
     small: String,
     thumb: String,
     #[serde(default)]
+    #[allow(dead_code)]
     raw: Option<String>,
 }
 
@@ -74,6 +77,7 @@ struct UnsplashUrls {
 struct UnsplashUser {
     name: String,
     #[serde(default)]
+    #[allow(dead_code)]
     username: String,
     links: UnsplashUserLinks,
 }
@@ -115,7 +119,7 @@ impl ImageSearchProvider for UnsplashProvider {
             return Err(ImageError::KeyMissing(self.env_var_name()));
         }
 
-        let per_page = req.per_page.min(30).max(1);
+        let per_page = req.per_page.clamp(1, 30);
         let provider_id = self.id();
 
         retry_with_backoff(provider_id, || async move {
@@ -128,7 +132,10 @@ impl ImageSearchProvider for UnsplashProvider {
                 .query(&[("per_page", &per_page.to_string())])
                 .query(&[("page", &req.page.to_string())])
                 // Default to high content filter for safety.
-                .query(&[("content_filter", if req.safesearch { "high" } else { "low" })]);
+                .query(&[(
+                    "content_filter",
+                    if req.safesearch { "high" } else { "low" },
+                )]);
 
             if let Some(o) = req.orientation {
                 q = q.query(&[("orientation", o.unsplash())]);
@@ -171,10 +178,7 @@ impl ImageSearchProvider for UnsplashProvider {
                 .into_iter()
                 .map(|p| {
                     let orientation = ImageOrientation::from_dims(p.width, p.height);
-                    let alt = p
-                        .alt_description
-                        .or(p.description)
-                        .unwrap_or_default();
+                    let alt = p.alt_description.or(p.description).unwrap_or_default();
                     ImageResult {
                         id: p.id,
                         provider: provider_id.into(),

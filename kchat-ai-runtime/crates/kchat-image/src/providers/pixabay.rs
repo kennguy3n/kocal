@@ -70,6 +70,7 @@ struct PixabayHit {
     page_url: String,
     #[serde(default)]
     #[serde(rename = "imageType")]
+    #[allow(dead_code)]
     image_type: Option<String>,
 }
 
@@ -100,7 +101,7 @@ impl ImageSearchProvider for PixabayProvider {
             return Err(ImageError::KeyMissing(self.env_var_name()));
         }
 
-        let per_page = req.per_page.min(200).max(3);
+        let per_page = req.per_page.clamp(3, 200);
         let provider_id = self.id();
 
         retry_with_backoff(provider_id, || async move {
@@ -170,10 +171,8 @@ impl ImageSearchProvider for PixabayProvider {
                 .map(|h| {
                     let orientation = ImageOrientation::from_dims(h.image_width, h.image_height);
                     let photographer = h.user;
-                    let photographer_url = format!(
-                        "https://pixabay.com/users/{}-{}",
-                        photographer, h.user_id
-                    );
+                    let photographer_url =
+                        format!("https://pixabay.com/users/{}-{}", photographer, h.user_id);
                     ImageResult {
                         id: h.id.to_string(),
                         provider: provider_id.into(),

@@ -8,7 +8,8 @@ authors.workspace = true
 [features]
 default = []
 onnx-runtime = ["dep:ort", "dep:tokenizers", "dep:ndarray"]
-gguf-runtime = ["dep:reqwest", "dep:serde_json"]
+# In-process GGUF encoder via llama-cpp-2 (no subprocess/HTTP — works on mobile)
+gguf-runtime = ["dep:llama-cpp-2", "dep:serde_json"]
 domain-adapters = ["dep:rusqlite"]
 
 [dependencies]
@@ -23,8 +24,8 @@ ort = { version = "=2.0.0-rc.10", default-features = false, features = ["load-dy
 tokenizers = { version = "0.21", default-features = false, features = ["fancy-regex"], optional = true }
 ndarray = { version = "0.16", optional = true }
 
-# Optional GGUF deps (for llama-server embedding backend)
-reqwest = { version = "0.12", default-features = false, features = ["json", "blocking"], optional = true }
+# Optional GGUF deps (in-process llama.cpp embedding backend)
+llama-cpp-2 = { version = "0.1", default-features = false, optional = true }
 serde_json = { workspace = true, optional = true }
 
 # Optional domain-adapter persistence

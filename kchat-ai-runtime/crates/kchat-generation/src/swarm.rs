@@ -41,9 +41,7 @@ impl SwarmConfig {
     /// Validate config values are within reasonable bounds.
     pub fn validate(&self) -> Result<(), SwarmError> {
         if self.num_peers == 0 {
-            return Err(SwarmError::GenerationFailed(
-                "num_peers must be > 0".into(),
-            ));
+            return Err(SwarmError::GenerationFailed("num_peers must be > 0".into()));
         }
         if self.num_peers > 20 {
             return Err(SwarmError::GenerationFailed(
@@ -141,21 +139,33 @@ impl Swarm {
             tracing::warn!("SwarmConfig.num_peers was 0, clamping to 1");
             config.num_peers = 1;
         } else if config.num_peers > 20 {
-            tracing::warn!("SwarmConfig.num_peers was {}, clamping to 20", config.num_peers);
+            tracing::warn!(
+                "SwarmConfig.num_peers was {}, clamping to 20",
+                config.num_peers
+            );
             config.num_peers = 20;
         }
         if config.consensus_threshold < 0.0 {
-            tracing::warn!("SwarmConfig.consensus_threshold was {}, clamping to 0.0", config.consensus_threshold);
+            tracing::warn!(
+                "SwarmConfig.consensus_threshold was {}, clamping to 0.0",
+                config.consensus_threshold
+            );
             config.consensus_threshold = 0.0;
         } else if config.consensus_threshold > 1.0 {
-            tracing::warn!("SwarmConfig.consensus_threshold was {}, clamping to 1.0", config.consensus_threshold);
+            tracing::warn!(
+                "SwarmConfig.consensus_threshold was {}, clamping to 1.0",
+                config.consensus_threshold
+            );
             config.consensus_threshold = 1.0;
         }
         if config.max_rounds == 0 {
             tracing::warn!("SwarmConfig.max_rounds was 0, clamping to 1");
             config.max_rounds = 1;
         } else if config.max_rounds > 10 {
-            tracing::warn!("SwarmConfig.max_rounds was {}, clamping to 10", config.max_rounds);
+            tracing::warn!(
+                "SwarmConfig.max_rounds was {}, clamping to 10",
+                config.max_rounds
+            );
             config.max_rounds = 10;
         }
         Self {
@@ -511,10 +521,7 @@ mod tests {
 
     #[test]
     fn test_compute_consensus_disjoint() {
-        let outputs = vec![
-            "alpha beta".to_string(),
-            "gamma delta".to_string(),
-        ];
+        let outputs = vec!["alpha beta".to_string(), "gamma delta".to_string()];
         let score = Swarm::compute_consensus(&outputs);
         assert!((score - 0.0).abs() < f64::EPSILON);
     }
@@ -522,10 +529,7 @@ mod tests {
     #[test]
     fn test_compute_consensus_partial() {
         // Jaccard: intersection {the, cat} = 2, union {the, cat, dog, sat} = 4 => 0.5
-        let outputs = vec![
-            "the cat sat".to_string(),
-            "the cat dog".to_string(),
-        ];
+        let outputs = vec!["the cat sat".to_string(), "the cat dog".to_string()];
         let score = Swarm::compute_consensus(&outputs);
         assert!((score - 0.5).abs() < 1e-9);
     }
@@ -567,7 +571,9 @@ mod tests {
         let backends: Vec<&dyn BackendAdapter> = vec![&peer];
         let config = GenerationConfig::default();
 
-        let result = swarm.generate("summarize this", &config, &backends).unwrap();
+        let result = swarm
+            .generate("summarize this", &config, &backends)
+            .unwrap();
         // Single peer => consensus 1.0 => terminates in round 1
         assert!((result.consensus_score - 1.0).abs() < f64::EPSILON);
         assert_eq!(result.num_rounds, 1);
@@ -594,7 +600,9 @@ mod tests {
         let backends: Vec<&dyn BackendAdapter> = vec![&p1, &p2, &p3];
         let config = GenerationConfig::default();
 
-        let result = swarm.generate("what is the answer", &config, &backends).unwrap();
+        let result = swarm
+            .generate("what is the answer", &config, &backends)
+            .unwrap();
         assert!((result.consensus_score - 1.0).abs() < f64::EPSILON);
         assert_eq!(result.num_rounds, 1);
         assert_eq!(result.final_text, "the answer is forty two");

@@ -10,6 +10,7 @@ default = ["text-pipeline"]
 text-pipeline = []
 encoder = []
 onnx-runtime = ["encoder", "kchat-encoder/onnx-runtime", "dep:ort", "dep:tokenizers", "dep:ndarray"]
+gguf-encoder = ["encoder", "kchat-encoder/gguf-runtime"]
 onnx-runtime-vision = ["onnx-runtime", "dep:image"]
 skill-pack = ["text-pipeline", "dep:zip", "dep:serde_yaml", "zip/deflate"]
 
@@ -48,3 +49,8 @@ serde_yaml = { version = "0.9", optional = true }
 tempfile = "3"
 rand = "0.8"
 chrono = { workspace = true }
+criterion = { workspace = true }
+
+[[bench]]
+name = "safety"
+harness = false

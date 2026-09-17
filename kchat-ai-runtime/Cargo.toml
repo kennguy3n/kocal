@@ -9,6 +9,7 @@ members = [
     "crates/kchat-generation",
     "crates/kchat-action",
     "crates/kchat-image",
+    "crates/kchat-runtime",
     "crates/kchat-bindings",
     "crates/kchat-wasm",
     "sidecars/kchat-generative-sidecar",
@@ -46,6 +47,8 @@ uuid = { version = "1.10", features = ["v4", "serde"] }
 once_cell = "1.19"
 parking_lot = "0.12"
 bytes = "1.7"
+# Benchmarks
+criterion = "0.5"
 # HTTP client (image search providers)
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 async-trait = "0.1"
@@ -57,4 +60,9 @@ codegen-units = 1
 strip = true
 
 [profile.dev]
+# NOTE: opt-level=1 on aarch64 exposed an LLVM miscompile of
+# `match (tier, n) { (High, n) if n > 1 => min(n, 4), _ => 1 }` — the `n > 1`
+# guard was folded away (rustc 1.96.1/1.97.0). The branch in
+# kchat-runtime's run_skill is restructured to avoid the pattern; do not
+# reintroduce a match-arm guard that folds a discriminant + scalar test.
 opt-level = 1

@@ -314,7 +314,8 @@ mod tests {
         {
             let mut zw = ZipWriter::new(Cursor::new(&mut buf));
             for (name, bytes) in entries {
-                zw.start_file::<&str, ()>(*name, FileOptions::default()).unwrap();
+                zw.start_file::<&str, ()>(*name, FileOptions::default())
+                    .unwrap();
                 zw.write_all(bytes).unwrap();
             }
             zw.finish().unwrap();

@@ -98,8 +98,10 @@ pub struct DeviceCapabilities {
 impl DeviceCapabilities {
     /// Returns true if the device is in a state that allows generative inference.
     pub fn allows_generative(&self) -> bool {
-        !matches!(self.thermal_state, ThermalState::Serious | ThermalState::Critical)
-            && self.app_state == AppState::Foreground
+        !matches!(
+            self.thermal_state,
+            ThermalState::Serious | ThermalState::Critical
+        ) && self.app_state == AppState::Foreground
     }
 
     /// Returns the safe AI memory budget in bytes (70% of safe allocatable).
@@ -364,16 +366,16 @@ mod apple {
                 .args(["-g", "therm"])
                 .output()
                 .ok()
-                .and_then(|out| {
+                .map(|out| {
                     let stdout = String::from_utf8_lossy(&out.stdout);
                     if stdout.contains("Critical") {
-                        Some(ThermalState::Critical)
+                        ThermalState::Critical
                     } else if stdout.contains("Serious") {
-                        Some(ThermalState::Serious)
+                        ThermalState::Serious
                     } else if stdout.contains("Fair") {
-                        Some(ThermalState::Fair)
+                        ThermalState::Fair
                     } else {
-                        Some(ThermalState::Nominal)
+                        ThermalState::Nominal
                     }
                 })
                 .unwrap_or(ThermalState::Nominal)
@@ -425,7 +427,11 @@ mod linux {
                             }
                         })
                         .sum::<u32>();
-                    if count > 0 { Some(count) } else { None }
+                    if count > 0 {
+                        Some(count)
+                    } else {
+                        None
+                    }
                 })
         }
 
@@ -499,7 +505,11 @@ mod linux {
             if let Ok(entries) = std::fs::read_dir("/sys/class/thermal/") {
                 for entry in entries.flatten() {
                     let path = entry.path();
-                    if path.file_name().map(|n| n.to_string_lossy().starts_with("thermal_zone")).unwrap_or(false) {
+                    if path
+                        .file_name()
+                        .map(|n| n.to_string_lossy().starts_with("thermal_zone"))
+                        .unwrap_or(false)
+                    {
                         let temp_path = path.join("temp");
                         if let Ok(temp_str) = std::fs::read_to_string(&temp_path) {
                             if let Ok(temp) = temp_str.trim().parse::<i64>() {
@@ -601,7 +611,6 @@ mod windows {
             ThermalState::Nominal
         }
     }
-
 }
 
 // --- Fallback (unknown platform) --------------------------------------------
@@ -797,7 +806,10 @@ mod tests {
         // May fail if safe_ai_budget < 256MB (very low-end device)
         // On a dev machine it should pass
         if caps.safe_ai_budget() >= 256 * 1024 * 1024 {
-            assert!(result.is_ok(), "calibrate should succeed with adequate budget");
+            assert!(
+                result.is_ok(),
+                "calibrate should succeed with adequate budget"
+            );
         }
     }
 }

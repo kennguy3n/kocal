@@ -821,7 +821,10 @@ impl WhisperMelKernel {
 /// Returns the `[80 × 3000]` log-mel grid as a flat
 /// row-major `Vec<f32>` of length 240_000. Errors map to
 /// [`AsrError::AudioDecode`].
-pub fn whisper_log_mel_from_wav(wav_bytes: &[u8], kernel: &WhisperMelKernel) -> AsrResult<Vec<f32>> {
+pub fn whisper_log_mel_from_wav(
+    wav_bytes: &[u8],
+    kernel: &WhisperMelKernel,
+) -> AsrResult<Vec<f32>> {
     let decoded = whisper_decode_wav(wav_bytes)?;
     let mono16k = whisper_to_mono_16k(&decoded);
     let padded = whisper_pad_or_truncate(mono16k);

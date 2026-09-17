@@ -28,8 +28,7 @@ pub use error::{CoreError, Result};
 pub use governor::{GovernorConfig, ResourceGovernor};
 pub use ids::{ArtifactId, ModelPackId, PolicyPackId, TaskId, TenantId, ToolId, UserId};
 pub use manifest::{
-    ManifestSignature, ModelPackManifest, PackChunk, PackType, RuntimeManifest,
-    SignedManifest,
+    ManifestSignature, ModelPackManifest, PackChunk, PackType, RuntimeManifest, SignedManifest,
 };
 pub use model_manager::ModelManager;
 pub use registry::{ModelRegistry, RegistryEntry};

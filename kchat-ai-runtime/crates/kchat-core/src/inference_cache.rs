@@ -275,9 +275,7 @@ impl<'a> LocalStoreInferenceCache<'a> {
                 .map_err(|e| CoreError::Storage(format!("inference_cache scan: {e}")))?;
             let mut out = Vec::new();
             for r in mapped {
-                out.push(r.map_err(|e| {
-                    CoreError::Storage(format!("inference_cache scan: {e}"))
-                })?);
+                out.push(r.map_err(|e| CoreError::Storage(format!("inference_cache scan: {e}")))?);
             }
             out
         };

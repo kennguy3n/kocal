@@ -116,6 +116,6 @@ pub use schema::{
     Lexicon, LexiconEntry, RegexPattern, RegexSet, SkillPack, SkillPackManifest, TaxonomyConfig,
 };
 pub use verifier::{
-    verify_skill_pack, verify_skill_pack_with_limit, DEFAULT_MAX_UNCOMPRESSED_SIZE, SkillPackSource,
-    VerificationResult,
+    verify_skill_pack, verify_skill_pack_with_limit, SkillPackSource, VerificationResult,
+    DEFAULT_MAX_UNCOMPRESSED_SIZE,
 };
