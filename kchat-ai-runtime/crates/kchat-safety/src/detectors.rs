@@ -885,7 +885,7 @@ impl MalwareUrlDetector {
             Regex::new(r#"(?i)/(?:setup|install|update|patch|firmware|crack|cracked|keygen|serial|warez|spy|hack|steal)(?:[/\.?\-]|$)"#).unwrap()
         });
         let suspicious_url_re = SUSPICIOUS_URL_RE.get_or_init(|| {
-            Regex::new(r#"(?i)/(?:crack|cracked|keygen|warez|spy-?tool|phone-?track|hack-?insta|steal|phish|spy-?tools|phone-?tracker)"#).unwrap()
+            Regex::new(r#"(?i)/(?:crack|cracked|keygen|warez|spy-?tool|phone-?track|hack-?insta|steal|spy-?tools|phone-?tracker)"#).unwrap()
         });
 
         let mut signals = Vec::new();

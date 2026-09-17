@@ -1204,17 +1204,17 @@ fn test_idle_unload_timeout(p: &DeviceProfile) -> EvalResult {
 fn test_context_cap_mobile() -> EvalResult {
     let mut errors: Vec<String> = Vec::new();
 
-    if DeviceTier::Low.context_cap_for_platform("ios") != 1024 {
-        errors.push("Low/ios context cap != 1024".into());
+    if DeviceTier::Low.context_cap_for_platform("ios") != 4096 {
+        errors.push("Low/ios context cap != 4096".into());
     }
-    if DeviceTier::Medium.context_cap_for_platform("android") != 4096 {
-        errors.push("Medium/android context cap != 4096".into());
+    if DeviceTier::Medium.context_cap_for_platform("android") != 8192 {
+        errors.push("Medium/android context cap != 8192".into());
     }
-    if DeviceTier::High.context_cap_for_platform("android") != 8192 {
-        errors.push("High/android context cap != 8192".into());
+    if DeviceTier::High.context_cap_for_platform("android") != 16384 {
+        errors.push("High/android context cap != 16384".into());
     }
-    if DeviceTier::High.context_cap_for_platform("ios") != 4096 {
-        errors.push("High/ios context cap != 4096".into());
+    if DeviceTier::High.context_cap_for_platform("ios") != 16384 {
+        errors.push("High/ios context cap != 16384".into());
     }
 
     if errors.is_empty() {
@@ -1227,11 +1227,11 @@ fn test_context_cap_mobile() -> EvalResult {
 fn test_context_cap_desktop() -> EvalResult {
     let mut errors: Vec<String> = Vec::new();
 
-    if DeviceTier::Low.context_cap_for_platform("macos") != 2048 {
-        errors.push("Low/macos context cap != 2048".into());
+    if DeviceTier::Low.context_cap_for_platform("macos") != 4096 {
+        errors.push("Low/macos context cap != 4096".into());
     }
-    if DeviceTier::Medium.context_cap_for_platform("windows") != 4096 {
-        errors.push("Medium/windows context cap != 4096".into());
+    if DeviceTier::Medium.context_cap_for_platform("windows") != 8192 {
+        errors.push("Medium/windows context cap != 8192".into());
     }
     if DeviceTier::High.context_cap_for_platform("macos") != 16384 {
         errors.push("High/macos context cap != 16384".into());
@@ -1328,13 +1328,13 @@ fn test_registry_finds_model_for_high_tier(registry: &ModelRegistry) -> EvalResu
         let mut meta = HashMap::new();
         meta.insert("count".into(), format!("{}", results.len()));
         meta.insert("first".into(), results[0].pack_id.clone());
-        // High tier should find all 2 generative models
-        // (Bonsai-1.7B-MLX-1bit, Bonsai-1.7B-Q1_0)
-        if results.len() != 2 {
+        // High tier should find all 7 generative models
+        // (4 Bonsai 1/2-bit + 3 Qwen3 Q4_K_M)
+        if results.len() != 7 {
             EvalResult::fail(
                 "registry_high_tier_model",
                 format!(
-                    "expected 2 generative models for High tier, got {}",
+                    "expected 7 generative models for High tier, got {}",
                     results.len()
                 ),
             )
@@ -1345,11 +1345,11 @@ fn test_registry_finds_model_for_high_tier(registry: &ModelRegistry) -> EvalResu
 }
 
 fn test_registry_finds_no_model_for_low_tier(registry: &ModelRegistry) -> EvalResult {
-    // Low tier should find 2 Bonsai-1.7B generative models (MLX + GGUF)
+    // Low tier should find 5 generative models (4 Bonsai 1/2-bit + Qwen3-0.6B)
     let low_results = registry.find_for_task("summarize", MinTier::Low);
     let mut errors = Vec::new();
     if low_results.is_empty() {
-        errors.push("no generative models found for Low tier (expected 2 Bonsai-1.7B)".into());
+        errors.push("no generative models found for Low tier (expected 5)".into());
     } else {
         // Verify all Low tier models fit in 750MB mobile budget
         for m in &low_results {
@@ -1361,10 +1361,10 @@ fn test_registry_finds_no_model_for_low_tier(registry: &ModelRegistry) -> EvalRe
                 ));
             }
         }
-        // Should find exactly 2 models
-        if low_results.len() != 2 {
+        // Should find exactly 5 models
+        if low_results.len() != 5 {
             errors.push(format!(
-                "expected 2 Low tier generative models, got {}",
+                "expected 5 Low tier generative models, got {}",
                 low_results.len()
             ));
         }
